@@ -250,7 +250,10 @@ a{color:var(--accent);text-decoration:none;}
 <div class="mobile-header" id="mobile-header">
   <div class="mobile-header-row">
     <div class="mobile-title" id="mobile-page-title">数据看板</div>
-    <button class="btn btn-primary btn-sm" id="mobile-add-btn" onclick="openInquiryModal()">＋ 新增</button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div id="mobile-settings-btn" onclick="showPage('settings')" style="display:none;width:30px;height:30px;background:rgba(107,114,195,0.15);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:16px;cursor:pointer">⚙️</div>
+      <button class="btn btn-primary btn-sm" id="mobile-add-btn" onclick="openInquiryModal()">＋ 新增</button>
+    </div>
   </div>
   <div id="mh-inq" style="display:none">
     <div style="display:flex;border-bottom:1px solid var(--border)">
@@ -605,7 +608,7 @@ a{color:var(--accent);text-decoration:none;}
     <div class="mobile-nav-item active" id="mnav-dashboard" onclick="mobileNav('dashboard')"><span class="mobile-nav-icon">📊</span>看板</div>
     <div class="mobile-nav-item" id="mnav-inquiries" onclick="mobileNav('inquiries')"><span class="mobile-nav-icon">📋</span>询盘</div>
     <div class="mobile-nav-item" id="mnav-customers" onclick="mobileNav('customers')"><span class="mobile-nav-icon">👥</span>客户</div>
-    <div class="mobile-nav-item" id="mnav-orders" onclick="mobileNav('orders')"><span class="mobile-nav-icon">⚙️</span>订单</div>
+    <div class="mobile-nav-item" id="mnav-orders" onclick="mobileNav('orders')"><span class="mobile-nav-icon">📦</span>订单</div>
     <div class="mobile-nav-item" id="mnav-oldstats" onclick="mobileNav('oldstats')"><span class="mobile-nav-icon">📈</span>统计</div>
   </div>
 </nav>
@@ -863,6 +866,7 @@ function switchUser(u){
   document.getElementById('btn-export').style.display=canExport()?'':'none';
   document.getElementById('btn-import').style.display=canExport()?'':'none';
   var sw=document.getElementById('nav-settings-wrap');if(sw)sw.style.display=u==='Alan'?'':'none';
+  var msb=document.getElementById('mobile-settings-btn');if(msb)msb.style.display=u==='Alan'?'flex':'none';
   refreshAll();
 }
 
@@ -2161,7 +2165,7 @@ const MOBILE_BATCH=10;
 
 function setMobileHeader(type){
   ['mh-inq','mh-hot','mh-cust','mh-ord','mh-stats'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
-  const titles={dashboard:'数据看板',inquiries:'询盘列表',hot:'🔥 热点商机',customers:'客户管理',oldstats:'📈 销售统计',orders:'⚙️ 执行中订单'};
+  const titles={dashboard:'数据看板',inquiries:'询盘列表',hot:'🔥 热点商机',customers:'客户管理',oldstats:'📈 销售统计',orders:'📦 执行中订单'};
   document.getElementById('mobile-page-title').textContent=titles[type]||type;
   const map={inquiries:'mh-inq',hot:'mh-hot',customers:'mh-cust',orders:'mh-ord',oldstats:'mh-stats'};
   if(map[type]){const el=document.getElementById(map[type]);if(el)el.style.display='';}
