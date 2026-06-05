@@ -1907,8 +1907,10 @@ function openCustDetail(id){
   // Tab 2: 跟进记录
   var fuHtml=renderFollowups(c.followups||[]);
   var tab2='<div style="display:flex;gap:7px;margin-bottom:8px;align-items:center">'
-    +'<div style="display:flex;flex:1;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface2)">'
-    +'<input type="date" id="dp-todo-date" value="'+(c.followupDate||'')+'" style="border:none;background:transparent;color:var(--text);font-size:12px;padding:7px 8px;width:120px;flex-shrink:0;outline:none">'
+    +'<div style="display:flex;flex:1;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface2);position:relative">'
+    +'<input id="dp-todo-date-text" value="'+(c.followupDate||'')+'" placeholder="日期" style="border:none;background:transparent;color:var(--text);font-size:12px;padding:7px 4px 7px 8px;width:86px;flex-shrink:0;outline:none">'
+    +'<span onclick="document.getElementById(\'dp-todo-date-picker\').showPicker&&document.getElementById(\'dp-todo-date-picker\').showPicker()||document.getElementById(\'dp-todo-date-picker\').click()" style="padding:7px 6px 7px 0;font-size:13px;cursor:pointer;flex-shrink:0">📅</span>'
+    +'<input type="date" id="dp-todo-date-picker" value="'+(c.followupDate||'')+'" onchange="document.getElementById(\'dp-todo-date-text\').value=this.value" style="position:absolute;opacity:0;width:0;height:0;pointer-events:none">'
     +'<div style="width:1px;background:var(--border);margin:6px 0"></div>'
     +'<input id="dp-todo-note" value="'+(c.followupNote||'')+'" placeholder="待办内容..." style="border:none;background:transparent;color:var(--text);font-size:12px;padding:7px 8px;flex:1;outline:none;min-width:0">'
     +'</div>'
@@ -2011,7 +2013,7 @@ function quickSetPerson(custId, person){
 function saveTodo(custId){
   var c=customers.find(function(x){return x.id===custId;});
   if(!c)return;
-  var date=document.getElementById('dp-todo-date');
+  var date=document.getElementById('dp-todo-date-text');
   var note=document.getElementById('dp-todo-note');
   c.followupDate=date?date.value:'';
   c.followupNote=note?note.value:'';
