@@ -1881,7 +1881,7 @@ function openCustDetail(id){
     +'<div class="detail-row"><span class="detail-key">产品</span><span class="detail-val" style="text-align:right;word-break:break-all">'+getProd(c)+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">负责人</span><span class="detail-val">'+(currentUser==='Alan'?'<select onchange="quickSetPerson('+c.id+',this.value)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:12px;padding:4px 8px;border-radius:6px;cursor:pointer"><option'+(c.person==='Alan'?' selected':'')+'>Alan</option><option'+(c.person==='Kelly'?' selected':'')+'>Kelly</option><option'+(c.person==='Momi'?' selected':'')+'>Momi</option><option'+(c.person==='Mille'?' selected':'')+'>Mille</option><option'+(c.person==='Penny'?' selected':'')+'>Penny</option></select>':c.person)+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">来源渠道</span><span class="detail-val">'+sourceSel+'</span></div>'
-    +'<div class="detail-row"><span class="detail-key">下次跟进</span><span class="detail-val">'+(c.followupDate||'未设置')+'</span></div>'
+    +'<div class="detail-row"><span class="detail-key">下次跟进</span><span class="detail-val" style="text-align:right">'+(c.followupDate||'未设置')+(c.followupNote?'<br><span style="font-size:11px;color:var(--green);font-weight:400">📌 '+c.followupNote+'</span>':'')+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">综合评分</span><span class="detail-val" style="color:'+(score>=5?'var(--green)':score>=3?'var(--yellow)':'var(--muted)')+'">★ '+score+'/7</span></div>'
     +'</div>'
     +'<div class="detail-section"><div class="detail-section-title">快速标签 <span style="font-size:10px;color:var(--muted);font-weight:400">点击即保存</span></div>'
@@ -1906,10 +1906,13 @@ function openCustDetail(id){
 
   // Tab 2: 跟进记录
   var fuHtml=renderFollowups(c.followups||[]);
-  var tab2='<div style="display:flex;gap:7px;margin-bottom:8px">'
-    +'<input type="date" class="form-input" id="dp-todo-date" value="'+(c.followupDate||'')+'" style="width:110px;font-size:12px;flex-shrink:0;padding:6px 8px">'
-    +'<input class="form-input" id="dp-todo-note" value="'+(c.followupNote||'')+'" placeholder="下次跟进待办..." style="flex:1;font-size:13px">'
-    +'<button class="btn btn-sm" onclick="saveTodo('+c.id+')" style="background:rgba(62,207,142,.2);color:var(--green);border:1px solid var(--green);white-space:nowrap">待办</button>'
+  var tab2='<div style="display:flex;gap:7px;margin-bottom:8px;align-items:center">'
+    +'<div style="display:flex;flex:1;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface2)">'
+    +'<input type="date" id="dp-todo-date" value="'+(c.followupDate||'')+'" style="border:none;background:transparent;color:var(--text);font-size:12px;padding:7px 8px;width:120px;flex-shrink:0;outline:none">'
+    +'<div style="width:1px;background:var(--border);margin:6px 0"></div>'
+    +'<input id="dp-todo-note" value="'+(c.followupNote||'')+'" placeholder="待办内容..." style="border:none;background:transparent;color:var(--text);font-size:12px;padding:7px 8px;flex:1;outline:none;min-width:0">'
+    +'</div>'
+    +'<button class="btn btn-sm" onclick="saveTodo('+c.id+')" style="background:rgba(62,207,142,.2);color:var(--green);border:1px solid var(--green);white-space:nowrap;flex-shrink:0">待办</button>'
     +'</div>'
     +'<div style="display:flex;gap:7px;margin-bottom:16px">'
     +'<input class="form-input" id="dp-fu-input" placeholder="记录本次跟进内容..." style="flex:1;font-size:13px">'
@@ -2392,6 +2395,7 @@ function renderMobileCards(page){
           +'<div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;gap:3px;align-items:flex-end">'
           +'<span style="font-size:12px;font-weight:600;color:'+sc+'">★ '+score+'/7</span>'
           +(cu.followupDate?'<span style="font-size:10px;color:var(--muted)">⏰ '+cu.followupDate+'</span>':'')
+          +(cu.followupNote?'<span style="font-size:10px;color:var(--green)">📌 '+cu.followupNote+'</span>':'')
           +'<span style="font-size:10px;color:var(--muted2)">'+cu.person+'</span>'
           +'</div></div>';
       });
@@ -2422,6 +2426,7 @@ function renderMobileCards(page){
               +'<span style="font-size:11px;color:'+(cu.status==='active'?'var(--green)':'var(--muted)')+'">'+( cu.status==='active'?'💚 活跃':'💤 沉睡')+'</span>'
               +'<span style="font-size:11px;color:'+sc+'">★ '+score+'/7</span>'
               +(cu.followupDate?'<span style="font-size:11px;color:var(--muted)">⏰ '+cu.followupDate+'</span>':'')
+              +(cu.followupNote?'<span style="font-size:11px;color:var(--green)">📌 '+cu.followupNote+'</span>':'')
               +'</div></div>';
           });
           if(group.length>shown){
