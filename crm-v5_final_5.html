@@ -1907,13 +1907,13 @@ function openCustDetail(id){
   // Tab 2: 跟进记录
   var fuHtml=renderFollowups(c.followups||[]);
   var tab2='<div style="display:flex;gap:7px;margin-bottom:8px">'
-    +'<input class="form-input" id="dp-fu-input" placeholder="记录本次跟进内容..." style="flex:1;font-size:13px">'
-    +'<button class="btn btn-primary btn-sm" onclick="addFollowup()">添加</button>'
-    +'</div>'
-    +'<div style="display:flex;gap:7px;margin-bottom:16px">'
-    +'<input type="date" class="form-input" id="dp-todo-date" value="'+(c.followupDate||'')+'" style="width:130px;font-size:13px;flex-shrink:0">'
+    +'<input type="date" class="form-input" id="dp-todo-date" value="'+(c.followupDate||'')+'" style="width:110px;font-size:12px;flex-shrink:0;padding:6px 8px">'
     +'<input class="form-input" id="dp-todo-note" value="'+(c.followupNote||'')+'" placeholder="下次跟进待办..." style="flex:1;font-size:13px">'
     +'<button class="btn btn-sm" onclick="saveTodo('+c.id+')" style="background:rgba(62,207,142,.2);color:var(--green);border:1px solid var(--green);white-space:nowrap">待办</button>'
+    +'</div>'
+    +'<div style="display:flex;gap:7px;margin-bottom:16px">'
+    +'<input class="form-input" id="dp-fu-input" placeholder="记录本次跟进内容..." style="flex:1;font-size:13px">'
+    +'<button class="btn btn-primary btn-sm" onclick="addFollowup()">添加</button>'
     +'</div>'
     +'<div id="dp-followups">'+fuHtml+'</div>';
 
