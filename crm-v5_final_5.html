@@ -2026,12 +2026,12 @@ function saveTodo(custId){
 function clearTodoDate(custId){
   var c=customers.find(function(x){return x.id===custId;});
   if(!c)return;
-  var note=document.getElementById('dp-todo-note');
   c.followupDate='';
-  c.followupNote=note?note.value:'';
+  c.followupNote='';
   saveAll();
   refreshAll();
-  toast('日期已清除');
+  openCustDetail(custId);
+  toast('待办已清除');
 }
 
 function renderFollowups(fus){
