@@ -71,6 +71,16 @@
 9. str_replace 定位锚点用完后必须确认原内容完整保留（曾发生 refreshAll 函数被误删导致全站崩溃）
 10. 每次改完 JS 必须用 node --check 语法检查再给文件
 
+13. iOS Safari input[type=date] 日期选择器：已证实无效的方案（不要重复尝试）：
+    - opacity:0 覆盖层：iOS 认为不可见，不触发 picker
+    - opacity:0.01 覆盖层：PWA 模式可用，iOS 浏览器模式仍不触发
+    - label 包裹 + opacity:0.01：同上，且容易误加 overflow:hidden 重现 bug
+    - opacity:1 + color:transparent + CSS 隐藏 indicator：仍不触发
+    - 普通可见 input（与编辑弹窗写法相同）：仍不触发（原因未明）
+    - showPicker() 调用：PWA 可用，iOS 浏览器模式不可靠
+    - overflow:hidden 父容器：会阻断 iOS 所有 touch 事件，绝对不能用在 date input 父层
+    - 根本原因：iOS Safari 浏览器模式 vs PWA 模式对 input[type=date] touch 处理机制不同，待查
+
 ## 必须遵守的规避规则（部署）
 11. 每次推送新版本到 GitHub Pages，必须同时把 service-worker.js 里的 CACHE_NAME 版本号加1（如 crm-v2 → crm-v3），否则 SW 缓存导致用户看不到更新
 12. PWA 安装版（桌面/手机 App）更新后需关闭再重开 App 才生效；浏览器访问版刷新即可
