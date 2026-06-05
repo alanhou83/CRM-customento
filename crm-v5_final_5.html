@@ -2408,8 +2408,7 @@ function renderMobileCards(page){
           +'</div>'
           +'<div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;gap:3px;align-items:flex-end">'
           +'<span style="font-size:12px;font-weight:600;color:'+sc+'">★ '+score+'/7</span>'
-          +(cu.followupDate?'<span style="font-size:10px;color:var(--muted)">⏰ '+cu.followupDate+'</span>':'')
-          +(cu.followupNote?'<span style="font-size:10px;color:var(--green)">📌 '+cu.followupNote+'</span>':'')
+          +(function(){var od=cu.followupDate&&cu.followupDate<today();var icon=od?'<span style="font-size:10px">🔔</span> ':'⏰ ';var dc=od?'var(--red)':'var(--muted)';var nc=od?'var(--red)':'var(--green)';if(cu.followupDate&&cu.followupNote)return '<span style="font-size:11px;color:'+dc+';font-weight:'+(od?'600':'400')+'">'+icon+cu.followupDate+'</span><span style="font-size:10px;color:'+nc+'"> 📌 '+cu.followupNote+'</span>';if(cu.followupDate)return '<span style="font-size:11px;color:'+dc+';font-weight:'+(od?'600':'400')+'">'+icon+cu.followupDate+'</span>';if(cu.followupNote)return '<span style="font-size:10px;color:var(--green)">📌 '+cu.followupNote+'</span>';return '';})()
           +'<span style="font-size:10px;color:var(--muted2)">'+cu.person+'</span>'
           +'</div></div>';
       });
