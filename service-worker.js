@@ -1,4 +1,4 @@
-const CACHE_NAME = 'customento-crm-v14';
+const CACHE_NAME = 'customento-crm-v15';
 const ASSETS = [
   '/CRM-customento/crm-v5_final_5.html',
   '/CRM-customento/manifest.json',
