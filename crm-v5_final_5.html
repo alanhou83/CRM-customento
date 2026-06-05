@@ -1544,7 +1544,8 @@ function renderCustCard(c, layer){
     +'</div>'
     +'<div class="cc-meta"><span>📦 '+getProd(c)+'</span><span>👤 '+c.person+'</span><span style="color:'+sc+'">★ '+score+'/7</span></div>'
     +'<div class="score-bar"><div class="score-fill" style="width:'+(score/7*100)+'%;background:'+sc+'"></div></div>'
-    +(c.followupDate?'<div class="cc-last">⏰ 下次跟进：'+c.followupDate+'</div>':'')
+    +(c.followupDate?'<div class="cc-last">⏰ '+c.followupDate+(c.followupNote?' <span style="color:var(--green)">📌 '+c.followupNote+'</span>':'')+'</div>':'')
+    +((!c.followupDate&&c.followupNote)?'<div class="cc-last"><span style="color:var(--green)">📌 '+c.followupNote+'</span></div>':'')
     +'</div>';
 }
 
@@ -1611,8 +1612,8 @@ function renderCustomers(){
         :'<span style="color:var(--muted2);font-size:11px">—</span>';
       const isOverdueFollowup=c.followupDate&&c.followupDate<today();
       const followupHtml=c.followupDate
-        ?'<span style="font-size:12px;color:'+(isOverdueFollowup?'var(--red)':'var(--muted)')+'">'+( isOverdueFollowup?'⚠ ':'')+c.followupDate+'</span>'
-        :'<span style="font-size:12px;color:var(--muted2)">—</span>';
+        ?'<div><span style="font-size:12px;color:'+(isOverdueFollowup?'var(--red)':'var(--muted)')+'">'+( isOverdueFollowup?'⚠ ':'')+c.followupDate+'</span>'+(c.followupNote?'<div style="font-size:11px;color:var(--green);margin-top:2px">📌 '+c.followupNote+'</div>':'')+'</div>'
+        :(c.followupNote?'<div style="font-size:11px;color:var(--green)">📌 '+c.followupNote+'</div>':'<span style="font-size:12px;color:var(--muted2)">—</span>');
       return '<div class="table-row" style="grid-template-columns:90px 60px 1fr 95px 90px 120px 50px 65px;border-left:3px solid '+lc+'" onclick="openCustDetail('+c.id+')">'
         +'<div class="table-cell" style="font-weight:500">'+c.alias+'</div>'
         +'<div class="table-cell" style="display:flex;gap:3px;align-items:center;flex-wrap:wrap">'+(c.vipStar?'<span class="mark-vip">VIP</span>':'')+(c.targetStar?'<span style="font-size:12px">🎯</span>':'')+'</div>'
@@ -2433,11 +2434,10 @@ function renderMobileCards(page){
             var sc=score>=5?'var(--green)':score>=3?'var(--yellow)':'var(--muted)';
             html+='<div class="mobile-card'+(cu.vipStar?' alan-star':'')+'" onclick="openCustDetail('+cu.id+')">'
               +'<div class="mobile-card-top"><div>'
-              +'<div class="mobile-card-name">'+cu.alias+(cu.vipStar?' ⭐':'')+(cu.targetStar?' 🎯':'')+'</div>'
+              +'<div class="mobile-card-name">'+cu.alias+(cu.vipStar?' <span class="mark-vip">VIP</span>':'')+(cu.targetStar?' 🎯':'')+'</div>'
               +'<div class="mobile-card-company">'+(cu.company||'')+(cu.country?' · '+cu.country:'')+'</div>'
               +'</div><span class="type-tag '+TC[cu.type]+'">'+TL[cu.type]+'</span></div>'
               +'<div class="mobile-card-bottom">'
-              +'<span style="font-size:11px;color:'+(cu.status==='active'?'var(--green)':'var(--muted)')+'">'+( cu.status==='active'?'💚 活跃':'💤 沉睡')+'</span>'
               +'<span style="font-size:11px;color:'+sc+'">★ '+score+'/7</span>'
               +(cu.followupDate?'<span style="font-size:11px;color:var(--muted)">⏰ '+cu.followupDate+'</span>':'')
               +(cu.followupNote?'<span style="font-size:11px;color:var(--green)">📌 '+cu.followupNote+'</span>':'')
