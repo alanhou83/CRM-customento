@@ -1831,10 +1831,7 @@ function switchDpTab(tab){
     if(content)content.classList.toggle('active',t===tab);
   });
   var bar=document.getElementById('dp-followup-bar');
-  if(bar)bar.style.display=tab==='followup'?'':'none';
-  if(tab==='followup'){
-    var inp=document.getElementById('dp-fu-input');if(inp)inp.focus();
-  }
+  if(bar)bar.style.display='none';
 }
 
 function openCustDetail(id){
@@ -1891,7 +1888,11 @@ function openCustDetail(id){
 
   // Tab 2: 跟进记录
   var fuHtml=renderFollowups(c.followups||[]);
-  var tab2='<div id="dp-followups">'+fuHtml+'</div>';
+  var tab2='<div style="display:flex;gap:7px;margin-bottom:16px">'
+    +'<input class="form-input" id="dp-fu-input" placeholder="记录本次跟进内容..." style="flex:1;font-size:13px">'
+    +'<button class="btn btn-primary btn-sm" onclick="addFollowup()">添加</button>'
+    +'</div>'
+    +'<div id="dp-followups">'+fuHtml+'</div>';
 
   // Tab 3: 成交统计
   var usdTotal=custSales.filter(function(s){return s.currency==='USD';}).reduce(function(sum,s){return sum+(+s.amount||0);},0);
