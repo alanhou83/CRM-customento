@@ -1908,7 +1908,10 @@ function openCustDetail(id){
   var fuHtml=renderFollowups(c.followups||[]);
   var tab2='<div style="display:flex;gap:7px;margin-bottom:8px;align-items:center">'
     +'<div style="display:flex;flex:1;border:1px solid var(--border);border-radius:8px;background:var(--surface2)">'
-    +'<input type="date" id="dp-todo-date-picker" value="'+(c.followupDate||'')+'" placeholder="📅 日期" style="border:none;background:transparent;color:'+(c.followupDate?'var(--text)':'var(--muted)')+';font-size:12px;padding:7px 4px 7px 8px;flex-shrink:0;width:110px;outline:none;cursor:pointer;min-width:0">'
+    +'<div style="display:flex;align-items:center;flex-shrink:0;position:relative">'
+    +'<input type="date" id="dp-todo-date-picker" value="'+(c.followupDate||'')+'" placeholder="📅 日期" style="border:none;background:transparent;color:'+(c.followupDate?'var(--text)':'var(--muted)')+';font-size:12px;padding:7px 4px 7px 8px;width:110px;outline:none;cursor:pointer;min-width:0">'
+    +(c.followupDate?'<span onclick="clearTodoDate('+c.id+')" style="font-size:11px;color:var(--muted);cursor:pointer;padding:0 6px 0 2px;line-height:1;flex-shrink:0" title="清除日期">✕</span>':'')
+    +'</div>'
     +'<div style="width:1px;background:var(--border);margin:6px 0;flex-shrink:0"></div>'
     +'<input id="dp-todo-note" value="'+(c.followupNote||'')+'" placeholder="待办内容..." style="border:none;background:transparent;color:var(--text);font-size:12px;padding:7px 8px;flex:1;outline:none;min-width:0">'
     +'</div>'
@@ -2018,6 +2021,17 @@ function saveTodo(custId){
   saveAll();
   refreshAll();
   toast('待办已保存 ✓');
+}
+
+function clearTodoDate(custId){
+  var c=customers.find(function(x){return x.id===custId;});
+  if(!c)return;
+  var note=document.getElementById('dp-todo-note');
+  c.followupDate='';
+  c.followupNote=note?note.value:'';
+  saveAll();
+  refreshAll();
+  toast('日期已清除');
 }
 
 function renderFollowups(fus){
