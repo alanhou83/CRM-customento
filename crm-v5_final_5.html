@@ -1879,7 +1879,7 @@ function openCustDetail(id){
     +'<div class="detail-row"><span class="detail-key">分层</span><span class="detail-val">'+layerSel+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">类型</span><span class="detail-val">'+typeSel+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">产品</span><span class="detail-val" style="text-align:right;word-break:break-all">'+getProd(c)+'</span></div>'
-    +'<div class="detail-row"><span class="detail-key">负责人</span><span class="detail-val">'+c.person+'</span></div>'
+    +'<div class="detail-row"><span class="detail-key">负责人</span><span class="detail-val">'+(currentUser==='Alan'?'<select onchange="quickSetPerson('+c.id+',this.value)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:12px;padding:4px 8px;border-radius:6px;cursor:pointer"><option'+(c.person==='Alan'?' selected':'')+'>Alan</option><option'+(c.person==='Kelly'?' selected':'')+'>Kelly</option><option'+(c.person==='Momi'?' selected':'')+'>Momi</option><option'+(c.person==='Mille'?' selected':'')+'>Mille</option><option'+(c.person==='Penny'?' selected':'')+'>Penny</option></select>':c.person)+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">来源渠道</span><span class="detail-val">'+sourceSel+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">下次跟进</span><span class="detail-val">'+(c.followupDate||'未设置')+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">综合评分</span><span class="detail-val" style="color:'+(score>=5?'var(--green)':score>=3?'var(--yellow)':'var(--muted)')+'">★ '+score+'/7</span></div>'
@@ -1988,6 +1988,16 @@ function quickSetSource(custId, source){
   openCustDetail(custId);
   refreshAll();
   toast('来源渠道已更新 ✓');
+}
+
+function quickSetPerson(custId, person){
+  const c=customers.find(function(x){return x.id===custId;});
+  if(!c)return;
+  c.person=person;
+  saveAll();
+  openCustDetail(custId);
+  refreshAll();
+  toast('负责人已更新 ✓');
 }
 
 function renderFollowups(fus){
