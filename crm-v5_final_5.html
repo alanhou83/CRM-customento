@@ -1944,20 +1944,45 @@ function quickToggle(custId, field, val){
 
 function renderFollowups(fus){
   if(!fus||!fus.length)return'<div style="color:var(--muted);font-size:13px;padding:6px 0">暂无跟进记录</div>';
-  return fus.slice().reverse().map(function(f){
+  var len=fus.length;
+  return fus.slice().reverse().map(function(f,revIdx){
+    var origIdx=len-1-revIdx;
     const parts=f.split(' ');const date=parts[0];
     const rest=parts.slice(1).join(' ');
     const um=rest.match(/^\[(\w+)\]/);
     const user=um?um[1]:'';
     const text=um?rest.replace(/^\[\w+\]\s*/,''):rest;
-    return '<div class="detail-row" style="flex-direction:column;align-items:flex-start;gap:3px;padding:8px 0">'
+    return '<div class="detail-row" style="flex-direction:column;align-items:flex-start;gap:3px;padding:8px 0;border-bottom:1px solid var(--border)">'
+      +'<div style="display:flex;gap:7px;align-items:center;width:100%;justify-content:space-between">'
       +'<div style="display:flex;gap:7px;align-items:center">'
       +'<span style="font-size:11px;color:var(--muted)">'+date+'</span>'
       +(user?'<span style="font-size:11px;color:var(--accent);font-weight:500">'+user+'</span>':'')
       +'</div>'
+      +'<span onclick="deleteFollowup('+origIdx+')" style="font-size:11px;color:var(--muted);cursor:pointer;padding:2px 6px;border-radius:4px" title="删除">✕</span>'
+      +'</div>'
       +'<div style="font-size:13px;color:var(--text)">'+text+'</div>'
       +'</div>';
   }).join('');
+}
+
+function deleteFollowup(idx){
+  if(!confirm('确认删除这条跟进记录？'))return;
+  if(currentDetailType==='customer'){
+    var c=customers.find(function(x){return x.id===currentDetailId;});
+    if(!c||!c.followups)return;
+    c.followups.splice(idx,1);
+    saveAll();
+    openCustDetail(currentDetailId);
+    switchDpTab('followup');
+    toast('跟进记录已删除');
+  } else if(currentDetailType==='inquiry'){
+    var i=inquiries.find(function(x){return x.id===currentDetailId;});
+    if(!i||!i.followups)return;
+    i.followups.splice(idx,1);
+    saveAll();
+    openInqDetail(currentDetailId);
+    toast('跟进记录已删除');
+  }
 }
 
 function closeDetail(){document.getElementById('detail-panel').classList.remove('open');currentDetailId=null;currentDetailType=null;}
