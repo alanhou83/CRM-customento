@@ -1857,12 +1857,34 @@ function openCustDetail(id){
   }
 
   // Tab 1: 客户档案
+  var layerBtns='<div style="display:flex;flex-wrap:wrap;gap:4px">';
+  ['core','focus','nurture','sleeping','dead'].forEach(function(lk){
+    var cfg=LAYER_CONFIG[lk];
+    var active=layer===lk;
+    layerBtns+='<span onclick="quickSetLayer('+c.id+',\''+lk+'\')" style="cursor:pointer;font-size:11px;padding:3px 8px;border-radius:12px;border:1px solid '+(active?cfg.color:'var(--border)')+';background:'+(active?'rgba(107,114,195,.18)':'transparent')+';color:'+(active?cfg.color:'var(--muted)')+';font-weight:'+(active?'600':'400')+'">'+cfg.label+'</span>';
+  });
+  layerBtns+='</div>';
+
+  var typeBtns='<div style="display:flex;flex-wrap:wrap;gap:4px">';
+  [['tourist','旅游纪念品'],['ecom','跨境电商'],['custom','来图定制'],['consumable','白耗材'],['promo','促销品'],['personal','个人定制']].forEach(function(pair){
+    var active=c.type===pair[0];
+    typeBtns+='<span onclick="quickSetType('+c.id+',\''+pair[0]+'\')" style="cursor:pointer;font-size:11px;padding:3px 8px;border-radius:12px;border:1px solid '+(active?'var(--accent)':'var(--border)')+';background:'+(active?'rgba(107,114,195,.18)':'transparent')+';color:'+(active?'var(--accent)':'var(--muted)')+';font-weight:'+(active?'600':'400')+'">'+pair[1]+'</span>';
+  });
+  typeBtns+='</div>';
+
+  var sourceBtns='<div style="display:flex;flex-wrap:wrap;gap:4px">';
+  ['Alibaba','1688','Customento','老客户','笨鸟导入','WhatsApp','展会','其他'].forEach(function(s){
+    var active=c.source===s;
+    sourceBtns+='<span onclick="quickSetSource('+c.id+',\''+s+'\')" style="cursor:pointer;font-size:11px;padding:3px 8px;border-radius:12px;border:1px solid '+(active?'var(--teal)':'var(--border)')+';background:'+(active?'rgba(75,209,247,.15)':'transparent')+';color:'+(active?'var(--teal)':'var(--muted)')+';font-weight:'+(active?'600':'400')+'">'+s+'</span>';
+  });
+  sourceBtns+='</div>';
+
   var tab1='<div class="detail-section"><div class="detail-section-title" style="display:flex;align-items:center;justify-content:space-between">基本信息<button onclick="newInqFromCust('+c.id+')" style="font-size:11px;padding:3px 9px;border-radius:5px;border:0.5px solid var(--green);color:var(--green);background:rgba(62,207,142,.12);cursor:pointer;font-weight:400">+ 新建询盘</button></div>'
-    +'<div class="detail-row"><span class="detail-key">分层</span><span class="detail-val">'+(LAYER_CONFIG[layer]?LAYER_CONFIG[layer].label:'—')+'</span></div>'
-    +'<div class="detail-row"><span class="detail-key">类型</span><span class="detail-val"><span class="type-tag '+TC[c.type]+'">'+TL[c.type]+'</span></span></div>'
+    +'<div class="detail-row" style="align-items:flex-start;padding:10px 0"><span class="detail-key" style="padding-top:4px">分层</span><span class="detail-val">'+layerBtns+'</span></div>'
+    +'<div class="detail-row" style="align-items:flex-start;padding:10px 0"><span class="detail-key" style="padding-top:4px">类型</span><span class="detail-val">'+typeBtns+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">产品</span><span class="detail-val" style="text-align:right;word-break:break-all">'+getProd(c)+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">负责人</span><span class="detail-val">'+c.person+'</span></div>'
-    +'<div class="detail-row"><span class="detail-key">来源渠道</span><span class="detail-val">'+(c.source||'—')+'</span></div>'
+    +'<div class="detail-row" style="align-items:flex-start;padding:10px 0"><span class="detail-key" style="padding-top:4px">来源渠道</span><span class="detail-val">'+sourceBtns+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">下次跟进</span><span class="detail-val">'+(c.followupDate||'未设置')+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">综合评分</span><span class="detail-val" style="color:'+(score>=5?'var(--green)':score>=3?'var(--yellow)':'var(--muted)')+'">★ '+score+'/7</span></div>'
     +'</div>'
@@ -1940,6 +1962,36 @@ function quickToggle(custId, field, val){
   openCustDetail(custId);
   refreshAll();
   toast('标签已更新 ✓');
+}
+
+function quickSetLayer(custId, layer){
+  const c=customers.find(function(x){return x.id===custId;});
+  if(!c)return;
+  c.layer=layer;
+  saveAll();
+  openCustDetail(custId);
+  refreshAll();
+  toast('分层已更新 ✓');
+}
+
+function quickSetType(custId, type){
+  const c=customers.find(function(x){return x.id===custId;});
+  if(!c)return;
+  c.type=type;
+  saveAll();
+  openCustDetail(custId);
+  refreshAll();
+  toast('类型已更新 ✓');
+}
+
+function quickSetSource(custId, source){
+  const c=customers.find(function(x){return x.id===custId;});
+  if(!c)return;
+  c.source=source;
+  saveAll();
+  openCustDetail(custId);
+  refreshAll();
+  toast('来源渠道已更新 ✓');
 }
 
 function renderFollowups(fus){
