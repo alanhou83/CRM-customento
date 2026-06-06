@@ -676,9 +676,9 @@ a{color:var(--accent);text-decoration:none;}
           <div class="form-group"><label class="form-label">已成单</label><select class="form-input" id="fc-ordered"><option value="1">✅ 是</option><option value="0">❌ 否</option></select></div>
           <div class="form-group"><label class="form-label">有复购</label><select class="form-input" id="fc-repurchase"><option value="1">🔄 是</option><option value="0">❌ 否</option></select></div>
           <div class="form-group"><label class="form-label">订单增长</label><select class="form-input" id="fc-growing"><option value="1">📈 是</option><option value="0">➡️ 否</option></select></div>
-          <div class="form-group"><label class="form-label">画像匹配</label><select class="form-input" id="fc-match"><option value="1">🎯 是</option><option value="0">❌ 否</option></select></div>
+          <div class="form-group"><label class="form-label">画像匹配</label><select class="form-input" id="fc-match"><option value="1">🏅 是</option><option value="0">❌ 否</option></select></div>
           <div class="form-group"><label class="form-label">客户活跃</label><select class="form-input" id="fc-active"><option value="1">💬 活跃</option><option value="0">😶 沉默</option></select></div>
-          <div class="form-group"><label class="form-label">客户体量</label><select class="form-input" id="fc-size"><option value="2">🏢 大</option><option value="1">🏠 中</option><option value="0">👤 小</option></select></div>
+          <div class="form-group"><label class="form-label">客户体量</label><select class="form-input" id="fc-size"><option value="4">XL</option><option value="3">L</option><option value="2">M</option><option value="1">S</option><option value="0">XS</option></select></div>
         </div>
       </div>
       <div class="form-group full"><div class="form-section-label">📞 联系方式</div>
@@ -1890,7 +1890,19 @@ function openCustDetail(id){
     +tagBtn('repurchase',1,'🔄 有复购','○ 无复购','rgba(79,142,247,.25)','rgba(255,255,255,.06)')
     +tagBtn('growing',1,'📈 增长中','○ 未增长','rgba(247,212,79,.25)','rgba(255,255,255,.06)')
     +tagBtn('activeScore',1,'💬 活跃','○ 沉默','rgba(75,209,247,.25)','rgba(255,255,255,.06)')
-    +'</div></div>';
+    +tagBtn('match',1,'🏅 画像匹配','○ 画像匹配','rgba(255,180,0,.25)','rgba(255,255,255,.06)')
+    +'</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;padding:4px 0">'
+    +'<span style="font-size:12px;color:var(--muted)">客户体量</span>'
+    +'<select style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:var(--text);font-size:12px;padding:2px 6px;cursor:pointer" onchange="quickSetSize('+id+',this.value)">'
+    +'<option value="4"'+(c.size==4?' selected':'')+'>XL</option>'
+    +'<option value="3"'+(c.size==3?' selected':'')+'>L</option>'
+    +'<option value="2"'+(c.size==2?' selected':'')+'>M</option>'
+    +'<option value="1"'+(c.size==1?' selected':'')+'>S</option>'
+    +'<option value="0"'+(c.size==0||!c.size?' selected':'')+'>XS</option>'
+    +'</select>'
+    +'</div>'
+    +'</div>';
   if(c.email||c.phone||c.wechat||c.wangwang){
     tab1+='<div class="detail-section"><div class="detail-section-title">联系方式</div>'
       +(c.email?'<div class="detail-row"><span class="detail-key">📧 邮箱</span><span class="detail-val"><a href="mailto:'+c.email+'">'+c.email+'</a></span></div>':'')
@@ -1989,6 +2001,16 @@ function quickSetType(custId, type){
   openCustDetail(custId);
   refreshAll();
   toast('类型已更新 ✓');
+}
+
+function quickSetSize(custId, size){
+  const c=customers.find(function(x){return x.id===custId;});
+  if(!c)return;
+  c.size=+size;
+  saveAll();
+  openCustDetail(custId);
+  refreshAll();
+  toast('客户体量已更新 ✓');
 }
 
 function quickSetSource(custId, source){
