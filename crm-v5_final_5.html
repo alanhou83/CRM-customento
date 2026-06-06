@@ -805,7 +805,7 @@ a{color:var(--accent);text-decoration:none;}
   <div class="modal-head"><div class="modal-title" id="sale-modal-title">录入成交记录</div><button class="modal-close" onclick="closeModal('sale-modal')">×</button></div>
   <div class="modal-body">
     <div class="form-grid">
-      <div class="form-group"><label class="form-label">成交日期</label><input class="form-input" type="date" id="fs-date" style="max-width:100%;box-sizing:border-box"></div>
+      <div class="form-group"><label class="form-label">成交日期</label><input class="form-input" type="date" id="fs-date" style="width:100%;max-width:100%;box-sizing:border-box;display:block"></div>
       <div class="form-group"><label class="form-label">客户代号 *</label><input class="form-input" type="text" id="fs-alias" placeholder="如：GKK"></div>
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">产品（可多选）</label><div id="fs-product-chips" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 0"></div></div>
       <div class="form-group"><label class="form-label">成交金额</label><div class="amount-row"><input class="form-input" type="number" id="fs-amount" placeholder="金额"><select class="form-input" id="fs-currency"><option value="USD">$ 美金</option><option value="CNY">¥ 人民币</option></select></div></div>
@@ -2981,21 +2981,14 @@ function renderMobileCards(page){
     c.innerHTML=filtered.map(s=>{
       const cust=custMap[s.alias];
       const icon=cust?typeIcon[cust.type]||'':'';
-      return '<div style="padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface);cursor:pointer" onclick="openSaleDetail('+s.id+')">'
+      var line2=s.product+' · '+s.date+' · '+getQ(s.date)+' · '+s.person+(s.notes?' · '+s.notes:'');
+      return '<div style="padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surface);cursor:pointer" onclick="openSaleDetail('+s.id+')">'
         +'<div style="display:flex;align-items:center;gap:10px">'
         +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.alias+' '+icon+'</div>'
-        +'<div style="font-size:11px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.product+' · '+s.date+'</div>'
-        +'<div style="display:flex;gap:6px;margin-top:4px;align-items:center">'
-        +'<span class="'+(s.currency==='USD'?'cur-usd':'cur-cny')+'">'+s.currency+'</span>'
-        +'<span style="font-size:11px;color:var(--muted)">'+getQ(s.date)+'</span>'
-        +'<span style="font-size:11px;color:var(--muted2)">'+s.person+'</span>'
+        +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.alias+' '+icon+' <span class="'+(s.currency==='USD'?'cur-usd':'cur-cny')+'" style="font-weight:400;font-size:11px">'+s.currency+'</span></div>'
+        +'<div style="font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+line2+'</div>'
         +'</div>'
-        +(s.notes?'<div style="font-size:11px;color:var(--muted2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.notes+'</div>':'')
-        +'</div>'
-        +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">'
-        +'<div style="font-size:14px;font-weight:700;color:'+(s.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(s.amount,s.currency)+'</div>'
-        +'</div>'
+        +'<div style="font-size:14px;font-weight:700;color:'+(s.currency==='USD'?'var(--green)':'var(--yellow)')+';flex-shrink:0">'+fmtAmt(s.amount,s.currency)+'</div>'
         +'</div>'
         +'</div>';
     }).join('');
