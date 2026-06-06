@@ -314,6 +314,10 @@ a{color:var(--accent);text-decoration:none;}
       <div class="mobile-chip" id="mb-view-list" onclick="setMobileCustView('list',this)">☰ 列表</div>
       <div class="mobile-chip" id="mb-cust-vip" onclick="toggleCustVip()">⭐ VIP</div>
       <div class="mobile-chip" id="mb-cust-chong" onclick="toggleCustChong()">🎯 冲单</div>
+      <select id="mb-cf-size" onchange="renderMobileCards('cust')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
+        <option value="">体量</option>
+        <option value="4">XL</option><option value="3">L</option><option value="2">M</option><option value="1">S</option><option value="0">XS</option>
+      </select>
       <select id="mb-cf-person" onchange="renderMobileCards('cust')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
         <option value="">全部</option>
         <option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option>
@@ -538,6 +542,10 @@ a{color:var(--accent);text-decoration:none;}
       <select class="filter-select" id="cf-person" onchange="renderCustomers()">
         <option value="">所有负责人</option>
         <option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option>
+      </select>
+      <select class="filter-select" id="cf-size" onchange="renderCustomers()">
+        <option value="">客户体量</option>
+        <option value="4">XL</option><option value="3">L</option><option value="2">M</option><option value="1">S</option><option value="0">XS</option>
       </select>
       <button class="btn btn-outline btn-sm" onclick="clearFilters('cust')">清除</button>
       <button class="cust-filter-btn" id="btn-cust-vip" onclick="toggleCustVip()">⭐ VIP</button>
@@ -943,7 +951,7 @@ function resetInqFilters(){['search-inq','f-status','f-source','f-grade','f-pers
 function clearFilters(type){
   if(type==='inq'){currentInqFilter={};resetInqFilters();renderInquiries();}
   else if(type==='hot'){['search-hot','fh-source','fh-person'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderHot();}
-  else if(type==='cust'){['search-cust','cf-layer','cf-type','cf-person'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderCustomers();}
+  else if(type==='cust'){['search-cust','cf-layer','cf-type','cf-person','cf-size'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderCustomers();}
   else if(type==='old'){['search-old','of-year','of-currency','of-person','of-quarter'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderOldStats();}
   else if(type==='ord'){['search-ord','ord-stage','ord-currency'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderOrders();}
 }
@@ -1601,12 +1609,14 @@ function renderCustomers(){
   const layerFilter=document.getElementById('cf-layer')?.value||'';
   const type=document.getElementById('cf-type')?.value||'';
   const person=document.getElementById('cf-person')?.value||'';
+  const sizeFilter=document.getElementById('cf-size')?.value||'';
 
   const filtered=customers.filter(function(c){
     if(!canSeeCust(c)) return false;
     if(search&&!c.alias.toLowerCase().includes(search)&&!(c.company||'').toLowerCase().includes(search)) return false;
     if(type&&c.type!==type) return false;
     if(person&&c.person!==person) return false;
+    if(sizeFilter!==''&&String(c.size||0)!==sizeFilter) return false;
     if(custFilterVip&&!c.vipStar) return false;
     if(custFilterChong&&!c.targetStar) return false;
     return true;
@@ -1939,6 +1949,7 @@ function openCustDetail(id){
     +'<div class="detail-row"><span class="detail-key">产品</span><span class="detail-val" style="text-align:right;word-break:break-all">'+getProd(c)+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">负责人</span><span class="detail-val">'+(currentUser==='Alan'?'<select onchange="quickSetPerson('+c.id+',this.value)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:12px;padding:4px 8px;border-radius:6px;cursor:pointer"><option'+(c.person==='Alan'?' selected':'')+'>Alan</option><option'+(c.person==='Kelly'?' selected':'')+'>Kelly</option><option'+(c.person==='Momi'?' selected':'')+'>Momi</option><option'+(c.person==='Mille'?' selected':'')+'>Mille</option><option'+(c.person==='Penny'?' selected':'')+'>Penny</option></select>':c.person)+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">来源渠道</span><span class="detail-val">'+sourceSel+'</span></div>'
+    +'<div class="detail-row"><span class="detail-key">客户体量</span><span class="detail-val"><select onchange="quickSetSize('+id+',this.value)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:12px;padding:4px 8px;border-radius:6px;cursor:pointer"><option value="4"'+(c.size==4?' selected':'')+'>XL</option><option value="3"'+(c.size==3?' selected':'')+'>L</option><option value="2"'+(c.size==2?' selected':'')+'>M</option><option value="1"'+(c.size==1?' selected':'')+'>S</option><option value="0"'+(c.size==0||!c.size?' selected':'')+'>XS</option></select></span></div>'
     +'<div class="detail-row"><span class="detail-key">下次跟进</span><span class="detail-val" style="text-align:right">'+(c.followupDate||'未设置')+(c.followupNote?'<br><span style="font-size:11px;color:var(--green);font-weight:400">📌 '+c.followupNote+'</span>':'')+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">综合评分</span><span class="detail-val" style="color:'+(score>=5?'var(--green)':score>=3?'var(--yellow)':'var(--muted)')+'">★ '+score+'/7</span></div>'
     +'</div>'
@@ -1949,16 +1960,6 @@ function openCustDetail(id){
     +tagBtn('growing',1,'📈 增长中','○ 未增长','rgba(247,212,79,.25)','rgba(255,255,255,.06)')
     +tagBtn('activeScore',1,'💬 活跃','○ 沉默','rgba(75,209,247,.25)','rgba(255,255,255,.06)')
     +tagBtn('match',1,'🏅 画像匹配','○ 画像匹配','rgba(255,180,0,.25)','rgba(255,255,255,.06)')
-    +'</div>'
-    +'<div style="display:flex;align-items:center;gap:8px;padding:4px 0">'
-    +'<span style="font-size:12px;color:var(--muted)">客户体量</span>'
-    +'<select style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:var(--text);font-size:12px;padding:2px 6px;cursor:pointer" onchange="quickSetSize('+id+',this.value)">'
-    +'<option value="4"'+(c.size==4?' selected':'')+'>XL</option>'
-    +'<option value="3"'+(c.size==3?' selected':'')+'>L</option>'
-    +'<option value="2"'+(c.size==2?' selected':'')+'>M</option>'
-    +'<option value="1"'+(c.size==1?' selected':'')+'>S</option>'
-    +'<option value="0"'+(c.size==0||!c.size?' selected':'')+'>XS</option>'
-    +'</select>'
     +'</div>'
     +'</div>';
   if(c.email||c.phone||c.wechat||c.wangwang){
@@ -2500,11 +2501,13 @@ function renderMobileCards(page){
     const search=ms?ms.value.toLowerCase():'';
     const mbPerson=(document.getElementById('mb-cf-person')||{}).value||'';
     const mbType=(document.getElementById('mb-cf-type')||{}).value||'';
+    const mbSize=(document.getElementById('mb-cf-size')||{}).value||'';
     const filtered=customers.filter(c=>{
       if(!canSeeCust(c))return false;
       if(search&&!c.alias.toLowerCase().includes(search)&&!(c.company||'').toLowerCase().includes(search))return false;
       if(f.filter&&(f.filter==='active'||f.filter==='sleeping')){if(c.status!==f.filter)return false;}
       if(mbType&&c.type!==mbType)return false;
+      if(mbSize!==''&&String(c.size||0)!==mbSize)return false;
       if(mbPerson&&c.person!==mbPerson)return false;
       if(custFilterVip&&!c.vipStar)return false;
       if(custFilterChong&&!c.targetStar)return false;
