@@ -2981,14 +2981,13 @@ function renderMobileCards(page){
     c.innerHTML=filtered.map(s=>{
       const cust=custMap[s.alias];
       const icon=cust?typeIcon[cust.type]||'':'';
-      return '<div style="padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surface);cursor:pointer" onclick="openSaleDetail('+s.id+')">'
-        +'<div style="display:flex;align-items:center;gap:10px">'
-        +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.alias+' '+icon+' <span style="font-size:11px;font-weight:400;color:var(--muted)">'+s.date+' '+getQ(s.date)+' '+s.person+'</span></div>'
-        +'<div style="font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="'+(s.currency==='USD'?'cur-usd':'cur-cny')+'">'+s.currency+'</span> '+s.product+(s.notes?' + '+s.notes:'')+'</div>'
-        +'</div>'
+      var detail='<span class="'+(s.currency==='USD'?'cur-usd':'cur-cny')+'">'+s.currency+'</span> '+s.product+' · '+s.date+' · '+getQ(s.date)+' · '+s.person+(s.notes?' · '+s.notes:'');
+      return '<div style="padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface);cursor:pointer" onclick="openSaleDetail('+s.id+')">'
+        +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">'
+        +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.alias+' '+icon+'</div>'
         +'<div style="font-size:14px;font-weight:700;color:'+(s.currency==='USD'?'var(--green)':'var(--yellow)')+';flex-shrink:0">'+fmtAmt(s.amount,s.currency)+'</div>'
         +'</div>'
+        +'<div style="font-size:11px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+detail+'</div>'
         +'</div>';
     }).join('');
   }
