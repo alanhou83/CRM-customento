@@ -235,6 +235,7 @@ a{color:var(--accent);text-decoration:none;}
 .inq-status-btn.won.active{border-color:var(--green);color:var(--green);background:rgba(62,207,142,.1);}
 .convert-btn{font-size:12px;padding:4px 10px;border-radius:6px;border:0.5px solid var(--green);color:var(--green);background:rgba(62,207,142,.12);cursor:pointer;}
 @media(max-width:768px){
+  #settings-page-head{display:none;}
   html,body{overflow:auto;-webkit-overflow-scrolling:touch;}
   .app{overflow:visible;height:auto;min-height:100vh;}
   .main{overflow:visible;}
@@ -265,8 +266,9 @@ a{color:var(--accent);text-decoration:none;}
   <div class="mobile-header-row">
     <div class="mobile-title" id="mobile-page-title">数据看板</div>
     <div style="display:flex;align-items:center;gap:8px">
-      <div id="mobile-settings-btn" onclick="showPage('settings')" style="display:none;width:30px;height:30px;background:rgba(107,114,195,0.15);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:16px;cursor:pointer">⚙️</div>
+      <div id="mobile-settings-btn" onclick="toggleSettingsPage()" style="display:none;width:30px;height:30px;background:rgba(107,114,195,0.15);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:16px;cursor:pointer">⚙️</div>
       <button class="btn btn-primary btn-sm" id="mobile-add-btn" onclick="openInquiryModal()">＋ 新增</button>
+      <button class="btn btn-outline btn-sm" id="mobile-back-btn" onclick="closeSettingsPage()" style="display:none">← 返回</button>
     </div>
   </div>
   <div id="mh-inq" style="display:none">
@@ -627,7 +629,7 @@ a{color:var(--accent);text-decoration:none;}
 
 <!-- 管理员设置 -->
 <div id="page-settings" class="page">
-  <div class="page-head">
+  <div class="page-head" id="settings-page-head">
     <div><div class="page-title">⚙️ 管理员设置</div><div class="page-sub">Alan 专属 — 自定义产品种类</div></div>
   </div>
   <div class="page-content">
@@ -2474,17 +2476,36 @@ const MOBILE_BATCH=10;
 
 function setMobileHeader(type){
   ['mh-inq','mh-hot','mh-cust','mh-ord','mh-stats'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
-  const titles={dashboard:'数据看板',inquiries:'询盘列表',hot:'🔥 热点商机',customers:'客户管理',oldstats:'📈 销售统计',orders:'📦 执行中订单'};
+  const titles={dashboard:'数据看板',inquiries:'询盘列表',hot:'🔥 热点商机',customers:'客户管理',oldstats:'📈 销售统计',orders:'📦 执行中订单',settings:'⚙️ 管理员设置'};
   document.getElementById('mobile-page-title').textContent=titles[type]||type;
   const map={inquiries:'mh-inq',hot:'mh-hot',customers:'mh-cust',orders:'mh-ord',oldstats:'mh-stats'};
   if(map[type]){const el=document.getElementById(map[type]);if(el)el.style.display='';}
-  const addBtn=document.getElementById('mobile-add-btn');
-  if(addBtn){
-    if(type==='orders')addBtn.onclick=()=>openOrderModal();
-    else if(type==='customers')addBtn.onclick=()=>openCustomerModal();
-    else if(type==='oldstats')addBtn.onclick=()=>openSaleModal();
-    else addBtn.onclick=()=>openInquiryModal();
+  var addBtn=document.getElementById('mobile-add-btn');
+  var backBtn=document.getElementById('mobile-back-btn');
+  var settingsBtn=document.getElementById('mobile-settings-btn');
+  if(type==='settings'){
+    if(addBtn)addBtn.style.display='none';
+    if(settingsBtn)settingsBtn.style.display='none';
+    if(backBtn)backBtn.style.display='';
+  } else {
+    if(addBtn){
+      addBtn.style.display='';
+      if(type==='orders')addBtn.onclick=()=>openOrderModal();
+      else if(type==='customers')addBtn.onclick=()=>openCustomerModal();
+      else if(type==='oldstats')addBtn.onclick=()=>openSaleModal();
+      else addBtn.onclick=()=>openInquiryModal();
+    }
+    if(backBtn)backBtn.style.display='none';
+    if(settingsBtn&&currentUser==='Alan')settingsBtn.style.display='flex';
   }
+}
+function toggleSettingsPage(){
+  var active=document.querySelector('.page.active');
+  if(active&&active.id==='page-settings'){closeSettingsPage();}else{showPage('settings');}
+}
+function closeSettingsPage(){
+  var el=document.getElementById('mnav-customers');
+  if(el){mobileNav('customers');}else{showPage('customers');}
 }
 
 function mobileNavAdd(){
