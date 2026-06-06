@@ -2427,7 +2427,7 @@ function newInqFromCust(custId){
   openModal('inq-modal');
 }
 
-function editCurrent(){if(!currentDetailId)return;const _id=currentDetailId,_type=currentDetailType;closeDetail();if(_type==='inquiry')editInquiry(_id);else if(_type==='customer')editCustomer(_id);else if(_type==='order')editOrder(_id);}
+function editCurrent(){if(!currentDetailId)return;const _id=currentDetailId,_type=currentDetailType;closeDetail();if(_type==='inquiry')editInquiry(_id);else if(_type==='customer')editCustomer(_id);else if(_type==='order')editOrder(_id);else if(_type==='sale')editSaleRecord(_id);}
 
 function toggleStar(){
   if(!currentDetailId)return;
