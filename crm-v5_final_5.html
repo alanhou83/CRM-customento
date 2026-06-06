@@ -2985,7 +2985,7 @@ function renderMobileCards(page){
         +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.alias+' '+icon+' <span style="font-size:11px;font-weight:400;color:var(--muted)">'+getQ(s.date)+'</span></div>'
-        +'<div style="font-size:11px;color:var(--muted);margin-top:4px;display:flex;align-items:center;gap:4px;overflow:hidden"><span class="'+(s.currency==='USD'?'cur-usd':'cur-cny')+'" style="flex-shrink:0">'+s.currency+'</span><span style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0">'+s.product+'</span>'+(s.notes?'<span style="color:var(--accent);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝'+s.notes+'</span>':'')+'</div>'
+        +'<div style="font-size:11px;color:var(--muted);margin-top:4px;display:flex;align-items:center;gap:4px;overflow:hidden"><span class="'+(s.currency==='USD'?'cur-usd':'cur-cny')+'" style="flex-shrink:0">'+s.currency+'</span><span style="flex:0 0 120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.product+'</span>'+(s.notes?'<span style="color:var(--accent);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">📝'+s.notes+'</span>':'')+'</div>'
         +'</div>'
         +'<div style="text-align:right;flex-shrink:0">'
         +'<div style="font-size:14px;font-weight:700;color:'+(s.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(s.amount,s.currency)+'</div>'
