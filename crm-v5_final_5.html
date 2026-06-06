@@ -2628,26 +2628,22 @@ function saveSaleRecord(){
   var alias=document.getElementById('fs-alias').value.trim();if(!alias){alert('请填写客户代号');return;}
   var entry={date:document.getElementById('fs-date').value,alias:alias,product:getSaleProductSelected(),amount:document.getElementById('fs-amount').value||0,currency:document.getElementById('fs-currency').value,person:document.getElementById('fs-person').value,notes:document.getElementById('fs-notes').value};
   if(editingSaleId!==null){
-    var idx=saleRecords.findIndex(function(x){return x.id===editingSaleId;});
-    if(idx>=0){entry.id=editingSaleId;if(saleRecords[idx].fromOrderId)entry.fromOrderId=saleRecords[idx].fromOrderId;saleRecords[idx]=entry;}
-    editingSaleId=null;
+    var sid=editingSaleId;
+    var idx=saleRecords.findIndex(function(x){return x.id===sid;});
+    if(idx>=0){entry.id=sid;if(saleRecords[idx].fromOrderId)entry.fromOrderId=saleRecords[idx].fromOrderId;saleRecords[idx]=entry;}
+    editingSaleId=null;_returnToSaleId=null;
+    autoUpdateCustomerTags(alias);
+    saveAll();closeModal('sale-modal');refreshAll();
+    openSaleDetail(sid);
     toast('成交记录已更新 ✓');
   } else {
-    entry.id=nextSaleId++;
-    saleRecords.push(entry);
+    var custPanelOpen=currentDetailType==='customer';var custId=currentDetailId;
+    entry.id=nextSaleId++;saleRecords.push(entry);
+    editingSaleId=null;_returnToSaleId=null;
+    autoUpdateCustomerTags(alias);
+    saveAll();closeModal('sale-modal');refreshAll();
+    if(custPanelOpen&&custId){openCustDetail(custId);}
     toast('成交记录已录入 ✓');
-  }
-  autoUpdateCustomerTags(alias);
-  var prevType=currentDetailType;var prevId=currentDetailId;var retSaleId=_returnToSaleId;
-  _returnToSaleId=null;
-  saveAll();closeModal('sale-modal');refreshAll();
-  if(retSaleId!==null){openSaleDetail(entry.id);}
-  else{
-    var panel=document.getElementById('detail-panel');
-    if(panel&&panel.classList.contains('open')&&prevId){
-      if(prevType==='sale'){openSaleDetail(entry.id);}
-      else{openCustDetail(prevId);}
-    }
   }
 }
 
