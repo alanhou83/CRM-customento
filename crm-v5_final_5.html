@@ -1959,7 +1959,7 @@ function openCustDetail(id){
   });
   var sourceSel='<select onchange="quickSetSource('+c.id+',this.value)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:12px;padding:4px 8px;border-radius:6px;cursor:pointer">'+sourceOpts+'</select>';
 
-  var tab1='<div class="detail-section"><div class="detail-section-title" style="display:flex;align-items:center;justify-content:space-between">基本信息<button onclick="newInqFromCust('+c.id+')" style="font-size:11px;padding:3px 9px;border-radius:5px;border:0.5px solid var(--green);color:var(--green);background:rgba(62,207,142,.12);cursor:pointer;font-weight:400">+ 新建询盘</button></div>'
+  var tab1='<div class="detail-section"><div class="detail-section-title" style="display:flex;align-items:center;justify-content:space-between">基本信息<div style="display:flex;gap:6px"><button onclick="newOrdFromCust('+c.id+')" style="font-size:11px;padding:3px 9px;border-radius:5px;border:0.5px solid var(--accent);color:var(--accent);background:rgba(79,142,247,.12);cursor:pointer;font-weight:400">+ 新建订单</button><button onclick="newInqFromCust('+c.id+')" style="font-size:11px;padding:3px 9px;border-radius:5px;border:0.5px solid var(--green);color:var(--green);background:rgba(62,207,142,.12);cursor:pointer;font-weight:400">+ 新建询盘</button></div></div>'
     +'<div class="detail-row"><span class="detail-key">分层</span><span class="detail-val">'+layerSel+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">类型</span><span class="detail-val">'+typeSel+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">产品</span><span class="detail-val" style="text-align:right;word-break:break-all">'+getProd(c)+'</span></div>'
@@ -2232,6 +2232,26 @@ function deleteFollowup(idx){
 }
 
 function closeDetail(){document.getElementById('detail-panel').classList.remove('open');currentDetailId=null;currentDetailType=null;}
+
+function newOrdFromCust(custId){
+  var c=customers.find(function(x){return x.id===custId;});
+  if(!c)return;
+  editingOrdId=null;
+  document.getElementById('order-modal-title').textContent='新增订单';
+  document.getElementById('order-delete-area').innerHTML='';
+  document.getElementById('fo-date').value=today();
+  document.getElementById('fo-currency').value='USD';
+  document.getElementById('fo-stage').value='生产中';
+  document.getElementById('fo-alias').value=c.alias||'';
+  document.getElementById('fo-person').value=c.person||'Kelly';
+  ['fo-qty','fo-amount','fo-delivery','fo-notes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var prodArr=getProdArr(c);
+  var prodEl=document.getElementById('fo-product');
+  if(prodEl&&prodArr.length){
+    for(var i=0;i<prodEl.options.length;i++){if(prodEl.options[i].value===prodArr[0]||prodEl.options[i].text===prodArr[0]){prodEl.selectedIndex=i;break;}}
+  }
+  openModal('order-modal');
+}
 
 function newInqFromCust(custId){
   /* 从客户详情新建询盘，预填客户信息 */
