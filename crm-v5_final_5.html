@@ -308,15 +308,15 @@ a{color:var(--accent);text-decoration:none;}
     <div class="mobile-chips" style="margin-top:4px">
       <div class="mobile-chip on" id="mb-view-card" onclick="setMobileCustView('card',this)">▦ 卡片</div>
       <div class="mobile-chip" id="mb-view-list" onclick="setMobileCustView('list',this)">☰ 列表</div>
-      <select id="mb-cf-layer" onchange="renderMobileCards('cust')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
+      <select id="mb-cf-layer" onchange="renderMobileCards('cust')" style="max-width:52px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
         <option value="">分层</option>
         <option value="core">🏆核心</option><option value="focus">🌳重点</option><option value="nurture">🔄普通</option><option value="sleeping">💤沉睡</option><option value="dead">☠️流失</option>
       </select>
-      <select id="mb-cf-type" onchange="renderMobileCards('cust')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
+      <select id="mb-cf-type" onchange="renderMobileCards('cust')" style="max-width:52px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
         <option value="">类型</option>
         <option value="tourist">旅游纪念品</option><option value="ecom">跨境电商</option><option value="custom">来图定制</option><option value="consumable">白耗材</option><option value="promo">促销品</option><option value="personal">个人定制</option>
       </select>
-      <select id="mb-cf-source" onchange="renderMobileCards('cust')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
+      <select id="mb-cf-source" onchange="renderMobileCards('cust')" style="max-width:52px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
         <option value="">来源</option>
         <option>Alibaba</option><option>1688</option><option>Customento</option><option>老客户</option><option>笨鸟导入</option><option>WhatsApp</option><option>展会</option><option>其他</option>
       </select>
@@ -325,7 +325,7 @@ a{color:var(--accent);text-decoration:none;}
         <option value="4">XL</option><option value="3">L</option><option value="2">M</option><option value="1">S</option><option value="0">XS</option>
       </select>
       <select id="mb-cf-person" onchange="renderMobileCards('cust')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
-        <option value="">负责人</option>
+        <option value="">跟单</option>
         <option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option>
       </select>
     </div>
