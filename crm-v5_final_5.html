@@ -807,6 +807,24 @@ a{color:var(--accent);text-decoration:none;}
 </div>
 </div>
 
+<!-- 汇率滚轮选择器 -->
+<div id="rate-picker-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:flex-end" onclick="closeRatePicker()">
+  <div onclick="event.stopPropagation()" style="background:var(--surface);border-radius:18px 18px 0 0;width:100%;padding-bottom:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px 10px;border-bottom:1px solid var(--border)">
+      <button onclick="closeRatePicker()" style="background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:4px 8px">取消</button>
+      <div style="font-size:14px;font-weight:600;color:var(--text)">汇率选择（USD → CNY）</div>
+      <button onclick="confirmRatePicker()" style="background:none;border:none;color:var(--accent);font-size:15px;font-weight:600;cursor:pointer;padding:4px 8px">确认</button>
+    </div>
+    <div style="position:relative;height:220px;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:88px;background:linear-gradient(to bottom,var(--surface) 40%,transparent);z-index:2;pointer-events:none"></div>
+      <div style="position:absolute;bottom:0;left:0;right:0;height:88px;background:linear-gradient(to top,var(--surface) 40%,transparent);z-index:2;pointer-events:none"></div>
+      <div style="position:absolute;top:88px;left:30px;right:30px;height:44px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);z-index:1;pointer-events:none;border-radius:8px"></div>
+      <div id="rate-picker-scroll" style="height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;padding:88px 0" onscroll="onRateScroll()"></div>
+    </div>
+    <div style="text-align:center;font-size:12px;color:var(--muted);padding:6px 0 0">1 USD = <span id="rate-preview" style="color:var(--accent);font-weight:600">6.89</span> CNY</div>
+  </div>
+</div>
+
 <!-- CSV Import -->
 <div class="modal-overlay" id="import-modal" onclick="closeModalBg(event,'import-modal')">
 <div class="modal" style="max-width:460px">
@@ -1742,11 +1760,17 @@ function renderOldStats(){
   }).sort((a,b)=>b.date.localeCompare(a.date));
   const usdTotal=filtered.filter(s=>s.currency==='USD').reduce((sum,s)=>sum+(+s.amount||0),0);
   const cnyTotal=filtered.filter(s=>s.currency==='CNY').reduce((sum,s)=>sum+(+s.amount||0),0);
-  const curYear=new Date().getFullYear();
-  const usdYear=saleRecords.filter(s=>s.currency==='USD'&&s.date.startsWith(curYear)).reduce((sum,s)=>sum+(+s.amount||0),0);
+  var combinedVal=statsCurrencyMode==='USD'
+    ? Math.round(usdTotal+cnyTotal/statsRateBase)
+    : Math.round(usdTotal*statsRateBase+cnyTotal);
+  var combinedStr=statsCurrencyMode==='USD'?'$'+combinedVal.toLocaleString():'¥'+combinedVal.toLocaleString();
+  var modeUSD='padding:2px 8px;border-radius:12px;font-size:11px;cursor:pointer;border:1px solid '+(statsCurrencyMode==='USD'?'var(--accent);background:rgba(79,142,247,.15);color:var(--accent)':'var(--border);background:none;color:var(--muted)');
+  var modeCNY='padding:2px 8px;border-radius:12px;font-size:11px;cursor:pointer;border:1px solid '+(statsCurrencyMode==='CNY'?'var(--yellow);background:rgba(247,212,79,.15);color:var(--yellow)':'var(--border);background:none;color:var(--muted)');
   document.getElementById('old-summary').innerHTML='<div class="stat-box"><div class="stat-box-label">筛选期 $ 合计</div><div class="stat-box-value" style="color:var(--green)">$'+usdTotal.toLocaleString()+'</div></div>'
     +'<div class="stat-box"><div class="stat-box-label">筛选期 ¥ 合计</div><div class="stat-box-value" style="color:var(--yellow)">¥'+cnyTotal.toLocaleString()+'</div></div>'
-    +'<div class="stat-box"><div class="stat-box-label">'+curYear+'年 $ 总计</div><div class="stat-box-value" style="color:var(--accent)">$'+usdYear.toLocaleString()+'</div></div>';
+    +'<div class="stat-box"><div class="stat-box-label" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">合并总计 <span onclick="openRatePicker()" style="font-size:10px;color:var(--muted);cursor:pointer;border:1px solid var(--border);border-radius:5px;padding:1px 5px">汇率 '+statsRateBase.toFixed(2)+'</span></div>'
+    +'<div style="display:flex;gap:4px;margin:4px 0"><span onclick="setStatsCurrencyMode(\'USD\')" style="'+modeUSD+'">$ 美金</span><span onclick="setStatsCurrencyMode(\'CNY\')" style="'+modeCNY+'">¥ 人民币</span></div>'
+    +'<div class="stat-box-value" style="color:var(--accent)">'+combinedStr+'</div></div>';
   const body=document.getElementById('old-table-body');
   if(!filtered.length){body.innerHTML='<div class="empty"><div class="empty-icon">📈</div><div class="empty-text">暂无成交记录</div></div>';return;}
   const typeIcon={tourist:'🎯',ecom:'🛒',custom:'✏️',consumable:'🏭',promo:'🎁',personal:'👤'};
@@ -2537,6 +2561,36 @@ function doImport(){
 let mobilePageFilter={hot:{},cust:{},ord:{},stats:{}};
 var statsCurrency='';
 var statsMobileSort={key:'date',dir:'desc'};
+var statsRateBase=6.89;
+var statsCurrencyMode='USD';
+function setStatsCurrencyMode(m){statsCurrencyMode=m;renderOldStats();}
+function openRatePicker(){
+  var el=document.getElementById('rate-picker-overlay');if(!el)return;
+  el.style.display='flex';
+  var sc=document.getElementById('rate-picker-scroll');
+  if(!sc)return;
+  var html='';
+  for(var i=0;i<=100;i++){
+    var v=(6.50+i*0.01).toFixed(2);
+    html+='<div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:300;color:var(--text);scroll-snap-align:center;flex-shrink:0;letter-spacing:1px">'+v+'</div>';
+  }
+  sc.innerHTML=html;
+  var idx=Math.round((statsRateBase-6.50)/0.01);
+  setTimeout(function(){sc.scrollTop=idx*44;},30);
+}
+function onRateScroll(){
+  var sc=document.getElementById('rate-picker-scroll');if(!sc)return;
+  var idx=Math.round(sc.scrollTop/44);
+  var v=(6.50+Math.max(0,Math.min(100,idx))*0.01).toFixed(2);
+  var pr=document.getElementById('rate-preview');if(pr)pr.textContent=v;
+}
+function closeRatePicker(){var el=document.getElementById('rate-picker-overlay');if(el)el.style.display='none';}
+function confirmRatePicker(){
+  var sc=document.getElementById('rate-picker-scroll');if(!sc)return;
+  var idx=Math.round(sc.scrollTop/44);
+  statsRateBase=+(6.50+Math.max(0,Math.min(100,idx))*0.01).toFixed(2);
+  closeRatePicker();renderOldStats();
+}
 function statsChipCurrency(el,val){
   statsCurrency=val;
   ['stats-chip-all','stats-chip-usd','stats-chip-cny'].forEach(function(id){var e=document.getElementById(id);if(e)e.classList.remove('on');});
