@@ -1857,7 +1857,7 @@ function renderOrders(){
 
 function completeOrder(id){
   const o=orders.find(x=>x.id===id);if(!o)return;
-  saleRecords.push({id:nextSaleId++,date:today(),alias:o.alias,product:o.product,amount:o.amount,currency:o.currency,person:o.person,notes:'从执行中订单完成'});
+  saleRecords.push({id:nextSaleId++,date:today(),alias:o.alias,product:o.product,amount:o.amount,currency:o.currency,person:o.person,notes:'从执行中订单完成',fromOrderId:id});
   o.completed=true;saveAll();refreshAll();toast('订单完成，已录入老客户统计 ✓');
 }
 
@@ -1904,9 +1904,10 @@ function openSaleDetail(id){
     +'<div class="detail-row"><span class="detail-key">负责人</span><span class="detail-val">'+s.person+'</span></div>'
     +(s.notes?'<div class="detail-row"><span class="detail-key">备注</span><span class="detail-val">'+s.notes+'</span></div>':'')
     +'</div>'
-    +'<div style="display:flex;gap:8px;margin-top:8px">'
+    +'<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">'
     +'<button class="btn btn-outline btn-sm" onclick="editSaleRecord('+s.id+');closeDetail()">编辑</button>'
     +'<button class="btn btn-danger btn-sm" onclick="deleteSaleRecord('+s.id+');closeDetail()">删除</button>'
+    +(s.fromOrderId?'<button class="btn btn-outline btn-sm" style="color:var(--yellow);border-color:var(--yellow)" onclick="confirmRevertOrder('+s.id+')">↩ 退回执行中</button>':'')
     +'</div>';
   var detailBody=document.getElementById('detail-body');if(detailBody)detailBody.innerHTML='<div class="detail-body-inner">'+html+'</div>';
   var dpTabs=document.getElementById('dp-tabs');if(dpTabs)dpTabs.style.display='none';
@@ -2570,6 +2571,25 @@ function deleteSaleRecord(id){
   var overlay=document.createElement('div');overlay.className='confirm-overlay';
   overlay.innerHTML='<div class="confirm-box"><div class="confirm-title">确认删除</div><div class="confirm-msg">确定要删除 <strong>'+s.alias+'</strong> 的成交记录（'+s.date+'）吗？不可撤销。</div><div class="confirm-btns"><button class="btn btn-outline" onclick="this.closest(\'.confirm-overlay\').remove()">取消</button><button class="btn btn-danger" onclick="doDeleteSale('+id+')">确认删除</button></div></div>';
   document.body.appendChild(overlay);
+}
+
+function confirmRevertOrder(saleId){
+  var s=saleRecords.find(function(x){return x.id===saleId;});if(!s)return;
+  var overlay=document.createElement('div');overlay.className='confirm-overlay';
+  overlay.innerHTML='<div class="confirm-box"><div class="confirm-title">退回执行中订单</div><div class="confirm-msg">确认将 <strong>'+s.alias+'</strong> 的这条成交记录从统计中删除，并将原订单恢复到执行中？此操作不可撤销。</div><div class="confirm-btns"><button class="btn btn-outline" onclick="this.closest(\'.confirm-overlay\').remove()">取消</button><button class="btn btn-primary" onclick="doRevertOrder('+saleId+')">确认退回</button></div></div>';
+  document.body.appendChild(overlay);
+}
+
+function doRevertOrder(saleId){
+  document.querySelector('.confirm-overlay')?.remove();
+  var s=saleRecords.find(function(x){return x.id===saleId;});if(!s)return;
+  var o=orders.find(function(x){return x.id===s.fromOrderId;});
+  if(o){o.completed=false;}
+  var alias=s.alias;
+  saleRecords=saleRecords.filter(function(x){return x.id!==saleId;});
+  if(alias)autoUpdateCustomerTags(alias);
+  saveAll();closeDetail();refreshAll();
+  toast('已退回执行中订单 ✓');
 }
 
 function doDeleteSale(id){
