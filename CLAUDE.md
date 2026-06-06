@@ -81,6 +81,8 @@
 6. renderMobileCards 里 var html='' 必须在 if 判断之前声明
 7. 手机端媒体查询必须覆盖：html,body{overflow:auto} / .app{overflow:visible;height:auto} / .main{overflow:visible} / .page-content{padding:0;overflow:visible}
 8. editCurrent() 必须先保存 id 再 closeDetail()，否则 id 被清空
+   ⚠️ 新增 detail type 时必须同步在 editCurrent() 加对应分支，否则头部编辑按钮点了只关面板不开modal
+   当前已有：inquiry / customer / order / sale（缺任何一个就会出现"点编辑就退出"的症状）
 9. str_replace 定位锚点用完后必须确认原内容完整保留（曾发生 refreshAll 函数被误删导致全站崩溃）
 10. 每次改完 JS 必须用 node --check 语法检查再给文件
 
@@ -108,7 +110,24 @@
 - 每次新对话开始前确认项目文件已是最新版本
 
 ## 当前进度
-- 上次完成：跟进记录输入框置顶 / 最新在前 / 删除按钮 / 快速下拉修改分层/类型/渠道/负责人 / 下次跟进待办行（日期+内容）/ 待办显示在卡片/列表/客户档案
+- 上次完成：销售统计4项改进（详情面板/备注/产品多选/日期修复）/ 手机卡片2行布局 / 退回执行中功能 / 完成订单二次确认 / 编辑按钮修复
+
+## 销售统计模块关键设计
+- 点击列表行 → `openSaleDetail(id)`，currentDetailType='sale'
+- 详情面板头部"编辑"→ `editCurrent()` → `editSaleRecord(id)`
+- 详情面板内编辑按钮 → `editSaleFromDetail(id)`（先closeDetail再openModal）
+- `editCurrent()` 已支持：inquiry / customer / order / sale
+- 产品字段：多选芯片 `fs-product-chips`，逗号分隔存储，`getSaleProductSelected()` 读取
+- `saveSaleRecord()`：编辑分支用 `sid=editingSaleId` 保存后直接 `openSaleDetail(sid)`
+- 订单完成 `doCompleteOrder(id)`：存 `fromOrderId` 字段，sales detail 有"退回执行中"按钮
+- `completeOrder(id)` 先弹二次确认，确认后才调 `doCompleteOrder`
+- 手机卡片布局：左上客户+Q季度 / 左下货币标签+产品+注：备注 / 右上金额 / 右下日期+跟单人
+
+## 调试经验（本次 session 总结）
+- 遇到"点按钮就退出"类问题，先在浏览器 Console 直接调用函数排查（不要改代码）
+- `editSaleRecord(saleRecords[0].id)` 可直接测 modal 是否正常开
+- `document.querySelector('#detail-body .btn-outline').getAttribute('onclick')` 可看按钮实际 onclick
+- 症状相同但原因不同：这次是 editCurrent() 漏处理 sale 类型，而非 z-index 或数据问题
 
 ## 已知未解决 Bug
 ### 待办行日期选择器跨平台问题
