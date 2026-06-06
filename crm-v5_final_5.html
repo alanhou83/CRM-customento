@@ -296,30 +296,36 @@ a{color:var(--accent);text-decoration:none;}
   </div>
   <div id="mh-cust" style="display:none">
     <div class="mobile-chips">
-      <div class="mobile-chip on" onclick="mobileChipFilter(this,'cust','all')">全部</div>
-      <div class="mobile-chip" onclick="mobileChipFilter(this,'cust','active')">💚 活跃</div>
-      <div class="mobile-chip" onclick="mobileChipFilter(this,'cust','sleeping')">💤 沉睡</div>
-      <select id="mb-cf-type" onchange="renderMobileCards('cust')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
-        <option value="">所有类型</option>
-        <option value="tourist">旅游纪念品</option>
-        <option value="ecom">跨境电商</option>
-        <option value="custom">来图定制</option>
-        <option value="consumable">白耗材</option>
-        <option value="promo">促销品</option>
-        <option value="personal">个人定制</option>
-      </select>
+      <div class="mobile-chip on" id="mb-chip-all" onclick="clearMobileQuickFilters()">全部</div>
+      <div class="mobile-chip" id="mb-chip-vip" onclick="toggleMobileQuickFilter('vip')" style="--chip-on-bg:rgba(255,200,0,.15);--chip-on-border:#ffd700;--chip-on-color:#ffd700">VIP</div>
+      <div class="mobile-chip" id="mb-chip-chong" onclick="toggleMobileQuickFilter('chong')" style="--chip-on-bg:rgba(255,120,60,.15);--chip-on-border:#ff7840;--chip-on-color:#ff7840">🎯冲单</div>
+      <div class="mobile-chip" id="mb-chip-ordered" onclick="toggleMobileQuickFilter('ordered')">✅成单</div>
+      <div class="mobile-chip" id="mb-chip-repurchase" onclick="toggleMobileQuickFilter('repurchase')">🔄复购</div>
+      <div class="mobile-chip" id="mb-chip-growing" onclick="toggleMobileQuickFilter('growing')">📈增长</div>
+      <div class="mobile-chip" id="mb-chip-active" onclick="toggleMobileQuickFilter('activeScore')">💬活跃</div>
+      <div class="mobile-chip" id="mb-chip-match" onclick="toggleMobileQuickFilter('match')">🏅画像</div>
     </div>
     <div class="mobile-chips" style="margin-top:4px">
       <div class="mobile-chip on" id="mb-view-card" onclick="setMobileCustView('card',this)">▦ 卡片</div>
       <div class="mobile-chip" id="mb-view-list" onclick="setMobileCustView('list',this)">☰ 列表</div>
-      <div class="mobile-chip" id="mb-cust-vip" onclick="toggleCustVip()">⭐ VIP</div>
-      <div class="mobile-chip" id="mb-cust-chong" onclick="toggleCustChong()">🎯 冲单</div>
+      <select id="mb-cf-layer" onchange="renderMobileCards('cust')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
+        <option value="">分层</option>
+        <option value="core">🏆核心</option><option value="focus">🌳重点</option><option value="nurture">🔄普通</option><option value="sleeping">💤沉睡</option><option value="dead">☠️流失</option>
+      </select>
+      <select id="mb-cf-type" onchange="renderMobileCards('cust')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
+        <option value="">类型</option>
+        <option value="tourist">旅游纪念品</option><option value="ecom">跨境电商</option><option value="custom">来图定制</option><option value="consumable">白耗材</option><option value="promo">促销品</option><option value="personal">个人定制</option>
+      </select>
+      <select id="mb-cf-source" onchange="renderMobileCards('cust')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
+        <option value="">来源</option>
+        <option>Alibaba</option><option>1688</option><option>Customento</option><option>老客户</option><option>笨鸟导入</option><option>WhatsApp</option><option>展会</option><option>其他</option>
+      </select>
       <select id="mb-cf-size" onchange="renderMobileCards('cust')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
         <option value="">体量</option>
         <option value="4">XL</option><option value="3">L</option><option value="2">M</option><option value="1">S</option><option value="0">XS</option>
       </select>
-      <select id="mb-cf-person" onchange="renderMobileCards('cust')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
-        <option value="">全部</option>
+      <select id="mb-cf-person" onchange="renderMobileCards('cust')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
+        <option value="">负责人</option>
         <option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option>
       </select>
     </div>
@@ -542,6 +548,10 @@ a{color:var(--accent);text-decoration:none;}
       <select class="filter-select" id="cf-person" onchange="renderCustomers()">
         <option value="">所有负责人</option>
         <option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option>
+      </select>
+      <select class="filter-select" id="cf-source" onchange="renderCustomers()">
+        <option value="">所有来源</option>
+        <option>Alibaba</option><option>1688</option><option>Customento</option><option>老客户</option><option>笨鸟导入</option><option>WhatsApp</option><option>展会</option><option>其他</option>
       </select>
       <select class="filter-select" id="cf-size" onchange="renderCustomers()">
         <option value="">客户体量</option>
@@ -951,7 +961,7 @@ function resetInqFilters(){['search-inq','f-status','f-source','f-grade','f-pers
 function clearFilters(type){
   if(type==='inq'){currentInqFilter={};resetInqFilters();renderInquiries();}
   else if(type==='hot'){['search-hot','fh-source','fh-person'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderHot();}
-  else if(type==='cust'){['search-cust','cf-layer','cf-type','cf-person','cf-size'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderCustomers();}
+  else if(type==='cust'){['search-cust','cf-layer','cf-type','cf-person','cf-size','cf-source'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});custQuickFilters={};updateQuickFilterUI();renderCustomers();}
   else if(type==='old'){['search-old','of-year','of-currency','of-person','of-quarter'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderOldStats();}
   else if(type==='ord'){['search-ord','ord-stage','ord-currency'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderOrders();}
 }
@@ -1421,8 +1431,7 @@ let custView='card';
 let custLayerExpanded={core:true,focus:true,nurture:true,sleeping:true,dead:false};
 let custLayerShown={core:6,focus:6,nurture:6,sleeping:6,dead:6};
 let custLayerSort={core:'score',focus:'score',nurture:'score',sleeping:'followup',dead:'score'};
-var custFilterVip=false;
-var custFilterChong=false;
+var custQuickFilters={};
 var custGlobalSort={key:'score',dir:'desc'};
 const BATCH=12, DEFAULT_SHOW=6;
 
@@ -1610,6 +1619,7 @@ function renderCustomers(){
   const type=document.getElementById('cf-type')?.value||'';
   const person=document.getElementById('cf-person')?.value||'';
   const sizeFilter=document.getElementById('cf-size')?.value||'';
+  const sourceFilter=document.getElementById('cf-source')?.value||'';
 
   const filtered=customers.filter(function(c){
     if(!canSeeCust(c)) return false;
@@ -1617,8 +1627,14 @@ function renderCustomers(){
     if(type&&c.type!==type) return false;
     if(person&&c.person!==person) return false;
     if(sizeFilter!==''&&String(c.size||0)!==sizeFilter) return false;
-    if(custFilterVip&&!c.vipStar) return false;
-    if(custFilterChong&&!c.targetStar) return false;
+    if(sourceFilter&&c.source!==sourceFilter) return false;
+    if(custQuickFilters.vip&&!c.vipStar) return false;
+    if(custQuickFilters.chong&&!c.targetStar) return false;
+    if(custQuickFilters.ordered&&!c.ordered) return false;
+    if(custQuickFilters.repurchase&&!c.repurchase) return false;
+    if(custQuickFilters.growing&&!c.growing) return false;
+    if(custQuickFilters.activeScore&&!c.activeScore) return false;
+    if(custQuickFilters.match&&!c.match) return false;
     return true;
   });
 
@@ -2062,22 +2078,39 @@ function quickSetType(custId, type){
   toast('类型已更新 ✓');
 }
 
-function toggleCustVip(){
-  custFilterVip=!custFilterVip;
-  ['btn-cust-vip','mb-cust-vip'].forEach(function(id){
-    var el=document.getElementById(id);
+function updateQuickFilterUI(){
+  var anyOn=Object.keys(custQuickFilters).some(function(k){return custQuickFilters[k];});
+  var allEl=document.getElementById('mb-chip-all');
+  if(allEl){if(anyOn)allEl.classList.remove('on');else allEl.classList.add('on');}
+  var cfgs=[
+    {key:'vip',id:'mb-chip-vip',onCls:'vip-on'},
+    {key:'chong',id:'mb-chip-chong',onCls:'chong-on'},
+    {key:'ordered',id:'mb-chip-ordered',onCls:'on'},
+    {key:'repurchase',id:'mb-chip-repurchase',onCls:'on'},
+    {key:'growing',id:'mb-chip-growing',onCls:'on'},
+    {key:'activeScore',id:'mb-chip-active',onCls:'on'},
+    {key:'match',id:'mb-chip-match',onCls:'on'}
+  ];
+  cfgs.forEach(function(cfg){
+    var el=document.getElementById(cfg.id);
     if(!el)return;
-    if(custFilterVip)el.classList.add('vip-on');else el.classList.remove('vip-on');
+    if(custQuickFilters[cfg.key])el.classList.add(cfg.onCls);else el.classList.remove(cfg.onCls);
   });
+  var dvip=document.getElementById('btn-cust-vip');
+  if(dvip){if(custQuickFilters.vip)dvip.classList.add('vip-on');else dvip.classList.remove('vip-on');}
+  var dchong=document.getElementById('btn-cust-chong');
+  if(dchong){if(custQuickFilters.chong)dchong.classList.add('chong-on');else dchong.classList.remove('chong-on');}
+}
+function toggleCustVip(){custQuickFilters.vip=!custQuickFilters.vip;updateQuickFilterUI();renderCustomers();renderMobileCards('cust');}
+function toggleCustChong(){custQuickFilters.chong=!custQuickFilters.chong;updateQuickFilterUI();renderCustomers();renderMobileCards('cust');}
+function toggleMobileQuickFilter(key){
+  custQuickFilters[key]=!custQuickFilters[key];
+  updateQuickFilterUI();
   renderCustomers();renderMobileCards('cust');
 }
-function toggleCustChong(){
-  custFilterChong=!custFilterChong;
-  ['btn-cust-chong','mb-cust-chong'].forEach(function(id){
-    var el=document.getElementById(id);
-    if(!el)return;
-    if(custFilterChong)el.classList.add('chong-on');else el.classList.remove('chong-on');
-  });
+function clearMobileQuickFilters(){
+  custQuickFilters={};
+  updateQuickFilterUI();
   renderCustomers();renderMobileCards('cust');
 }
 function setCustSort(key){
@@ -2502,15 +2535,23 @@ function renderMobileCards(page){
     const mbPerson=(document.getElementById('mb-cf-person')||{}).value||'';
     const mbType=(document.getElementById('mb-cf-type')||{}).value||'';
     const mbSize=(document.getElementById('mb-cf-size')||{}).value||'';
+    const mbLayer=(document.getElementById('mb-cf-layer')||{}).value||'';
+    const mbSource=(document.getElementById('mb-cf-source')||{}).value||'';
     const filtered=customers.filter(c=>{
       if(!canSeeCust(c))return false;
       if(search&&!c.alias.toLowerCase().includes(search)&&!(c.company||'').toLowerCase().includes(search))return false;
-      if(f.filter&&(f.filter==='active'||f.filter==='sleeping')){if(c.status!==f.filter)return false;}
+      if(mbLayer&&(c.layer||getLayer(c))!==mbLayer)return false;
       if(mbType&&c.type!==mbType)return false;
+      if(mbSource&&c.source!==mbSource)return false;
       if(mbSize!==''&&String(c.size||0)!==mbSize)return false;
       if(mbPerson&&c.person!==mbPerson)return false;
-      if(custFilterVip&&!c.vipStar)return false;
-      if(custFilterChong&&!c.targetStar)return false;
+      if(custQuickFilters.vip&&!c.vipStar)return false;
+      if(custQuickFilters.chong&&!c.targetStar)return false;
+      if(custQuickFilters.ordered&&!c.ordered)return false;
+      if(custQuickFilters.repurchase&&!c.repurchase)return false;
+      if(custQuickFilters.growing&&!c.growing)return false;
+      if(custQuickFilters.activeScore&&!c.activeScore)return false;
+      if(custQuickFilters.match&&!c.match)return false;
       return true;
     }).sort(function(a,b){
       var k=custGlobalSort.key;var d=custGlobalSort.dir;var diff=0;
