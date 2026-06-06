@@ -59,6 +59,19 @@
 - Logo：定位针图标 + CUSTOMENTO 文字
 - PWA 图标：深蓝背景 + 定位针 + CRM 文字 + CUSTOMENTO 小字
 
+## ⚠️ 最高优先级原则（覆盖其他所有规则）
+
+**原则A：SW 采用 HTML 网络优先策略，绝对不能改回缓存优先**
+- service-worker.js 已将 HTML 文件设为 network-first（每次请求先取网络，离线才回退缓存）
+- 这是解决浏览器刷新/PWA重开看不到更新的根本方案
+- 绝对不能把 HTML 的 fetch 策略改回 `caches.match → fetch` 的缓存优先写法
+- 静态资源（图片/manifest）仍可保持缓存优先
+
+**原则B：不再需要每次推送都 bump CACHE_NAME**
+- 由于 HTML 已是网络优先，内容更新无需升级版本号
+- 只有在 service-worker.js 本身的代码逻辑发生变化时才需要 bump CACHE_NAME
+- 旧规则 11（每次推送都 bump）已作废，以本原则为准
+
 ## 必须遵守的规避规则（代码）
 1. JS 里绝对不能用模板字符串，必须用字符串拼接，否则引号嵌套会导致整个脚本崩溃
 2. 每次修改客户管理 HTML 后必须检查 cust-list-view 的 </div> 是否正确闭合，否则后续页面被隐藏
@@ -82,8 +95,8 @@
     - 根本原因：iOS Safari 浏览器模式 vs PWA 模式对 input[type=date] touch 处理机制不同，待查
 
 ## 必须遵守的规避规则（部署）
-11. 每次推送新版本到 GitHub Pages，必须同时把 service-worker.js 里的 CACHE_NAME 版本号加1（如 crm-v2 → crm-v3），否则 SW 缓存导致用户看不到更新
-12. PWA 安装版（桌面/手机 App）更新后需关闭再重开 App 才生效；浏览器访问版刷新即可
+11. 【已作废，见最高优先级原则B】原每次推送 bump CACHE_NAME 的规则不再适用
+12. 当前行为：浏览器普通刷新即可看到更新；PWA 关闭重开即可，无需删除重装
 
 ## 工作规范
 - 所有改动代码必须先说方案，等确认后再执行
