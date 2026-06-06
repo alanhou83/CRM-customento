@@ -307,12 +307,16 @@ a{color:var(--accent);text-decoration:none;}
       <div class="mobile-chip" id="mb-view-list" onclick="setMobileCustView('list',this)">☰ 列表</div>
       <div class="mobile-chip" id="mb-cust-vip" onclick="toggleCustVip()">⭐ VIP</div>
       <div class="mobile-chip" id="mb-cust-chong" onclick="toggleCustChong()">🎯 冲单</div>
+      <select class="filter-select" id="mb-cf-person" onchange="renderMobileCards('cust')" style="font-size:11px;padding:3px 6px;height:26px;border-radius:20px">
+        <option value="">全部</option>
+        <option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option>
+      </select>
     </div>
     <div class="mobile-search-wrap">
       <input placeholder="🔍 搜索客户..." oninput="renderMobileCards('cust')">
       <button class="sort-btn-s" id="mb-sort-todo" onclick="setCustSort('todo')" style="color:#e05050">待办日期 ↓</button>
       <button class="sort-btn-s" id="mb-sort-score" onclick="setCustSort('score')" style="color:#4bda87">评分 ↓</button>
-      <button class="sort-btn-s" id="mb-sort-person" onclick="setCustSort('person')" style="color:#4bd1f7">跟单 ↓</button>
+
     </div>
   </div>
   <div id="mh-ord" style="display:none">
@@ -501,7 +505,7 @@ a{color:var(--accent);text-decoration:none;}
         <input id="search-cust" placeholder="🔍 搜索代号/公司..." oninput="renderCustomers()">
         <button class="sort-btn-s" id="dt-sort-todo" onclick="setCustSort('todo')" style="color:#e05050">待办日期 ↓</button>
         <button class="sort-btn-s" id="dt-sort-score" onclick="setCustSort('score')" style="color:#4bda87">评分 ↓</button>
-        <button class="sort-btn-s" id="dt-sort-person" onclick="setCustSort('person')" style="color:#4bd1f7">跟单 ↓</button>
+
       </div>
       <select class="filter-select" id="cf-layer" onchange="renderCustomers()">
         <option value="">所有分层</option>
@@ -2480,10 +2484,12 @@ function renderMobileCards(page){
     const f=mobilePageFilter.cust||{};
     const ms=document.querySelector('#mh-cust .mobile-search-wrap input')||document.querySelector('#mh-cust .mobile-search');
     const search=ms?ms.value.toLowerCase():'';
+    const mbPerson=(document.getElementById('mb-cf-person')||{}).value||'';
     const filtered=customers.filter(c=>{
       if(!canSeeCust(c))return false;
       if(search&&!c.alias.toLowerCase().includes(search)&&!(c.company||'').toLowerCase().includes(search))return false;
       if(f.filter){if(f.filter==='active'||f.filter==='sleeping'){if(c.status!==f.filter)return false;}else if(c.type!==f.filter)return false;}
+      if(mbPerson&&c.person!==mbPerson)return false;
       if(custFilterVip&&!c.vipStar)return false;
       if(custFilterChong&&!c.targetStar)return false;
       return true;
