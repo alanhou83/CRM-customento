@@ -85,7 +85,7 @@ a{color:var(--accent);text-decoration:none;}
 .cols-inq{grid-template-columns:80px 1fr 90px 90px 100px 55px 100px 95px 65px 70px;}
 .cols-hot{grid-template-columns:80px 1fr 90px 90px 110px 55px 110px 95px 65px 80px;}
 .cols-ord{grid-template-columns:85px 120px 110px 120px 110px 100px 70px 80px;}
-.cols-stat{grid-template-columns:110px 160px 70px 120px 100px 70px 70px 90px;}
+.cols-stat{grid-template-columns:110px 1fr 70px 120px 100px 70px 70px;}
 .filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
 .filter-select,.search-box{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:8px;font-family:var(--font-body);font-size:13px;outline:none;}
 .filter-select:focus,.search-box:focus{border-color:var(--accent);}
@@ -617,7 +617,6 @@ a{color:var(--accent);text-decoration:none;}
         <div id="ths-date" onclick="setStatsTableSort('date')" style="cursor:pointer;user-select:none">日期 <span id="ths-date-arr" style="color:var(--accent);opacity:1">↓</span></div>
         <div>季度</div>
         <div id="ths-person" onclick="setStatsTableSort('person')" style="cursor:pointer;user-select:none">负责人 <span id="ths-person-arr" style="color:var(--muted);opacity:.4">↕</span></div>
-        <div>操作</div>
       </div>
       <div id="old-table-body"></div>
     </div></div></div>
@@ -806,9 +805,9 @@ a{color:var(--accent);text-decoration:none;}
   <div class="modal-head"><div class="modal-title" id="sale-modal-title">录入成交记录</div><button class="modal-close" onclick="closeModal('sale-modal')">×</button></div>
   <div class="modal-body">
     <div class="form-grid">
-      <div class="form-group"><label class="form-label">成交日期</label><input class="form-input" type="date" id="fs-date"></div>
+      <div class="form-group"><label class="form-label">成交日期</label><input class="form-input" type="date" id="fs-date" style="max-width:100%;box-sizing:border-box"></div>
       <div class="form-group"><label class="form-label">客户代号 *</label><input class="form-input" type="text" id="fs-alias" placeholder="如：GKK"></div>
-      <div class="form-group"><label class="form-label">产品</label><select class="form-input" id="fs-product"><option>MDF杯垫</option><option>MDF冰箱贴</option><option>马克杯</option><option>帆布袋</option><option>T恤</option><option>多品类</option><option>其他</option></select></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">产品（可多选）</label><div id="fs-product-chips" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 0"></div></div>
       <div class="form-group"><label class="form-label">成交金额</label><div class="amount-row"><input class="form-input" type="number" id="fs-amount" placeholder="金额"><select class="form-input" id="fs-currency"><option value="USD">$ 美金</option><option value="CNY">¥ 人民币</option></select></div></div>
       <div class="form-group"><label class="form-label">负责人</label><select class="form-input" id="fs-person"><option>Kelly</option><option>Momi</option><option>Mille</option><option>Alan</option></select></div>
       <div class="form-group"><label class="form-label">备注</label><input class="form-input" type="text" id="fs-notes" placeholder="备注信息"></div>
@@ -1800,15 +1799,14 @@ function renderOldStats(){
   body.innerHTML=filtered.map(function(s){
     const cust=custMap[s.alias];
     const icon=cust?typeIcon[cust.type]||'':'';
-    return '<div class="table-row cols-stat">'
-      +'<div class="table-cell" style="font-weight:500">'+s.alias+' '+icon+'</div>'
+    return '<div class="table-row cols-stat" style="cursor:pointer" onclick="openSaleDetail('+s.id+')">'
+      +'<div class="table-cell" style="font-weight:500">'+s.alias+' '+icon+(s.notes?'<div style="font-size:11px;color:var(--muted2);font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.notes+'</div>':'')+'</div>'
       +'<div class="table-cell">'+s.product+'</div>'
       +'<div class="table-cell"><span class="'+(s.currency==='USD'?'cur-usd':'cur-cny')+'">'+s.currency+'</span></div>'
       +'<div class="table-cell" style="font-weight:500;color:'+(s.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(s.amount,s.currency)+'</div>'
       +'<div class="table-cell" style="color:var(--muted);font-size:12px">'+s.date+'</div>'
       +'<div class="table-cell" style="color:var(--muted)">'+getQ(s.date)+'</div>'
       +'<div class="table-cell" style="color:var(--muted)">'+s.person+'</div>'
-      +'<div class="table-cell"><button class="btn btn-outline btn-xs" onclick="editSaleRecord('+s.id+')">编辑</button> <button class="btn btn-danger btn-xs" onclick="deleteSaleRecord('+s.id+')">删除</button></div>'
       +'</div>';
   }).join('');
 }
@@ -1887,6 +1885,62 @@ function openOrderDetail(id){
   document.getElementById('detail-body').innerHTML='<div class="detail-body-inner">'+html+'</div>';
   var dpTabs=document.getElementById('dp-tabs');if(dpTabs)dpTabs.style.display='none';
   document.getElementById('detail-panel').classList.add('open');
+}
+
+function openSaleDetail(id){
+  var s=saleRecords.find(function(x){return x.id===id;});if(!s)return;
+  currentDetailId=id;currentDetailType='sale';
+  var dpTitle=document.getElementById('dp-title');if(dpTitle)dpTitle.textContent=s.alias+' — 成交记录';
+  var dpSub=document.getElementById('dp-sub');if(dpSub)dpSub.textContent=s.product+' · '+fmtAmt(s.amount,s.currency);
+  var dpStar=document.getElementById('dp-star-btn');if(dpStar)dpStar.style.display='none';
+  var dpTarget=document.getElementById('dp-target-btn');if(dpTarget)dpTarget.style.display='none';
+  var html='<div class="detail-section"><div class="detail-section-title">成交记录详情</div>'
+    +'<div class="detail-row"><span class="detail-key">成交日期</span><span class="detail-val">'+s.date+'</span></div>'
+    +'<div class="detail-row"><span class="detail-key">客户代号</span><span class="detail-val">'+s.alias+'</span></div>'
+    +'<div class="detail-row"><span class="detail-key">产品</span><span class="detail-val">'+s.product+'</span></div>'
+    +'<div class="detail-row"><span class="detail-key">货币</span><span class="detail-val"><span class="'+(s.currency==='USD'?'cur-usd':'cur-cny')+'">'+s.currency+'</span></span></div>'
+    +'<div class="detail-row"><span class="detail-key">成交金额</span><span class="detail-val" style="color:'+(s.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(s.amount,s.currency)+'</span></div>'
+    +'<div class="detail-row"><span class="detail-key">季度</span><span class="detail-val">'+getQ(s.date)+'</span></div>'
+    +'<div class="detail-row"><span class="detail-key">负责人</span><span class="detail-val">'+s.person+'</span></div>'
+    +(s.notes?'<div class="detail-row"><span class="detail-key">备注</span><span class="detail-val">'+s.notes+'</span></div>':'')
+    +'</div>'
+    +'<div style="display:flex;gap:8px;margin-top:8px">'
+    +'<button class="btn btn-outline btn-sm" onclick="editSaleRecord('+s.id+');closeDetail()">编辑</button>'
+    +'<button class="btn btn-danger btn-sm" onclick="deleteSaleRecord('+s.id+');closeDetail()">删除</button>'
+    +'</div>';
+  var detailBody=document.getElementById('detail-body');if(detailBody)detailBody.innerHTML='<div class="detail-body-inner">'+html+'</div>';
+  var dpTabs=document.getElementById('dp-tabs');if(dpTabs)dpTabs.style.display='none';
+  var panel=document.getElementById('detail-panel');if(panel)panel.classList.add('open');
+}
+
+function renderSaleProductChips(){
+  var container=document.getElementById('fs-product-chips');if(!container)return;
+  var prods=getProducts();
+  var selected=container.getAttribute('data-selected')?container.getAttribute('data-selected').split(',').filter(function(x){return x;}):[];
+  container.innerHTML=prods.map(function(p){
+    var isOn=selected.indexOf(p)>=0;
+    return '<span onclick="toggleSaleProdChip(this,\''+p+'\')" style="cursor:pointer;padding:4px 10px;border-radius:14px;font-size:12px;border:1px solid '+(isOn?'var(--accent);':'var(--border);')+'background:'+(isOn?'rgba(107,114,195,0.2);':'rgba(0,0,0,0.03);')+'color:'+(isOn?'var(--accent)':'var(--text)')+'">'+p+'</span>';
+  }).join('');
+}
+
+function toggleSaleProdChip(el,prod){
+  var container=document.getElementById('fs-product-chips');if(!container)return;
+  var selected=container.getAttribute('data-selected')?container.getAttribute('data-selected').split(',').filter(function(x){return x;}):[];
+  var idx=selected.indexOf(prod);
+  if(idx>=0){selected.splice(idx,1);}else{selected.push(prod);}
+  container.setAttribute('data-selected',selected.join(','));
+  renderSaleProductChips();
+}
+
+function getSaleProductSelected(){
+  var container=document.getElementById('fs-product-chips');if(!container)return '';
+  return container.getAttribute('data-selected')||'';
+}
+
+function setSaleProductSelected(val){
+  var container=document.getElementById('fs-product-chips');if(!container)return;
+  container.setAttribute('data-selected',val||'');
+  renderSaleProductChips();
 }
 
 function openInqDetail(id){
@@ -2481,10 +2535,7 @@ function newSaleFromCust(custId){
   document.getElementById('fs-person').value=c.person||'Kelly';
   ['fs-amount','fs-notes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   var prodArr=getProdArr(c);
-  var prodEl=document.getElementById('fs-product');
-  if(prodEl&&prodArr.length){
-    for(var i=0;i<prodEl.options.length;i++){if(prodEl.options[i].value===prodArr[0]||prodEl.options[i].text===prodArr[0]){prodEl.selectedIndex=i;break;}}
-  }
+  setSaleProductSelected(prodArr.length?prodArr[0]:'');
   openModal('sale-modal');
 }
 
@@ -2494,6 +2545,7 @@ function openSaleModal(){
   document.getElementById('fs-date').value=today();document.getElementById('fs-currency').value='USD';
   document.getElementById('fs-person').value=currentUser==='Momi'?'Momi':currentUser==='Mille'?'Mille':'Kelly';
   ['fs-alias','fs-amount','fs-notes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  setSaleProductSelected('');
   openModal('sale-modal');
 }
 
@@ -2508,8 +2560,7 @@ function editSaleRecord(id){
   document.getElementById('fs-currency').value=s.currency||'USD';
   document.getElementById('fs-person').value=s.person||'Kelly';
   document.getElementById('fs-notes').value=s.notes||'';
-  var prodEl=document.getElementById('fs-product');
-  if(prodEl){for(var i=0;i<prodEl.options.length;i++){if(prodEl.options[i].value===s.product||prodEl.options[i].text===s.product){prodEl.selectedIndex=i;break;}}}
+  setSaleProductSelected(s.product||'');
   openModal('sale-modal');
 }
 
@@ -2529,13 +2580,16 @@ function doDeleteSale(id){
   if(alias)autoUpdateCustomerTags(alias);
   saveAll();refreshAll();
   var panel=document.getElementById('detail-panel');
-  if(panel&&panel.classList.contains('open')&&currentDetailId){openCustDetail(currentDetailId);}
+  if(panel&&panel.classList.contains('open')){
+    if(currentDetailType==='sale'){closeDetail();}
+    else if(currentDetailId){openCustDetail(currentDetailId);}
+  }
   toast('已删除成交记录');
 }
 
 function saveSaleRecord(){
   var alias=document.getElementById('fs-alias').value.trim();if(!alias){alert('请填写客户代号');return;}
-  var entry={date:document.getElementById('fs-date').value,alias:alias,product:document.getElementById('fs-product').value,amount:document.getElementById('fs-amount').value||0,currency:document.getElementById('fs-currency').value,person:document.getElementById('fs-person').value,notes:document.getElementById('fs-notes').value};
+  var entry={date:document.getElementById('fs-date').value,alias:alias,product:getSaleProductSelected(),amount:document.getElementById('fs-amount').value||0,currency:document.getElementById('fs-currency').value,person:document.getElementById('fs-person').value,notes:document.getElementById('fs-notes').value};
   if(editingSaleId!==null){
     var idx=saleRecords.findIndex(function(x){return x.id===editingSaleId;});
     if(idx>=0){entry.id=editingSaleId;saleRecords[idx]=entry;}
@@ -2547,9 +2601,13 @@ function saveSaleRecord(){
     toast('成交记录已录入 ✓');
   }
   autoUpdateCustomerTags(alias);
+  var prevType=currentDetailType;var prevId=currentDetailId;
   saveAll();closeModal('sale-modal');refreshAll();
   var panel=document.getElementById('detail-panel');
-  if(panel&&panel.classList.contains('open')&&currentDetailId){openCustDetail(currentDetailId);}
+  if(panel&&panel.classList.contains('open')&&prevId){
+    if(prevType==='sale'){openSaleDetail(entry.id);}
+    else{openCustDetail(prevId);}
+  }
 }
 
 function confirmDelete(type,id){
@@ -2923,7 +2981,7 @@ function renderMobileCards(page){
     c.innerHTML=filtered.map(s=>{
       const cust=custMap[s.alias];
       const icon=cust?typeIcon[cust.type]||'':'';
-      return '<div style="padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface)">'
+      return '<div style="padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface);cursor:pointer" onclick="openSaleDetail('+s.id+')">'
         +'<div style="display:flex;align-items:center;gap:10px">'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.alias+' '+icon+'</div>'
@@ -2932,13 +2990,11 @@ function renderMobileCards(page){
         +'<span class="'+(s.currency==='USD'?'cur-usd':'cur-cny')+'">'+s.currency+'</span>'
         +'<span style="font-size:11px;color:var(--muted)">'+getQ(s.date)+'</span>'
         +'<span style="font-size:11px;color:var(--muted2)">'+s.person+'</span>'
-        +'</div></div>'
+        +'</div>'
+        +(s.notes?'<div style="font-size:11px;color:var(--muted2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.notes+'</div>':'')
+        +'</div>'
         +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">'
         +'<div style="font-size:14px;font-weight:700;color:'+(s.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(s.amount,s.currency)+'</div>'
-        +'<div style="display:flex;gap:4px">'
-        +'<button class="btn btn-outline btn-xs" onclick="editSaleRecord('+s.id+')" style="font-size:10px;padding:2px 8px">编辑</button>'
-        +'<button class="btn btn-danger btn-xs" onclick="deleteSaleRecord('+s.id+')" style="font-size:10px;padding:2px 8px">删除</button>'
-        +'</div>'
         +'</div>'
         +'</div>'
         +'</div>';
@@ -3065,11 +3121,12 @@ function importData(input){
 function rebuildProductSelects(){
   var prods=getProducts();
   var opts=prods.map(function(p){return '<option>'+p+'</option>';}).join('');
-  ['fi-product','fo-product','fs-product'].forEach(function(id){
+  ['fi-product','fo-product'].forEach(function(id){
     var el=document.getElementById(id);if(!el)return;
     var cur=el.value;el.innerHTML=opts;
     if(prods.indexOf(cur)>=0)el.value=cur;
   });
+  renderSaleProductChips();
   var tagWrap=document.getElementById('fc-product-tags');
   if(tagWrap){
     tagWrap.innerHTML=prods.map(function(p){
