@@ -90,6 +90,18 @@ a{color:var(--accent);text-decoration:none;}
 .filter-select,.search-box{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:8px;font-family:var(--font-body);font-size:13px;outline:none;}
 .filter-select:focus,.search-box:focus{border-color:var(--accent);}
 .search-box{width:180px;}.search-box::placeholder{color:var(--muted);}
+.search-sort-wrap{display:flex;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:2px 4px 2px 2px;}
+.search-sort-wrap:focus-within{border-color:var(--accent);}
+.search-sort-wrap input{background:transparent;border:none;color:var(--text);padding:5px 8px;font-family:var(--font-body);font-size:13px;outline:none;flex:1;min-width:80px;width:auto;}
+.search-sort-wrap input::placeholder{color:var(--muted);}
+.sort-btn-s{background:none;border:none;cursor:pointer;font-size:11px;font-weight:600;padding:3px 4px;border-radius:5px;white-space:nowrap;line-height:1;opacity:.55;}
+.sort-btn-s:hover,.sort-btn-s.active{opacity:1;background:rgba(255,255,255,.08);}
+.mobile-search-wrap{display:flex;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-top:8px;padding:2px 4px 2px 2px;}
+.mobile-search-wrap input{background:transparent;border:none;color:var(--text);padding:5px 8px;font-family:var(--font-body);font-size:13px;outline:none;flex:1;min-width:60px;width:auto;}
+.mobile-search-wrap input::placeholder{color:var(--muted);}
+.cust-filter-btn{padding:5px 10px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04);color:var(--muted);font-weight:600;white-space:nowrap;}
+.cust-filter-btn.vip-on{background:rgba(255,200,0,.15);border-color:#ffd700;color:#ffd700;}
+.cust-filter-btn.chong-on{background:rgba(255,100,50,.15);border-color:#ff7840;color:#ff7840;}
 .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px;}
 .customer-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px;cursor:pointer;transition:border-color .2s;}.customer-card:hover{border-color:var(--accent);}
 .customer-card.vip-star{border-color:rgba(247,147,79,.5);}
@@ -196,6 +208,8 @@ a{color:var(--accent);text-decoration:none;}
 .mobile-chips{display:flex;gap:6px;margin-top:8px;overflow-x:auto;padding-bottom:2px;}
 .mobile-chip{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap;cursor:pointer;flex-shrink:0;}
 .mobile-chip.on{background:rgba(79,142,247,.15);border-color:var(--accent);color:var(--accent);}
+.mobile-chip.vip-on{background:rgba(255,200,0,.15);border-color:#ffd700;color:#ffd700;}
+.mobile-chip.chong-on{background:rgba(255,100,50,.15);border-color:#ff7840;color:#ff7840;}
 .mobile-search{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:8px;font-family:var(--font-body);font-size:13px;outline:none;width:100%;margin-top:8px;}
 .mobile-search::placeholder{color:var(--muted);}
 .mobile-cards{display:none;flex-direction:column;gap:0;padding:0;}
@@ -291,8 +305,15 @@ a{color:var(--accent);text-decoration:none;}
     <div class="mobile-chips" style="margin-top:4px">
       <div class="mobile-chip on" id="mb-view-card" onclick="setMobileCustView('card',this)">▦ 卡片</div>
       <div class="mobile-chip" id="mb-view-list" onclick="setMobileCustView('list',this)">☰ 列表</div>
+      <div class="mobile-chip" id="mb-cust-vip" onclick="toggleCustVip()">⭐ VIP</div>
+      <div class="mobile-chip" id="mb-cust-chong" onclick="toggleCustChong()">🎯 追单</div>
     </div>
-    <input class="mobile-search" placeholder="🔍 搜索客户..." oninput="renderMobileCards('cust')">
+    <div class="mobile-search-wrap">
+      <input placeholder="🔍 搜索客户..." oninput="renderMobileCards('cust')">
+      <button class="sort-btn-s" id="mb-sort-todo" onclick="setCustSort('todo')" style="color:#e05050">待办日期 ↓</button>
+      <button class="sort-btn-s" id="mb-sort-score" onclick="setCustSort('score')" style="color:#4bda87">评分 ↓</button>
+      <button class="sort-btn-s" id="mb-sort-person" onclick="setCustSort('person')" style="color:#4bd1f7">跟单 ↓</button>
+    </div>
   </div>
   <div id="mh-ord" style="display:none">
     <div class="mobile-chips">
@@ -476,7 +497,12 @@ a{color:var(--accent);text-decoration:none;}
   </div>
   <div class="page-content">
     <div class="filters">
-      <input class="search-box" id="search-cust" placeholder="🔍 搜索代号/公司..." oninput="renderCustomers()">
+      <div class="search-sort-wrap">
+        <input id="search-cust" placeholder="🔍 搜索代号/公司..." oninput="renderCustomers()">
+        <button class="sort-btn-s" id="dt-sort-todo" onclick="setCustSort('todo')" style="color:#e05050">待办日期 ↓</button>
+        <button class="sort-btn-s" id="dt-sort-score" onclick="setCustSort('score')" style="color:#4bda87">评分 ↓</button>
+        <button class="sort-btn-s" id="dt-sort-person" onclick="setCustSort('person')" style="color:#4bd1f7">跟单 ↓</button>
+      </div>
       <select class="filter-select" id="cf-layer" onchange="renderCustomers()">
         <option value="">所有分层</option>
         <option value="core">🏆 核心客户</option>
@@ -499,6 +525,8 @@ a{color:var(--accent);text-decoration:none;}
         <option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option>
       </select>
       <button class="btn btn-outline btn-sm" onclick="clearFilters('cust')">清除</button>
+      <button class="cust-filter-btn" id="btn-cust-vip" onclick="toggleCustVip()">⭐ VIP</button>
+      <button class="cust-filter-btn" id="btn-cust-chong" onclick="toggleCustChong()">🎯 追单</button>
     </div>
     <div id="cust-card-view">
       <div id="cust-section-core" style="margin-bottom:20px"></div>
@@ -1370,6 +1398,9 @@ let custView='card';
 let custLayerExpanded={core:true,focus:true,nurture:true,sleeping:true,dead:false};
 let custLayerShown={core:6,focus:6,nurture:6,sleeping:6,dead:6};
 let custLayerSort={core:'score',focus:'score',nurture:'score',sleeping:'followup',dead:'score'};
+var custFilterVip=false;
+var custFilterChong=false;
+var custGlobalSort={key:'score',dir:'desc'};
 const BATCH=12, DEFAULT_SHOW=6;
 
 const LAYER_CONFIG={
@@ -1432,6 +1463,7 @@ function sortCustomers(items, sortBy){
       return a.followupDate.localeCompare(b.followupDate);
     }
     if(sortBy==='name') return a.alias.localeCompare(b.alias);
+    if(sortBy==='person') return (a.person||'').localeCompare(b.person||'');
     return 0;
   });
 }
@@ -1559,6 +1591,8 @@ function renderCustomers(){
     if(search&&!c.alias.toLowerCase().includes(search)&&!(c.company||'').toLowerCase().includes(search)) return false;
     if(type&&c.type!==type) return false;
     if(person&&c.person!==person) return false;
+    if(custFilterVip&&!c.vipStar) return false;
+    if(custFilterChong&&!c.targetStar) return false;
     return true;
   });
 
@@ -1595,7 +1629,13 @@ function renderCustomers(){
     const allFiltered=filtered.filter(function(c){
       if(!layerFilter)return true;
       return (c.layer||getLayer(c))===layerFilter;
-    }).sort(function(a,b){return custScore(b)-custScore(a);});
+    }).sort(function(a,b){
+      var k=custGlobalSort.key;var d=custGlobalSort.dir;var diff=0;
+      if(k==='score')diff=custScore(b)-custScore(a);
+      else if(k==='todo'){var da=a.followupDate||'9999',db=b.followupDate||'9999';diff=da<db?-1:da>db?1:0;}
+      else if(k==='person')diff=(a.person||'').localeCompare(b.person||'');
+      return d==='asc'?-diff:diff;
+    });
     const body=document.getElementById('cust-list-body');
     const layerLabel={core:'🏆 核心',focus:'🌳 重点',nurture:'🔄 普通',sleeping:'💤 沉睡',dead:'☠️ 流失'};
     const layerColor={core:'var(--accent2)',focus:'var(--accent)',nurture:'var(--teal)',sleeping:'var(--muted2)',dead:'rgba(247,111,111,.5)'};
@@ -2003,6 +2043,46 @@ function quickSetType(custId, type){
   toast('类型已更新 ✓');
 }
 
+function toggleCustVip(){
+  custFilterVip=!custFilterVip;
+  ['btn-cust-vip','mb-cust-vip'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el)return;
+    if(custFilterVip)el.classList.add('vip-on');else el.classList.remove('vip-on');
+  });
+  renderCustomers();renderMobileCards('cust');
+}
+function toggleCustChong(){
+  custFilterChong=!custFilterChong;
+  ['btn-cust-chong','mb-cust-chong'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el)return;
+    if(custFilterChong)el.classList.add('chong-on');else el.classList.remove('chong-on');
+  });
+  renderCustomers();renderMobileCards('cust');
+}
+function setCustSort(key){
+  if(custGlobalSort.key===key){
+    custGlobalSort.dir=custGlobalSort.dir==='desc'?'asc':'desc';
+  } else {
+    custGlobalSort.key=key;custGlobalSort.dir='desc';
+  }
+  var labels={todo:'待办日期',score:'评分',person:'跟单'};
+  ['todo','score','person'].forEach(function(k){
+    var isActive=custGlobalSort.key===k;
+    var arrow=isActive?(custGlobalSort.dir==='desc'?' ↓':' ↑'):' ↓';
+    ['dt-sort-','mb-sort-'].forEach(function(pre){
+      var el=document.getElementById(pre+k);
+      if(!el)return;
+      el.textContent=labels[k]+arrow;
+      if(isActive)el.classList.add('active');else el.classList.remove('active');
+    });
+  });
+  var sortKeyMap={score:'score',todo:'followup',person:'person'};
+  var lk=sortKeyMap[custGlobalSort.key]||'score';
+  ['core','focus','nurture','sleeping','dead'].forEach(function(l){custLayerSort[l]=lk;});
+  renderCustomers();renderMobileCards('cust');
+}
 function quickSetSize(custId, size){
   const c=customers.find(function(x){return x.id===custId;});
   if(!c)return;
@@ -2398,14 +2478,22 @@ function renderMobileCards(page){
     }).join('');
   } else if(page==='cust'){
     const f=mobilePageFilter.cust||{};
-    const ms=document.querySelector('#mh-cust .mobile-search');
+    const ms=document.querySelector('#mh-cust .mobile-search-wrap input')||document.querySelector('#mh-cust .mobile-search');
     const search=ms?ms.value.toLowerCase():'';
     const filtered=customers.filter(c=>{
       if(!canSeeCust(c))return false;
       if(search&&!c.alias.toLowerCase().includes(search)&&!(c.company||'').toLowerCase().includes(search))return false;
       if(f.filter){if(f.filter==='active'||f.filter==='sleeping'){if(c.status!==f.filter)return false;}else if(c.type!==f.filter)return false;}
+      if(custFilterVip&&!c.vipStar)return false;
+      if(custFilterChong&&!c.targetStar)return false;
       return true;
-    }).sort((a,b)=>custScore(b)-custScore(a));
+    }).sort(function(a,b){
+      var k=custGlobalSort.key;var d=custGlobalSort.dir;var diff=0;
+      if(k==='score')diff=custScore(b)-custScore(a);
+      else if(k==='todo'){var da=a.followupDate||'9999',db=b.followupDate||'9999';diff=da<db?-1:da>db?1:0;}
+      else if(k==='person')diff=(a.person||'').localeCompare(b.person||'');
+      return d==='asc'?-diff:diff;
+    });
     const c=document.getElementById('mobile-cust-cards');if(!c)return;
     if(!filtered.length){c.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">暂无客户</div></div>';return;}
     var layerCfg=[
