@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>筛选排序方案预览 v2</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,sans-serif;background:#0f1117;color:#e0e2f0;padding:20px}
+h2{color:#8B91D4;margin:24px 0 10px;font-size:13px;letter-spacing:1px;text-transform:uppercase}
+
+.filter-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:#1a1d2e;border-radius:10px;padding:10px 12px}
+
+/* 搜索框 */
+.search-wrap{position:relative;display:flex;align-items:center}
+.search-wrap input{background:#252840;border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#e0e2f0;padding:6px 10px 6px 28px;font-size:13px;width:150px;outline:none}
+.search-wrap .icon{position:absolute;left:8px;font-size:12px;color:#6b7280}
+
+/* 排序下拉 */
+.sort-wrap{position:relative}
+.sort-btn{background:#252840;border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#c0c4e0;padding:6px 10px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.sort-btn:hover{border-color:#6B72C3;color:#fff}
+.sort-btn.active{border-color:#6B72C3;background:rgba(107,114,195,.2);color:#8B91D4}
+.sort-dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;background:#252840;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:4px;z-index:100;min-width:150px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.sort-wrap:hover .sort-dropdown{display:block}
+.sort-opt{padding:6px 10px;font-size:12px;border-radius:6px;cursor:pointer;color:#c0c4e0;white-space:nowrap}
+.sort-opt:hover{background:rgba(107,114,195,.25);color:#fff}
+.sort-opt.selected{color:#8B91D4;font-weight:600}
+
+/* 分隔线 */
+.sep{width:1px;height:20px;background:rgba(255,255,255,.1);flex-shrink:0}
+
+/* 普通下拉 */
+select.sel{background:#252840;border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#c0c4e0;padding:6px 8px;font-size:12px;cursor:pointer;outline:none}
+select.sel:hover{border-color:#6B72C3}
+
+/* 切换芯片 */
+.chip{padding:5px 10px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#8b91d4;white-space:nowrap;user-select:none;transition:.15s}
+.chip:hover{background:rgba(107,114,195,.2)}
+.chip.vip{border-color:rgba(255,200,0,.3);color:#c8a800}
+.chip.vip.on{background:rgba(255,200,0,.15);border-color:#ffd700;color:#ffd700}
+.chip.chong{border-color:rgba(255,120,60,.3);color:#c06030}
+.chip.chong.on{background:rgba(255,120,60,.15);border-color:#ff7840;color:#ff7840}
+.chip.overdue{border-color:rgba(255,80,80,.3);color:#b05050}
+.chip.overdue.on{background:rgba(255,80,80,.15);border-color:#ff5050;color:#ff5050}
+
+/* 列表预览 */
+.list-wrap{background:#1a1d2e;border-radius:10px;overflow:hidden;margin-top:6px}
+.list-header{display:grid;grid-template-columns:56px 1fr 90px 70px 90px 70px;background:#252840;border-bottom:1px solid rgba(255,255,255,.06)}
+.th{padding:7px 10px;font-size:11px;color:#6b7280;cursor:pointer;display:flex;align-items:center;gap:3px;user-select:none}
+.th:hover{color:#8B91D4}
+.th .arr{font-size:10px}
+.list-row{display:grid;grid-template-columns:56px 1fr 90px 70px 90px 70px;border-bottom:1px solid rgba(255,255,255,.04)}
+.list-row:last-child{border-bottom:none}
+.td{padding:8px 10px;font-size:12px;color:#c0c4e0;display:flex;align-items:center;gap:4px}
+.tag{border-radius:4px;padding:1px 5px;font-size:10px}
+.tag-vip{background:rgba(255,200,0,.12);color:#ffd700}
+.tag-chong{background:rgba(255,120,60,.12);color:#ff7840}
+.score-hi{color:#4bda87;font-weight:600}
+.score-mid{color:#ffd700;font-weight:600}
+.score-lo{color:#6b7280}
+.overdue{color:#ff5050;font-size:11px}
+.todo{color:#8B91D4;font-size:11px}
+</style>
+</head>
+<body>
+
+<h2>单行筛选 — 紧凑版</h2>
+
+<div class="filter-row">
+  <!-- 搜索框 -->
+  <div class="search-wrap">
+    <span class="icon">🔍</span>
+    <input placeholder="搜索客户...">
+  </div>
+
+  <!-- 排序下拉 -->
+  <div class="sort-wrap">
+    <div class="sort-btn active">⇅ 评分↓ ▾</div>
+    <div class="sort-dropdown">
+      <div class="sort-opt selected">⇅ 评分 ↓ 高→低</div>
+      <div class="sort-opt">⇅ 评分 ↑ 低→高</div>
+      <div class="sort-opt">📅 待办日期</div>
+      <div class="sort-opt"># 客户编号</div>
+      <div class="sort-opt">A 公司名</div>
+      <div class="sort-opt">👤 负责人</div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- 原有筛选 -->
+  <select class="sel"><option>全部分层</option><option>🏆 核心</option><option>🌳 重点培养</option><option>🔄 普通跟踪</option></select>
+  <select class="sel"><option>全部类型</option><option>品牌商</option><option>工厂</option></select>
+  <select class="sel"><option>全部负责人</option><option>Alan</option><option>Kelly</option></select>
+
+  <div class="sep"></div>
+
+  <!-- 快速筛选芯片 -->
+  <span class="chip vip on">⭐ VIP</span>
+  <span class="chip chong">🎯 追单</span>
+  <span class="chip overdue">🔔 超时</span>
+</div>
+
+<!-- 列表效果 -->
+<div class="list-wrap">
+  <div class="list-header">
+    <div class="th"># <span class="arr" style="color:#6B72C3">↑</span></div>
+    <div class="th">公司 / 产品</div>
+    <div class="th">分层</div>
+    <div class="th">评分 <span class="arr" style="color:#6B72C3">↓</span></div>
+    <div class="th">待办</div>
+    <div class="th">负责人</div>
+  </div>
+  <div class="list-row">
+    <div class="td" style="color:#6b7280;font-size:11px">C-001</div>
+    <div class="td">Sunrise Textiles <span class="tag tag-vip">VIP</span></div>
+    <div class="td">🏆 核心</div>
+    <div class="td"><span class="score-hi">★ 6/7</span></div>
+    <div class="td"><span class="overdue">🔔 06-01</span></div>
+    <div class="td">Alan</div>
+  </div>
+  <div class="list-row">
+    <div class="td" style="color:#6b7280;font-size:11px">C-002</div>
+    <div class="td">BlueSky Apparel <span class="tag tag-chong">追单</span></div>
+    <div class="td">🌳 重点培养</div>
+    <div class="td"><span class="score-mid">★ 4/7</span></div>
+    <div class="td"><span class="todo">📅 06-10</span></div>
+    <div class="td">Kelly</div>
+  </div>
+  <div class="list-row">
+    <div class="td" style="color:#6b7280;font-size:11px">C-003</div>
+    <div class="td">Nordic Fashion</div>
+    <div class="td">🔄 普通跟踪</div>
+    <div class="td"><span class="score-lo">★ 2/7</span></div>
+    <div class="td" style="color:#6b7280">—</div>
+    <div class="td">Momi</div>
+  </div>
+</div>
+
+<h2 style="margin-top:20px;color:#6b7280;font-size:11px">提示：鼠标悬停"⇅ 评分↓ ▾"可展开排序选项</h2>
+
+</body>
+</html>

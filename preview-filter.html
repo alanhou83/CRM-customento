@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>筛选排序方案预览</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,sans-serif;background:#0f1117;color:#e0e2f0;padding:20px}
+h2{color:#8B91D4;margin:24px 0 12px;font-size:14px;letter-spacing:1px;text-transform:uppercase}
+.card{background:#1a1d2e;border-radius:12px;padding:16px;margin-bottom:8px}
+
+/* 方案A */
+.filter-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.filter-bar input{background:#252840;border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#e0e2f0;padding:6px 12px;font-size:13px;width:160px}
+select.sel{background:#252840;border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#e0e2f0;padding:6px 10px;font-size:13px;cursor:pointer}
+.sort-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.sort-label{font-size:12px;color:#6b7280}
+.chip{padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#c0c4e0;transition:.2s}
+.chip:hover{background:rgba(107,114,195,.3);border-color:#6B72C3}
+.chip.active{background:rgba(107,114,195,.35);border-color:#8B91D4;color:#fff}
+.chip.vip{border-color:rgba(255,200,0,.4);background:rgba(255,200,0,.1);color:#ffd700}
+.chip.chong{border-color:rgba(255,100,50,.4);background:rgba(255,100,50,.1);color:#ff6432}
+.chip.todo{border-color:rgba(75,209,247,.4);background:rgba(75,209,247,.1);color:#4bd1f7}
+.chip.overdue{border-color:rgba(255,80,80,.4);background:rgba(255,80,80,.1);color:#ff5050}
+
+/* 方案B */
+.filter-bar-b{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn-b{padding:6px 14px;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid rgba(255,255,255,.15);background:#252840;color:#c0c4e0}
+.btn-b:hover{background:rgba(107,114,195,.3)}
+.popover{background:#252840;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px;margin-top:8px;display:inline-block}
+.pop-row{display:flex;align-items:center;gap:8px;padding:5px 8px;font-size:13px;border-radius:6px;cursor:pointer}
+.pop-row:hover{background:rgba(107,114,195,.2)}
+.pop-row input{accent-color:#6B72C3}
+.divider{width:1px;height:20px;background:rgba(255,255,255,.1)}
+
+/* 列表预览 */
+.list-header{display:grid;grid-template-columns:60px 1fr 100px 80px 80px 80px;gap:0;background:#252840;border-radius:8px 8px 0 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.th{padding:8px 10px;font-size:11px;color:#6b7280;cursor:pointer;user-select:none;display:flex;align-items:center;gap:4px}
+.th:hover{color:#8B91D4}
+.th .arrow{font-size:10px;color:#6B72C3}
+.list-row{display:grid;grid-template-columns:60px 1fr 100px 80px 80px 80px;gap:0;border-bottom:1px solid rgba(255,255,255,.05);padding:0}
+.td{padding:8px 10px;font-size:12px;color:#c0c4e0}
+.tag-vip{background:rgba(255,200,0,.15);color:#ffd700;border-radius:4px;padding:1px 5px;font-size:10px}
+.tag-chong{background:rgba(255,100,50,.15);color:#ff6432;border-radius:4px;padding:1px 5px;font-size:10px}
+.score{color:#4bda87;font-weight:600}
+.overdue-txt{color:#ff5050;font-size:11px}
+
+.section-title{font-size:18px;font-weight:700;color:#fff;margin-bottom:4px}
+.section-sub{font-size:12px;color:#6b7280;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<h2>方案 A — 两行式（筛选 + 排序各一行）</h2>
+<div class="card">
+  <div class="filter-bar">
+    <input placeholder="🔍 搜索客户...">
+    <select class="sel"><option>全部分层</option><option>🏆 核心</option><option>🌳 重点培养</option></select>
+    <select class="sel"><option>全部类型</option><option>品牌商</option></select>
+    <select class="sel"><option>全部负责人</option><option>Alan</option></select>
+  </div>
+  <div class="sort-bar">
+    <span class="sort-label">排序：</span>
+    <select class="sel">
+      <option>评分 ↓</option>
+      <option>评分 ↑</option>
+      <option>客户编号 ↑</option>
+      <option>公司名 A→Z</option>
+      <option>待办日期 ↑</option>
+    </select>
+    <div style="width:1px;height:20px;background:rgba(255,255,255,.1)"></div>
+    <span class="sort-label">筛选：</span>
+    <span class="chip vip active">⭐ VIP</span>
+    <span class="chip chong">🎯 追单</span>
+    <span class="chip todo">📅 有待办</span>
+    <span class="chip overdue">🔔 超时</span>
+  </div>
+</div>
+
+<h2>方案 B — 单行式（按钮点开浮层）</h2>
+<div class="card">
+  <div class="filter-bar-b">
+    <input class="sel" placeholder="🔍 搜索客户..." style="background:#1a1d2e;border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#e0e2f0;padding:6px 12px;font-size:13px;width:160px">
+    <select class="sel"><option>全部分层</option><option>🏆 核心</option></select>
+    <select class="sel"><option>全部类型</option></select>
+    <select class="sel"><option>全部负责人</option></select>
+    <div class="divider"></div>
+    <button class="btn-b">⇅ 排序</button>
+    <button class="btn-b" style="border-color:rgba(107,114,195,.5);color:#8B91D4">▼ 筛选 <span style="background:#6B72C3;border-radius:8px;padding:1px 6px;font-size:11px;color:#fff">1</span></button>
+  </div>
+  <div style="display:flex;gap:12px;margin-top:10px">
+    <div class="popover">
+      <div style="font-size:11px;color:#6b7280;padding:0 8px 6px">排序方式</div>
+      <div class="pop-row"><input type="radio" name="sort" checked> 评分 ↓（高→低）</div>
+      <div class="pop-row"><input type="radio" name="sort"> 评分 ↑（低→高）</div>
+      <div class="pop-row"><input type="radio" name="sort"> 客户编号</div>
+      <div class="pop-row"><input type="radio" name="sort"> 公司名 A→Z</div>
+      <div class="pop-row"><input type="radio" name="sort"> 待办日期（最近优先）</div>
+    </div>
+    <div class="popover">
+      <div style="font-size:11px;color:#6b7280;padding:0 8px 6px">快速筛选</div>
+      <div class="pop-row"><input type="checkbox" checked> ⭐ VIP 客户</div>
+      <div class="pop-row"><input type="checkbox"> 🎯 追单标记</div>
+      <div class="pop-row"><input type="checkbox"> 📅 有待办</div>
+      <div class="pop-row"><input type="checkbox"> 🔔 超时待办</div>
+    </div>
+  </div>
+</div>
+
+<h2>桌面列表视图 — 表头点击排序（两方案共用）</h2>
+<div class="card" style="padding:0;overflow:hidden">
+  <div class="list-header">
+    <div class="th">编号 <span class="arrow">↑</span></div>
+    <div class="th">公司 / 产品 <span class="arrow" style="color:transparent">↕</span></div>
+    <div class="th">分层</div>
+    <div class="th">评分 <span class="arrow">↓</span></div>
+    <div class="th">待办 <span class="arrow" style="color:transparent">↕</span></div>
+    <div class="th">负责人</div>
+  </div>
+  <div class="list-row">
+    <div class="td" style="color:#6b7280">C-001</div>
+    <div class="td">Sunrise Textiles <span class="tag-vip">VIP</span></div>
+    <div class="td">🏆 核心</div>
+    <div class="td"><span class="score">★ 6/7</span></div>
+    <div class="td"><span class="overdue-txt">🔔 06-01</span></div>
+    <div class="td">Alan</div>
+  </div>
+  <div class="list-row">
+    <div class="td" style="color:#6b7280">C-002</div>
+    <div class="td">BlueSky Apparel <span class="tag-chong">追单</span></div>
+    <div class="td">🌳 重点培养</div>
+    <div class="td"><span class="score" style="color:#ffd700">★ 4/7</span></div>
+    <div class="td" style="font-size:11px;color:#8b91d4">📅 06-10</div>
+    <div class="td">Kelly</div>
+  </div>
+  <div class="list-row">
+    <div class="td" style="color:#6b7280">C-003</div>
+    <div class="td">Nordic Fashion</div>
+    <div class="td">🔄 普通跟踪</div>
+    <div class="td"><span class="score" style="color:#6b7280">★ 2/7</span></div>
+    <div class="td" style="color:#6b7280">—</div>
+    <div class="td">Momi</div>
+  </div>
+</div>
+
+</body>
+</html>
