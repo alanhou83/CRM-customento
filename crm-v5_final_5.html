@@ -918,6 +918,7 @@ let nextOrdId=orders.length?Math.max(...orders.map(o=>o.id))+1:1;
 let nextSaleId=saleRecords.length?Math.max(...saleRecords.map(s=>s.id))+1:1;
 let editingInqId=null,editingCustId=null,editingOrdId=null,editingSaleId=null;
 let currentDetailId=null,currentDetailType=null;
+var _returnToSaleId=null;
 let currentInqFilter={},csvData=null;
 
 function saveAll(){localStorage.setItem(SK.inq,JSON.stringify(inquiries));localStorage.setItem(SK.cust,JSON.stringify(customers));localStorage.setItem(SK.ord,JSON.stringify(orders));localStorage.setItem(SK.sale,JSON.stringify(saleRecords));}
@@ -1913,7 +1914,7 @@ function openSaleDetail(id){
     +(s.notes?'<div class="detail-row"><span class="detail-key">备注</span><span class="detail-val">'+s.notes+'</span></div>':'')
     +'</div>'
     +'<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">'
-    +'<button class="btn btn-outline btn-sm" onclick="editSaleRecord('+s.id+')">编辑</button>'
+    +'<button class="btn btn-outline btn-sm" onclick="editSaleFromDetail('+s.id+')">编辑</button>'
     +'<button class="btn btn-danger btn-sm" onclick="deleteSaleRecord('+s.id+')">删除</button>'
     +(s.fromOrderId?'<button class="btn btn-outline btn-sm" style="color:var(--yellow);border-color:var(--yellow)" onclick="confirmRevertOrder('+s.id+')">↩ 退回执行中</button>':'')
     +'</div>';
@@ -2558,6 +2559,12 @@ function openSaleModal(){
   openModal('sale-modal');
 }
 
+function editSaleFromDetail(id){
+  _returnToSaleId=id;
+  closeDetail();
+  editSaleRecord(id);
+}
+
 function editSaleRecord(id){
   var s=saleRecords.find(function(x){return x.id===id;});
   if(!s)return;
@@ -2622,7 +2629,7 @@ function saveSaleRecord(){
   var entry={date:document.getElementById('fs-date').value,alias:alias,product:getSaleProductSelected(),amount:document.getElementById('fs-amount').value||0,currency:document.getElementById('fs-currency').value,person:document.getElementById('fs-person').value,notes:document.getElementById('fs-notes').value};
   if(editingSaleId!==null){
     var idx=saleRecords.findIndex(function(x){return x.id===editingSaleId;});
-    if(idx>=0){entry.id=editingSaleId;saleRecords[idx]=entry;}
+    if(idx>=0){entry.id=editingSaleId;if(saleRecords[idx].fromOrderId)entry.fromOrderId=saleRecords[idx].fromOrderId;saleRecords[idx]=entry;}
     editingSaleId=null;
     toast('成交记录已更新 ✓');
   } else {
@@ -2631,12 +2638,16 @@ function saveSaleRecord(){
     toast('成交记录已录入 ✓');
   }
   autoUpdateCustomerTags(alias);
-  var prevType=currentDetailType;var prevId=currentDetailId;
+  var prevType=currentDetailType;var prevId=currentDetailId;var retSaleId=_returnToSaleId;
+  _returnToSaleId=null;
   saveAll();closeModal('sale-modal');refreshAll();
-  var panel=document.getElementById('detail-panel');
-  if(panel&&panel.classList.contains('open')&&prevId){
-    if(prevType==='sale'){openSaleDetail(entry.id);}
-    else{openCustDetail(prevId);}
+  if(retSaleId!==null){openSaleDetail(entry.id);}
+  else{
+    var panel=document.getElementById('detail-panel');
+    if(panel&&panel.classList.contains('open')&&prevId){
+      if(prevType==='sale'){openSaleDetail(entry.id);}
+      else{openCustDetail(prevId);}
+    }
   }
 }
 
