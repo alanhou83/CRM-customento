@@ -325,10 +325,10 @@ a{color:var(--accent);text-decoration:none;}
     </div>
     <div class="mobile-search-wrap">
       <input placeholder="🔍 搜索客户..." oninput="renderMobileCards('cust')">
-      <button class="sort-btn-s" id="mb-sort-todo" onclick="setCustSort('todo')" style="color:#e05050">待办日期 ↓</button>
-      <button class="sort-btn-s" id="mb-sort-score" onclick="setCustSort('score')" style="color:#4bda87">评分 ↓</button>
       <button class="sort-btn-s" id="mb-sort-alias" onclick="setCustSort('alias')" style="color:#c0a0f0">客户 ↓</button>
       <button class="sort-btn-s" id="mb-sort-company" onclick="setCustSort('company')" style="color:#f0c060">公司 ↓</button>
+      <button class="sort-btn-s" id="mb-sort-todo" onclick="setCustSort('todo')" style="color:#e05050">待办日期 ↓</button>
+      <button class="sort-btn-s" id="mb-sort-score" onclick="setCustSort('score')" style="color:#4bda87">评分 ↓</button>
 
     </div>
   </div>
@@ -516,10 +516,10 @@ a{color:var(--accent);text-decoration:none;}
     <div class="filters">
       <div class="search-sort-wrap">
         <input id="search-cust" placeholder="🔍 搜索代号/公司..." oninput="renderCustomers()">
-        <button class="sort-btn-s" id="dt-sort-todo" onclick="setCustSort('todo')" style="color:#e05050">待办日期 ↓</button>
-        <button class="sort-btn-s" id="dt-sort-score" onclick="setCustSort('score')" style="color:#4bda87">评分 ↓</button>
         <button class="sort-btn-s" id="dt-sort-alias" onclick="setCustSort('alias')" style="color:#c0a0f0">客户 ↓</button>
         <button class="sort-btn-s" id="dt-sort-company" onclick="setCustSort('company')" style="color:#f0c060">公司 ↓</button>
+        <button class="sort-btn-s" id="dt-sort-todo" onclick="setCustSort('todo')" style="color:#e05050">待办日期 ↓</button>
+        <button class="sort-btn-s" id="dt-sort-score" onclick="setCustSort('score')" style="color:#4bda87">评分 ↓</button>
 
       </div>
       <select class="filter-select" id="cf-layer" onchange="renderCustomers()">
