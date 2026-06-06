@@ -609,7 +609,16 @@ a{color:var(--accent);text-decoration:none;}
       <button class="btn btn-outline btn-sm" onclick="clearFilters('old')">清除</button>
     </div>
     <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
-      <div class="table-header cols-stat"><div>客户</div><div>产品</div><div>货币</div><div>金额</div><div>日期</div><div>季度</div><div>负责人</div><div>操作</div></div>
+      <div class="table-header cols-stat">
+        <div id="ths-alias" onclick="setStatsTableSort('alias')" style="cursor:pointer;user-select:none">客户 <span id="ths-alias-arr" style="color:var(--muted);opacity:.4">↕</span></div>
+        <div>产品</div>
+        <div>货币</div>
+        <div id="ths-amount" onclick="setStatsTableSort('amount')" style="cursor:pointer;user-select:none">金额 <span id="ths-amount-arr" style="color:var(--muted);opacity:.4">↕</span></div>
+        <div id="ths-date" onclick="setStatsTableSort('date')" style="cursor:pointer;user-select:none">日期 <span id="ths-date-arr" style="color:var(--accent);opacity:1">↓</span></div>
+        <div>季度</div>
+        <div id="ths-person" onclick="setStatsTableSort('person')" style="cursor:pointer;user-select:none">负责人 <span id="ths-person-arr" style="color:var(--muted);opacity:.4">↕</span></div>
+        <div>操作</div>
+      </div>
       <div id="old-table-body"></div>
     </div></div></div>
     <div class="mobile-cards" id="mobile-stats-cards"></div>
@@ -1759,7 +1768,16 @@ function renderOldStats(){
     if(person&&s.person!==person)return false;
     if(quarter&&getQ(s.date)!==quarter)return false;
     return true;
-  }).sort((a,b)=>b.date.localeCompare(a.date));
+  }).sort(function(a,b){
+    var k=statsTableSort.key;var d=statsTableSort.dir;
+    if(!k)return b.date.localeCompare(a.date);
+    var diff=0;
+    if(k==='date')diff=a.date.localeCompare(b.date);
+    else if(k==='amount')diff=(+a.amount||0)-(+b.amount||0);
+    else if(k==='alias')diff=a.alias.localeCompare(b.alias);
+    else if(k==='person')diff=(a.person||'').localeCompare(b.person||'');
+    return d==='asc'?diff:-diff;
+  });
   const usdTotal=filtered.filter(s=>s.currency==='USD').reduce((sum,s)=>sum+(+s.amount||0),0);
   const cnyTotal=filtered.filter(s=>s.currency==='CNY').reduce((sum,s)=>sum+(+s.amount||0),0);
   var combinedVal=statsCurrencyMode==='USD'
@@ -2576,6 +2594,25 @@ var statsCurrency='';
 var statsMobileSort={key:'date',dir:'desc'};
 var statsRateBase=6.89;
 var statsCurrencyMode='USD';
+var statsTableSort={key:'date',dir:'desc'};
+function setStatsTableSort(key){
+  if(statsTableSort.key===key){
+    if(statsTableSort.dir==='desc'){statsTableSort.dir='asc';}
+    else if(statsTableSort.dir==='asc'){statsTableSort.key=null;statsTableSort.dir='desc';}
+  } else {
+    statsTableSort.key=key;statsTableSort.dir='desc';
+  }
+  ['alias','amount','date','person'].forEach(function(k){
+    var el=document.getElementById('ths-'+k+'-arr');if(!el)return;
+    if(statsTableSort.key===k){
+      el.textContent=statsTableSort.dir==='desc'?'↓':'↑';
+      el.style.color='var(--accent)';el.style.opacity='1';
+    } else {
+      el.textContent='↕';el.style.color='var(--muted)';el.style.opacity='.4';
+    }
+  });
+  renderOldStats();
+}
 function setStatsCurrencyMode(m){statsCurrencyMode=m;renderOldStats();}
 function openRatePicker(){
   var el=document.getElementById('rate-picker-overlay');if(!el)return;
