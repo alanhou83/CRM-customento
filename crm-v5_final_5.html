@@ -844,7 +844,7 @@ function canDelete(){return currentUser==='Alan';}
 function canExport(){return currentUser==='Alan';}
 function canStar(){return true;}
 function canVip(){return currentUser==='Alan';}
-function custScore(c){return +c.ordered+ +c.repurchase+ +c.growing+ +c.match+ +c.activeScore+Math.min(+c.size,2);}
+function custScore(c){var sz=+c.size;var szScore=sz<=1?0:sz===2?1:2;return +c.ordered+ +c.repurchase+ +c.growing+ +c.match+ +c.activeScore+szScore;}
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
 
 function updateNavCounts(){
