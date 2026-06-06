@@ -577,13 +577,13 @@ a{color:var(--accent);text-decoration:none;}
     <div id="cust-list-view" style="display:none">
       <div class="table-wrap"><div class="table-scroll"><div class="table-inner" style="width:100%">
         <div class="table-header" style="grid-template-columns:90px 60px 1fr 95px 90px 120px 50px 65px">
-          <div id="th-alias" onclick="setCustSort('alias')" style="cursor:pointer;user-select:none">代号 <span id="th-alias-arr" style="color:var(--accent)"></span></div>
+          <div id="th-alias" onclick="setCustSort('alias')" style="cursor:pointer;user-select:none">代号 <span id="th-alias-arr" style="color:var(--muted);opacity:.4">↕</span></div>
           <div>标记</div>
-          <div id="th-company" onclick="setCustSort('company')" style="cursor:pointer;user-select:none">公司 / 产品 <span id="th-company-arr" style="color:var(--accent)"></span></div>
+          <div id="th-company" onclick="setCustSort('company')" style="cursor:pointer;user-select:none">公司 / 产品 <span id="th-company-arr" style="color:var(--muted);opacity:.4">↕</span></div>
           <div>类型</div>
           <div>分层</div>
-          <div id="th-todo" onclick="setCustSort('todo')" style="cursor:pointer;user-select:none">跟进待办 <span id="th-todo-arr" style="color:var(--accent)"></span></div>
-          <div id="th-score" onclick="setCustSort('score')" style="cursor:pointer;user-select:none">评分 <span id="th-score-arr" style="color:var(--accent)"></span></div>
+          <div id="th-todo" onclick="setCustSort('todo')" style="cursor:pointer;user-select:none">跟进待办 <span id="th-todo-arr" style="color:var(--muted);opacity:.4">↕</span></div>
+          <div id="th-score" onclick="setCustSort('score')" style="cursor:pointer;user-select:none">评分 <span id="th-score-arr" style="color:var(--muted);opacity:.4">↕</span></div>
           <div>操作</div>
         </div>
         <div id="cust-list-body"></div>
@@ -2168,8 +2168,12 @@ function setCustSort(key){
   // Update desktop table header arrows
   ['alias','company','todo','score'].forEach(function(k){
     var arrEl=document.getElementById('th-'+k+'-arr');if(!arrEl)return;
-    if(custGlobalSort.key===k){arrEl.textContent=custGlobalSort.dir==='desc'?'↓':'↑';}
-    else{arrEl.textContent='';}
+    if(custGlobalSort.key===k){
+      arrEl.textContent=custGlobalSort.dir==='desc'?'↓':'↑';
+      arrEl.style.color='var(--accent)';arrEl.style.opacity='1';
+    } else {
+      arrEl.textContent='↕';arrEl.style.color='var(--muted)';arrEl.style.opacity='.4';
+    }
   });
   // Update mobile sort buttons
   var labels={todo:'待办日期',score:'评分',alias:'客户',company:'公司'};
