@@ -2014,6 +2014,7 @@ function openCustDetail(id){
   var usdTotal=custSales.filter(function(s){return s.currency==='USD';}).reduce(function(sum,s){return sum+(+s.amount||0);},0);
   var cnyTotal=custSales.filter(function(s){return s.currency==='CNY';}).reduce(function(sum,s){return sum+(+s.amount||0);},0);
   var tab3='<div class="detail-section">'
+    +'<div class="detail-section-title" style="display:flex;align-items:center;justify-content:space-between">成交概览<button onclick="newSaleFromCust('+c.id+')" style="font-size:11px;padding:3px 9px;border-radius:5px;border:0.5px solid var(--yellow);color:var(--yellow);background:rgba(247,212,79,.12);cursor:pointer;font-weight:400">+ 录入成交</button></div>'
     +'<div class="detail-row"><span class="detail-key">成交次数</span><span class="detail-val" style="color:var(--accent);font-weight:600">'+custSales.length+' 次</span></div>'
     +'<div class="detail-row"><span class="detail-key">$ 总额</span><span class="detail-val" style="color:var(--green);font-weight:600">$'+usdTotal.toLocaleString()+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">¥ 总额</span><span class="detail-val" style="color:var(--yellow);font-weight:600">¥'+cnyTotal.toLocaleString()+'</span></div>'
@@ -2396,6 +2397,22 @@ function saveOrder(){
   if(editingOrdId){const o=orders.find(x=>x.id===editingOrdId);if(o)Object.assign(o,data);}
   else{orders.push({id:nextOrdId++,...data});}
   saveAll();closeModal('order-modal');refreshAll();toast('订单已保存 ✓');
+}
+
+function newSaleFromCust(custId){
+  var c=customers.find(function(x){return x.id===custId;});
+  if(!c)return;
+  document.getElementById('fs-date').value=today();
+  document.getElementById('fs-currency').value='USD';
+  document.getElementById('fs-alias').value=c.alias||'';
+  document.getElementById('fs-person').value=c.person||'Kelly';
+  ['fs-amount','fs-notes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var prodArr=getProdArr(c);
+  var prodEl=document.getElementById('fs-product');
+  if(prodEl&&prodArr.length){
+    for(var i=0;i<prodEl.options.length;i++){if(prodEl.options[i].value===prodArr[0]||prodEl.options[i].text===prodArr[0]){prodEl.selectedIndex=i;break;}}
+  }
+  openModal('sale-modal');
 }
 
 function openSaleModal(){
