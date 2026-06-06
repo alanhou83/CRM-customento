@@ -1768,9 +1768,11 @@ function renderOldStats(){
   var modeCNY='padding:2px 8px;border-radius:12px;font-size:11px;cursor:pointer;border:1px solid '+(statsCurrencyMode==='CNY'?'var(--yellow);background:rgba(247,212,79,.15);color:var(--yellow)':'var(--border);background:none;color:var(--muted)');
   document.getElementById('old-summary').innerHTML='<div class="stat-box"><div class="stat-box-label">筛选期 $ 合计</div><div class="stat-box-value" style="color:var(--green)">$'+usdTotal.toLocaleString()+'</div></div>'
     +'<div class="stat-box"><div class="stat-box-label">筛选期 ¥ 合计</div><div class="stat-box-value" style="color:var(--yellow)">¥'+cnyTotal.toLocaleString()+'</div></div>'
-    +'<div class="stat-box"><div class="stat-box-label" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">合并总计 <span onclick="openRatePicker()" style="font-size:10px;color:var(--muted);cursor:pointer;border:1px solid var(--border);border-radius:5px;padding:1px 5px">汇率 '+statsRateBase.toFixed(2)+'</span></div>'
-    +'<div style="display:flex;gap:4px;margin:4px 0"><span onclick="setStatsCurrencyMode(\'USD\')" style="'+modeUSD+'">$ 美金</span><span onclick="setStatsCurrencyMode(\'CNY\')" style="'+modeCNY+'">¥ 人民币</span></div>'
-    +'<div class="stat-box-value" style="color:var(--accent)">'+combinedStr+'</div></div>';
+    +'<div class="stat-box" style="text-align:center">'
+    +'<div style="display:flex;align-items:center;justify-content:center;gap:5px;font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.5px;text-transform:uppercase">合并总计 <span onclick="openRatePicker()" style="font-size:10px;color:var(--muted);cursor:pointer;border:1px solid var(--border);border-radius:5px;padding:1px 5px">汇率 '+statsRateBase.toFixed(2)+'</span></div>'
+    +'<div class="stat-box-value" style="color:var(--accent);margin:4px 0">'+combinedStr+'</div>'
+    +'<div style="display:flex;gap:4px;justify-content:center"><span onclick="setStatsCurrencyMode(\'USD\')" style="'+modeUSD+'">$ 美金</span><span onclick="setStatsCurrencyMode(\'CNY\')" style="'+modeCNY+'">¥ 人民币</span></div>'
+    +'</div>';
   const body=document.getElementById('old-table-body');
   if(!filtered.length){body.innerHTML='<div class="empty"><div class="empty-icon">📈</div><div class="empty-text">暂无成交记录</div></div>';return;}
   const typeIcon={tourist:'🎯',ecom:'🛒',custom:'✏️',consumable:'🏭',promo:'🎁',personal:'👤'};
