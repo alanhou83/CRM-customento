@@ -2744,12 +2744,24 @@ function renderSettingsPage(){
   if(!list)return;
   var prods=getProducts();
   if(!prods.length){list.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px">暂无产品</div>';return;}
-  list.innerHTML=prods.map(function(p,i){
-    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border)">'
-      +'<span style="font-size:13px">'+p+'</span>'
-      +'<button class="btn btn-danger btn-xs" onclick="removeSettingsProd('+i+')">删除</button>'
+  var isMobile=window.innerWidth<=768;
+  if(isMobile){
+    list.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:8px;padding:12px">'
+      +prods.map(function(p,i){
+        return '<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(107,114,195,0.15);border:1px solid rgba(107,114,195,0.35);border-radius:20px;padding:5px 10px 5px 12px;font-size:13px;color:var(--text)">'
+          +'<span>'+p+'</span>'
+          +'<span onclick="removeSettingsProd('+i+')" style="width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,0.1);display:inline-flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;color:var(--muted);flex-shrink:0">✕</span>'
+          +'</div>';
+      }).join('')
       +'</div>';
-  }).join('');
+  } else {
+    list.innerHTML=prods.map(function(p,i){
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border)">'
+        +'<span style="font-size:13px">'+p+'</span>'
+        +'<button class="btn btn-danger btn-xs" onclick="removeSettingsProd('+i+')">删除</button>'
+        +'</div>';
+    }).join('');
+  }
 }
 function addSettingsProd(){
   var inp=document.getElementById('settings-new-prod');
