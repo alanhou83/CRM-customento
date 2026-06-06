@@ -299,8 +299,15 @@ a{color:var(--accent);text-decoration:none;}
       <div class="mobile-chip on" onclick="mobileChipFilter(this,'cust','all')">全部</div>
       <div class="mobile-chip" onclick="mobileChipFilter(this,'cust','active')">💚 活跃</div>
       <div class="mobile-chip" onclick="mobileChipFilter(this,'cust','sleeping')">💤 沉睡</div>
-      <div class="mobile-chip" onclick="mobileChipFilter(this,'cust','tourist')">旅游纪念品</div>
-      <div class="mobile-chip" onclick="mobileChipFilter(this,'cust','consumable')">白耗材</div>
+      <select id="mb-cf-type" onchange="renderMobileCards('cust')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
+        <option value="">所有类型</option>
+        <option value="tourist">旅游纪念品</option>
+        <option value="ecom">跨境电商</option>
+        <option value="custom">来图定制</option>
+        <option value="consumable">白耗材</option>
+        <option value="promo">促销品</option>
+        <option value="personal">个人定制</option>
+      </select>
     </div>
     <div class="mobile-chips" style="margin-top:4px">
       <div class="mobile-chip on" id="mb-view-card" onclick="setMobileCustView('card',this)">▦ 卡片</div>
@@ -2485,10 +2492,12 @@ function renderMobileCards(page){
     const ms=document.querySelector('#mh-cust .mobile-search-wrap input')||document.querySelector('#mh-cust .mobile-search');
     const search=ms?ms.value.toLowerCase():'';
     const mbPerson=(document.getElementById('mb-cf-person')||{}).value||'';
+    const mbType=(document.getElementById('mb-cf-type')||{}).value||'';
     const filtered=customers.filter(c=>{
       if(!canSeeCust(c))return false;
       if(search&&!c.alias.toLowerCase().includes(search)&&!(c.company||'').toLowerCase().includes(search))return false;
-      if(f.filter){if(f.filter==='active'||f.filter==='sleeping'){if(c.status!==f.filter)return false;}else if(c.type!==f.filter)return false;}
+      if(f.filter&&(f.filter==='active'||f.filter==='sleeping')){if(c.status!==f.filter)return false;}
+      if(mbType&&c.type!==mbType)return false;
       if(mbPerson&&c.person!==mbPerson)return false;
       if(custFilterVip&&!c.vipStar)return false;
       if(custFilterChong&&!c.targetStar)return false;
