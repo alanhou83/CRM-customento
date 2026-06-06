@@ -1857,8 +1857,16 @@ function renderOrders(){
 
 function completeOrder(id){
   const o=orders.find(x=>x.id===id);if(!o)return;
+  var overlay=document.createElement('div');overlay.className='confirm-overlay';
+  overlay.innerHTML='<div class="confirm-box"><div class="confirm-title">标记订单完成</div><div class="confirm-msg">确认将 <strong>'+o.alias+'</strong>（'+o.product+'）标记为完成并录入销售统计？</div><div class="confirm-btns"><button class="btn btn-outline" onclick="this.closest(\'.confirm-overlay\').remove()">取消</button><button class="btn btn-green" onclick="doCompleteOrder('+id+')">确认完成</button></div></div>';
+  document.body.appendChild(overlay);
+}
+
+function doCompleteOrder(id){
+  document.querySelector('.confirm-overlay')?.remove();
+  const o=orders.find(x=>x.id===id);if(!o)return;
   saleRecords.push({id:nextSaleId++,date:today(),alias:o.alias,product:o.product,amount:o.amount,currency:o.currency,person:o.person,notes:'从执行中订单完成',fromOrderId:id});
-  o.completed=true;saveAll();refreshAll();toast('订单完成，已录入老客户统计 ✓');
+  o.completed=true;saveAll();closeDetail();refreshAll();toast('订单完成，已录入老客户统计 ✓');
 }
 
 function openOrderDetail(id){
@@ -1905,8 +1913,8 @@ function openSaleDetail(id){
     +(s.notes?'<div class="detail-row"><span class="detail-key">备注</span><span class="detail-val">'+s.notes+'</span></div>':'')
     +'</div>'
     +'<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">'
-    +'<button class="btn btn-outline btn-sm" onclick="editSaleRecord('+s.id+');closeDetail()">编辑</button>'
-    +'<button class="btn btn-danger btn-sm" onclick="deleteSaleRecord('+s.id+');closeDetail()">删除</button>'
+    +'<button class="btn btn-outline btn-sm" onclick="editSaleRecord('+s.id+')">编辑</button>'
+    +'<button class="btn btn-danger btn-sm" onclick="deleteSaleRecord('+s.id+')">删除</button>'
     +(s.fromOrderId?'<button class="btn btn-outline btn-sm" style="color:var(--yellow);border-color:var(--yellow)" onclick="confirmRevertOrder('+s.id+')">↩ 退回执行中</button>':'')
     +'</div>';
   var detailBody=document.getElementById('detail-body');if(detailBody)detailBody.innerHTML='<div class="detail-body-inner">'+html+'</div>';
@@ -2588,7 +2596,9 @@ function doRevertOrder(saleId){
   var alias=s.alias;
   saleRecords=saleRecords.filter(function(x){return x.id!==saleId;});
   if(alias)autoUpdateCustomerTags(alias);
-  saveAll();closeDetail();refreshAll();
+  saveAll();
+  closeDetail();
+  renderOldStats();renderOrders();renderMobileCards('stats');renderMobileCards('ord');
   toast('已退回执行中订单 ✓');
 }
 
