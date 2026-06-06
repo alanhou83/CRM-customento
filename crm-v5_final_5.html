@@ -702,7 +702,7 @@ a{color:var(--accent);text-decoration:none;}
   <div class="modal-head"><div class="modal-title" id="inq-modal-title">新增询盘</div><button class="modal-close" onclick="closeModal('inq-modal')">×</button></div>
   <div class="modal-body">
     <div class="form-grid">
-      <div class="form-group"><label class="form-label">询盘日期</label><input class="form-input" type="date" id="fi-date" style="width:100%;max-width:100%;box-sizing:border-box;display:block"></div>
+      <div class="form-group" style="min-width:0;overflow:hidden"><label class="form-label">询盘日期</label><input class="form-input" type="date" id="fi-date" style="width:100%;min-width:0;max-width:100%;box-sizing:border-box;display:block"></div>
       <div class="form-group"><label class="form-label">来源渠道</label><select class="form-input" id="fi-source"><option>Alibaba</option><option>1688</option><option>Customento</option><option>老客户</option><option>笨鸟导入</option><option>WhatsApp</option><option>展会</option><option>其他</option></select></div>
       <div class="form-group"><label class="form-label">客户代号 *</label><input class="form-input" type="text" id="fi-alias" placeholder="如：CAZL、GKK"></div>
       <div class="form-group"><label class="form-label">公司全名</label><input class="form-input" type="text" id="fi-company" placeholder="公司完整名称"></div>
@@ -1288,8 +1288,10 @@ function quickInqStatus(inqId, status){
   if(status==='已成单'){
     i.expired=false;
     saveAll();refreshAll();
-    /* 自动切换到已成单视图 */
-    switchInqTab('archive');
+    /* 自动切换到已成单筛选视图 */
+    switchInqTab('active');
+    var fStatus=document.getElementById('f-status');if(fStatus)fStatus.value='已成单';
+    renderInquiries();
     openInqDetail(inqId);
     toast('状态已更新：已成单');
   } else {
@@ -2878,8 +2880,8 @@ function renderMobileCards(page){
         +'<span class="status-badge '+SC[i.status]+'">'+i.status+'</span>'
         +(ov?'<span class="mark-overdue">超时</span>':'')
         +(tf?'<span style="font-size:10px;color:var(--yellow);font-weight:600">⏰今日</span>':'')
-        +'</div></div>'
-        +(i.notes?'<div style="font-size:10px;color:var(--muted2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 '+i.notes+'</div>':'')
+        +'</div>'
+        +(i.notes?'<div style="font-size:10px;color:var(--muted2);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 '+i.notes+'</div>':'')
         +'</div>'
         +'<div style="text-align:right;flex-shrink:0">'
         +'<span class="badge '+GC[i.grade]+'">'+i.grade+'级</span>'
