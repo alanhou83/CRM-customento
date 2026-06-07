@@ -2142,7 +2142,8 @@ function openInqDetail(id){
     '已成单':'background:rgba(62,207,142,.15);color:var(--green)',
     '失效':'background:rgba(247,111,111,.15);color:var(--red)'
   };
-  var dynStatuses=['新询盘','互动中','报价中','打样中','追单中','沉默中','已成单','失效'];
+  /* 第一行：6个动态状态 */
+  var dynStatuses=['新询盘','互动中','报价中','打样中','追单中','沉默中'];
   var statusBar='<div class="inq-status-bar">';
   dynStatuses.forEach(function(s){
     var isActive=i.status===s;
@@ -2151,22 +2152,29 @@ function openInqDetail(id){
     statusBar+='<button class="inq-status-btn" style="'+colorStyle+';'+borderStyle+'" onclick="quickInqStatus('+id+',\''+s+'\')">'+s+'</button>';
   });
   statusBar+='</div>';
-  /* 里程碑标记（第二类，多选） */
+  /* 第二行：里程碑标记 + 已成单 + 失效 */
   var flags=i.flags||[];
   var flagBar='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">';
+  /* 已报价 / 已打样 里程碑 */
   var flagDefs=[['已报价','background:rgba(247,212,79,.15);color:var(--yellow)'],['已打样','background:rgba(167,79,247,.15);color:var(--purple)']];
   flagDefs.forEach(function(fd){
     var fname=fd[0];var fstyle=fd[1];
     var active=flags.indexOf(fname)>=0;
     flagBar+='<button class="inq-status-btn" style="font-size:11px;padding:3px 10px;'+(active?fstyle+';border-color:currentColor':'')+'" onclick="toggleInqFlagDirect('+id+',\''+fname+'\')">'+fname+'</button>';
   });
-  /* 沉默中时显示待确认失效按钮 */
+  /* 已成单 */
+  var wonActive=i.status==='已成单';
+  flagBar+='<button class="inq-status-btn" style="font-size:11px;padding:3px 10px;'+(wonActive?statusColors['已成单']+';border-color:currentColor':'')+'" onclick="quickInqStatus('+id+',\'已成单\')">已成单</button>';
+  /* 失效 */
+  var lostActive=i.status==='失效';
+  flagBar+='<button class="inq-status-btn" style="font-size:11px;padding:3px 10px;'+(lostActive?statusColors['失效']+';border-color:currentColor':'')+'" onclick="quickInqStatus('+id+',\'失效\')">失效</button>';
+  /* 沉默超7天提示 */
   if(i.status==='沉默中'){
     var todayStr=today();
     var base=i.silentSince||i.date;
     var days=Math.floor((new Date(todayStr)-new Date(base))/86400000);
     if(days>=7){
-      flagBar+='<span style="font-size:12px;color:var(--red);align-self:center">⚠️ 沉默'+days+'天，建议确认失效</span>';
+      flagBar+='<span style="font-size:11px;color:var(--red);align-self:center">⚠️ 沉默'+days+'天</span>';
     }
   }
   flagBar+='</div>';
