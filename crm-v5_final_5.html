@@ -3225,12 +3225,11 @@ function renderMobileCards(page){
       var todOv=i.followupDate&&i.followupDate<today();
       return '<div style="display:flex;align-items:flex-start;padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;gap:10px;background:var(--surface)'+(ov?';border-left:3px solid var(--yellow)':'')+'" onclick="openInqDetail('+i.id+')">'
         +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+'</div>'
+        +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+(ov?' <span class="mark-overdue" style="font-size:10px;vertical-align:middle">超时</span>':'')+'</div>'
         +'<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+(i.company||'')+(i.country?' · '+i.country:'')+'</div>'
         +'<div style="display:flex;gap:5px;margin-top:4px;flex-wrap:wrap">'
         +'<span class="source-tag">'+i.source+'</span>'
         +'<span class="status-badge '+SC[i.status]+'">'+i.status+'</span>'
-        +(ov?'<span class="mark-overdue">超时</span>':'')
         +(tf?'<span style="font-size:10px;color:var(--yellow);font-weight:600">⏰今日</span>':'')
         +(i.flags&&i.flags.length?i.flags.map(function(f){var fc=f==='已报价'?'background:rgba(247,212,79,.15);color:var(--yellow)':'background:rgba(167,79,247,.15);color:var(--purple)';return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;'+fc+'">'+f+'</span>';}).join(''):'')
         +'</div>'
