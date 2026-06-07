@@ -2223,12 +2223,12 @@ function openCustDetail(id){
       +custSales.map(function(s){
         return '<div onclick="editSaleRecord('+s.id+')" style="cursor:pointer;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">'
           +'<div style="flex:1;min-width:0">'
-          +'<div style="font-size:11px;color:var(--muted);margin-bottom:2px">'+s.date+' · '+s.person+(s.notes?' · <span style="color:var(--muted2)">'+s.notes+'</span>':'')+'</div>'
+          +'<div style="font-size:11px;color:var(--muted);margin-bottom:2px">'+s.date+(s.notes?' · <span style="color:var(--muted2)">'+s.notes+'</span>':'')+'</div>'
           +'<div style="font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.product+'</div>'
           +'</div>'
           +'<div style="text-align:right;flex-shrink:0">'
           +'<div style="font-weight:600;color:'+(s.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(s.amount,s.currency)+'</div>'
-          +'<span class="'+(s.currency==='USD'?'cur-usd':'cur-cny')+'" style="font-size:10px">'+s.currency+'</span>'
+          +'<div style="font-size:10px;color:var(--muted2)">'+s.person+'</div>'
           +'</div>'
           +'</div>';
       }).join('')
