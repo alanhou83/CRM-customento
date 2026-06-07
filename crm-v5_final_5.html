@@ -347,8 +347,8 @@ a{color:var(--accent);text-decoration:none;}
       <div class="mobile-chip" onclick="mobileChipFilter(this,'ord','打样中')">打样中</div>
       <div class="mobile-chip" onclick="mobileChipFilter(this,'ord','待发货')">待发货</div>
       <div class="mobile-chip" onclick="mobileChipFilter(this,'ord','已发货')">已发货</div>
+      <select id="mb-ord-person" onchange="renderMobileCards('ord')" style="background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--text);padding:3px 6px;font-size:11px;outline:none;flex-shrink:0"><option value="">跟单</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Alan</option></select>
     </div>
-    <select id="mb-ord-person" onchange="renderMobileCards('ord')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:5px 8px;font-size:12px;outline:none;margin:4px 12px 6px;width:calc(100% - 24px);box-sizing:border-box"><option value="">所有跟单人</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Alan</option></select>
     <input class="mobile-search" placeholder="🔍 搜索客户..." oninput="renderMobileCards('ord')" id="mb-ord-search">
   </div>
   <div id="mh-stats" style="display:none">
@@ -643,7 +643,15 @@ a{color:var(--accent);text-decoration:none;}
       <button class="btn btn-outline btn-sm" onclick="clearFilters('ord')">清除</button>
     </div>
     <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
-      <div class="table-header cols-ord"><div>下单日期</div><div>客户</div><div>产品</div><div>订单金额</div><div>当前阶段</div><div>预计交期</div><div>负责人</div></div>
+      <div class="table-header cols-ord">
+        <div id="tho-date" onclick="setOrdSort('date')" style="cursor:pointer;user-select:none">下单日期 <span id="tho-date-arr" style="color:var(--accent);opacity:1">↓</span></div>
+        <div id="tho-alias" onclick="setOrdSort('alias')" style="cursor:pointer;user-select:none">客户 <span id="tho-alias-arr" style="color:var(--muted);opacity:.4">↕</span></div>
+        <div>产品</div>
+        <div id="tho-amount" onclick="setOrdSort('amount')" style="cursor:pointer;user-select:none">订单金额 <span id="tho-amount-arr" style="color:var(--muted);opacity:.4">↕</span></div>
+        <div>当前阶段</div>
+        <div id="tho-delivery" onclick="setOrdSort('delivery')" style="cursor:pointer;user-select:none">预计交期 <span id="tho-delivery-arr" style="color:var(--muted);opacity:.4">↕</span></div>
+        <div>负责人</div>
+      </div>
       <div id="ord-table-body"></div>
     </div></div></div>
     <div class="mobile-cards" id="mobile-ord-cards"></div>
@@ -1854,7 +1862,15 @@ function renderOrders(){
     if(currency&&o.currency!==currency)return false;
     if(person&&o.person!==person)return false;
     return true;
-  }).sort(function(a,b){return b.date.localeCompare(a.date);});
+  }).sort(function(a,b){
+    var k=ordTableSort.key,d=ordTableSort.dir==='asc'?1:-1;
+    if(!k)return b.date.localeCompare(a.date);
+    if(k==='date')return a.date.localeCompare(b.date)*d;
+    if(k==='alias')return a.alias.localeCompare(b.alias)*d;
+    if(k==='amount')return((+a.amount||0)-(+b.amount||0))*d;
+    if(k==='delivery')return(a.delivery||'9999').localeCompare(b.delivery||'9999')*d;
+    return 0;
+  });
 
   const usdTotal=filtered.filter(function(o){return o.currency==='USD';}).reduce(function(s,o){return s+(+o.amount||0);},0);
   const cnyTotal=filtered.filter(function(o){return o.currency==='CNY';}).reduce(function(s,o){return s+(+o.amount||0);},0);
@@ -1876,9 +1892,9 @@ function renderOrders(){
     return '<div class="table-row cols-ord" onclick="openOrderDetail('+o.id+')">'
       +'<div class="table-cell" style="color:var(--muted);font-size:12px">'+o.date+'</div>'
       +'<div class="table-cell" style="font-weight:500">'+o.alias+'</div>'
-      +'<div class="table-cell"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+o.product+'</div>'+(o.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+o.notes+'</div>':'')+'</div>'
+      +'<div class="table-cell"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+o.product+'</div>'+(o.notes?'<div style="font-size:10px;color:var(--green);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📌 '+o.notes+'</div>':'')+'</div>'
       +'<div class="table-cell" style="font-weight:500;color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+'"><span class="'+(o.currency==='USD'?'cur-usd':'cur-cny')+'">'+o.currency+'</span> '+fmtAmt(o.amount,o.currency)+'</div>'
-      +'<div class="table-cell"><span class="status-badge s-following">'+o.stage+'</span></div>'
+      +'<div class="table-cell"><span style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;'+getOrdStageStyle(o.stage)+'">'+o.stage+'</span></div>'
       +'<div class="table-cell" style="font-size:12px;color:'+(deliveryOverdue?'var(--red)':'var(--muted)')+'">'+(deliveryOverdue?'⚠️ ':'')+( o.delivery||'未设定')+'</div>'
       +'<div class="table-cell" style="color:var(--muted)">'+o.person+'</div>'
       +'</div>';
@@ -2729,6 +2745,27 @@ var statsMobileSort={key:'date',dir:'desc'};
 var statsRateBase=6.89;
 var statsCurrencyMode='USD';
 var statsTableSort={key:'date',dir:'desc'};
+var ordTableSort={key:'date',dir:'desc'};
+var ORD_STAGE_STYLE={'等待打样':'background:rgba(150,150,150,.2);color:#999;border:0.5px solid rgba(150,150,150,.3)','打样中':'background:rgba(167,79,247,.2);color:#b36bfa;border:0.5px solid rgba(167,79,247,.3)','客户确认样品':'background:rgba(247,212,79,.2);color:var(--yellow);border:0.5px solid rgba(247,212,79,.3)','生产中':'background:rgba(79,142,247,.2);color:var(--accent);border:0.5px solid rgba(79,142,247,.3)','待发货':'background:rgba(247,147,79,.2);color:var(--accent2);border:0.5px solid rgba(247,147,79,.3)','已发货':'background:rgba(62,207,142,.2);color:var(--green);border:0.5px solid rgba(62,207,142,.3)'};
+function getOrdStageStyle(stage){return ORD_STAGE_STYLE[stage]||'background:rgba(107,114,195,.2);color:var(--accent);border:0.5px solid rgba(107,114,195,.3)';}
+function setOrdSort(key){
+  if(ordTableSort.key===key){
+    if(ordTableSort.dir==='desc'){ordTableSort.dir='asc';}
+    else if(ordTableSort.dir==='asc'){ordTableSort.key=null;ordTableSort.dir='desc';}
+  } else {
+    ordTableSort.key=key;ordTableSort.dir='desc';
+  }
+  ['date','alias','amount','delivery'].forEach(function(k){
+    var el=document.getElementById('tho-'+k+'-arr');if(!el)return;
+    if(ordTableSort.key===k){
+      el.textContent=ordTableSort.dir==='desc'?'↓':'↑';
+      el.style.color='var(--accent)';el.style.opacity='1';
+    } else {
+      el.textContent='↕';el.style.color='var(--muted)';el.style.opacity='.4';
+    }
+  });
+  renderOrders();
+}
 function setStatsTableSort(key){
   if(statsTableSort.key===key){
     if(statsTableSort.dir==='desc'){statsTableSort.dir='asc';}
@@ -3025,12 +3062,16 @@ function renderMobileCards(page){
     var todayStr2=today();
     c.innerHTML=filtered.map(o=>{
       var delivOvd=o.delivery&&o.delivery<todayStr2;
-      return '<div style="display:flex;align-items:center;padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;gap:10px;background:var(--surface)'+(delivOvd?';border-left:3px solid var(--red)':'')+'" onclick="openOrderDetail('+o.id+')">'
+      var stageSpan='<span style="font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;'+getOrdStageStyle(o.stage)+'">'+o.stage+'</span>';
+      return '<div style="display:flex;align-items:flex-start;padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;gap:10px;background:var(--surface)'+(delivOvd?';border-left:3px solid var(--red)':'')+'" onclick="openOrderDetail('+o.id+')">'
         +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+o.alias+'</div>'
-        +'<div style="font-size:11px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+o.product+'</div>'
-        +(o.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+o.notes+'</div>':'')
-        +'<div style="margin-top:4px"><span class="status-badge s-following">'+o.stage+'</span></div>'
+        +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
+        +'<span style="font-size:13px;font-weight:600">'+o.alias+'</span>'
+        +stageSpan
+        +(delivOvd?'<span style="font-size:10px;font-weight:600;color:var(--red)">超时</span>':'')
+        +'</div>'
+        +'<div style="font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+o.product+'</div>'
+        +(o.notes?'<div style="font-size:10px;color:var(--green);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📌 '+o.notes+'</div>':'')
         +'</div>'
         +'<div style="text-align:right;flex-shrink:0">'
         +'<div style="font-size:13px;font-weight:700;color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(o.amount,o.currency)+'</div>'
