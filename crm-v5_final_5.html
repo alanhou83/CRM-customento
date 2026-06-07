@@ -2208,28 +2208,28 @@ function openCustDetail(id){
   var usdTotal=custSales.filter(function(s){return s.currency==='USD';}).reduce(function(sum,s){return sum+(+s.amount||0);},0);
   var cnyTotal=custSales.filter(function(s){return s.currency==='CNY';}).reduce(function(sum,s){return sum+(+s.amount||0);},0);
   var tab3='<div class="detail-section">'
-    +'<div class="detail-section-title" style="display:flex;align-items:center;justify-content:space-between">成交概览<button onclick="newSaleFromCust('+c.id+')" style="font-size:11px;padding:3px 9px;border-radius:5px;border:0.5px solid var(--yellow);color:var(--yellow);background:rgba(247,212,79,.12);cursor:pointer;font-weight:400">+ 录入成交</button></div>'
-    +'<div class="detail-row"><span class="detail-key">成交次数</span><span class="detail-val" style="color:var(--accent);font-weight:600">'+custSales.length+' 次</span></div>'
-    +'<div class="detail-row"><span class="detail-key">$ 总额</span><span class="detail-val" style="color:var(--green);font-weight:600">$'+usdTotal.toLocaleString()+'</span></div>'
-    +'<div class="detail-row"><span class="detail-key">¥ 总额</span><span class="detail-val" style="color:var(--yellow);font-weight:600">¥'+cnyTotal.toLocaleString()+'</span></div>'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
+    +'<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">'
+    +'<span class="detail-section-title" style="margin:0">成交概览</span>'
+    +'<span style="font-size:12px;color:var(--accent);font-weight:600">'+custSales.length+' 次</span>'
+    +(usdTotal>0?'<span style="font-size:12px;color:var(--green);font-weight:600">$'+usdTotal.toLocaleString()+'</span>':'')
+    +(cnyTotal>0?'<span style="font-size:12px;color:var(--yellow);font-weight:600">¥'+cnyTotal.toLocaleString()+'</span>':'')
+    +'</div>'
+    +'<button onclick="newSaleFromCust('+c.id+')" style="font-size:11px;padding:3px 9px;border-radius:5px;border:0.5px solid var(--yellow);color:var(--yellow);background:rgba(247,212,79,.12);cursor:pointer;font-weight:400;flex-shrink:0">+ 录入成交</button>'
+    +'</div>'
     +'</div>';
   if(custSales.length){
     tab3+='<div class="detail-section"><div class="detail-section-title">全部成交记录</div>'
       +custSales.map(function(s){
-        return '<div class="detail-row" style="flex-direction:column;align-items:flex-start;gap:2px;padding:8px 0">'
-          +'<div style="display:flex;justify-content:space-between;align-items:center;width:100%">'
-          +'<span style="font-size:11px;color:var(--muted)">'+s.date+' · '+s.person+'</span>'
-          +'<div style="display:flex;align-items:center;gap:6px">'
-          +'<span class="'+(s.currency==='USD'?'cur-usd':'cur-cny')+'">'+s.currency+'</span>'
-          +'<button class="btn btn-outline btn-xs" onclick="editSaleRecord('+s.id+')" style="padding:1px 7px;font-size:10px">编辑</button>'
-          +'<button class="btn btn-danger btn-xs" onclick="deleteSaleRecord('+s.id+')" style="padding:1px 7px;font-size:10px">删除</button>'
+        return '<div onclick="editSaleRecord('+s.id+')" style="cursor:pointer;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">'
+          +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:11px;color:var(--muted);margin-bottom:2px">'+s.date+' · '+s.person+(s.notes?' · <span style="color:var(--muted2)">'+s.notes+'</span>':'')+'</div>'
+          +'<div style="font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.product+'</div>'
           +'</div>'
+          +'<div style="text-align:right;flex-shrink:0">'
+          +'<div style="font-weight:600;color:'+(s.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(s.amount,s.currency)+'</div>'
+          +'<span class="'+(s.currency==='USD'?'cur-usd':'cur-cny')+'" style="font-size:10px">'+s.currency+'</span>'
           +'</div>'
-          +'<div style="display:flex;justify-content:space-between;align-items:center;width:100%">'
-          +'<span style="font-size:13px;color:var(--muted)">'+s.product+'</span>'
-          +'<span style="font-weight:600;color:'+(s.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(s.amount,s.currency)+'</span>'
-          +'</div>'
-          +(s.notes?'<div style="font-size:11px;color:var(--muted2)">'+s.notes+'</div>':'')
           +'</div>';
       }).join('')
       +'</div>';
