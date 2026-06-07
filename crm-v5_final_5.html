@@ -722,6 +722,13 @@ a{color:var(--accent);text-decoration:none;}
         </div>
         <div id="backup-status" style="margin-top:10px;font-size:12px;color:var(--muted)"></div>
       </div>
+
+      <!-- 重置演示数据 -->
+      <div style="margin-top:28px;padding-top:20px;border-top:2px solid var(--border)">
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px">🔄 重置演示数据</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px">清除所有本地数据并还原为内置演示数据。<strong style="color:var(--red)">此操作不可撤销。</strong></div>
+        <button class="btn btn-outline" style="border-color:var(--red);color:var(--red)" onclick="resetDemoData()">🗑 清除数据并重置</button>
+      </div>
     </div>
   </div>
 </div>
@@ -3734,6 +3741,13 @@ function exportData(){
   var el=document.getElementById('backup-status');
   if(el) el.textContent='✓ 已导出 '+dateStr+' 备份文件';
   toast('数据已导出 ✓');
+}
+
+function resetDemoData(){
+  showConfirmModal('清除数据并重置','所有询盘、客户、订单、销售记录将被删除，还原为内置演示数据。\n\n确定要继续吗？','确认清除',function(){
+    [SK.inq,SK.cust,SK.ord,SK.sale].forEach(function(k){localStorage.removeItem(k);});
+    location.reload();
+  });
 }
 
 function importData(input){
