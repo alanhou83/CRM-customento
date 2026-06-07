@@ -1264,8 +1264,11 @@ function renderExpired(){
   expired.forEach(function(i){
     mHtml+='<div style="padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;opacity:0.8" onclick="openInqDetail('+i.id+')">'
       +'<div style="display:flex;justify-content:space-between;align-items:center">'
-      +'<span style="font-size:13px;font-weight:600">'+i.alias+'</span>'
+      +'<span style="font-size:13px;font-weight:600">'+i.alias+(i.isHot?' 🔥':'')+'</span>'
+      +'<div style="display:flex;align-items:center;gap:5px">'
+      +'<span class="badge '+GC[i.grade]+'">'+i.grade+'级</span>'
       +'<span style="font-size:10px;color:var(--muted)">'+i.date+'</span>'
+      +'</div>'
       +'</div>'
       +'<div style="display:flex;gap:5px;margin-top:3px;align-items:center">'
       +'<span class="source-tag">'+i.source+'</span>'
