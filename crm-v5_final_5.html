@@ -996,7 +996,7 @@ const BC=['#4f8ef7','#3ecf8e','#f7934f','#f7d44f','#a74ff7','#f76f6f','#4fc9f7']
 function today(){return new Date().toISOString().split('T')[0];}
 function fmtAmt(a,c){if(!a||a==0)return'—';return c==='CNY'?'¥'+Number(a).toLocaleString():'$'+Number(a).toLocaleString();}
 function getQ(d){const m=new Date(d).getMonth()+1;return m<=3?'Q1':m<=6?'Q2':m<=9?'Q3':'Q4';}
-function isOverdue(i){if(['已成单','未成单'].includes(i.status))return false;const last=i.followups&&i.followups.length?i.followups[i.followups.length-1].split(' ')[0]:i.date;return Math.floor((new Date()-new Date(last))/86400000)>=2;}
+function isOverdue(i){if(['已成单','未成单'].includes(i.status))return false;const last=i.followups&&i.followups.length?i.followups[i.followups.length-1].split(' ')[0]:i.date;return Math.floor((new Date()-new Date(last))/86400000)>=5;}
 function isTodayFu(i){return i.followupDate===today();}
 function canSeeInq(i){if(['Alan','Kelly','Penny'].includes(currentUser))return true;return i.person===currentUser;}
 function canSeeCust(c){if(['Alan','Kelly','Penny'].includes(currentUser))return true;return c.person===currentUser;}
