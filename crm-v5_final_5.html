@@ -448,6 +448,10 @@ a{color:var(--accent);text-decoration:none;}
     <button class="btn btn-primary" onclick="openInquiryModal()">＋ 新增询盘</button>
   </div>
   <div class="page-content">
+    <div class="goal-banner"><span style="font-size:18px">🎯</span>
+      <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px">战略目标</div>
+      <div style="font-size:14px;font-weight:500;margin-top:1px">找到 <span style="color:var(--accent)">20个</span> 欧美旅游纪念品稳定客户 — 目前 <span id="target-count" style="color:var(--green)">0</span> 个</div></div>
+    </div>
     <div id="dash-action-row" class="stats-grid"></div>
     <div id="dash-perf-bar"></div>
     <div id="dash-funnel-wrap"></div>
@@ -1070,6 +1074,9 @@ function renderDashboard(){
     var days=Math.floor((new Date(o.delivery)-new Date())/86400000);
     return days>=0&&days<=7;
   }).length;
+
+  var tc=document.getElementById('target-count');
+  if(tc)tc.textContent=customers.filter(function(c){return c.type==='tourist'&&c.status==='active';}).length;
 
   /* ① 行动区4卡片 */
   var ar=document.getElementById('dash-action-row');
