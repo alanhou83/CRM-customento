@@ -1287,12 +1287,13 @@ function renderSilent(){
       +'<span style="font-size:11px;'+(warn?'color:var(--red);font-weight:600':'color:var(--muted)')+'">'+( warn?'⚠️ 待确认':'沉默'+days+'天')+'</span>'
       +'</div>'
       +'</div>'
+      +'<div style="font-size:10px;color:var(--muted2);margin-top:1px">'+i.date+'</div>'
       +'<div style="display:flex;gap:5px;margin-top:3px;align-items:center">'
       +'<span class="source-tag">'+i.source+'</span>'
       +'<span style="font-size:11px;color:var(--muted)">'+i.product+'</span>'
       +'<span style="font-size:11px;color:var(--muted);margin-left:auto">'+i.person+'</span>'
       +'</div>'
-      +(i.reason?'<div style="font-size:11px;color:var(--muted2);margin-top:3px">备注：'+i.reason+'</div>':'')
+      +(i.notes?'<div style="font-size:10px;color:var(--muted2);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">注：'+i.notes+'</div>':'')
       +'</div>';
   });
   mobileEl.innerHTML=mHtml;
