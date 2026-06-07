@@ -1587,7 +1587,7 @@ function renderInquiries(){
       +'<div class="table-cell"><span class="source-tag">'+i.source+'</span></div>'
       +'<div class="table-cell"><div>'+i.product+'</div>'+(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.notes+'</div>':'')+'</div>'
       +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+i.grade+'级</span></div>'
-      +'<div class="table-cell"><span class="status-badge '+SC[i.status]+'">'+i.status+'</span>'+(i.flags&&i.flags.length?'<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">'+i.flags.map(function(f){return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:rgba(247,212,79,.15);color:var(--yellow)">'+f+'</span>';}).join('')+'</div>':'')+'</div>'
+      +'<div class="table-cell"><span class="status-badge '+SC[i.status]+'">'+i.status+'</span>'+(i.flags&&i.flags.length?'<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">'+i.flags.map(function(f){var fc=f==='已报价'?'background:rgba(247,212,79,.15);color:var(--yellow)':'background:rgba(167,79,247,.15);color:var(--purple)';return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;'+fc+'">'+f+'</span>';}).join('')+'</div>':'')+'</div>'
       +'<div class="table-cell" style="font-size:12px;color:'+(tf?'var(--yellow)':'var(--muted)')+'">'+( i.followupDate||'—')+(tf?' ⏰':'')+'</div>'
       +'<div class="table-cell" style="color:var(--muted)">'+i.person+'</div>'
       +'<div class="table-cell" onclick="event.stopPropagation()"><button class="btn btn-outline btn-xs" onclick="editInquiry('+i.id+')">编辑</button></div>'
@@ -3157,7 +3157,7 @@ function renderMobileCards(page){
         +'<div style="display:flex;gap:5px;margin-top:4px;flex-wrap:wrap">'
         +'<span class="source-tag">'+i.source+'</span>'
         +'<span class="status-badge '+SC[i.status]+'">'+i.status+'</span>'
-        +(i.flags&&i.flags.length?i.flags.map(function(f){return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:rgba(247,212,79,.15);color:var(--yellow)">'+f+'</span>';}).join(''):'')
+        +(i.flags&&i.flags.length?i.flags.map(function(f){var fc=f==='已报价'?'background:rgba(247,212,79,.15);color:var(--yellow)':'background:rgba(167,79,247,.15);color:var(--purple)';return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;'+fc+'">'+f+'</span>';}).join(''):'')
         +(ov?'<span class="mark-overdue">超时</span>':'')
         +(tf?'<span style="font-size:10px;color:var(--yellow);font-weight:600">⏰今日</span>':'')
         +'</div>'
