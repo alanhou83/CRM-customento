@@ -517,9 +517,6 @@ a{color:var(--accent);text-decoration:none;}
     <div class="mobile-cards" id="mobile-archive-cards"></div>
   </div>
   <div id="inq-expired-view" style="display:none">
-    <div style="display:flex;gap:20px;padding:10px 20px;border-bottom:1px solid var(--border);font-size:12px">
-      <span style="color:var(--muted)">失效询盘：<strong id="exp-count" style="color:var(--text)">0</strong></span>
-    </div>
     <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
       <div class="table-header cols-inq"><div>日期</div><div>客户</div><div>标记</div><div>渠道</div><div>产品</div><div>评级</div><div>状态</div><div>下次跟进</div><div>负责人</div><div>操作</div></div>
       <div id="inq-expired-body"></div>
@@ -971,7 +968,7 @@ function isOverdue(i){if(['已成单','未成单'].includes(i.status))return fal
 function isTodayFu(i){return i.followupDate===today();}
 function canSeeInq(i){if(['Alan','Kelly','Penny'].includes(currentUser))return true;return i.person===currentUser;}
 function canSeeCust(c){if(['Alan','Kelly','Penny'].includes(currentUser))return true;return c.person===currentUser;}
-function canDelete(){return currentUser==='Alan';}
+function canDelete(){return currentUser==='Alan'||currentUser==='Kelly';}
 function canExport(){return currentUser==='Alan';}
 function canStar(){return true;}
 function canVip(){return currentUser==='Alan';}
@@ -1234,7 +1231,6 @@ function clearArchiveFilters(){
 /* 渲染失效询盘列表 */
 function renderExpired(){
   var expired=inquiries.filter(function(i){return i.expired&&!i.archived&&canSeeInq(i);}).sort(function(a,b){return b.date.localeCompare(a.date);});
-  var elE=document.getElementById('exp-count');if(elE)elE.textContent=expired.length;
   var body=document.getElementById('inq-expired-body');
   if(!body)return;
   if(!expired.length){
@@ -1266,10 +1262,17 @@ function renderExpired(){
   if(!mobileEl)return;
   var mHtml='';
   expired.forEach(function(i){
-    mHtml+='<div class="mobile-card" style="opacity:0.7" onclick="openInqDetail('+i.id+')">'
-      +'<div class="mobile-card-top"><span class="mobile-card-name">'+i.alias+'</span>'
-      +'<span class="status-badge s-lost" style="font-size:11px">'+i.status+'</span></div>'
-      +'<div class="mobile-card-bottom"><span class="source-tag">'+i.source+'</span><span style="font-size:11px;color:var(--muted)">'+i.product+'</span><span style="font-size:11px;color:var(--muted);margin-left:auto">'+i.person+'</span></div>'
+    mHtml+='<div style="padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;opacity:0.8" onclick="openInqDetail('+i.id+')">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center">'
+      +'<span style="font-size:13px;font-weight:600">'+i.alias+'</span>'
+      +'<span style="font-size:10px;color:var(--muted)">'+i.date+'</span>'
+      +'</div>'
+      +'<div style="display:flex;gap:5px;margin-top:3px;align-items:center">'
+      +'<span class="source-tag">'+i.source+'</span>'
+      +'<span style="font-size:11px;color:var(--muted)">'+i.product+'</span>'
+      +'<span style="font-size:11px;color:var(--muted);margin-left:auto">'+i.person+'</span>'
+      +'</div>'
+      +(i.reason?'<div style="font-size:11px;color:var(--red);margin-top:3px">原因：'+i.reason+'</div>':'')
       +'</div>';
   });
   mobileEl.innerHTML=mHtml||'<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">暂无失效询盘</div></div>';
