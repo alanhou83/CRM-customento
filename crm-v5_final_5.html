@@ -2074,7 +2074,7 @@ function renderCustCard(c, layer){
     +'</div>'
     +'<div class="cc-meta"><span>📦 '+getProd(c)+'</span><span>👤 '+c.person+'</span><span style="color:'+sc+'">★ '+score+'/7</span></div>'
     +'<div class="score-bar"><div class="score-fill" style="width:'+(score/7*100)+'%;background:'+sc+'"></div></div>'
-    +(function(){var od=c.followupDate&&c.followupDate<today();var icon=od?'<span style="font-size:16px">🔔</span> ':'<span style="font-size:9px">📅</span> ';var dc=od?'var(--red)':'var(--muted)';var dsz=od?'13px':'12px';var nc=od?'var(--red)':'var(--green)';var nsz=od?'13px':'11px';if(c.followupDate&&c.followupNote)return '<div class="cc-last">'+icon+'<span style="font-size:'+dsz+';color:'+dc+';font-weight:'+(od?'600':'400')+'">'+c.followupDate+'</span> <span style="font-size:'+nsz+';color:'+nc+'">📌 '+c.followupNote+'</span></div>';if(c.followupDate)return '<div class="cc-last">'+icon+'<span style="font-size:'+dsz+';color:'+dc+';font-weight:'+(od?'600':'400')+'">'+c.followupDate+'</span></div>';if(c.followupNote)return '<div class="cc-last"><span style="font-size:11px;color:var(--green)">📌 '+c.followupNote+'</span></div>';return '';})()
+    +(function(){var od=c.followupDate&&c.followupDate<today();var icon=od?'<span style="font-size:16px">🔔</span> ':'<span style="font-size:9px">📅</span> ';var dc=od?'var(--red)':'var(--muted)';var dsz=od?'13px':'12px';var nc=od?'var(--red)':'var(--green)';var nsz=od?'13px':'11px';if(c.followupDate&&c.followupNote)return '<div class="cc-last">'+icon+'<span style="font-size:'+dsz+';color:'+dc+';font-weight:'+(od?'600':'400')+'">'+c.followupDate+'</span> <span style="font-size:'+nsz+';color:'+nc+'">📌 '+c.followupNote+'</span></div>';var lf=getLastFollowupStr(c);if(lf)return '<div class="cc-last" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span style="font-size:10px;color:var(--muted)">'+lf+'</span></div>';return '';})()
     +'</div>';
 }
 
@@ -2158,6 +2158,7 @@ function renderCustomers(){
       const prodHtml=prodArr.length
         ?prodArr.map(function(p){return '<span class="prod-pill">'+p+'</span>';}).join('')
         :'<span style="color:var(--muted2);font-size:11px">—</span>';
+      const lastFuC=getLastFollowupStr(c);
       const isOverdueFollowup=c.followupDate&&c.followupDate<today();
       const followupHtml=c.followupDate
         ?'<div>'+(isOverdueFollowup?'<span style="font-size:16px">🔔</span> ':'<span style="font-size:9px">📅</span> ')+'<span style="font-size:'+(isOverdueFollowup?'13':'12')+'px;color:'+(isOverdueFollowup?'var(--red)':'var(--muted)')+';font-weight:'+(isOverdueFollowup?'600':'400')+'">'+c.followupDate+'</span>'+(c.followupNote?'<div style="font-size:'+(isOverdueFollowup?'12':'11')+'px;color:'+(isOverdueFollowup?'var(--red)':'var(--green)')+';margin-top:2px">📌 '+c.followupNote+'</div>':'')+'</div>'
@@ -2168,6 +2169,7 @@ function renderCustomers(){
         +'<div class="table-cell" style="overflow:visible;white-space:normal">'
         +'<div style="font-size:12px;color:var(--muted);margin-bottom:3px">'+(c.company||'—')+(c.country?' <span style="color:var(--muted2)">· '+c.country+'</span>':'')+'</div>'
         +'<div style="display:flex;flex-wrap:wrap;gap:2px">'+prodHtml+'</div>'
+        +(lastFuC?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">'+lastFuC+'</div>':'')
         +'</div>'
         +'<div class="table-cell"><span class="type-tag '+TC[c.type]+'">'+TL[c.type]+'</span></div>'
         +'<div class="table-cell" style="font-size:12px">'+(layerLabel[layer]||layer)+'</div>'
@@ -3671,7 +3673,7 @@ function renderMobileCards(page){
           +'</div>'
           +'<div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;gap:3px;align-items:flex-end">'
           +'<span style="font-size:12px;font-weight:600;color:'+sc+'">★ '+score+'/7</span>'
-          +(function(){var od=cu.followupDate&&cu.followupDate<today();var icon=od?'<span style="font-size:16px">🔔</span> ':'<span style="font-size:9px">📅</span> ';var dc=od?'var(--red)':'var(--muted)';var nc=od?'var(--red)':'var(--green)';if(cu.followupDate&&cu.followupNote)return '<span style="font-size:11px;color:'+dc+';font-weight:'+(od?'600':'400')+'">'+icon+cu.followupDate+'</span><span style="font-size:10px;color:'+nc+'"> 📌 '+cu.followupNote+'</span>';if(cu.followupDate)return '<span style="font-size:11px;color:'+dc+';font-weight:'+(od?'600':'400')+'">'+icon+cu.followupDate+'</span>';if(cu.followupNote)return '<span style="font-size:10px;color:var(--green)">📌 '+cu.followupNote+'</span>';return '';})()
+          +(function(){var od=cu.followupDate&&cu.followupDate<today();var icon=od?'<span style="font-size:16px">🔔</span> ':'<span style="font-size:9px">📅</span> ';var dc=od?'var(--red)':'var(--muted)';var nc=od?'var(--red)':'var(--green)';if(cu.followupDate&&cu.followupNote)return '<span style="font-size:11px;color:'+dc+';font-weight:'+(od?'600':'400')+'">'+icon+cu.followupDate+'</span><span style="font-size:10px;color:'+nc+'"> 📌 '+cu.followupNote+'</span>';var lf=getLastFollowupStr(cu);if(lf)return '<span style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;display:block;text-align:right">'+lf+'</span>';return '';})()
           +'<span style="font-size:10px;color:var(--muted2)">'+cu.person+'</span>'
           +'</div></div>';
       });
@@ -3700,7 +3702,7 @@ function renderMobileCards(page){
               +'</div><span class="type-tag '+TC[cu.type]+'">'+TL[cu.type]+'</span></div>'
               +'<div class="mobile-card-bottom">'
               +'<span style="font-size:11px;color:'+sc+'">★ '+score+'/7</span>'
-              +(function(){var od=cu.followupDate&&cu.followupDate<today();var icon=od?'<span style="font-size:16px">🔔</span> ':'<span style="font-size:9px">📅</span> ';var dc=od?'var(--red)':'var(--muted)';var nc=od?'var(--red)':'var(--green)';var dsz=od?'13px':'11px';var nsz=od?'12px':'11px';if(cu.followupDate&&cu.followupNote)return '<span style="font-size:'+dsz+';color:'+dc+';font-weight:'+(od?'600':'400')+'">'+icon+cu.followupDate+'</span><span style="font-size:'+nsz+';color:'+nc+'"> 📌 '+cu.followupNote+'</span>';if(cu.followupDate)return '<span style="font-size:'+dsz+';color:'+dc+';font-weight:'+(od?'600':'400')+'">'+icon+cu.followupDate+'</span>';if(cu.followupNote)return '<span style="font-size:11px;color:var(--green)">📌 '+cu.followupNote+'</span>';return '';})()
+              +(function(){var od=cu.followupDate&&cu.followupDate<today();var icon=od?'<span style="font-size:16px">🔔</span> ':'<span style="font-size:9px">📅</span> ';var dc=od?'var(--red)':'var(--muted)';var nc=od?'var(--red)':'var(--green)';var dsz=od?'13px':'11px';var nsz=od?'12px':'11px';if(cu.followupDate&&cu.followupNote)return '<span style="font-size:'+dsz+';color:'+dc+';font-weight:'+(od?'600':'400')+'">'+icon+cu.followupDate+'</span><span style="font-size:'+nsz+';color:'+nc+'"> 📌 '+cu.followupNote+'</span>';var lf=getLastFollowupStr(cu);if(lf)return '<span style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block">'+lf+'</span>';return '';})()
               +'</div></div>';
           });
           if(group.length>shown){
