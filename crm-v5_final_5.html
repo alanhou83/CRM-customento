@@ -259,6 +259,22 @@ a{color:var(--accent);text-decoration:none;}
   .form-grid{grid-template-columns:1fr;}.form-group.full{grid-column:1;}
   .modal-body{padding:14px 18px;}.modal-head{padding:14px 18px;}.modal-foot{padding:10px 18px 20px;}
 }
+.inq-card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:16px;}
+.inq-card-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:box-shadow .2s,border-color .2s;}
+.inq-card-item:hover{box-shadow:0 4px 20px rgba(45,49,114,.12);border-color:var(--accent);}
+.inq-card-img{width:100%;height:140px;object-fit:cover;display:block;}
+.inq-card-img-ph{width:100%;height:140px;background:linear-gradient(135deg,rgba(107,114,195,.08),rgba(107,114,195,.03));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--muted);font-size:11px;cursor:pointer;}
+.inq-card-body{padding:10px 12px 12px;}
+.inq-card-name{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px;}
+.inq-card-company{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:6px;}
+.inq-card-meta{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-bottom:5px;}
+.inq-card-footer{display:flex;justify-content:space-between;align-items:center;margin-top:5px;font-size:10px;color:var(--muted);}
+@media(max-width:768px){
+  .inq-card-grid{grid-template-columns:repeat(2,1fr);gap:9px;padding:10px;}
+  .inq-card-img,.inq-card-img-ph{height:110px;}
+  .inq-card-body{padding:8px 10px 10px;}
+  .inq-card-name{font-size:12px;}
+}
 </style>
 </head>
 <body>
@@ -493,7 +509,13 @@ a{color:var(--accent);text-decoration:none;}
         <div id="inq-tab-archive" onclick="switchInqTab('archive')" style="font-size:12px;padding:5px 12px;cursor:pointer;color:var(--muted)">成单 <span id="inq-count-archive">0</span></div>
         <div id="inq-tab-expired" onclick="switchInqTab('expired')" style="font-size:12px;padding:5px 12px;cursor:pointer;color:var(--muted)">失效 <span id="inq-count-expired">0</span></div>
       </div>
-      <button class="btn btn-primary" onclick="openInquiryModal()">＋ 新增询盘</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="view-toggle" id="inq-view-toggle" style="display:none">
+          <button class="view-btn active" id="inq-view-btn-list" onclick="setInqView('list')">☰ 列表</button>
+          <button class="view-btn" id="inq-view-btn-card" onclick="setInqView('card')">▦ 卡片</button>
+        </div>
+        <button class="btn btn-primary" onclick="openInquiryModal()">＋ 新增询盘</button>
+      </div>
     </div>
   </div>
   <div id="inq-active-view">
@@ -512,6 +534,9 @@ a{color:var(--accent);text-decoration:none;}
         <div id="inq-table-body"></div>
       </div></div></div>
       <div class="mobile-cards" id="mobile-inq-cards"></div>
+    </div>
+    <div id="inq-card-view-wrap" style="display:none">
+      <div class="inq-card-grid" id="inq-card-grid"></div>
     </div>
   </div>
   <div id="inq-silent-view" style="display:none">
@@ -777,9 +802,40 @@ a{color:var(--accent);text-decoration:none;}
         </div>
       </div>
       <div class="form-group full"><label class="form-label">需求备注</label><textarea class="form-input form-textarea" id="fi-notes" placeholder="客户具体需求、特殊要求..."></textarea></div>
+      <div class="form-group full">
+        <label class="form-label">产品参考图 <span style="font-size:10px;color:var(--muted);font-weight:400">上传后自动裁切压缩</span></label>
+        <div id="fi-img-preview" style="display:none;position:relative;width:100%;max-width:200px;margin-bottom:8px">
+          <img id="fi-img-thumb" style="width:100%;border-radius:8px;display:block;border:1px solid var(--border)" src="" alt="">
+          <button onclick="removeInqImg()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:white;border:none;border-radius:50%;width:22px;height:22px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">×</button>
+        </div>
+        <div id="fi-img-upload-area" style="border:1.5px dashed var(--border);border-radius:8px;padding:16px;text-align:center;cursor:pointer;color:var(--muted);font-size:12px" onclick="document.getElementById('fi-img-file').click()">
+          📷 点击选择图片
+        </div>
+        <input type="file" id="fi-img-file" accept="image/*" style="display:none" onchange="handleInqImgSelect(this)">
+      </div>
     </div>
   </div>
   <div class="modal-foot"><div id="inq-delete-area"></div><div style="display:flex;gap:8px"><button class="btn btn-outline" onclick="closeModal('inq-modal')">取消</button><button class="btn btn-primary" onclick="saveInquiry()">保存</button></div></div>
+</div>
+</div>
+
+<!-- 图片裁切 Modal -->
+<div class="modal-overlay" id="crop-modal" style="display:none">
+<div class="modal" style="max-width:500px">
+  <div class="modal-head"><div class="modal-title">裁切图片</div><button class="modal-close" onclick="closeCropModal()">×</button></div>
+  <div class="modal-body" style="padding:16px">
+    <div style="position:relative;background:#000;border-radius:8px;overflow:hidden;margin-bottom:10px;user-select:none;touch-action:none" id="crop-container">
+      <canvas id="crop-canvas" style="display:block;max-width:100%;cursor:move"></canvas>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;text-align:center">拖动图片调整构图，裁切框固定在中央</div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-outline" onclick="skipCrop()">跳过裁切</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-outline" onclick="closeCropModal()">取消</button>
+      <button class="btn btn-primary" onclick="confirmCrop()">确认裁切</button>
+    </div>
+  </div>
 </div>
 </div>
 
@@ -1324,6 +1380,8 @@ function switchInqTab(tab){
     var chips=document.getElementById('mh-inq-chips');
     if(chips)chips.style.display=tab==='active'?'':'none';
   });
+  var toggleBtn=document.getElementById('inq-view-toggle');
+  if(toggleBtn)toggleBtn.style.display=tab==='active'?'flex':'none';
   if(tab==='active')renderInquiries();
   else if(tab==='silent')renderSilent();
   else if(tab==='archive')renderArchive();
@@ -2385,6 +2443,14 @@ function openInqDetail(id){
   if(i.notes){
     tab1+='<div class="detail-section"><div class="detail-section-title">备注</div><div style="font-size:13px;line-height:1.6">'+i.notes+'</div></div>';
   }
+  /* 产品图片占位，异步填充 */
+  tab1+='<div class="detail-section" id="dp-inq-img-section" style="display:none">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+    +'<div class="detail-section-title" style="margin-bottom:0">产品参考图</div>'
+    +'<button class="btn btn-outline btn-xs" onclick="deleteInqImgFromDetail('+i.id+')">删除</button>'
+    +'</div>'
+    +'<img id="dp-inq-img" style="width:100%;border-radius:8px;border:1px solid var(--border)" src="" alt="">'
+    +'</div>';
 
   /* Tab2：跟进记录 */
   var fuHtml=renderFollowups(i.followups||[]);
@@ -2424,6 +2490,13 @@ function openInqDetail(id){
   document.getElementById('dp-followup-bar').style.display='none';
   switchDpTab('profile');
   document.getElementById('detail-panel').classList.add('open');
+  /* 异步加载询盘图片 */
+  getImgFromDB(id,function(dataUrl){
+    var sec=document.getElementById('dp-inq-img-section');
+    var img=document.getElementById('dp-inq-img');
+    if(sec&&img&&dataUrl){sec.style.display='block';img.src=dataUrl;}
+    else if(sec){sec.style.display='none';}
+  });
 }
 
 function switchDpTab(tab){
@@ -2921,6 +2994,11 @@ function openInquiryModal(){
     var chip=document.getElementById(cid);
     if(chip){chip.classList.remove('flag-active');chip.style.background='rgba(255,255,255,.04)';chip.style.color='var(--muted)';chip.style.borderColor='var(--border)';}
   });
+  _pendingInqImg=null;
+  var prev=document.getElementById('fi-img-preview');
+  var area=document.getElementById('fi-img-upload-area');
+  if(prev)prev.style.display='none';
+  if(area)area.style.display='block';
   openModal('inq-modal');
 }
 
@@ -2972,7 +3050,16 @@ function saveInquiry(){
     if(newStatus==='沉默中'&&!newInq.silentSince)newInq.silentSince=data.date;
     inquiries.push(newInq);
   }
-  saveAll();closeModal('inq-modal');refreshAll();toast('询盘已保存 ✓');
+  var savedId=editingInqId?editingInqId:inquiries[inquiries.length-1].id;
+  if(_pendingInqImg){
+    saveImgToDB(savedId,_pendingInqImg,function(){
+      _pendingInqImg=null;
+      saveAll();closeModal('inq-modal');refreshAll();toast('询盘已保存 ✓');
+    });
+  } else {
+    _pendingInqImg=null;
+    saveAll();closeModal('inq-modal');refreshAll();toast('询盘已保存 ✓');
+  }
 }
 
 function openCustomerModal(){
