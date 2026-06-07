@@ -820,7 +820,7 @@ a{color:var(--accent);text-decoration:none;}
 </div>
 
 <!-- 图片裁切 Modal -->
-<div class="modal-overlay" id="crop-modal" style="display:none">
+<div class="modal-overlay" id="crop-modal">
 <div class="modal" style="max-width:500px">
   <div class="modal-head"><div class="modal-title">裁切图片</div><button class="modal-close" onclick="closeCropModal()">×</button></div>
   <div class="modal-body" style="padding:16px">
@@ -4008,7 +4008,7 @@ function openCropModal(img){
   var modal=document.getElementById('crop-modal');
   var canvas=document.getElementById('crop-canvas');
   if(!modal||!canvas)return;
-  modal.style.display='flex';
+  modal.classList.add('open');
   var maxW=Math.min(460,window.innerWidth-60);
   var ratio=img.height/img.width;
   var cw=maxW;
@@ -4098,7 +4098,7 @@ function skipCrop(){
 }
 
 function closeCropModal(){
-  var m=document.getElementById('crop-modal');if(m)m.style.display='none';
+  var m=document.getElementById('crop-modal');if(m)m.classList.remove('open');
 }
 
 var _pendingInqImg=null;
