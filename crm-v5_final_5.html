@@ -1892,7 +1892,7 @@ function renderOrders(){
     return '<div class="table-row cols-ord" onclick="openOrderDetail('+o.id+')">'
       +'<div class="table-cell" style="color:var(--muted);font-size:12px">'+o.date+'</div>'
       +'<div class="table-cell" style="font-weight:500">'+o.alias+'</div>'
-      +'<div class="table-cell"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+o.product+'</div>'+(o.notes?'<div style="font-size:10px;color:var(--green);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📌 '+o.notes+'</div>':'')+'</div>'
+      +'<div class="table-cell"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+o.product+'</div>'+(o.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">注：'+o.notes+'</div>':'')+'</div>'
       +'<div class="table-cell" style="font-weight:500;color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+'"><span class="'+(o.currency==='USD'?'cur-usd':'cur-cny')+'">'+o.currency+'</span> '+fmtAmt(o.amount,o.currency)+'</div>'
       +'<div class="table-cell"><span style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;'+getOrdStageStyle(o.stage)+'">'+o.stage+'</span></div>'
       +'<div class="table-cell" style="font-size:12px;color:'+(deliveryOverdue?'var(--red)':'var(--muted)')+'">'+(deliveryOverdue?'⚠️ ':'')+( o.delivery||'未设定')+'</div>'
