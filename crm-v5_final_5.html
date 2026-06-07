@@ -3041,6 +3041,19 @@ function editInquiry(id){
   };
   resetChip('flag-chip-quoted','已报价','rgba(247,212,79,.15)','var(--yellow)','var(--yellow)');
   resetChip('flag-chip-sampled','已打样','rgba(167,79,247,.15)','var(--purple)','var(--purple)');
+  /* 重置图片预览区，从 DB 异步加载该询盘已有图 */
+  _pendingInqImg=null;
+  var prev=document.getElementById('fi-img-preview');
+  var thumb=document.getElementById('fi-img-thumb');
+  var area=document.getElementById('fi-img-upload-area');
+  if(prev)prev.style.display='none';
+  if(area)area.style.display='block';
+  getImgFromDB(id,function(dataUrl){
+    if(!dataUrl)return;
+    if(thumb)thumb.src=dataUrl;
+    if(prev)prev.style.display='block';
+    if(area)area.style.display='none';
+  });
   openModal('inq-modal');
 }
 
