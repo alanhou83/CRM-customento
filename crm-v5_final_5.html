@@ -2202,7 +2202,7 @@ function openInqDetail(id){
 
   /* Tab1：询盘详情 */
   var tab1='';
-  tab1+='<div class="detail-section"><div class="detail-section-title">快速更新状态</div>'
+  tab1+='<div class="detail-section">'
     +statusBar+flagBar+convertBar+'</div>';
   tab1+='<div class="detail-section"><div class="detail-section-title">询盘信息</div>'
     +'<div class="detail-row"><span class="detail-key">日期</span><span class="detail-val">'+i.date+'</span></div>'
@@ -2212,6 +2212,7 @@ function openInqDetail(id){
     +'<div class="detail-row"><span class="detail-key">评级</span><span class="detail-val"><span class="badge '+GC[i.grade]+'">'+i.grade+'级</span></span></div>'
     +(i.amount&&i.amount>0?'<div class="detail-row"><span class="detail-key">目标金额</span><span class="detail-val" style="color:'+(i.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(i.amount,i.currency)+'</span></div>':'')
     +'<div class="detail-row"><span class="detail-key">负责人</span><span class="detail-val">'+i.person+'</span></div>'
+    +(i.followupDate||i.followupNote?'<div class="detail-row"><span class="detail-key">待办</span><span class="detail-val" style="text-align:right">'+(i.followupDate?'<span style="color:'+(i.followupDate<today()?'var(--red)':'var(--text)')+'">'+i.followupDate+'</span>':'')+(i.followupNote?'<br><span style="font-size:11px;color:'+(i.followupDate&&i.followupDate<today()?'var(--red)':'var(--green)')+'">📌 '+i.followupNote+'</span>':'')+'</span></div>':'')
     +(i.reason?'<div class="detail-row"><span class="detail-key">未成单原因</span><span class="detail-val" style="color:var(--red)">'+i.reason+'</span></div>':'')
     +'<div class="detail-row"><span class="detail-key">热点商机</span><span class="detail-val"><button class="btn btn-outline btn-xs" style="'+(i.isHot?'background:rgba(247,147,79,.15);color:var(--accent2);border-color:var(--accent2)':'')+'" onclick="toggleInqHot('+i.id+')">'+( i.isHot?'🔥 取消热点':'标记热点')+'</button></span></div>'
     +'</div>';
