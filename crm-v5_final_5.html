@@ -289,6 +289,9 @@ a{color:var(--accent);text-decoration:none;}
     </div>
     <div style="display:flex;align-items:center;gap:3px;width:calc(100% + 30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
       <input placeholder="🔍 搜索询盘..." oninput="renderMobileCards('inq')" style="flex:1;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;padding:3px 0;min-width:0">
+      <button class="sort-btn-s" id="inq-sort-date" onclick="setInqMobileSort('date')">日期 ↓</button>
+      <button class="sort-btn-s" id="inq-sort-alias" onclick="setInqMobileSort('alias')">客户 ↓</button>
+      <button class="sort-btn-s" id="inq-sort-followup" onclick="setInqMobileSort('followup')">待办 ↓</button>
     </div>
   </div>
   <div id="mh-hot" style="display:none">
@@ -492,7 +495,7 @@ a{color:var(--accent);text-decoration:none;}
       </div>
       <div id="inq-notice"></div>
       <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
-        <div class="table-header cols-inq"><div>日期</div><div>客户</div><div>标记</div><div>渠道</div><div>产品</div><div>评级</div><div>状态</div><div>待办</div><div>负责人</div></div>
+        <div class="table-header cols-inq"><div onclick="setInqSort('date')" style="cursor:pointer;user-select:none">日期 <span id="thi-date-arr" style="color:var(--accent);opacity:1">↓</span></div><div onclick="setInqSort('alias')" style="cursor:pointer;user-select:none">客户 <span id="thi-alias-arr" style="color:var(--muted);opacity:.4">↓</span></div><div>标记</div><div>渠道</div><div>产品</div><div>评级</div><div>状态</div><div onclick="setInqSort('followup')" style="cursor:pointer;user-select:none">待办 <span id="thi-followup-arr" style="color:var(--muted);opacity:.4">↓</span></div><div>负责人</div></div>
         <div id="inq-table-body"></div>
       </div></div></div>
       <div class="mobile-cards" id="mobile-inq-cards"></div>
@@ -1561,7 +1564,16 @@ function getFilteredInq(){
     if(grade&&i.grade!==grade)return false;
     if(person&&i.person!==person)return false;
     return true;
-  }).sort((a,b)=>b.date.localeCompare(a.date));
+  }).sort(function(a,b){
+    var sk=inqTableSort.key||inqMobileSort.key||'date';
+    var sd=inqTableSort.key?inqTableSort.dir:inqMobileSort.key?inqMobileSort.dir:'desc';
+    var av,bv;
+    if(sk==='alias'){av=(a.alias||'').toLowerCase();bv=(b.alias||'').toLowerCase();}
+    else if(sk==='followup'){av=a.followupDate||'9999';bv=b.followupDate||'9999';}
+    else{av=a.date;bv=b.date;}
+    var cmp=av<bv?-1:av>bv?1:0;
+    return sd==='asc'?cmp:-cmp;
+  });
 }
 
 function renderInquiries(){
@@ -3017,12 +3029,46 @@ let mobilePageFilter={hot:{},cust:{},ord:{},stats:{}};
 var statsCurrency='';
 var statsMobileSort={key:'date',dir:'desc'};
 var ordMobileSort={key:null,dir:'desc'};
+var inqTableSort={key:'date',dir:'desc'};
+var inqMobileSort={key:null,dir:'desc'};
 var statsRateBase=6.89;
 var statsCurrencyMode='USD';
 var statsTableSort={key:'date',dir:'desc'};
 var ordTableSort={key:'date',dir:'desc'};
 var ORD_STAGE_STYLE={'等待打样':'background:rgba(150,150,150,.2);color:#999;border:0.5px solid rgba(150,150,150,.3)','打样中':'background:rgba(167,79,247,.2);color:#b36bfa;border:0.5px solid rgba(167,79,247,.3)','客户确认样品':'background:rgba(247,212,79,.2);color:var(--yellow);border:0.5px solid rgba(247,212,79,.3)','生产中':'background:rgba(79,142,247,.2);color:var(--accent);border:0.5px solid rgba(79,142,247,.3)','待发货':'background:rgba(247,147,79,.2);color:var(--accent2);border:0.5px solid rgba(247,147,79,.3)','已发货':'background:rgba(62,207,142,.2);color:var(--green);border:0.5px solid rgba(62,207,142,.3)'};
 function getOrdStageStyle(stage){return ORD_STAGE_STYLE[stage]||'background:rgba(107,114,195,.2);color:var(--accent);border:0.5px solid rgba(107,114,195,.3)';}
+function setInqSort(key){
+  if(inqTableSort.key===key){
+    if(inqTableSort.dir==='desc'){inqTableSort.dir='asc';}
+    else{inqTableSort.key=null;inqTableSort.dir='desc';}
+  } else {inqTableSort.key=key;inqTableSort.dir='desc';}
+  ['date','alias','followup'].forEach(function(k){
+    var el=document.getElementById('thi-'+k+'-arr');if(!el)return;
+    if(inqTableSort.key===k){
+      el.textContent=inqTableSort.dir==='desc'?'↓':'↑';
+      el.style.color='var(--accent)';el.style.opacity='1';
+    } else {
+      el.textContent='↓';el.style.color='var(--muted)';el.style.opacity='.4';
+    }
+  });
+  renderInquiries();
+}
+function setInqMobileSort(key){
+  if(inqMobileSort.key===key){
+    if(inqMobileSort.dir==='desc'){inqMobileSort.dir='asc';}
+    else{inqMobileSort.key=null;inqMobileSort.dir='desc';}
+  } else {inqMobileSort.key=key;inqMobileSort.dir='desc';}
+  var labels={date:'日期',alias:'客户',followup:'待办'};
+  ['date','alias','followup'].forEach(function(k){
+    var el=document.getElementById('inq-sort-'+k);if(!el)return;
+    var isActive=inqMobileSort.key===k;
+    el.textContent=labels[k]+(isActive&&inqMobileSort.dir==='asc'?' ↑':' ↓');
+    el.classList.toggle('active',isActive);
+    el.style.opacity=isActive?'1':'.4';
+  });
+  renderMobileCards('inq');
+}
+
 function setOrdSort(key){
   if(ordTableSort.key===key){
     if(ordTableSort.dir==='desc'){ordTableSort.dir='asc';}
