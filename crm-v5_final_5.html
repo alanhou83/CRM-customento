@@ -83,7 +83,9 @@ a{color:var(--accent);text-decoration:none;}
 .table-row:last-child{border-bottom:none;}.table-row:hover{background:var(--surface2);}
 .table-row.is-overdue{border-left:2px solid rgba(247,212,79,.4);}
 .table-cell{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:6px;font-size:13px;}
-.cols-inq{grid-template-columns:80px 1fr 90px 90px 100px 55px 100px 150px 65px;}
+.cols-inq{grid-template-columns:46px 80px 1fr 90px 90px 100px 55px 100px 150px 65px;}
+.inq-list-thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;display:block;}
+.inq-list-thumb-ph{width:36px;height:36px;border-radius:6px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted);opacity:.4;}
 .cols-hot{grid-template-columns:80px 1fr 90px 90px 110px 55px 110px 95px 65px 80px;}
 .cols-ord{grid-template-columns:85px 120px 1fr 120px 110px 100px 70px;}
 .cols-stat{grid-template-columns:110px 1fr 70px 120px 100px 70px 70px;}
@@ -326,6 +328,9 @@ a{color:var(--accent);text-decoration:none;}
       <button class="sort-btn-s" id="inq-sort-date" onclick="setInqMobileSort('date')">日期 ↓</button>
       <button class="sort-btn-s" id="inq-sort-alias" onclick="setInqMobileSort('alias')">客户 ↓</button>
       <button class="sort-btn-s" id="inq-sort-followup" onclick="setInqMobileSort('followup')">待办 ↓</button>
+      <span style="color:var(--border);margin:0 1px">|</span>
+      <button id="minq-view-btn-list" onclick="setInqView('list')" style="padding:3px 7px;border-radius:5px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:12px;cursor:pointer;line-height:1.2">☰</button>
+      <button id="minq-view-btn-card" onclick="setInqView('card')" style="padding:3px 7px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;line-height:1.2">▦</button>
     </div>
   </div>
   <div id="mh-hot" style="display:none">
@@ -510,7 +515,7 @@ a{color:var(--accent);text-decoration:none;}
         <div id="inq-tab-expired" onclick="switchInqTab('expired')" style="font-size:12px;padding:5px 12px;cursor:pointer;color:var(--muted)">失效 <span id="inq-count-expired">0</span></div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <div class="view-toggle" id="inq-view-toggle" style="display:none">
+        <div class="view-toggle" id="inq-view-toggle">
           <button class="view-btn active" id="inq-view-btn-list" onclick="setInqView('list')">☰ 列表</button>
           <button class="view-btn" id="inq-view-btn-card" onclick="setInqView('card')">▦ 卡片</button>
         </div>
@@ -530,7 +535,7 @@ a{color:var(--accent);text-decoration:none;}
       </div>
       <div id="inq-notice"></div>
       <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
-        <div class="table-header cols-inq"><div onclick="setInqSort('date')" style="cursor:pointer;user-select:none">日期 <span id="thi-date-arr" style="color:var(--accent);opacity:1">↓</span></div><div onclick="setInqSort('alias')" style="cursor:pointer;user-select:none">客户 <span id="thi-alias-arr" style="color:var(--muted);opacity:.4">↓</span></div><div>标记</div><div>渠道</div><div>产品</div><div>评级</div><div>状态</div><div onclick="setInqSort('followup')" style="cursor:pointer;user-select:none">待办 <span id="thi-followup-arr" style="color:var(--muted);opacity:.4">↓</span></div><div>负责人</div></div>
+        <div class="table-header cols-inq"><div></div><div onclick="setInqSort('date')" style="cursor:pointer;user-select:none">日期 <span id="thi-date-arr" style="color:var(--accent);opacity:1">↓</span></div><div onclick="setInqSort('alias')" style="cursor:pointer;user-select:none">客户 <span id="thi-alias-arr" style="color:var(--muted);opacity:.4">↓</span></div><div>标记</div><div>渠道</div><div>产品</div><div>评级</div><div>状态</div><div onclick="setInqSort('followup')" style="cursor:pointer;user-select:none">待办 <span id="thi-followup-arr" style="color:var(--muted);opacity:.4">↓</span></div><div>负责人</div></div>
         <div id="inq-table-body"></div>
       </div></div></div>
       <div class="mobile-cards" id="mobile-inq-cards"></div>
@@ -827,7 +832,13 @@ a{color:var(--accent);text-decoration:none;}
     <div style="position:relative;background:#000;border-radius:8px;overflow:hidden;margin-bottom:10px;user-select:none;touch-action:none" id="crop-container">
       <canvas id="crop-canvas" style="display:block;max-width:100%;cursor:move"></canvas>
     </div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;text-align:center">拖动图片调整构图，裁切框固定在中央</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="font-size:11px;color:var(--muted);white-space:nowrap">缩小</span>
+      <input type="range" id="crop-zoom" min="0.5" max="4" step="0.05" value="1" style="flex:1;accent-color:var(--accent)" oninput="setCropZoom(this.value)">
+      <span style="font-size:11px;color:var(--muted);white-space:nowrap">放大</span>
+      <span id="crop-zoom-label" style="font-size:11px;color:var(--accent);min-width:32px;text-align:right">1.0x</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;text-align:center">拖动调整构图 · 滑条或滚轮缩放</div>
   </div>
   <div class="modal-foot">
     <button class="btn btn-outline" onclick="skipCrop()">跳过裁切</button>
@@ -1809,6 +1820,7 @@ function renderInquiries(){
     if(ov) marks+='<span class="mark-overdue">超时</span>';
     marks+='</div>';
     return '<div class="table-row cols-inq" onclick="openInqDetail('+i.id+')">'
+      +'<div class="table-cell" style="padding-right:0;padding-left:2px"><div class="inq-list-thumb-ph" id="inq-lph-'+i.id+'">📷</div><img class="inq-list-thumb" id="inq-limg-'+i.id+'" src="" alt="" style="display:none"></div>'
       +'<div class="table-cell" style="color:var(--muted);font-size:12px">'+i.date+'</div>'
       +'<div class="table-cell"><div style="font-weight:500">'+i.alias+'</div><div style="font-size:11px;color:var(--muted)">'+( i.company||'')+'</div></div>'
       +'<div class="table-cell">'+marks+'</div>'
@@ -1820,6 +1832,15 @@ function renderInquiries(){
       +'<div class="table-cell" style="color:var(--muted)">'+i.person+'</div>'
       +'</div>';
   }).join('');
+  filtered.forEach(function(i){
+    getImgFromDB(i.id,function(dataUrl){
+      if(!dataUrl)return;
+      var limg=document.getElementById('inq-limg-'+i.id);
+      var lph=document.getElementById('inq-lph-'+i.id);
+      if(limg){limg.src=dataUrl;limg.style.display='block';}
+      if(lph)lph.style.display='none';
+    });
+  });
   renderMobileCards('inq');
 }
 
@@ -3977,7 +3998,7 @@ function deleteImgFromDB(id,cb){
 }
 
 /* ===== 裁切逻辑 ===== */
-var _cropState={img:null,origFile:null,onDone:null,offsetX:0,offsetY:0,dragging:false,lastX:0,lastY:0,canvasW:0,canvasH:0,cropSize:0,drawScale:1};
+var _cropState={img:null,origFile:null,onDone:null,offsetX:0,offsetY:0,dragging:false,lastX:0,lastY:0,canvasW:0,canvasH:0,cropSize:0,drawScale:1,zoomFactor:1};
 
 function handleInqImgSelect(input){
   var file=input.files[0];if(!file)return;
@@ -4019,7 +4040,20 @@ function openCropModal(img){
   _cropState.cropSize=cropSize;
   _cropState.drawScale=cw/img.width;
   _cropState.offsetX=0;_cropState.offsetY=0;
+  _cropState.zoomFactor=1;
+  var zSlider=document.getElementById('crop-zoom');
+  var zLabel=document.getElementById('crop-zoom-label');
+  if(zSlider)zSlider.value=1;
+  if(zLabel)zLabel.textContent='1.0x';
   drawCrop();
+  canvas.onwheel=function(e){
+    e.preventDefault();
+    var delta=e.deltaY>0?-0.1:0.1;
+    _cropState.zoomFactor=Math.min(4,Math.max(0.5,_cropState.zoomFactor+delta));
+    if(zSlider)zSlider.value=_cropState.zoomFactor;
+    if(zLabel)zLabel.textContent=_cropState.zoomFactor.toFixed(1)+'x';
+    clampOffset();drawCrop();
+  };
   canvas.onmousedown=function(e){_cropState.dragging=true;_cropState.lastX=e.clientX;_cropState.lastY=e.clientY;};
   canvas.onmousemove=function(e){
     if(!_cropState.dragging)return;
@@ -4036,8 +4070,9 @@ function openCropModal(img){
 
 function clampOffset(){
   var s=_cropState;
-  var scaledW=s.img.width*s.drawScale;
-  var scaledH=s.img.height*s.drawScale;
+  var es=s.drawScale*s.zoomFactor;
+  var scaledW=s.img.width*es;
+  var scaledH=s.img.height*es;
   var cropX=(s.canvasW-s.cropSize)/2;
   var cropY=(s.canvasH-s.cropSize)/2;
   var minOX=cropX+s.cropSize-scaledW;
@@ -4053,13 +4088,14 @@ function drawCrop(){
   var canvas=document.getElementById('crop-canvas');
   if(!canvas)return;
   var ctx=canvas.getContext('2d');
+  var es=s.drawScale*s.zoomFactor;
   ctx.clearRect(0,0,s.canvasW,s.canvasH);
-  ctx.drawImage(s.img,s.offsetX,s.offsetY,s.img.width*s.drawScale,s.img.height*s.drawScale);
+  ctx.drawImage(s.img,s.offsetX,s.offsetY,s.img.width*es,s.img.height*es);
   ctx.fillStyle='rgba(0,0,0,.45)';
   ctx.fillRect(0,0,s.canvasW,s.canvasH);
   var cx=(s.canvasW-s.cropSize)/2,cy=(s.canvasH-s.cropSize)/2;
   ctx.clearRect(cx,cy,s.cropSize,s.cropSize);
-  ctx.drawImage(s.img,s.offsetX,s.offsetY,s.img.width*s.drawScale,s.img.height*s.drawScale);
+  ctx.drawImage(s.img,s.offsetX,s.offsetY,s.img.width*es,s.img.height*es);
   ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=2;
   ctx.strokeRect(cx,cy,s.cropSize,s.cropSize);
   ctx.strokeStyle='rgba(255,255,255,.3)';ctx.lineWidth=1;
@@ -4074,10 +4110,11 @@ function confirmCrop(){
   var out=document.createElement('canvas');
   out.width=400;out.height=400;
   var ctx=out.getContext('2d');
+  var es=s.drawScale*s.zoomFactor;
   var cx=(s.canvasW-s.cropSize)/2,cy=(s.canvasH-s.cropSize)/2;
-  var srcX=(cx-s.offsetX)/s.drawScale;
-  var srcY=(cy-s.offsetY)/s.drawScale;
-  var srcSize=s.cropSize/s.drawScale;
+  var srcX=(cx-s.offsetX)/es;
+  var srcY=(cy-s.offsetY)/es;
+  var srcSize=s.cropSize/es;
   ctx.drawImage(s.img,srcX,srcY,srcSize,srcSize,0,0,400,400);
   var dataUrl=out.toDataURL('image/jpeg',0.75);
   closeCropModal();
@@ -4101,6 +4138,13 @@ function closeCropModal(){
   var m=document.getElementById('crop-modal');if(m)m.classList.remove('open');
 }
 
+function setCropZoom(val){
+  _cropState.zoomFactor=parseFloat(val);
+  var lbl=document.getElementById('crop-zoom-label');
+  if(lbl)lbl.textContent=parseFloat(val).toFixed(1)+'x';
+  clampOffset();drawCrop();
+}
+
 var _pendingInqImg=null;
 
 function removeInqImg(){
@@ -4119,19 +4163,29 @@ function setInqView(v){
   var cardWrap=document.getElementById('inq-card-view-wrap');
   var btnList=document.getElementById('inq-view-btn-list');
   var btnCard=document.getElementById('inq-view-btn-card');
+  var mBtnList=document.getElementById('minq-view-btn-list');
+  var mBtnCard=document.getElementById('minq-view-btn-card');
+  var mobileCards=document.getElementById('mobile-inq-cards');
   if(v==='card'){
     var tbl=document.getElementById('inq-table-body');
     if(tbl&&tbl.closest)tbl.closest('.table-wrap').style.display='none';
+    if(mobileCards)mobileCards.style.display='none';
     if(cardWrap)cardWrap.style.display='block';
-    if(btnList)btnList.classList.remove('active');
-    if(btnCard)btnCard.classList.add('active');
+    if(btnList){btnList.classList.remove('active');}
+    if(btnCard){btnCard.classList.add('active');}
+    if(mBtnList){mBtnList.style.background='transparent';mBtnList.style.borderColor='var(--border)';mBtnList.style.color='var(--muted)';}
+    if(mBtnCard){mBtnCard.style.background='var(--accent)';mBtnCard.style.borderColor='var(--accent)';mBtnCard.style.color='#fff';}
     renderInqCardView();
   } else {
     var tbl2=document.getElementById('inq-table-body');
     if(tbl2&&tbl2.closest)tbl2.closest('.table-wrap').style.display='';
+    if(mobileCards)mobileCards.style.display='';
     if(cardWrap)cardWrap.style.display='none';
-    if(btnList)btnList.classList.add('active');
-    if(btnCard)btnCard.classList.remove('active');
+    if(btnList){btnList.classList.add('active');}
+    if(btnCard){btnCard.classList.remove('active');}
+    if(mBtnList){mBtnList.style.background='var(--accent)';mBtnList.style.borderColor='var(--accent)';mBtnList.style.color='#fff';}
+    if(mBtnCard){mBtnCard.style.background='transparent';mBtnCard.style.borderColor='var(--border)';mBtnCard.style.color='var(--muted)';}
+    renderMobileCards('inq');
   }
 }
 
