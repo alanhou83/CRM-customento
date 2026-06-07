@@ -346,7 +346,10 @@ a{color:var(--accent);text-decoration:none;}
       <div class="mobile-chip" onclick="mobileChipFilter(this,'ord','生产中')">生产中</div>
       <div class="mobile-chip" onclick="mobileChipFilter(this,'ord','打样中')">打样中</div>
       <div class="mobile-chip" onclick="mobileChipFilter(this,'ord','待发货')">待发货</div>
+      <div class="mobile-chip" onclick="mobileChipFilter(this,'ord','已发货')">已发货</div>
     </div>
+    <select id="mb-ord-person" onchange="renderMobileCards('ord')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:5px 8px;font-size:12px;outline:none;margin:4px 12px 6px;width:calc(100% - 24px);box-sizing:border-box"><option value="">所有跟单人</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Alan</option></select>
+    <input class="mobile-search" placeholder="🔍 搜索客户..." oninput="renderMobileCards('ord')" id="mb-ord-search">
   </div>
   <div id="mh-stats" style="display:none">
     <div class="mobile-chips" style="gap:4px;margin-bottom:8px">
@@ -3008,9 +3011,13 @@ function renderMobileCards(page){
     }
   } else if(page==='ord'){
     const f=mobilePageFilter.ord||{};
+    const mbOrdPerson=(document.getElementById('mb-ord-person')||{}).value||'';
+    const mbOrdSearch=((document.getElementById('mb-ord-search')||{}).value||'').toLowerCase();
     const filtered=orders.filter(o=>{
       if(o.completed)return false;
       if(f.filter&&o.stage!==f.filter)return false;
+      if(mbOrdPerson&&o.person!==mbOrdPerson)return false;
+      if(mbOrdSearch&&!o.alias.toLowerCase().includes(mbOrdSearch))return false;
       return true;
     });
     const c=document.getElementById('mobile-ord-cards');if(!c)return;
