@@ -2855,7 +2855,7 @@ function setOrdMobileSort(key){
   ['date','alias','product','amount','delivery'].forEach(function(k){
     var el=document.getElementById('ord-sort-'+k);if(!el)return;
     var isActive=ordMobileSort.key===k;
-    el.textContent=labels[k]+(isActive?(ordMobileSort.dir==='desc'?' ↓':' ↑'):' ↕');
+    el.textContent=labels[k]+(isActive&&ordMobileSort.dir==='asc'?' ↑':' ↓');
     el.classList.toggle('active',isActive);
     if(!isActive){el.style.opacity='.4';}else{el.style.opacity='1';}
   });
