@@ -271,7 +271,7 @@ a{color:var(--accent);text-decoration:none;}
       <button class="btn btn-outline btn-sm" id="mobile-back-btn" onclick="closeSettingsPage()" style="display:none">← 返回</button>
     </div>
   </div>
-  <div id="mh-inq" style="display:none">
+  <div id="mh-inq" style="display:none;margin-bottom:-6px">
     <div style="display:flex;border-bottom:1px solid var(--border)">
       <div id="minq-tab-active" onclick="switchInqTab('active')" style="flex:1;text-align:center;padding:6px 4px;font-size:12px;font-weight:500;color:var(--accent);border-bottom:2px solid var(--accent);cursor:pointer">活跃</div>
       <div id="minq-tab-archive" onclick="switchInqTab('archive')" style="flex:1;text-align:center;padding:6px 4px;font-size:12px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer">成单</div>
@@ -298,7 +298,7 @@ a{color:var(--accent);text-decoration:none;}
     </div>
     <input class="mobile-search" placeholder="🔍 搜索商机..." oninput="renderMobileCards('hot')">
   </div>
-  <div id="mh-cust" style="display:none">
+  <div id="mh-cust" style="display:none;margin-bottom:-6px">
     <div class="mobile-chips">
       <div class="mobile-chip on" id="mb-chip-all" onclick="clearMobileQuickFilters()">全部</div>
       <div class="mobile-chip" id="mb-chip-vip" onclick="toggleMobileQuickFilter('vip')">⭐VIP</div>
@@ -361,7 +361,7 @@ a{color:var(--accent);text-decoration:none;}
       <button class="sort-btn-s" id="ord-sort-delivery" onclick="setOrdMobileSort('delivery')">交期 ↓</button>
     </div>
   </div>
-  <div id="mh-stats" style="display:none">
+  <div id="mh-stats" style="display:none;margin-bottom:-6px">
     <div class="mobile-chips" style="gap:4px;padding-bottom:6px">
       <div class="mobile-chip on" id="stats-chip-all" onclick="statsChipCurrency(this,'')" style="padding:3px 8px">全部</div>
       <div class="mobile-chip" id="stats-chip-usd" onclick="statsChipCurrency(this,'USD')" style="padding:3px 8px">$ 美金</div>
