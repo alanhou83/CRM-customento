@@ -306,25 +306,25 @@ a{color:var(--accent);text-decoration:none;}
       <div class="mobile-chip" onclick="mobileChip(this,'overdue')">⚠️ 超时</div>
     </div>
     <div class="mobile-chips" style="padding-bottom:6px;margin-top:2px">
-      <select id="mb-inq-status" onchange="renderMobileCards('inq')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
+      <select id="mb-inq-status" onchange="refreshInqActive()" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
         <option value="">状态</option>
         <option>新询盘</option><option>互动中</option><option>报价中</option><option>打样中</option><option>追单中</option>
       </select>
-      <select id="mb-inq-grade" onchange="renderMobileCards('inq')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
+      <select id="mb-inq-grade" onchange="refreshInqActive()" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
         <option value="">评级</option>
         <option value="A">A级</option><option value="B">B级</option><option value="C">C级</option><option value="D">D级</option>
       </select>
-      <select id="mb-inq-person" onchange="renderMobileCards('inq')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
+      <select id="mb-inq-person" onchange="refreshInqActive()" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
         <option value="">跟单</option>
         <option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Penny</option>
       </select>
-      <select id="mb-inq-source" onchange="renderMobileCards('inq')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
+      <select id="mb-inq-source" onchange="refreshInqActive()" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
         <option value="">渠道</option>
         <option>Alibaba</option><option>1688</option><option>Customento</option><option>老客户</option><option>笨鸟导入</option><option>WhatsApp</option><option>展会</option><option>其他</option>
       </select>
     </div>
     <div style="display:flex;align-items:center;gap:3px;width:calc(100% + 30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
-      <input id="search-inq-m" placeholder="🔍 搜索询盘..." oninput="renderMobileCards('inq')" style="flex:1;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;padding:3px 0;min-width:0">
+      <input id="search-inq-m" placeholder="🔍 搜索询盘..." oninput="refreshInqActive()" style="flex:1;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;padding:3px 0;min-width:0">
       <button class="sort-btn-s" id="inq-sort-date" onclick="setInqMobileSort('date')">日期 ↓</button>
       <button class="sort-btn-s" id="inq-sort-alias" onclick="setInqMobileSort('alias')">客户 ↓</button>
       <button class="sort-btn-s" id="inq-sort-followup" onclick="setInqMobileSort('followup')">待办 ↓</button>
@@ -526,11 +526,11 @@ a{color:var(--accent);text-decoration:none;}
   <div id="inq-active-view">
     <div class="page-content">
       <div class="filters">
-        <input class="search-box" id="search-inq" placeholder="🔍 搜索客户/产品..." oninput="renderInquiries()">
-        <select class="filter-select" id="f-status" onchange="renderInquiries()"><option value="">所有状态</option><option>新询盘</option><option>已回复</option><option>跟进中</option><option>已报价</option><option>打样中</option><option>已打样</option><option>已成单</option></select>
-        <select class="filter-select" id="f-source" onchange="renderInquiries()"><option value="">所有渠道</option><option>Alibaba</option><option>1688</option><option>Customento</option><option>老客户</option><option>笨鸟导入</option><option>WhatsApp</option><option>展会</option><option>其他</option></select>
-        <select class="filter-select" id="f-grade" onchange="renderInquiries()"><option value="">所有评级</option><option value="A">A级</option><option value="B">B级</option><option value="C">C级</option><option value="D">D级</option></select>
-        <select class="filter-select" id="f-person" onchange="renderInquiries()"><option value="">所有负责人</option><option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option></select>
+        <input class="search-box" id="search-inq" placeholder="🔍 搜索客户/产品..." oninput="refreshInqActive()">
+        <select class="filter-select" id="f-status" onchange="refreshInqActive()"><option value="">所有状态</option><option>新询盘</option><option>已回复</option><option>跟进中</option><option>已报价</option><option>打样中</option><option>已打样</option><option>已成单</option></select>
+        <select class="filter-select" id="f-source" onchange="refreshInqActive()"><option value="">所有渠道</option><option>Alibaba</option><option>1688</option><option>Customento</option><option>老客户</option><option>笨鸟导入</option><option>WhatsApp</option><option>展会</option><option>其他</option></select>
+        <select class="filter-select" id="f-grade" onchange="refreshInqActive()"><option value="">所有评级</option><option value="A">A级</option><option value="B">B级</option><option value="C">C级</option><option value="D">D级</option></select>
+        <select class="filter-select" id="f-person" onchange="refreshInqActive()"><option value="">所有负责人</option><option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option></select>
         <button class="btn btn-outline btn-sm" onclick="clearFilters('inq')">清除</button>
       </div>
       <div id="inq-notice"></div>
@@ -1182,13 +1182,13 @@ function filterNav(type,val){
   else if(type==='today'){currentInqFilter.today=true;document.getElementById('inq-title').textContent='今日待跟进';document.getElementById('inq-sub').textContent=today();}
   else if(type==='overdue'){currentInqFilter.overdue=true;document.getElementById('inq-title').textContent='超时未跟进';document.getElementById('inq-sub').textContent='超过48小时未更新';}
   else if(type==='alan'){currentInqFilter.alan=true;document.getElementById('inq-title').textContent='Alan 重点关注';}
-  renderInquiries();
+  refreshInqActive();
 }
 
 function resetInqFilters(){['search-inq','f-status','f-source','f-grade','f-person'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('inq-title').textContent='询盘列表';document.getElementById('inq-sub').textContent='全部渠道';}
 
 function clearFilters(type){
-  if(type==='inq'){currentInqFilter={};resetInqFilters();renderInquiries();}
+  if(type==='inq'){currentInqFilter={};resetInqFilters();refreshInqActive();}
   else if(type==='hot'){['search-hot','fh-source','fh-person'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderHot();}
   else if(type==='cust'){['search-cust','cf-layer','cf-type','cf-person','cf-size','cf-source'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});custQuickFilters={};updateQuickFilterUI();renderCustomers();}
   else if(type==='old'){['search-old','of-year','of-currency','of-person','of-quarter'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderOldStats();}
@@ -1393,7 +1393,7 @@ function switchInqTab(tab){
   });
   var toggleBtn=document.getElementById('inq-view-toggle');
   if(toggleBtn)toggleBtn.style.display=tab==='active'?'flex':'none';
-  if(tab==='active')renderInquiries();
+  if(tab==="active")refreshInqActive();
   else if(tab==='silent')renderSilent();
   else if(tab==='archive')renderArchive();
   else if(tab==='expired')renderExpired();
@@ -3333,7 +3333,7 @@ function setInqSort(key){
       el.textContent='↓';el.style.color='var(--muted)';el.style.opacity='.4';
     }
   });
-  renderInquiries();
+  refreshInqActive();
 }
 function setInqMobileSort(key){
   if(inqMobileSort.key===key){
@@ -3348,7 +3348,7 @@ function setInqMobileSort(key){
     el.classList.toggle('active',isActive);
     el.style.opacity=isActive?'1':'.4';
   });
-  renderMobileCards('inq');
+  refreshInqActive();
 }
 
 function setOrdSort(key){
@@ -3535,8 +3535,7 @@ function mobileChip(el,type){
   if(type==='grade-A'){currentInqFilter.grade='A';}
   else if(type==='overdue'){currentInqFilter.overdue=true;}
   else if(type!=='all'){currentInqFilter.source=type;}
-  renderInquiries();
-  renderMobileCards('inq');
+  refreshInqActive();
 }
 
 function mobileChipFilter(el,page,val){
@@ -4198,6 +4197,11 @@ function removeInqImg(){
 
 /* ===== 询盘卡片视图 ===== */
 var inqView='list';
+
+function refreshInqActive(){
+  if(inqView==='card'){renderInqCardView();}
+  else{renderInquiries();renderMobileCards('inq');}
+}
 
 function setInqView(v){
   inqView=v;
