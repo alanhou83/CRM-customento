@@ -3512,15 +3512,22 @@ function rebuildProductSelects(){
 
 function migrateInqStatuses(){
   var migrated=false;
+  /* 一次性修复：归档询盘状态被误改为追单中的，恢复为已成单 */
+  inquiries.forEach(function(i){
+    if(i.archived&&i.status==='追单中'){i.status='已成单';migrated=true;}
+  });
   inquiries.forEach(function(i){
     if(i._v2migrated)return;
     if(!i.flags)i.flags=[];
+    /* 已归档/已失效的询盘不迁移状态，保留原样 */
+    if(i.archived||i.expired){i._v2migrated=true;migrated=true;return;}
     var s=i.status||'';
     if(s==='已回复'||s==='跟进中'){i.status='互动中';}
     else if(s==='已报价'){i.status='报价中';if(i.flags.indexOf('已报价')<0)i.flags.push('已报价');}
     else if(s==='已打样'){i.status='追单中';if(i.flags.indexOf('已打样')<0)i.flags.push('已打样');}
     else if(s==='未成单'){i.status='沉默中';if(!i.silentSince)i.silentSince=i.date;}
-    else if(s==='已成单'){i.status='追单中';}
+    /* 已成单（未归档）→ 追单中，等待人工确认是否归档 */
+    else if(s==='已成单'&&!i.archived){i.status='追单中';}
     if(!i.flags)i.flags=[];
     i._v2migrated=true;
     migrated=true;
