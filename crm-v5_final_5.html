@@ -3222,6 +3222,7 @@ function renderMobileCards(page){
     if(!filtered.length){container.innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">没有符合条件的询盘</div></div>';return;}
     container.innerHTML=filtered.map(i=>{
       const ov=isOverdue(i),tf=isTodayFu(i);
+      var todOv=i.followupDate&&i.followupDate<today();
       return '<div style="display:flex;align-items:flex-start;padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;gap:10px;background:var(--surface)'+(ov?';border-left:3px solid var(--yellow)':'')+'" onclick="openInqDetail('+i.id+')">'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+'</div>'
@@ -3234,12 +3235,16 @@ function renderMobileCards(page){
         +(tf?'<span style="font-size:10px;color:var(--yellow);font-weight:600">⏰今日</span>':'')
         +'</div>'
         +(i.notes?'<div style="font-size:10px;color:var(--muted2);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 '+i.notes+'</div>':'')
-        +(function(){var todOv=i.followupDate&&i.followupDate<today();if(!i.followupDate&&!i.followupNote)return '';return '<div style="font-size:10px;margin-top:3px;color:'+(todOv?'var(--red)':'var(--green)')+'">'+(i.followupDate?(todOv?'🔔 ':'📅 ')+i.followupDate+' ':'')+(i.followupNote?'📌 '+i.followupNote:'')+'</div>';}())
         +'</div>'
-        +'<div style="text-align:right;flex-shrink:0">'
+        +'<div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:3px">'
+        +'<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end">'
+        +'<span style="font-size:10px;color:var(--muted);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.product+'</span>'
+        +'<span style="font-size:10px;color:var(--muted2)">'+i.date+'</span>'
         +'<span class="badge '+GC[i.grade]+'">'+i.grade+'级</span>'
-        +'<div style="font-size:10px;color:var(--muted);margin-top:4px">'+i.person+'</div>'
-        +'<div style="font-size:10px;color:var(--muted2);margin-top:2px">'+i.date+'</div>'
+        +'</div>'
+        +'<div style="font-size:10px;color:var(--muted)">'+i.person+'</div>'
+        +(i.followupDate?'<div style="font-size:10px;color:'+(todOv?'var(--red)':'var(--muted)')+'">'+(todOv?'🔔 ':'📅 ')+i.followupDate+'</div>':'')
+        +(i.followupNote?'<div style="font-size:10px;color:'+(todOv?'var(--red)':'var(--green)')+'">📌 '+i.followupNote+'</div>':'')
         +'</div></div>';
     }).join('');
   } else if(page==='hot'){
