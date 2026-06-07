@@ -4113,8 +4113,8 @@ function clampOffset(){
   var maxOX=cropX;
   var minOY=cropY+s.cropSize-scaledH;
   var maxOY=cropY;
-  if(scaledW<=s.cropSize){s.offsetX=0;}else{s.offsetX=Math.min(maxOX,Math.max(minOX,s.offsetX));}
-  if(scaledH<=s.cropSize){s.offsetY=0;}else{s.offsetY=Math.min(maxOY,Math.max(minOY,s.offsetY));}
+  if(scaledW<=s.cropSize){s.offsetX=(s.canvasW-scaledW)/2;}else{s.offsetX=Math.min(maxOX,Math.max(minOX,s.offsetX));}
+  if(scaledH<=s.cropSize){s.offsetY=(s.canvasH-scaledH)/2;}else{s.offsetY=Math.min(maxOY,Math.max(minOY,s.offsetY));}
 }
 
 function drawCrop(){
