@@ -3941,6 +3941,280 @@ function refreshAll(){
   if(id==='dashboard')renderDashboard();else if(id==='hot')renderHot();else if(id==='inquiries')renderInquiries();else if(id==='customers')renderCustomers();else if(id==='oldstats')renderOldStats();else if(id==='orders')renderOrders();
 }
 
+/* ===== IndexedDB 图片存储 ===== */
+var _imgDB=null;
+function openImgDB(cb){
+  if(_imgDB){cb(_imgDB);return;}
+  var req=indexedDB.open('customento-img-v1',1);
+  req.onupgradeneeded=function(e){e.target.result.createObjectStore('imgs',{keyPath:'id'});};
+  req.onsuccess=function(e){_imgDB=e.target.result;cb(_imgDB);};
+  req.onerror=function(){cb(null);};
+}
+function saveImgToDB(id,dataUrl,cb){
+  openImgDB(function(db){
+    if(!db){if(cb)cb();return;}
+    var tx=db.transaction('imgs','readwrite');
+    tx.objectStore('imgs').put({id:id,img:dataUrl});
+    tx.oncomplete=function(){if(cb)cb();};
+  });
+}
+function getImgFromDB(id,cb){
+  openImgDB(function(db){
+    if(!db){cb(null);return;}
+    var tx=db.transaction('imgs','readonly');
+    var req=tx.objectStore('imgs').get(id);
+    req.onsuccess=function(){cb(req.result?req.result.img:null);};
+    req.onerror=function(){cb(null);};
+  });
+}
+function deleteImgFromDB(id,cb){
+  openImgDB(function(db){
+    if(!db){if(cb)cb();return;}
+    var tx=db.transaction('imgs','readwrite');
+    tx.objectStore('imgs').delete(id);
+    tx.oncomplete=function(){if(cb)cb();};
+  });
+}
+
+/* ===== 裁切逻辑 ===== */
+var _cropState={img:null,origFile:null,onDone:null,offsetX:0,offsetY:0,dragging:false,lastX:0,lastY:0,canvasW:0,canvasH:0,cropSize:0,drawScale:1};
+
+function handleInqImgSelect(input){
+  var file=input.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      _cropState.img=img;
+      _cropState.origFile=e.target.result;
+      _cropState.onDone=function(dataUrl){
+        var prev=document.getElementById('fi-img-preview');
+        var thumb=document.getElementById('fi-img-thumb');
+        var area=document.getElementById('fi-img-upload-area');
+        if(thumb)thumb.src=dataUrl;
+        if(prev)prev.style.display='block';
+        if(area)area.style.display='none';
+        _pendingInqImg=dataUrl;
+      };
+      openCropModal(img);
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+  input.value='';
+}
+
+function openCropModal(img){
+  var modal=document.getElementById('crop-modal');
+  var canvas=document.getElementById('crop-canvas');
+  if(!modal||!canvas)return;
+  modal.style.display='flex';
+  var maxW=Math.min(460,window.innerWidth-60);
+  var ratio=img.height/img.width;
+  var cw=maxW;
+  var ch=Math.round(cw*ratio);
+  var cropSize=Math.round(Math.min(cw,ch)*0.8);
+  canvas.width=cw;canvas.height=ch;
+  _cropState.canvasW=cw;_cropState.canvasH=ch;
+  _cropState.cropSize=cropSize;
+  _cropState.drawScale=cw/img.width;
+  _cropState.offsetX=0;_cropState.offsetY=0;
+  drawCrop();
+  canvas.onmousedown=function(e){_cropState.dragging=true;_cropState.lastX=e.clientX;_cropState.lastY=e.clientY;};
+  canvas.onmousemove=function(e){
+    if(!_cropState.dragging)return;
+    var dx=e.clientX-_cropState.lastX,dy=e.clientY-_cropState.lastY;
+    _cropState.lastX=e.clientX;_cropState.lastY=e.clientY;
+    _cropState.offsetX+=dx;_cropState.offsetY+=dy;
+    clampOffset();drawCrop();
+  };
+  canvas.onmouseup=canvas.onmouseleave=function(){_cropState.dragging=false;};
+  canvas.ontouchstart=function(e){e.preventDefault();var t=e.touches[0];_cropState.dragging=true;_cropState.lastX=t.clientX;_cropState.lastY=t.clientY;};
+  canvas.ontouchmove=function(e){e.preventDefault();if(!_cropState.dragging)return;var t=e.touches[0];var dx=t.clientX-_cropState.lastX,dy=t.clientY-_cropState.lastY;_cropState.lastX=t.clientX;_cropState.lastY=t.clientY;_cropState.offsetX+=dx;_cropState.offsetY+=dy;clampOffset();drawCrop();};
+  canvas.ontouchend=function(){_cropState.dragging=false;};
+}
+
+function clampOffset(){
+  var s=_cropState;
+  var scaledW=s.img.width*s.drawScale;
+  var scaledH=s.img.height*s.drawScale;
+  var cropX=(s.canvasW-s.cropSize)/2;
+  var cropY=(s.canvasH-s.cropSize)/2;
+  var minOX=cropX+s.cropSize-scaledW;
+  var maxOX=cropX;
+  var minOY=cropY+s.cropSize-scaledH;
+  var maxOY=cropY;
+  if(scaledW<=s.cropSize){s.offsetX=0;}else{s.offsetX=Math.min(maxOX,Math.max(minOX,s.offsetX));}
+  if(scaledH<=s.cropSize){s.offsetY=0;}else{s.offsetY=Math.min(maxOY,Math.max(minOY,s.offsetY));}
+}
+
+function drawCrop(){
+  var s=_cropState;
+  var canvas=document.getElementById('crop-canvas');
+  if(!canvas)return;
+  var ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,s.canvasW,s.canvasH);
+  ctx.drawImage(s.img,s.offsetX,s.offsetY,s.img.width*s.drawScale,s.img.height*s.drawScale);
+  ctx.fillStyle='rgba(0,0,0,.45)';
+  ctx.fillRect(0,0,s.canvasW,s.canvasH);
+  var cx=(s.canvasW-s.cropSize)/2,cy=(s.canvasH-s.cropSize)/2;
+  ctx.clearRect(cx,cy,s.cropSize,s.cropSize);
+  ctx.drawImage(s.img,s.offsetX,s.offsetY,s.img.width*s.drawScale,s.img.height*s.drawScale);
+  ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=2;
+  ctx.strokeRect(cx,cy,s.cropSize,s.cropSize);
+  ctx.strokeStyle='rgba(255,255,255,.3)';ctx.lineWidth=1;
+  for(var k=1;k<3;k++){
+    ctx.beginPath();ctx.moveTo(cx+s.cropSize*k/3,cy);ctx.lineTo(cx+s.cropSize*k/3,cy+s.cropSize);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx,cy+s.cropSize*k/3);ctx.lineTo(cx+s.cropSize,cy+s.cropSize*k/3);ctx.stroke();
+  }
+}
+
+function confirmCrop(){
+  var s=_cropState;
+  var out=document.createElement('canvas');
+  out.width=400;out.height=400;
+  var ctx=out.getContext('2d');
+  var cx=(s.canvasW-s.cropSize)/2,cy=(s.canvasH-s.cropSize)/2;
+  var srcX=(cx-s.offsetX)/s.drawScale;
+  var srcY=(cy-s.offsetY)/s.drawScale;
+  var srcSize=s.cropSize/s.drawScale;
+  ctx.drawImage(s.img,srcX,srcY,srcSize,srcSize,0,0,400,400);
+  var dataUrl=out.toDataURL('image/jpeg',0.75);
+  closeCropModal();
+  if(_cropState.onDone)_cropState.onDone(dataUrl);
+}
+
+function skipCrop(){
+  var img=_cropState.img;
+  var out=document.createElement('canvas');
+  out.width=400;out.height=400;
+  var ctx=out.getContext('2d');
+  var side=Math.min(img.width,img.height);
+  var sx=(img.width-side)/2,sy=(img.height-side)/2;
+  ctx.drawImage(img,sx,sy,side,side,0,0,400,400);
+  var dataUrl=out.toDataURL('image/jpeg',0.75);
+  closeCropModal();
+  if(_cropState.onDone)_cropState.onDone(dataUrl);
+}
+
+function closeCropModal(){
+  var m=document.getElementById('crop-modal');if(m)m.style.display='none';
+}
+
+var _pendingInqImg=null;
+
+function removeInqImg(){
+  _pendingInqImg=null;
+  var prev=document.getElementById('fi-img-preview');
+  var area=document.getElementById('fi-img-upload-area');
+  if(prev)prev.style.display='none';
+  if(area)area.style.display='block';
+}
+
+/* ===== 询盘卡片视图 ===== */
+var inqView='list';
+
+function setInqView(v){
+  inqView=v;
+  var cardWrap=document.getElementById('inq-card-view-wrap');
+  var btnList=document.getElementById('inq-view-btn-list');
+  var btnCard=document.getElementById('inq-view-btn-card');
+  if(v==='card'){
+    var tbl=document.getElementById('inq-table-body');
+    if(tbl&&tbl.closest)tbl.closest('.table-wrap').style.display='none';
+    if(cardWrap)cardWrap.style.display='block';
+    if(btnList)btnList.classList.remove('active');
+    if(btnCard)btnCard.classList.add('active');
+    renderInqCardView();
+  } else {
+    var tbl2=document.getElementById('inq-table-body');
+    if(tbl2&&tbl2.closest)tbl2.closest('.table-wrap').style.display='';
+    if(cardWrap)cardWrap.style.display='none';
+    if(btnList)btnList.classList.add('active');
+    if(btnCard)btnCard.classList.remove('active');
+  }
+}
+
+function renderInqCardView(){
+  var grid=document.getElementById('inq-card-grid');if(!grid)return;
+  var filtered=getFilteredInq();
+  if(!filtered.length){grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📭</div><div class="empty-text">没有符合条件的询盘</div></div>';return;}
+  grid.innerHTML=filtered.map(function(i){
+    var ov=isOverdue(i);
+    var flags=i.flags||[];
+    var flagsHtml=flags.map(function(f){
+      var fc=f==='已报价'?'background:rgba(247,212,79,.15);color:var(--yellow)':'background:rgba(167,79,247,.15);color:var(--purple)';
+      return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;'+fc+'">'+f+'</span>';
+    }).join('');
+    return '<div class="inq-card-item" id="inq-card-'+i.id+'" onclick="openInqDetail('+i.id+')">'
+      +'<div class="inq-card-img-ph" id="inq-card-ph-'+i.id+'" onclick="event.stopPropagation();uploadInqImgFromCard('+i.id+')">'
+      +'<span style="font-size:22px;opacity:.4">📷</span>'
+      +'<span>暂无产品图</span>'
+      +'</div>'
+      +'<img class="inq-card-img" id="inq-card-img-'+i.id+'" src="" alt="" style="display:none">'
+      +'<div class="inq-card-body">'
+      +'<div class="inq-card-name">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+(ov?' <span class="mark-overdue" style="font-size:9px">超时</span>':'')+'</div>'
+      +'<div class="inq-card-company">'+(i.company||i.country||'')+'</div>'
+      +'<div class="inq-card-meta">'
+      +'<span class="source-tag">'+i.source+'</span>'
+      +'<span class="status-badge '+(SC[i.status]||'')+'">'+i.status+'</span>'
+      +flagsHtml
+      +'</div>'
+      +'<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📦 '+i.product+(i.qty?' · '+i.qty:'')+'</div>'
+      +'<div class="inq-card-footer">'
+      +(i.followupDate?'<span style="color:'+(i.followupDate<today()?'var(--red)':'var(--accent2)')+'">📅 '+i.followupDate+'</span>':'<span></span>')
+      +'<span>'+i.person+'</span>'
+      +'</div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+  filtered.forEach(function(i){
+    getImgFromDB(i.id,function(dataUrl){
+      if(!dataUrl)return;
+      var img=document.getElementById('inq-card-img-'+i.id);
+      var ph=document.getElementById('inq-card-ph-'+i.id);
+      if(img){img.src=dataUrl;img.style.display='block';}
+      if(ph)ph.style.display='none';
+    });
+  });
+}
+
+function uploadInqImgFromCard(inqId){
+  var tmp=document.createElement('input');
+  tmp.type='file';tmp.accept='image/*';
+  tmp.onchange=function(){
+    var file=tmp.files[0];if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var img=new Image();
+      img.onload=function(){
+        _cropState.img=img;
+        _cropState.onDone=function(dataUrl){
+          saveImgToDB(inqId,dataUrl,function(){
+            renderInqCardView();
+            toast('图片已保存 ✓');
+          });
+        };
+        openCropModal(img);
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  tmp.click();
+}
+
+function deleteInqImgFromDetail(inqId){
+  showConfirmModal('删除图片','确认删除这张产品参考图？','确认删除',function(){
+    deleteImgFromDB(inqId,function(){
+      var sec=document.getElementById('dp-inq-img-section');
+      if(sec)sec.style.display='none';
+      if(inqView==='card')renderInqCardView();
+      toast('图片已删除');
+    });
+  });
+}
+
 function autoUpdateCustomerTags(alias){
   const c=customers.find(x=>x.alias===alias);
   if(!c) return;
