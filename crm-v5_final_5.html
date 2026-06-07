@@ -1124,6 +1124,7 @@ const TL={tourist:'旅游纪念品',ecom:'跨境电商',custom:'来图定制',co
 const BC=['#4f8ef7','#3ecf8e','#f7934f','#f7d44f','#a74ff7','#f76f6f','#4fc9f7'];
 
 function today(){return new Date().toISOString().split('T')[0];}
+function fmtCardDate(d){var mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];var p=d?d.split('-'):[];return p.length===3?mn[parseInt(p[1])-1]+'.'+parseInt(p[2]):d||'';}
 function fmtAmt(a,c){if(!a||a==0)return'—';return c==='CNY'?'¥'+Number(a).toLocaleString():'$'+Number(a).toLocaleString();}
 function getQ(d){const m=new Date(d).getMonth()+1;return m<=3?'Q1':m<=6?'Q2':m<=9?'Q3':'Q4';}
 function isOverdue(i){if(['已成单','未成单'].includes(i.status))return false;const last=i.followups&&i.followups.length?i.followups[i.followups.length-1].split(' ')[0]:i.date;return Math.floor((new Date()-new Date(last))/86400000)>=5;}
@@ -4266,9 +4267,9 @@ function renderInqCardView(){
       +'<span style="font-size:10px;color:var(--muted);flex-shrink:0">'+i.person+'</span>'
       +'</div>'
       +(i.followupDate||i.followupNote
-        ?'<div style="font-size:10px;display:flex;align-items:baseline;gap:4px;flex-wrap:wrap">'
-          +(i.followupDate?'<span style="color:'+(i.followupDate<today()?'var(--red)':'var(--accent2)')+';flex-shrink:0">📅 '+i.followupDate+'</span>':'')
-          +(i.followupNote?'<span style="color:var(--green);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">'+i.followupNote+'</span>':'')
+        ?'<div style="font-size:10px;display:flex;align-items:center;gap:4px;overflow:hidden">'
+          +(i.followupDate?'<span style="color:'+(i.followupDate<today()?'var(--red)':'var(--accent2)')+';flex-shrink:0;font-weight:500">'+fmtCardDate(i.followupDate)+'</span>':'')
+          +(i.followupNote?'<span style="color:var(--green);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">📌 '+i.followupNote+'</span>':'')
           +'</div>'
         :'')
       +'</div>'
