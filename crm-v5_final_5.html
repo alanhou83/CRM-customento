@@ -788,9 +788,17 @@ a{color:var(--accent);text-decoration:none;}
       <div class="form-group full"><div class="form-section-label">📞 联系方式</div>
         <div class="form-grid" style="margin-top:0">
           <div class="form-group"><label class="form-label">📧 Email</label><input class="form-input" type="text" id="fc-email"></div>
-          <div class="form-group"><label class="form-label">📱 手机/WA</label><input class="form-input" type="text" id="fc-phone"></div>
+          <div class="form-group"><label class="form-label">📱 手机</label><input class="form-input" type="text" id="fc-phone"></div>
           <div class="form-group"><label class="form-label">💬 微信</label><input class="form-input" type="text" id="fc-wechat"></div>
           <div class="form-group"><label class="form-label">🛒 旺旺/1688</label><input class="form-input" type="text" id="fc-wangwang"></div>
+        </div>
+      </div>
+      <div class="form-group full"><div class="form-section-label">🌐 社媒账号</div>
+        <div class="form-grid" style="margin-top:0">
+          <div class="form-group"><label class="form-label">📱 WhatsApp</label><input class="form-input" type="text" id="fc-whatsapp" placeholder="含国际区号"></div>
+          <div class="form-group"><label class="form-label">📘 Facebook</label><input class="form-input" type="text" id="fc-facebook" placeholder="用户名或链接"></div>
+          <div class="form-group"><label class="form-label">📷 Instagram</label><input class="form-input" type="text" id="fc-instagram" placeholder="@用户名"></div>
+          <div class="form-group"><label class="form-label">✈️ Telegram</label><input class="form-input" type="text" id="fc-telegram" placeholder="@用户名"></div>
         </div>
       </div>
       <div class="form-group full"><label class="form-label">备注</label><textarea class="form-input form-textarea" id="fc-notes" placeholder="客户背景、合作历史..."></textarea></div>
@@ -2156,12 +2164,20 @@ function openCustDetail(id){
     +tagBtn('match',1,'🏅 画像匹配','○ 画像匹配','rgba(255,180,0,.25)','rgba(255,255,255,.06)')
     +'</div>'
     +'</div>';
-  if(c.email||c.phone||c.wechat||c.wangwang){
+  if(c.email||c.phone||c.wechat||c.wangwang||c.whatsapp||c.facebook||c.instagram||c.telegram){
+    var waNum=c.whatsapp?(c.whatsapp.replace(/[^0-9]/g,'')):'';
+    var fbUrl=c.facebook?(c.facebook.indexOf('http')===0?c.facebook:'https://www.facebook.com/'+c.facebook):'';
+    var igUser=c.instagram?(c.instagram.replace('@','')):'';
+    var tgUser=c.telegram?(c.telegram.replace('@','')):'';
     tab1+='<div class="detail-section"><div class="detail-section-title">联系方式</div>'
-      +(c.email?'<div class="detail-row"><span class="detail-key">📧 邮箱</span><span class="detail-val"><a href="mailto:'+c.email+'">'+c.email+'</a></span></div>':'')
+      +(c.email?'<div class="detail-row"><span class="detail-key">📧 邮箱</span><span class="detail-val"><a href="mailto:'+c.email+'" style="color:var(--accent)">'+c.email+'</a></span></div>':'')
       +(c.phone?'<div class="detail-row"><span class="detail-key">📱 手机</span><span class="detail-val">'+c.phone+'</span></div>':'')
       +(c.wechat?'<div class="detail-row"><span class="detail-key">💬 微信</span><span class="detail-val">'+c.wechat+'</span></div>':'')
       +(c.wangwang?'<div class="detail-row"><span class="detail-key">🛒 旺旺</span><span class="detail-val">'+c.wangwang+'</span></div>':'')
+      +(c.whatsapp?'<div class="detail-row"><span class="detail-key">📱 WhatsApp</span><span class="detail-val"><a href="https://wa.me/'+waNum+'" target="_blank" style="color:#25D366">'+c.whatsapp+'</a></span></div>':'')
+      +(c.facebook?'<div class="detail-row"><span class="detail-key">📘 Facebook</span><span class="detail-val"><a href="'+fbUrl+'" target="_blank" style="color:#4267B2">'+c.facebook+'</a></span></div>':'')
+      +(c.instagram?'<div class="detail-row"><span class="detail-key">📷 Instagram</span><span class="detail-val"><a href="https://www.instagram.com/'+igUser+'" target="_blank" style="color:#E1306C">'+c.instagram+'</a></span></div>':'')
+      +(c.telegram?'<div class="detail-row"><span class="detail-key">✈️ Telegram</span><span class="detail-val"><a href="https://t.me/'+tgUser+'" target="_blank" style="color:#0088cc">'+c.telegram+'</a></span></div>':'')
       +'</div>';
   }
   if(c.notes){
@@ -2551,7 +2567,7 @@ function openCustomerModal(){
   document.getElementById('fc-person').value=currentUser==='Momi'?'Momi':currentUser==='Mille'?'Mille':'Kelly';
   document.getElementById('fc-type').value='tourist';document.getElementById('fc-layer').value='focus';
   document.getElementById('fc-ordered').value='1';document.getElementById('fc-repurchase').value='0';document.getElementById('fc-growing').value='0';document.getElementById('fc-match').value='1';document.getElementById('fc-active').value='1';document.getElementById('fc-size').value='1';
-  ['fc-alias','fc-company','fc-country','fc-email','fc-phone','fc-wechat','fc-wangwang','fc-notes','fc-followup'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['fc-alias','fc-company','fc-country','fc-email','fc-phone','fc-wechat','fc-wangwang','fc-notes','fc-followup','fc-whatsapp','fc-facebook','fc-instagram','fc-telegram'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   clearProdTags();
   openModal('cust-modal');
 }
@@ -2561,14 +2577,14 @@ function editCustomer(id){
   editingCustId=id;document.getElementById('cust-modal-title').textContent='编辑客户';
   document.getElementById('cust-delete-area').innerHTML=canDelete()?'<button class="btn btn-danger btn-sm" onclick="confirmDelete(\'cust\','+id+')">🗑 删除</button>':'';
   const set=(fid,val)=>{const el=document.getElementById(fid);if(el)el.value=val||'';};
-  set('fc-alias',c.alias);set('fc-company',c.company);set('fc-country',c.country);set('fc-person',c.person);set('fc-source',c.source||'');set('fc-type',c.type);set('fc-layer',c.layer||getLayer(c));set('fc-followup',c.followupDate);set('fc-ordered',c.ordered||0);set('fc-repurchase',c.repurchase||0);set('fc-growing',c.growing||0);set('fc-match',c.match||0);set('fc-active',c.activeScore||0);set('fc-size',c.size||1);set('fc-email',c.email);set('fc-phone',c.phone);set('fc-wechat',c.wechat);set('fc-wangwang',c.wangwang);set('fc-notes',c.notes);
+  set('fc-alias',c.alias);set('fc-company',c.company);set('fc-country',c.country);set('fc-person',c.person);set('fc-source',c.source||'');set('fc-type',c.type);set('fc-layer',c.layer||getLayer(c));set('fc-followup',c.followupDate);set('fc-ordered',c.ordered||0);set('fc-repurchase',c.repurchase||0);set('fc-growing',c.growing||0);set('fc-match',c.match||0);set('fc-active',c.activeScore||0);set('fc-size',c.size||1);set('fc-email',c.email);set('fc-phone',c.phone);set('fc-wechat',c.wechat);set('fc-wangwang',c.wangwang);set('fc-notes',c.notes);set('fc-whatsapp',c.whatsapp);set('fc-facebook',c.facebook);set('fc-instagram',c.instagram);set('fc-telegram',c.telegram);
   setProdTags(getProdArr(c));
   openModal('cust-modal');
 }
 
 function saveCustomer(){
   const alias=document.getElementById('fc-alias').value.trim();if(!alias){alert('请填写客户代号');return;}
-  const data={alias,company:document.getElementById('fc-company').value,country:document.getElementById('fc-country').value,person:document.getElementById('fc-person').value,source:document.getElementById('fc-source').value,type:document.getElementById('fc-type').value,layer:document.getElementById('fc-layer').value,product:getSelectedProdTags(),followupDate:document.getElementById('fc-followup').value,ordered:document.getElementById('fc-ordered').value,repurchase:document.getElementById('fc-repurchase').value,growing:document.getElementById('fc-growing').value,match:document.getElementById('fc-match').value,activeScore:document.getElementById('fc-active').value,size:document.getElementById('fc-size').value,email:document.getElementById('fc-email').value,phone:document.getElementById('fc-phone').value,wechat:document.getElementById('fc-wechat').value,wangwang:document.getElementById('fc-wangwang').value,notes:document.getElementById('fc-notes').value};
+  const data={alias,company:document.getElementById('fc-company').value,country:document.getElementById('fc-country').value,person:document.getElementById('fc-person').value,source:document.getElementById('fc-source').value,type:document.getElementById('fc-type').value,layer:document.getElementById('fc-layer').value,product:getSelectedProdTags(),followupDate:document.getElementById('fc-followup').value,ordered:document.getElementById('fc-ordered').value,repurchase:document.getElementById('fc-repurchase').value,growing:document.getElementById('fc-growing').value,match:document.getElementById('fc-match').value,activeScore:document.getElementById('fc-active').value,size:document.getElementById('fc-size').value,email:document.getElementById('fc-email').value,phone:document.getElementById('fc-phone').value,wechat:document.getElementById('fc-wechat').value,wangwang:document.getElementById('fc-wangwang').value,notes:document.getElementById('fc-notes').value,whatsapp:document.getElementById('fc-whatsapp').value,facebook:document.getElementById('fc-facebook').value,instagram:document.getElementById('fc-instagram').value,telegram:document.getElementById('fc-telegram').value};
   if(editingCustId){const c=customers.find(x=>x.id===editingCustId);if(c)Object.assign(c,data);}
   else{customers.push({id:nextCustId++,followups:[],vipStar:false,...data});}
   saveAll();closeModal('cust-modal');refreshAll();toast('客户已保存 ✓');
