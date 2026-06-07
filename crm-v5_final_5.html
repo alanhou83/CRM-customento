@@ -492,7 +492,7 @@ a{color:var(--accent);text-decoration:none;}
       </div>
       <div id="inq-notice"></div>
       <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
-        <div class="table-header cols-inq"><div>日期</div><div>客户</div><div>标记</div><div>渠道</div><div>产品</div><div>评级</div><div>状态</div><div>下次跟进</div><div>负责人</div><div>操作</div></div>
+        <div class="table-header cols-inq"><div>日期</div><div>客户</div><div>标记</div><div>渠道</div><div>产品</div><div>评级</div><div>状态</div><div>待办</div><div>负责人</div><div>操作</div></div>
         <div id="inq-table-body"></div>
       </div></div></div>
       <div class="mobile-cards" id="mobile-inq-cards"></div>
@@ -1588,7 +1588,7 @@ function renderInquiries(){
       +'<div class="table-cell"><div>'+i.product+'</div>'+(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.notes+'</div>':'')+'</div>'
       +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+i.grade+'级</span></div>'
       +'<div class="table-cell"><span class="status-badge '+SC[i.status]+'">'+i.status+'</span>'+(i.flags&&i.flags.length?'<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">'+i.flags.map(function(f){var fc=f==='已报价'?'background:rgba(247,212,79,.15);color:var(--yellow)':'background:rgba(167,79,247,.15);color:var(--purple)';return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;'+fc+'">'+f+'</span>';}).join('')+'</div>':'')+'</div>'
-      +'<div class="table-cell" style="font-size:12px;color:'+(tf?'var(--yellow)':'var(--muted)')+'">'+( i.followupDate||'—')+(tf?' ⏰':'')+'</div>'
+      +(function(){var ov=i.followupDate&&i.followupDate<today();return '<div class="table-cell">'+(i.followupDate?'<div>'+(ov?'<span style="font-size:14px">🔔</span> ':'<span style="font-size:9px">📅</span> ')+'<span style="font-size:'+(ov?'13':'12')+'px;color:'+(ov?'var(--red)':'var(--muted)')+';font-weight:'+(ov?'600':'400')+'">'+i.followupDate+'</span>'+(i.followupNote?'<div style="font-size:'+(ov?'12':'11')+'px;color:'+(ov?'var(--red)':'var(--green)')+';margin-top:2px">📌 '+i.followupNote+'</div>':'')+'</div>':(i.followupNote?'<div style="font-size:11px;color:var(--green)">📌 '+i.followupNote+'</div>':'<span style="font-size:12px;color:var(--muted2)">—</span>'))+'</div>';}())
       +'<div class="table-cell" style="color:var(--muted)">'+i.person+'</div>'
       +'<div class="table-cell" onclick="event.stopPropagation()"><button class="btn btn-outline btn-xs" onclick="editInquiry('+i.id+')">编辑</button></div>'
       +'</div>';
@@ -3234,6 +3234,7 @@ function renderMobileCards(page){
         +(tf?'<span style="font-size:10px;color:var(--yellow);font-weight:600">⏰今日</span>':'')
         +'</div>'
         +(i.notes?'<div style="font-size:10px;color:var(--muted2);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 '+i.notes+'</div>':'')
+        +(function(){var todOv=i.followupDate&&i.followupDate<today();if(!i.followupDate&&!i.followupNote)return '';return '<div style="font-size:10px;margin-top:3px;color:'+(todOv?'var(--red)':'var(--green)')+'">'+(i.followupDate?(todOv?'🔔 ':'📅 ')+i.followupDate+' ':'')+(i.followupNote?'📌 '+i.followupNote:'')+'</div>';}())
         +'</div>'
         +'<div style="text-align:right;flex-shrink:0">'
         +'<span class="badge '+GC[i.grade]+'">'+i.grade+'级</span>'
