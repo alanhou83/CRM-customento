@@ -58,6 +58,7 @@ a{color:var(--accent);text-decoration:none;}
 .s-sample{background:rgba(167,79,247,.15);color:var(--purple);}
 .s-won{background:rgba(62,207,142,.15);color:var(--green);}
 .s-lost{background:rgba(247,111,111,.15);color:var(--red);}
+.s-silent{background:rgba(150,150,150,.15);color:#888;}
 .source-tag{font-size:11px;color:var(--muted);background:var(--surface2);padding:2px 7px;border-radius:4px;white-space:nowrap;}
 .type-tag{font-size:11px;padding:2px 7px;border-radius:4px;font-weight:500;white-space:nowrap;}
 .type-tourist{background:rgba(62,207,142,.12);color:var(--green);}
@@ -274,6 +275,7 @@ a{color:var(--accent);text-decoration:none;}
   <div id="mh-inq" style="display:none;margin-bottom:-6px">
     <div style="display:flex;border-bottom:1px solid var(--border)">
       <div id="minq-tab-active" onclick="switchInqTab('active')" style="flex:1;text-align:center;padding:6px 4px;font-size:12px;font-weight:500;color:var(--accent);border-bottom:2px solid var(--accent);cursor:pointer">活跃</div>
+      <div id="minq-tab-silent" onclick="switchInqTab('silent')" style="flex:1;text-align:center;padding:6px 4px;font-size:12px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer">沉默</div>
       <div id="minq-tab-archive" onclick="switchInqTab('archive')" style="flex:1;text-align:center;padding:6px 4px;font-size:12px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer">成单</div>
       <div id="minq-tab-expired" onclick="switchInqTab('expired')" style="flex:1;text-align:center;padding:6px 4px;font-size:12px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer">失效</div>
     </div>
@@ -471,6 +473,7 @@ a{color:var(--accent);text-decoration:none;}
     <div style="display:flex;align-items:center;gap:10px">
       <div style="display:flex;border:0.5px solid var(--border);border-radius:6px;overflow:hidden">
         <div id="inq-tab-active" onclick="switchInqTab('active')" style="font-size:12px;padding:5px 12px;cursor:pointer;background:var(--accent);color:white;font-weight:500">活跃 <span id="inq-count-active">0</span></div>
+        <div id="inq-tab-silent" onclick="switchInqTab('silent')" style="font-size:12px;padding:5px 12px;cursor:pointer;color:var(--muted)">沉默 <span id="inq-count-silent">0</span></div>
         <div id="inq-tab-archive" onclick="switchInqTab('archive')" style="font-size:12px;padding:5px 12px;cursor:pointer;color:var(--muted)">成单 <span id="inq-count-archive">0</span></div>
         <div id="inq-tab-expired" onclick="switchInqTab('expired')" style="font-size:12px;padding:5px 12px;cursor:pointer;color:var(--muted)">失效 <span id="inq-count-expired">0</span></div>
       </div>
@@ -494,6 +497,13 @@ a{color:var(--accent);text-decoration:none;}
       </div></div></div>
       <div class="mobile-cards" id="mobile-inq-cards"></div>
     </div>
+  </div>
+  <div id="inq-silent-view" style="display:none">
+    <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
+      <div class="table-header cols-inq"><div>日期</div><div>客户</div><div>标记</div><div>渠道</div><div>产品</div><div>评级</div><div>沉默天数</div><div>下次跟进</div><div>负责人</div><div>操作</div></div>
+      <div id="inq-silent-body"></div>
+    </div></div></div>
+    <div class="mobile-cards" id="mobile-silent-cards"></div>
   </div>
   <div id="inq-archive-view" style="display:none">
     <div class="filters" style="padding:10px 20px">
@@ -729,7 +739,8 @@ a{color:var(--accent);text-decoration:none;}
       <div class="form-group"><label class="form-label">询问产品</label><select class="form-input" id="fi-product"><option>MDF杯垫</option><option>MDF冰箱贴</option><option>马克杯</option><option>帆布袋</option><option>T恤</option><option>Shot Glass</option><option>软木杯垫</option><option>多品类</option><option>其他</option></select></div>
       <div class="form-group"><label class="form-label">询盘数量</label><input class="form-input" type="text" id="fi-qty" placeholder="如：500个"></div>
       <div class="form-group"><label class="form-label">客户评级</label><select class="form-input" id="fi-grade"><option value="A">A级 — 重点跟进</option><option value="B">B级 — 积极跟进</option><option value="C" selected>C级 — 一般观望</option><option value="D">D级 — 暂时放弃</option></select></div>
-      <div class="form-group"><label class="form-label">当前状态</label><select class="form-input" id="fi-status"><option>新询盘</option><option>已回复</option><option>跟进中</option><option>已报价</option><option>打样中</option><option>已打样</option><option>已成单</option><option>未成单</option></select></div>
+      <div class="form-group"><label class="form-label">当前状态</label><select class="form-input" id="fi-status"><option>新询盘</option><option>互动中</option><option>报价中</option><option>打样中</option><option>追单中</option><option>沉默中</option></select></div>
+      <div class="form-group"><label class="form-label">里程碑 <span style="font-size:10px;color:var(--muted);font-weight:400">可多选</span></label><div style="display:flex;gap:8px;padding-top:4px"><div id="flag-chip-quoted" onclick="toggleInqFlag('已报价')" style="font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer">已报价</div><div id="flag-chip-sampled" onclick="toggleInqFlag('已打样')" style="font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer">已打样</div></div></div>
       <div class="form-group"><label class="form-label">目标订单金额</label><div class="amount-row"><input class="form-input" type="number" id="fi-amount" placeholder="预估金额"><select class="form-input" id="fi-currency"><option value="USD">$ 美金</option><option value="CNY">¥ 人民币</option></select></div></div>
       <div class="form-group"><label class="form-label">下次跟进日期</label><input class="form-input" type="date" id="fi-followup"></div>
       <div class="form-group"><label class="form-label">未成单原因</label><select class="form-input" id="fi-reason"><option value="">— 暂无 —</option><option>价格太高</option><option>MOQ太高</option><option>交期太长</option><option>质量不符</option><option>无回应</option><option>找到其他供应商</option><option>需求取消</option><option>其他</option></select></div>
@@ -955,7 +966,7 @@ function buildProductOptions(selectedVal){
   return getProducts().map(function(p){return '<option'+(p===selectedVal?' selected':'')+'>'+p+'</option>';}).join('');
 }
 
-const SC={'新询盘':'s-new','已回复':'s-replied','跟进中':'s-following','已报价':'s-quoted','打样中':'s-sample','已打样':'s-sample','已成单':'s-won','未成单':'s-lost','失效':'s-lost'};
+const SC={'新询盘':'s-new','互动中':'s-replied','报价中':'s-quoted','打样中':'s-sample','追单中':'s-following','沉默中':'s-silent','已成单':'s-won','失效':'s-lost','已回复':'s-replied','跟进中':'s-following','已报价':'s-quoted','已打样':'s-sample','未成单':'s-lost'};
 const GC={A:'badge-A',B:'badge-B',C:'badge-C',D:'badge-D'};
 const TC={tourist:'type-tourist',ecom:'type-ecom',custom:'type-custom',consumable:'type-consumable',promo:'type-promo',personal:'type-personal'};
 const TL={tourist:'旅游纪念品',ecom:'跨境电商',custom:'来图定制',consumable:'白耗材',promo:'促销品',personal:'个人定制'};
@@ -1146,10 +1157,10 @@ function convertToOrder(inqId){
   openModal('order-modal');toast('询盘已标记已成单，请填写订单详情');
 }
 
-/* 询盘Tab切换：活跃/成单/失效 */
+/* 询盘Tab切换：活跃/沉默/成单/失效 */
 function switchInqTab(tab){
-  var tabs=['active','archive','expired'];
-  var colors={active:'var(--accent)',archive:'var(--green)',expired:'var(--red)'};
+  var tabs=['active','silent','archive','expired'];
+  var colors={active:'var(--accent)',silent:'#888',archive:'var(--green)',expired:'var(--red)'};
   tabs.forEach(function(t){
     var el=document.getElementById('inq-tab-'+t);
     var mel=document.getElementById('minq-tab-'+t);
@@ -1163,6 +1174,7 @@ function switchInqTab(tab){
     if(chips)chips.style.display=tab==='active'?'':'none';
   });
   if(tab==='active')renderInquiries();
+  else if(tab==='silent')renderSilent();
   else if(tab==='archive')renderArchive();
   else if(tab==='expired')renderExpired();
 }
@@ -1221,6 +1233,66 @@ function renderArchive(){
       +'</div>'
       +'<div class="mobile-card-bottom"><span class="source-tag">'+i.source+'</span><span style="font-size:11px;color:var(--muted)">'+i.product+'</span><div style="display:flex;flex-direction:column;align-items:flex-end;margin-left:auto"><span style="font-size:11px;color:var(--muted)">'+i.person+'</span><span style="font-size:10px;color:var(--muted2)">'+i.date+'</span></div></div>'
       +(i.notes?'<div style="font-size:10px;color:var(--muted2);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 '+i.notes+'</div>':'')
+      +'</div>';
+  });
+  mobileEl.innerHTML=mHtml;
+}
+
+/* 渲染沉默询盘列表 */
+function renderSilent(){
+  var todayStr=today();
+  var silent=inquiries.filter(function(i){
+    return canSeeInq(i)&&!i.archived&&!i.expired&&i.status==='沉默中';
+  }).sort(function(a,b){return (a.silentSince||a.date).localeCompare(b.silentSince||b.date);});
+  var body=document.getElementById('inq-silent-body');
+  if(!body)return;
+  if(!silent.length){
+    body.innerHTML='<div class="empty"><div class="empty-icon">😴</div><div class="empty-text">暂无沉默询盘</div></div>';
+    var mobileEl=document.getElementById('mobile-silent-cards');
+    if(mobileEl)mobileEl.innerHTML='<div class="empty"><div class="empty-icon">😴</div><div class="empty-text">暂无沉默询盘</div></div>';
+    return;
+  }
+  function silentDays(i){
+    var base=i.silentSince||i.date;
+    return Math.floor((new Date(todayStr)-new Date(base))/86400000);
+  }
+  body.innerHTML=silent.map(function(i){
+    var days=silentDays(i);
+    var warn=days>=7;
+    var daysTxt=(warn?'⚠️ ':'')+'沉默'+days+'天'+(warn?' 待确认':'');
+    var daysColor=warn?'color:var(--red)':'color:var(--muted)';
+    return '<div class="table-row" style="display:grid;grid-template-columns:100px 1fr 120px 80px 80px 120px 80px;cursor:pointer;'+(warn?'border-left:3px solid var(--red);':'')+'" onclick="openInqDetail('+i.id+')">'
+      +'<div class="table-cell" style="color:var(--muted);font-size:12px">'+(i.silentSince||i.date)+'</div>'
+      +'<div class="table-cell"><div style="font-weight:500">'+i.alias+'</div><div style="font-size:11px;color:var(--muted)">'+(i.company||'')+'</div></div>'
+      +'<div class="table-cell">'+i.product+'</div>'
+      +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+i.grade+'级</span></div>'
+      +'<div class="table-cell"><span class="source-tag">'+i.source+'</span></div>'
+      +'<div class="table-cell" style="'+daysColor+';font-size:12px">'+daysTxt+'</div>'
+      +'<div class="table-cell" style="color:var(--muted)">'+i.person+'</div>'
+      +'</div>';
+  }).join('');
+  /* 手机端沉默卡片 */
+  var mobileEl=document.getElementById('mobile-silent-cards');
+  if(!mobileEl)return;
+  var mHtml='';
+  silent.forEach(function(i){
+    var days=silentDays(i);
+    var warn=days>=7;
+    var borderStyle=warn?'border-left:3px solid var(--red);':'';
+    mHtml+='<div style="padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;'+borderStyle+'" onclick="openInqDetail('+i.id+')">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center">'
+      +'<span style="font-size:13px;font-weight:600">'+i.alias+(i.isHot?' 🔥':'')+'</span>'
+      +'<div style="display:flex;align-items:center;gap:5px">'
+      +'<span class="badge '+GC[i.grade]+'">'+i.grade+'级</span>'
+      +'<span style="font-size:11px;'+(warn?'color:var(--red);font-weight:600':'color:var(--muted)')+'">'+( warn?'⚠️ 待确认':'沉默'+days+'天')+'</span>'
+      +'</div>'
+      +'</div>'
+      +'<div style="display:flex;gap:5px;margin-top:3px;align-items:center">'
+      +'<span class="source-tag">'+i.source+'</span>'
+      +'<span style="font-size:11px;color:var(--muted)">'+i.product+'</span>'
+      +'<span style="font-size:11px;color:var(--muted);margin-left:auto">'+i.person+'</span>'
+      +'</div>'
+      +(i.reason?'<div style="font-size:11px;color:var(--muted2);margin-top:3px">备注：'+i.reason+'</div>':'')
       +'</div>';
   });
   mobileEl.innerHTML=mHtml;
@@ -1325,12 +1397,21 @@ function quickInqStatus(inqId, status){
   if(status==='已成单'){
     i.expired=false;
     i.archived=true;
+    i.silentSince=null;
     saveAll();refreshAll();
     switchInqTab('archive');
     openInqDetail(inqId);
     toast('状态已更新：已成单');
-  } else {
+  } else if(status==='沉默中'){
     i.expired=false;i.archived=false;
+    if(!i.silentSince)i.silentSince=today();
+    saveAll();refreshAll();
+    switchInqTab('silent');
+    openInqDetail(inqId);
+    toast('已标记沉默中，计时开始');
+  } else {
+    /* 从沉默中救活 */
+    i.expired=false;i.archived=false;i.silentSince=null;
     saveAll();openInqDetail(inqId);refreshAll();
     toast('状态已更新：'+status);
   }
@@ -1346,6 +1427,27 @@ function doExpireInq(inqId){
   i.status='失效';i.expired=true;i.archived=false;i.reason=reason;
   saveAll();openInqDetail(inqId);refreshAll();
   toast('已标记为失效');
+}
+
+/* modal 内 flag 芯片切换（编辑/新建询盘时用） */
+function toggleInqFlag(flag){
+  var chipId=flag==='已报价'?'flag-chip-quoted':'flag-chip-sampled';
+  var el=document.getElementById(chipId);
+  if(!el)return;
+  var active=el.classList.toggle('flag-active');
+  if(active){el.style.background='rgba(247,212,79,.15)';el.style.color='var(--yellow)';el.style.borderColor='var(--yellow)';}
+  else{el.style.background='rgba(255,255,255,.04)';el.style.color='var(--muted)';el.style.borderColor='var(--border)';}
+}
+
+function toggleInqFlagDirect(inqId, flag){
+  var i=inquiries.find(function(x){return x.id===inqId;});
+  if(!i)return;
+  if(!i.flags)i.flags=[];
+  var idx=i.flags.indexOf(flag);
+  if(idx>=0)i.flags.splice(idx,1);
+  else i.flags.push(flag);
+  saveAll();openInqDetail(inqId);refreshAll();
+  toast(idx>=0?'已取消：'+flag:'已标记：'+flag);
 }
 
 function toggleInqHot(inqId){
@@ -1445,8 +1547,9 @@ function getFilteredInq(){
   const person=document.getElementById('f-person')?.value||'';
   return inquiries.filter(i=>{
     if(!canSeeInq(i))return false;
-    if(i.archived)return false; /* 已归档不显示在活跃列表 */
-    if(i.expired)return false; /* 失效不显示在活跃列表 */
+    if(i.archived)return false;
+    if(i.expired)return false;
+    if(i.status==='沉默中')return false;
     if(currentInqFilter.source&&i.source!==currentInqFilter.source)return false;
     if(currentInqFilter.grade&&i.grade!==currentInqFilter.grade)return false;
     if(currentInqFilter.today&&!isTodayFu(i))return false;
@@ -1462,13 +1565,6 @@ function getFilteredInq(){
 }
 
 function renderInquiries(){
-  /* 更新Tab计数 */
-  var activeCount=inquiries.filter(function(i){return canSeeInq(i)&&!i.archived&&!i.expired;}).length;
-  var archiveCount=inquiries.filter(function(i){return canSeeInq(i)&&i.archived;}).length;
-  var expiredCount=inquiries.filter(function(i){return canSeeInq(i)&&i.expired&&!i.archived;}).length;
-  var elA=document.getElementById('inq-count-active');if(elA)elA.textContent=activeCount;
-  var elB=document.getElementById('inq-count-archive');if(elB)elB.textContent=archiveCount;
-  var elE=document.getElementById('inq-count-expired');if(elE)elE.textContent=expiredCount;
 
   const filtered=getFilteredInq();
   const noticeEl=document.getElementById('inq-notice');
@@ -1490,7 +1586,7 @@ function renderInquiries(){
       +'<div class="table-cell"><span class="source-tag">'+i.source+'</span></div>'
       +'<div class="table-cell"><div>'+i.product+'</div>'+(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.notes+'</div>':'')+'</div>'
       +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+i.grade+'级</span></div>'
-      +'<div class="table-cell"><span class="status-badge '+SC[i.status]+'">'+i.status+'</span></div>'
+      +'<div class="table-cell"><span class="status-badge '+SC[i.status]+'">'+i.status+'</span>'+(i.flags&&i.flags.length?'<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">'+i.flags.map(function(f){return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:rgba(247,212,79,.15);color:var(--yellow)">'+f+'</span>';}).join('')+'</div>':'')+'</div>'
       +'<div class="table-cell" style="font-size:12px;color:'+(tf?'var(--yellow)':'var(--muted)')+'">'+( i.followupDate||'—')+(tf?' ⏰':'')+'</div>'
       +'<div class="table-cell" style="color:var(--muted)">'+i.person+'</div>'
       +'<div class="table-cell" onclick="event.stopPropagation()"><button class="btn btn-outline btn-xs" onclick="editInquiry('+i.id+')">编辑</button></div>'
@@ -2034,26 +2130,45 @@ function openInqDetail(id){
   document.getElementById('dp-star-btn').textContent=i.vipStar?'取消VIP':'⭐ VIP';
   document.getElementById('dp-target-btn').style.display='none';
 
-  /* 状态快速切换栏，带颜色 */
+  /* 状态快速切换栏（动态状态，第一类） */
   var statusColors={
     '新询盘':'background:rgba(247,147,79,.15);color:var(--accent2)',
-    '已回复':'background:rgba(79,142,247,.15);color:var(--accent)',
-    '跟进中':'background:rgba(75,209,247,.15);color:var(--teal)',
-    '已报价':'background:rgba(247,212,79,.15);color:var(--yellow)',
+    '互动中':'background:rgba(79,142,247,.15);color:var(--accent)',
+    '报价中':'background:rgba(247,212,79,.15);color:var(--yellow)',
     '打样中':'background:rgba(167,79,247,.15);color:var(--purple)',
-    '已打样':'background:rgba(130,60,200,.2);color:#c084fc',
+    '追单中':'background:rgba(75,209,247,.15);color:var(--teal)',
+    '沉默中':'background:rgba(150,150,150,.15);color:#888',
     '已成单':'background:rgba(62,207,142,.15);color:var(--green)',
     '失效':'background:rgba(247,111,111,.15);color:var(--red)'
   };
-  var statuses=['新询盘','已回复','跟进中','已报价','打样中','已打样','已成单','失效'];
+  var dynStatuses=['新询盘','互动中','报价中','打样中','追单中','沉默中','已成单','失效'];
   var statusBar='<div class="inq-status-bar">';
-  statuses.forEach(function(s){
+  dynStatuses.forEach(function(s){
     var isActive=i.status===s;
     var colorStyle=isActive?(statusColors[s]||''):'';
     var borderStyle=isActive?'border-color:currentColor':'';
     statusBar+='<button class="inq-status-btn" style="'+colorStyle+';'+borderStyle+'" onclick="quickInqStatus('+id+',\''+s+'\')">'+s+'</button>';
   });
   statusBar+='</div>';
+  /* 里程碑标记（第二类，多选） */
+  var flags=i.flags||[];
+  var flagBar='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">';
+  var flagDefs=[['已报价','background:rgba(247,212,79,.15);color:var(--yellow)'],['已打样','background:rgba(167,79,247,.15);color:var(--purple)']];
+  flagDefs.forEach(function(fd){
+    var fname=fd[0];var fstyle=fd[1];
+    var active=flags.indexOf(fname)>=0;
+    flagBar+='<button class="inq-status-btn" style="font-size:11px;padding:3px 10px;'+(active?fstyle+';border-color:currentColor':'')+'" onclick="toggleInqFlagDirect('+id+',\''+fname+'\')">'+fname+'</button>';
+  });
+  /* 沉默中时显示待确认失效按钮 */
+  if(i.status==='沉默中'){
+    var todayStr=today();
+    var base=i.silentSince||i.date;
+    var days=Math.floor((new Date(todayStr)-new Date(base))/86400000);
+    if(days>=7){
+      flagBar+='<span style="font-size:12px;color:var(--red);align-self:center">⚠️ 沉默'+days+'天，建议确认失效</span>';
+    }
+  }
+  flagBar+='</div>';
 
   /* 已成单时显示转为客户按钮 */
   var convertBar='';
@@ -2066,7 +2181,7 @@ function openInqDetail(id){
   }
 
   var html='<div class="detail-section"><div class="detail-section-title">快速更新状态</div>'
-    +statusBar+convertBar+'</div>';
+    +statusBar+flagBar+convertBar+'</div>';
 
   html+='<div class="detail-section"><div class="detail-section-title">询盘信息</div>'
     +'<div class="detail-row"><span class="detail-key">日期</span><span class="detail-val">'+i.date+'</span></div>'
@@ -2550,6 +2665,11 @@ function openInquiryModal(){
   document.getElementById('fi-grade').value='C';document.getElementById('fi-status').value='新询盘';
   document.getElementById('fi-currency').value='USD';document.getElementById('fi-is-hot').checked=false;
   ['fi-alias','fi-company','fi-country','fi-qty','fi-amount','fi-email','fi-phone','fi-wechat','fi-wangwang','fi-notes','fi-followup','fi-reason'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  /* 清空 flags 芯片 */
+  ['flag-chip-quoted','flag-chip-sampled'].forEach(function(cid){
+    var chip=document.getElementById(cid);
+    if(chip){chip.classList.remove('flag-active');chip.style.background='rgba(255,255,255,.04)';chip.style.color='var(--muted)';chip.style.borderColor='var(--border)';}
+  });
   openModal('inq-modal');
 }
 
@@ -2560,14 +2680,47 @@ function editInquiry(id){
   const set=(fid,val)=>{const el=document.getElementById(fid);if(el)el.value=val||'';};
   set('fi-date',i.date);set('fi-source',i.source);set('fi-alias',i.alias);set('fi-company',i.company);set('fi-country',i.country);set('fi-person',i.person);set('fi-product',i.product);set('fi-qty',i.qty);set('fi-grade',i.grade);set('fi-status',i.status);set('fi-amount',i.amount||'');set('fi-currency',i.currency||'USD');set('fi-followup',i.followupDate);set('fi-reason',i.reason);set('fi-notes',i.notes);set('fi-email',i.email);set('fi-phone',i.phone);set('fi-wechat',i.wechat);set('fi-wangwang',i.wangwang);
   document.getElementById('fi-is-hot').checked=!!i.isHot;
+  /* 恢复 flags 芯片状态 */
+  var flags=i.flags||[];
+  var resetChip=function(chipId,flag,onBg,onColor,onBorder){
+    var chip=document.getElementById(chipId);
+    if(!chip)return;
+    var active=flags.indexOf(flag)>=0;
+    if(active){chip.classList.add('flag-active');chip.style.background=onBg;chip.style.color=onColor;chip.style.borderColor=onBorder;}
+    else{chip.classList.remove('flag-active');chip.style.background='rgba(255,255,255,.04)';chip.style.color='var(--muted)';chip.style.borderColor='var(--border)';}
+  };
+  resetChip('flag-chip-quoted','已报价','rgba(247,212,79,.15)','var(--yellow)','var(--yellow)');
+  resetChip('flag-chip-sampled','已打样','rgba(167,79,247,.15)','var(--purple)','var(--purple)');
   openModal('inq-modal');
 }
 
 function saveInquiry(){
   const alias=document.getElementById('fi-alias').value.trim();if(!alias){alert('请填写客户代号');return;}
-  const data={date:document.getElementById('fi-date').value,source:document.getElementById('fi-source').value,alias,company:document.getElementById('fi-company').value,country:document.getElementById('fi-country').value,person:document.getElementById('fi-person').value,product:document.getElementById('fi-product').value,qty:document.getElementById('fi-qty').value,grade:document.getElementById('fi-grade').value,status:document.getElementById('fi-status').value,amount:document.getElementById('fi-amount').value||0,currency:document.getElementById('fi-currency').value,followupDate:document.getElementById('fi-followup').value,reason:document.getElementById('fi-reason').value,notes:document.getElementById('fi-notes').value,email:document.getElementById('fi-email').value,phone:document.getElementById('fi-phone').value,wechat:document.getElementById('fi-wechat').value,wangwang:document.getElementById('fi-wangwang').value,isHot:document.getElementById('fi-is-hot').checked};
-  if(editingInqId){const i=inquiries.find(x=>x.id===editingInqId);if(i)Object.assign(i,data);}
-  else{inquiries.push({id:nextInqId++,followups:[],vipStar:false,...data});}
+  /* 读取里程碑flags */
+  var newFlags=[];
+  var chipQ=document.getElementById('flag-chip-quoted');
+  var chipS=document.getElementById('flag-chip-sampled');
+  if(chipQ&&chipQ.classList.contains('flag-active'))newFlags.push('已报价');
+  if(chipS&&chipS.classList.contains('flag-active'))newFlags.push('已打样');
+  /* 沉默中时自动记录 silentSince */
+  var newStatus=document.getElementById('fi-status').value;
+  var data={date:document.getElementById('fi-date').value,source:document.getElementById('fi-source').value,alias,company:document.getElementById('fi-company').value,country:document.getElementById('fi-country').value,person:document.getElementById('fi-person').value,product:document.getElementById('fi-product').value,qty:document.getElementById('fi-qty').value,grade:document.getElementById('fi-grade').value,status:newStatus,amount:document.getElementById('fi-amount').value||0,currency:document.getElementById('fi-currency').value,followupDate:document.getElementById('fi-followup').value,reason:document.getElementById('fi-reason').value,notes:document.getElementById('fi-notes').value,email:document.getElementById('fi-email').value,phone:document.getElementById('fi-phone').value,wechat:document.getElementById('fi-wechat').value,wangwang:document.getElementById('fi-wangwang').value,isHot:document.getElementById('fi-is-hot').checked,flags:newFlags};
+  if(editingInqId){
+    const i=inquiries.find(x=>x.id===editingInqId);
+    if(i){
+      /* 如果新设为沉默中且之前没有 silentSince，记录今天 */
+      if(newStatus==='沉默中'&&i.status!=='沉默中'&&!i.silentSince)data.silentSince=today();
+      /* 如果从沉默中改为其他，清除 silentSince */
+      if(newStatus!=='沉默中'&&i.status==='沉默中')data.silentSince=null;
+      Object.assign(i,data);
+    }
+  }
+  else{
+    var newInq={id:nextInqId++,followups:[],vipStar:false};
+    Object.assign(newInq,data);
+    if(newStatus==='沉默中'&&!newInq.silentSince)newInq.silentSince=data.date;
+    inquiries.push(newInq);
+  }
   saveAll();closeModal('inq-modal');refreshAll();toast('询盘已保存 ✓');
 }
 
@@ -2995,6 +3148,7 @@ function renderMobileCards(page){
         +'<div style="display:flex;gap:5px;margin-top:4px;flex-wrap:wrap">'
         +'<span class="source-tag">'+i.source+'</span>'
         +'<span class="status-badge '+SC[i.status]+'">'+i.status+'</span>'
+        +(i.flags&&i.flags.length?i.flags.map(function(f){return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:rgba(247,212,79,.15);color:var(--yellow)">'+f+'</span>';}).join(''):'')
         +(ov?'<span class="mark-overdue">超时</span>':'')
         +(tf?'<span style="font-size:10px;color:var(--yellow);font-weight:600">⏰今日</span>':'')
         +'</div>'
@@ -3347,16 +3501,41 @@ function rebuildProductSelects(){
   }
 }
 
+function migrateInqStatuses(){
+  var migrated=false;
+  inquiries.forEach(function(i){
+    if(i._v2migrated)return;
+    if(!i.flags)i.flags=[];
+    var s=i.status||'';
+    if(s==='已回复'||s==='跟进中'){i.status='互动中';}
+    else if(s==='已报价'){i.status='报价中';if(i.flags.indexOf('已报价')<0)i.flags.push('已报价');}
+    else if(s==='已打样'){i.status='追单中';if(i.flags.indexOf('已打样')<0)i.flags.push('已打样');}
+    else if(s==='未成单'){i.status='沉默中';if(!i.silentSince)i.silentSince=i.date;}
+    else if(s==='已成单'){i.status='追单中';}
+    if(!i.flags)i.flags=[];
+    i._v2migrated=true;
+    migrated=true;
+  });
+  if(migrated)saveAll();
+}
 function updateInqTabCounts(){
-  var active=inquiries.filter(function(i){return canSeeInq(i)&&!i.archived&&!i.expired;}).length;
+  var active=inquiries.filter(function(i){return canSeeInq(i)&&!i.archived&&!i.expired&&i.status!=='沉默中';}).length;
+  var silent=inquiries.filter(function(i){return canSeeInq(i)&&!i.archived&&!i.expired&&i.status==='沉默中';}).length;
   var archived=inquiries.filter(function(i){return canSeeInq(i)&&i.archived;}).length;
   var expired=inquiries.filter(function(i){return canSeeInq(i)&&i.expired;}).length;
   var el;
   el=document.getElementById('minq-tab-active');if(el)el.textContent='活跃 '+active;
+  el=document.getElementById('minq-tab-silent');if(el)el.textContent='沉默 '+silent;
   el=document.getElementById('minq-tab-archive');if(el)el.textContent='成单 '+archived;
   el=document.getElementById('minq-tab-expired');if(el)el.textContent='失效 '+expired;
+  /* 桌面端 */
+  el=document.getElementById('inq-count-active');if(el)el.textContent=active;
+  el=document.getElementById('inq-count-silent');if(el)el.textContent=silent;
+  el=document.getElementById('inq-count-archive');if(el)el.textContent=archived;
+  el=document.getElementById('inq-count-expired');if(el)el.textContent=expired;
 }
 function refreshAll(){
+  migrateInqStatuses();
   autoExpireInquiries();
   updateNavCounts();
   updateInqTabCounts();
