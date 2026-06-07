@@ -340,16 +340,17 @@ a{color:var(--accent);text-decoration:none;}
 
     </div>
   </div>
-  <div id="mh-ord" style="display:none">
+  <div id="mh-ord" style="display:none;margin-bottom:-6px">
     <div class="mobile-chips">
-      <div class="mobile-chip on" onclick="mobileChipFilter(this,'ord','all')">全部</div>
-      <div class="mobile-chip" onclick="mobileChipFilter(this,'ord','生产中')">生产中</div>
-      <div class="mobile-chip" onclick="mobileChipFilter(this,'ord','打样中')">打样中</div>
-      <div class="mobile-chip" onclick="mobileChipFilter(this,'ord','待发货')">待发货</div>
-      <div class="mobile-chip" onclick="mobileChipFilter(this,'ord','已发货')">已发货</div>
+      <div class="mobile-chip on" onclick="ordChipFilter(this,'all')">全部</div>
+      <div class="mobile-chip" onclick="ordChipFilter(this,'生产中')">生产中</div>
+      <div class="mobile-chip" onclick="ordChipFilter(this,'打样中')">打样中</div>
+      <div class="mobile-chip" onclick="ordChipFilter(this,'待发货')">待发货</div>
+      <div class="mobile-chip" onclick="ordChipFilter(this,'已发货')">已发货</div>
+      <div class="mobile-chip" onclick="ordChipFilter(this,'超时')">超时</div>
       <select id="mb-ord-person" onchange="renderMobileCards('ord')" style="background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--text);padding:3px 6px;font-size:11px;outline:none;flex-shrink:0"><option value="">跟单</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Alan</option></select>
     </div>
-    <div style="display:flex;align-items:center;gap:3px;width:calc(100% + 30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
+    <div style="display:flex;align-items:center;gap:3px;width:calc(100% + 30px);margin-left:-15px;margin-right:-15px;margin-top:8px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
       <input id="mb-ord-search" placeholder="🔍 搜索客户..." oninput="renderMobileCards('ord')" style="flex:1;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;padding:3px 0;min-width:0">
       <button class="sort-btn-s" id="ord-sort-date" onclick="setOrdMobileSort('date')">日期 ↓</button>
       <button class="sort-btn-s" id="ord-sort-alias" onclick="setOrdMobileSort('alias')">客户 ↓</button>
@@ -2826,6 +2827,23 @@ function statsChipCurrency(el,val){
   el.classList.add('on');
   renderMobileCards('stats');
 }
+var ORD_CHIP_COLOR={'all':'var(--accent)','生产中':'var(--accent)','打样中':'#b36bfa','待发货':'var(--accent2)','已发货':'var(--green)','超时':'var(--red)'};
+var ORD_CHIP_BG={'all':'rgba(107,114,195,.25)','生产中':'rgba(79,142,247,.2)','打样中':'rgba(167,79,247,.2)','待发货':'rgba(247,147,79,.2)','已发货':'rgba(62,207,142,.2)','超时':'rgba(247,111,111,.2)'};
+function ordChipFilter(el,stage){
+  el.closest('.mobile-chips').querySelectorAll('.mobile-chip').forEach(function(c){
+    c.classList.remove('on');
+    c.style.color='';c.style.background='';c.style.borderColor='';
+  });
+  el.classList.add('on');
+  var col=ORD_CHIP_COLOR[stage]||'var(--accent)';
+  el.style.color=col;
+  el.style.background=ORD_CHIP_BG[stage]||'rgba(107,114,195,.25)';
+  el.style.borderColor=col;
+  if(stage==='超时'){mobilePageFilter.ord={overdue:true};}
+  else if(stage==='all'){mobilePageFilter.ord={};}
+  else{mobilePageFilter.ord={filter:stage};}
+  renderMobileCards('ord');
+}
 function setOrdMobileSort(key){
   if(ordMobileSort.key===key){
     if(ordMobileSort.dir==='desc'){ordMobileSort.dir='asc';}
@@ -3073,8 +3091,10 @@ function renderMobileCards(page){
     const f=mobilePageFilter.ord||{};
     const mbOrdPerson=(document.getElementById('mb-ord-person')||{}).value||'';
     const mbOrdSearch=((document.getElementById('mb-ord-search')||{}).value||'').toLowerCase();
+    var todayForFilter=today();
     const filtered=orders.filter(o=>{
       if(o.completed)return false;
+      if(f.overdue&&!(o.delivery&&o.delivery<todayForFilter))return false;
       if(f.filter&&o.stage!==f.filter)return false;
       if(mbOrdPerson&&o.person!==mbOrdPerson)return false;
       if(mbOrdSearch&&!o.alias.toLowerCase().includes(mbOrdSearch))return false;
