@@ -2318,9 +2318,9 @@ function setCustSort(key){
   ['todo','score','alias','company'].forEach(function(k){
     var el=document.getElementById('mb-sort-'+k);if(!el)return;
     var isActive=custGlobalSort.key===k;
-    var arrow=isActive?(custGlobalSort.dir==='desc'?' ↓':' ↑'):' ↓';
-    el.textContent=labels[k]+arrow;
-    if(isActive)el.classList.add('active');else el.classList.remove('active');
+    el.textContent=labels[k]+(isActive&&custGlobalSort.dir==='asc'?' ↑':' ↓');
+    el.classList.toggle('active',isActive);
+    el.style.opacity=isActive?'1':'.4';
   });
   var sortKeyMap={score:'score',todo:'followup',person:'person',alias:'name',company:'company'};
   var lk=custGlobalSort.key?sortKeyMap[custGlobalSort.key]||'score':'score';
@@ -2862,13 +2862,17 @@ function setOrdMobileSort(key){
   renderMobileCards('ord');
 }
 function setStatsSort(key){
-  if(statsMobileSort.key===key){statsMobileSort.dir=statsMobileSort.dir==='desc'?'asc':'desc';}
-  else{statsMobileSort.key=key;statsMobileSort.dir='desc';}
+  if(statsMobileSort.key===key){
+    if(statsMobileSort.dir==='desc'){statsMobileSort.dir='asc';}
+    else{statsMobileSort.key=null;statsMobileSort.dir='desc';}
+  } else{statsMobileSort.key=key;statsMobileSort.dir='desc';}
   var labels={alias:'客户',date:'日期',amount:'金额'};
   ['alias','date','amount'].forEach(function(k){
     var el=document.getElementById('stats-sort-'+k);if(!el)return;
-    el.textContent=labels[k]+(statsMobileSort.key===k?(statsMobileSort.dir==='desc'?' ↓':' ↑'):' ↓');
-    el.classList.toggle('active',statsMobileSort.key===k);
+    var isActive=statsMobileSort.key===k;
+    el.textContent=labels[k]+(isActive&&statsMobileSort.dir==='asc'?' ↑':' ↓');
+    el.classList.toggle('active',isActive);
+    el.style.opacity=isActive?'1':'.4';
   });
   renderMobileCards('stats');
 }
