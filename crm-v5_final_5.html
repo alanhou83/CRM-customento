@@ -1129,6 +1129,15 @@ const BC=['#4f8ef7','#3ecf8e','#f7934f','#f7d44f','#a74ff7','#f76f6f','#4fc9f7']
 function today(){return new Date().toISOString().split('T')[0];}
 function fmtCardDate(d){var mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];var p=d?d.split('-'):[];return p.length===3?mn[parseInt(p[1])-1]+'.-'+p[2]:d||'';}
 function fmtShortDate(d){var p=d?d.split('-'):[];return p.length===3?p[0].slice(2)+'.'+p[1]+'.'+p[2]:d||'';}
+function getLastFollowupStr(i){
+  if(!i.followups||!i.followups.length)return'';
+  var last=i.followups[i.followups.length-1];
+  var dm=last.match(/^(\d{4}-\d{2}-\d{2})/);
+  var content=last.replace(/^\d{4}-\d{2}-\d{2}\s*\[[^\]]*\]\s*/,'').trim();
+  if(!dm||!content)return content||'';
+  var p=dm[1].split('-');
+  return p[0].slice(2)+'.'+p[1]+'.'+p[2]+' 最后跟进：'+content;
+}
 function fmtAmt(a,c){if(!a||a==0)return'—';return c==='CNY'?'¥'+Number(a).toLocaleString():'$'+Number(a).toLocaleString();}
 function getQ(d){const m=new Date(d).getMonth()+1;return m<=3?'Q1':m<=6?'Q2':m<=9?'Q3':'Q4';}
 function isOverdue(i){if(['已成单','未成单'].includes(i.status))return false;const last=i.followups&&i.followups.length?i.followups[i.followups.length-1].split(' ')[0]:i.date;return Math.floor((new Date()-new Date(last))/86400000)>=5;}
@@ -1825,10 +1834,11 @@ function renderInquiries(){
     if(i.isHot) marks+='<span class="mark-hot">热点</span>';
     if(ov) marks+='<span class="mark-overdue">超时</span>';
     marks+='</div>';
+    var lastFu=getLastFollowupStr(i);
     return '<div class="table-row cols-inq" onclick="openInqDetail('+i.id+')">'
       +'<div class="table-cell" style="padding-right:0;padding-left:2px"><div class="inq-list-thumb-ph" id="inq-lph-'+i.id+'">📷</div><img class="inq-list-thumb" id="inq-limg-'+i.id+'" src="" alt="" style="display:none"></div>'
       +'<div class="table-cell" style="color:var(--muted);font-size:12px">'+i.date+'</div>'
-      +'<div class="table-cell"><div style="font-weight:500">'+i.alias+'</div><div style="font-size:11px;color:var(--muted)">'+( i.company||'')+'</div></div>'
+      +'<div class="table-cell"><div style="font-weight:500">'+i.alias+'</div><div style="font-size:11px;color:var(--muted)">'+( i.company||'')+'</div>'+(lastFu?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+lastFu+'</div>':'')+'</div>'
       +'<div class="table-cell">'+marks+'</div>'
       +'<div class="table-cell"><span class="source-tag">'+i.source+'</span></div>'
       +'<div class="table-cell"><div>'+i.product+'</div>'+(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.notes+'</div>':'')+'</div>'
@@ -3562,14 +3572,14 @@ function renderMobileCards(page){
       return '<div style="display:flex;align-items:flex-start;padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;gap:10px;background:var(--surface)'+(ov?';border-left:3px solid var(--yellow)':'')+'" onclick="openInqDetail('+i.id+')">'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+(ov?' <span class="mark-overdue" style="font-size:10px;vertical-align:middle">超时</span>':'')+'</div>'
-        +'<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+(i.company||'')+(i.country?' · '+i.country:'')+'</div>'
-        +'<div style="display:flex;gap:5px;margin-top:4px;flex-wrap:wrap">'
+        +(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+i.notes+'</div>':'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+(i.company||'')+(i.country?' · '+i.country:'')+'</div>')
+        +'<div style="display:flex;gap:5px;margin-top:3px;flex-wrap:wrap">'
         +'<span class="source-tag">'+i.source+'</span>'
         +'<span class="status-badge '+SC[i.status]+'">'+i.status+'</span>'
         +(tf?'<span style="font-size:10px;color:var(--yellow);font-weight:600">⏰今日</span>':'')
         +(i.flags&&i.flags.length?i.flags.map(function(f){var fc=f==='已报价'?'background:rgba(192,130,0,.18);color:#b87800':'background:rgba(210,55,115,.18);color:#c43270';return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;'+fc+'">✓ '+f+'</span>';}).join(''):'')
         +'</div>'
-        +(i.notes?'<div style="font-size:10px;color:var(--muted2);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 '+i.notes+'</div>':'')
+        +(function(){var lf=getLastFollowupStr(i);return lf?'<div style="font-size:10px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+lf+'</div>':'';}())
         +'</div>'
         +'<div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:3px">'
         +'<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end">'
@@ -4278,7 +4288,7 @@ function renderInqCardView(){
           +(i.followupDate?'<span style="color:'+(ov?'var(--red)':'var(--muted)')+';flex-shrink:0;font-weight:'+(ov?'600':'400')+'">'+(ov?'🔔 ':'')+fmtCardDate(i.followupDate)+'</span>':'')
           +(i.followupNote?'<span style="color:var(--green);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">📌 '+i.followupNote+'</span>':'')
           +'</div>';})()
-        :'')
+        :(function(){var lf=getLastFollowupStr(i);return lf?'<div style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+lf+'</div>':'';}()))
       +'</div>'
       +'</div>';
   }).join('');
