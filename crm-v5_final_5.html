@@ -1212,11 +1212,7 @@ function renderArchive(){
   /* 手机端归档卡片 */
   var mobileEl=document.getElementById('mobile-archive-cards');
   if(!mobileEl)return;
-  var mHtml='<div style="display:flex;padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px;gap:16px">'
-    +'<span style="color:var(--muted)">共 <strong style="color:var(--text)">'+archived.length+'</strong> 条</span>'
-    +'<span style="color:var(--muted)">$ <strong style="color:var(--green)">'+usdTotal.toLocaleString()+'</strong></span>'
-    +'<span style="color:var(--muted)">¥ <strong style="color:var(--yellow)">'+cnyTotal.toLocaleString()+'</strong></span>'
-    +'</div>';
+  var mHtml='';
   archived.forEach(function(i){
     mHtml+='<div class="mobile-card" onclick="openInqDetail('+i.id+')">'
       +'<div class="mobile-card-top"><span class="mobile-card-name">'+i.alias+'</span>'
