@@ -4103,18 +4103,7 @@ function openCropModal(img){
 }
 
 function clampOffset(){
-  var s=_cropState;
-  var es=s.drawScale*s.zoomFactor;
-  var scaledW=s.img.width*es;
-  var scaledH=s.img.height*es;
-  var cropX=(s.canvasW-s.cropSize)/2;
-  var cropY=(s.canvasH-s.cropSize)/2;
-  var minOX=cropX+s.cropSize-scaledW;
-  var maxOX=cropX;
-  var minOY=cropY+s.cropSize-scaledH;
-  var maxOY=cropY;
-  if(scaledW<=s.cropSize){s.offsetX=(s.canvasW-scaledW)/2;}else{s.offsetX=Math.min(maxOX,Math.max(minOX,s.offsetX));}
-  if(scaledH<=s.cropSize){s.offsetY=(s.canvasH-scaledH)/2;}else{s.offsetY=Math.min(maxOY,Math.max(minOY,s.offsetY));}
+  /* 完全自由移动，不做任何限制 */
 }
 
 function drawCrop(){
@@ -4144,12 +4133,16 @@ function confirmCrop(){
   var out=document.createElement('canvas');
   out.width=400;out.height=400;
   var ctx=out.getContext('2d');
+  ctx.fillStyle='#ffffff';
+  ctx.fillRect(0,0,400,400);
   var es=s.drawScale*s.zoomFactor;
   var cx=(s.canvasW-s.cropSize)/2,cy=(s.canvasH-s.cropSize)/2;
-  var srcX=(cx-s.offsetX)/es;
-  var srcY=(cy-s.offsetY)/es;
-  var srcSize=s.cropSize/es;
-  ctx.drawImage(s.img,srcX,srcY,srcSize,srcSize,0,0,400,400);
+  var imgX=s.offsetX-cx;
+  var imgY=s.offsetY-cy;
+  var scaledW=s.img.width*es;
+  var scaledH=s.img.height*es;
+  var scale=400/s.cropSize;
+  ctx.drawImage(s.img,imgX*scale,imgY*scale,scaledW*scale,scaledH*scale);
   var dataUrl=out.toDataURL('image/jpeg',0.75);
   closeCropModal();
   if(_cropState.onDone)_cropState.onDone(dataUrl);
