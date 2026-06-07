@@ -843,7 +843,7 @@ a{color:var(--accent);text-decoration:none;}
       <div class="form-group"><label class="form-label">备注</label><input class="form-input" type="text" id="fs-notes" placeholder="备注信息"></div>
     </div>
   </div>
-  <div class="modal-foot"><div></div><div style="display:flex;gap:8px"><button class="btn btn-outline" onclick="closeModal('sale-modal')">取消</button><button class="btn btn-primary" onclick="saveSaleRecord()">保存</button></div></div>
+  <div class="modal-foot"><div id="sale-delete-area" style="display:flex;gap:6px"></div><div style="display:flex;gap:8px"><button class="btn btn-outline" onclick="closeModal('sale-modal')">取消</button><button class="btn btn-primary" onclick="saveSaleRecord()">保存</button></div></div>
 </div>
 </div>
 
@@ -2617,6 +2617,7 @@ function saveOrder(){
 
 function newSaleFromCust(custId){
   editingSaleId=null;
+  var delArea=document.getElementById('sale-delete-area');if(delArea)delArea.innerHTML='';
   var t=document.getElementById('sale-modal-title');if(t)t.textContent='录入成交记录';
   var c=customers.find(function(x){return x.id===custId;});
   if(!c)return;
@@ -2632,6 +2633,7 @@ function newSaleFromCust(custId){
 
 function openSaleModal(){
   editingSaleId=null;
+  var delArea=document.getElementById('sale-delete-area');if(delArea)delArea.innerHTML='';
   var t=document.getElementById('sale-modal-title');if(t)t.textContent='录入成交记录';
   document.getElementById('fs-date').value=today();document.getElementById('fs-currency').value='USD';
   document.getElementById('fs-person').value=currentUser==='Momi'?'Momi':currentUser==='Mille'?'Mille':'Kelly';
@@ -2658,6 +2660,11 @@ function editSaleRecord(id){
   document.getElementById('fs-person').value=s.person||'Kelly';
   document.getElementById('fs-notes').value=s.notes||'';
   setSaleProductSelected(s.product||'');
+  var delArea=document.getElementById('sale-delete-area');
+  if(delArea){
+    delArea.innerHTML='<button class="btn btn-danger btn-sm" onclick="deleteSaleRecord('+id+')">删除</button>'
+      +(s.fromOrderId?'<button class="btn btn-outline btn-sm" style="color:var(--yellow);border-color:var(--yellow)" onclick="confirmRevertOrder('+id+')">↩ 退回执行中</button>':'');
+  }
   openModal('sale-modal');
 }
 
