@@ -1212,9 +1212,15 @@ function renderArchive(){
   var mHtml='';
   archived.forEach(function(i){
     mHtml+='<div class="mobile-card" onclick="openInqDetail('+i.id+')">'
-      +'<div class="mobile-card-top"><span class="mobile-card-name">'+i.alias+'</span>'
-      +'<span style="font-weight:600;color:'+(i.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(i.amount||0,i.currency||'USD')+'</span></div>'
+      +'<div class="mobile-card-top">'
+      +'<span class="mobile-card-name">'+i.alias+'</span>'
+      +'<div style="display:flex;align-items:center;gap:5px">'
+      +'<span class="badge '+GC[i.grade]+'">'+i.grade+'级</span>'
+      +'<span style="font-weight:600;color:'+(i.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(i.amount||0,i.currency||'USD')+'</span>'
+      +'</div>'
+      +'</div>'
       +'<div class="mobile-card-bottom"><span class="source-tag">'+i.source+'</span><span style="font-size:11px;color:var(--muted)">'+i.product+'</span><span style="font-size:11px;color:var(--muted);margin-left:auto">'+i.person+'</span></div>'
+      +(i.notes?'<div style="font-size:10px;color:var(--muted2);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 '+i.notes+'</div>':'')
       +'</div>';
   });
   mobileEl.innerHTML=mHtml;
