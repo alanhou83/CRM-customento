@@ -481,7 +481,7 @@ a{color:var(--accent);text-decoration:none;}
     <div class="page-content">
       <div class="filters">
         <input class="search-box" id="search-inq" placeholder="🔍 搜索客户/产品..." oninput="renderInquiries()">
-        <select class="filter-select" id="f-status" onchange="renderInquiries()"><option value="">所有状态</option><option>新询盘</option><option>已回复</option><option>跟进中</option><option>已报价</option><option>样品阶段</option><option>已成单</option></select>
+        <select class="filter-select" id="f-status" onchange="renderInquiries()"><option value="">所有状态</option><option>新询盘</option><option>已回复</option><option>跟进中</option><option>已报价</option><option>打样中</option><option>已打样</option><option>已成单</option></select>
         <select class="filter-select" id="f-source" onchange="renderInquiries()"><option value="">所有渠道</option><option>Alibaba</option><option>1688</option><option>Customento</option><option>老客户</option><option>笨鸟导入</option><option>WhatsApp</option><option>展会</option><option>其他</option></select>
         <select class="filter-select" id="f-grade" onchange="renderInquiries()"><option value="">所有评级</option><option value="A">A级</option><option value="B">B级</option><option value="C">C级</option><option value="D">D级</option></select>
         <select class="filter-select" id="f-person" onchange="renderInquiries()"><option value="">所有负责人</option><option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option></select>
@@ -732,7 +732,7 @@ a{color:var(--accent);text-decoration:none;}
       <div class="form-group"><label class="form-label">询问产品</label><select class="form-input" id="fi-product"><option>MDF杯垫</option><option>MDF冰箱贴</option><option>马克杯</option><option>帆布袋</option><option>T恤</option><option>Shot Glass</option><option>软木杯垫</option><option>多品类</option><option>其他</option></select></div>
       <div class="form-group"><label class="form-label">询盘数量</label><input class="form-input" type="text" id="fi-qty" placeholder="如：500个"></div>
       <div class="form-group"><label class="form-label">客户评级</label><select class="form-input" id="fi-grade"><option value="A">A级 — 重点跟进</option><option value="B">B级 — 积极跟进</option><option value="C" selected>C级 — 一般观望</option><option value="D">D级 — 暂时放弃</option></select></div>
-      <div class="form-group"><label class="form-label">当前状态</label><select class="form-input" id="fi-status"><option>新询盘</option><option>已回复</option><option>跟进中</option><option>已报价</option><option>样品阶段</option><option>已成单</option><option>未成单</option></select></div>
+      <div class="form-group"><label class="form-label">当前状态</label><select class="form-input" id="fi-status"><option>新询盘</option><option>已回复</option><option>跟进中</option><option>已报价</option><option>打样中</option><option>已打样</option><option>已成单</option><option>未成单</option></select></div>
       <div class="form-group"><label class="form-label">目标订单金额</label><div class="amount-row"><input class="form-input" type="number" id="fi-amount" placeholder="预估金额"><select class="form-input" id="fi-currency"><option value="USD">$ 美金</option><option value="CNY">¥ 人民币</option></select></div></div>
       <div class="form-group"><label class="form-label">下次跟进日期</label><input class="form-input" type="date" id="fi-followup"></div>
       <div class="form-group"><label class="form-label">未成单原因</label><select class="form-input" id="fi-reason"><option value="">— 暂无 —</option><option>价格太高</option><option>MOQ太高</option><option>交期太长</option><option>质量不符</option><option>无回应</option><option>找到其他供应商</option><option>需求取消</option><option>其他</option></select></div>
@@ -912,7 +912,7 @@ const DEF_INQ=[
   {id:1,date:'2026-05-01',source:'Alibaba',alias:'Sarah J.',company:'Rocky Mountain Gifts',country:'加拿大',person:'Kelly',product:'MDF杯垫',qty:'300个',grade:'A',status:'已报价',amount:2000,currency:'USD',followupDate:'2026-05-29',reason:'',notes:'落基山脉定制图案，全彩印刷',email:'sarah@rockymtn.ca',phone:'+1 604 555 1234',wechat:'',wangwang:'',isHot:true,vipStar:false,followups:['2026-05-01 [Kelly] 首次回复，发送产品目录','2026-05-05 [Kelly] 发送报价单，客户表示价格合理']},
   {id:2,date:'2026-05-03',source:'1688',alias:'张伟',company:'郑州礼品批发',country:'中国',person:'Mille',product:'MDF冰箱贴',qty:'500个',grade:'B',status:'已回复',amount:8000,currency:'CNY',followupDate:'2026-05-28',reason:'',notes:'德国主题冰箱贴，激光切割款',email:'',phone:'',wechat:'zhangwei888',wangwang:'zhengzhou_gift',isHot:false,vipStar:false,followups:['2026-05-03 [Mille] 回复询盘并发送图片']},
   {id:3,date:'2026-04-28',source:'老客户',alias:'GKK',company:'Giftware Keepsake Kingdom GmbH',country:'德国',person:'Alan',product:'MDF冰箱贴',qty:'各200个',grade:'A',status:'已成单',amount:8000,currency:'USD',followupDate:'',reason:'',notes:'年度复单，空白冰箱贴+杯垫',email:'gkk@berlin.de',phone:'+49 30 555 0011',wechat:'',wangwang:'',isHot:false,vipStar:true,followups:['2026-04-28 [Alan] 客户主动联系复单','2026-05-02 [Alan] 收到定金安排生产']},
-  {id:4,date:'2026-04-25',source:'Alibaba',alias:'Emma S.',company:'Berlin Travel Shop',country:'德国',person:'Momi',product:'MDF冰箱贴',qty:'200个',grade:'A',status:'样品阶段',amount:3000,currency:'USD',followupDate:'2026-05-30',reason:'',notes:'柏林地标系列，3D激光切割款',email:'emma@berlintrav.de',phone:'',wechat:'',wangwang:'berlintravelshop',isHot:true,vipStar:false,followups:['2026-04-25 [Momi] 回复并发送产品图','2026-04-28 [Momi] 客户要求寄样品']},
+  {id:4,date:'2026-04-25',source:'Alibaba',alias:'Emma S.',company:'Berlin Travel Shop',country:'德国',person:'Momi',product:'MDF冰箱贴',qty:'200个',grade:'A',status:'打样中',amount:3000,currency:'USD',followupDate:'2026-05-30',reason:'',notes:'柏林地标系列，3D激光切割款',email:'emma@berlintrav.de',phone:'',wechat:'',wangwang:'berlintravelshop',isHot:true,vipStar:false,followups:['2026-04-25 [Momi] 回复并发送产品图','2026-04-28 [Momi] 客户要求寄样品']},
   {id:5,date:'2026-04-20',source:'Alibaba',alias:'Carlos R.',company:'Mexico Gifts LLC',country:'墨西哥',person:'Kelly',product:'马克杯',qty:'1000个',grade:'C',status:'未成单',amount:0,currency:'USD',followupDate:'',reason:'价格太高',notes:'对价格非常敏感',email:'carlos@mexgifts.mx',phone:'',wechat:'',wangwang:'',isHot:false,vipStar:false,followups:['2026-04-20 [Kelly] 回复询盘','2026-04-25 [Kelly] 降价3%仍不接受']},
   {id:6,date:'2026-05-07',source:'Customento',alias:'Tom W.',company:'Sydney Souvenir Store',country:'澳大利亚',person:'Alan',product:'MDF杯垫',qty:'150个',grade:'B',status:'已回复',amount:1500,currency:'USD',followupDate:'2026-05-29',reason:'',notes:'网站询盘，悉尼主题定制',email:'tom@sydneysouvenir.au',phone:'+61 2 5550 3344',wechat:'',wangwang:'',isHot:false,vipStar:false,followups:['2026-05-07 [Alan] 第一条网站询盘，已回复']},
   {id:7,date:'2026-05-10',source:'1688',alias:'李明',company:'深圳旅游礼品',country:'中国',person:'Mille',product:'帆布袋',qty:'100个',grade:'B',status:'新询盘',amount:3000,currency:'CNY',followupDate:'2026-05-29',reason:'',notes:'小批量帆布袋，有自己设计图',email:'',phone:'',wechat:'liming_szgift',wangwang:'sz_tourism',isHot:false,vipStar:false,followups:[]},
@@ -958,7 +958,7 @@ function buildProductOptions(selectedVal){
   return getProducts().map(function(p){return '<option'+(p===selectedVal?' selected':'')+'>'+p+'</option>';}).join('');
 }
 
-const SC={'新询盘':'s-new','已回复':'s-replied','跟进中':'s-following','已报价':'s-quoted','样品阶段':'s-sample','已成单':'s-won','未成单':'s-lost','失效':'s-lost'};
+const SC={'新询盘':'s-new','已回复':'s-replied','跟进中':'s-following','已报价':'s-quoted','打样中':'s-sample','已打样':'s-sample','已成单':'s-won','未成单':'s-lost','失效':'s-lost'};
 const GC={A:'badge-A',B:'badge-B',C:'badge-C',D:'badge-D'};
 const TC={tourist:'type-tourist',ecom:'type-ecom',custom:'type-custom',consumable:'type-consumable',promo:'type-promo',personal:'type-personal'};
 const TL={tourist:'旅游纪念品',ecom:'跨境电商',custom:'来图定制',consumable:'白耗材',promo:'促销品',personal:'个人定制'};
@@ -2032,11 +2032,12 @@ function openInqDetail(id){
     '已回复':'background:rgba(79,142,247,.15);color:var(--accent)',
     '跟进中':'background:rgba(75,209,247,.15);color:var(--teal)',
     '已报价':'background:rgba(247,212,79,.15);color:var(--yellow)',
-    '样品阶段':'background:rgba(167,79,247,.15);color:var(--purple)',
+    '打样中':'background:rgba(167,79,247,.15);color:var(--purple)',
+    '已打样':'background:rgba(130,60,200,.2);color:#c084fc',
     '已成单':'background:rgba(62,207,142,.15);color:var(--green)',
     '失效':'background:rgba(247,111,111,.15);color:var(--red)'
   };
-  var statuses=['新询盘','已回复','跟进中','已报价','样品阶段','已成单','失效'];
+  var statuses=['新询盘','已回复','跟进中','已报价','打样中','已打样','已成单','失效'];
   var statusBar='<div class="inq-status-bar">';
   statuses.forEach(function(s){
     var isActive=i.status===s;
