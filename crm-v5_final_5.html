@@ -1219,7 +1219,7 @@ function renderArchive(){
       +'<span style="font-weight:600;color:'+(i.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(i.amount||0,i.currency||'USD')+'</span>'
       +'</div>'
       +'</div>'
-      +'<div class="mobile-card-bottom"><span class="source-tag">'+i.source+'</span><span style="font-size:11px;color:var(--muted)">'+i.product+'</span><span style="font-size:11px;color:var(--muted);margin-left:auto">'+i.person+' · '+i.date+'</span></div>'
+      +'<div class="mobile-card-bottom"><span class="source-tag">'+i.source+'</span><span style="font-size:11px;color:var(--muted)">'+i.product+'</span><div style="display:flex;flex-direction:column;align-items:flex-end;margin-left:auto"><span style="font-size:11px;color:var(--muted)">'+i.person+'</span><span style="font-size:10px;color:var(--muted2)">'+i.date+'</span></div></div>'
       +(i.notes?'<div style="font-size:10px;color:var(--muted2);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 '+i.notes+'</div>':'')
       +'</div>';
   });
