@@ -41,12 +41,45 @@
 - PWA 支持：可安装到手机/桌面，离线缓存
 - 社媒联系方式（WhatsApp/Facebook/Instagram/Telegram）加入客户档案，品牌SVG图标，点击跳转App；微信/旺旺加复制按钮
 
-## 询盘状态设计
-- 状态流程：新询盘 → 已回复 → 跟进中 → 已报价 → **打样中 → 已打样** → 已成单
-- "样品阶段"已废弃，拆分为"打样中"（紫色）和"已打样"（浅紫色）
-- 两者互斥，可同时不选
-- SC map 已更新，旧数据"样品阶段"需手动编辑改为"打样中"
-- 手机端三Tab后显示条数：活跃X / 成单X / 失效X（`updateInqTabCounts()` 在 `refreshAll` 中调用）
+## 询盘状态设计（V2 重构后）
+- **4个Tab**：活跃（非沉默中）/ 沉默 / 成单（archived）/ 失效（expired）
+- **6个动态状态**：新询盘 / 互动中 / 报价中 / 打样中 / 追单中 / 沉默中
+- **里程碑标记 flags[]**：已报价（黄）/ 已打样（紫），可叠加，独立于状态
+- **旧数据迁移**：`migrateInqStatuses()` 一次性迁移，已归档/失效的跳过
+- SC map 含新旧状态名兼容（已回复→互动中 等）
+- 沉默中：切换时记录 `silentSince` 日期，≥7天在沉默Tab显示警告
+- 询盘列表4个Tab计数：`updateInqTabCounts()`（活跃/沉默/成单/失效）
+- 手机端Tab计数 id：`minq-tab-active/silent/archive/expired`
+
+## 询盘详情面板设计（V2）
+- **2个Tab**：询盘详情 / 跟进记录
+- Tab标签：`dp-tab-profile`="询盘详情"，`dp-tab-sales` 隐藏（客户详情时恢复"客户档案"+显示销售Tab）
+- 状态区第一行：6个动态状态按钮
+- 状态区第二行：已报价标记 / 已打样标记 / 已成单（action）/ 失效（action）
+- 无"快速更新状态"标题行
+- 待办显示在询盘详情Tab内（followupDate + followupNote）
+- `saveInqTodo(inqId)` / `clearInqTodoDate(inqId)` 处理待办保存/清除
+- 跟进记录Tab：顶部待办日期+内容输入 → 保存到 followupDate/followupNote；下方跟进记录列表
+
+## 询盘列表规范（V2）
+- **列定义**（9列）：日期 / 客户 / 标记 / 渠道 / 产品 / 评级 / 状态 / 待办 / 负责人
+- `.cols-inq{grid-template-columns:80px 1fr 90px 90px 100px 55px 100px 150px 65px;}`
+- 无"操作"列，点行进详情
+- 表头排序：日期/客户/待办（`setInqSort`，3态，id=`thi-date-arr`等）
+- 手机端排序：日期/客户/待办（`setInqMobileSort`，id=`inq-sort-date`等）
+- 排序状态变量：`inqTableSort={key:'date',dir:'desc'}` / `inqMobileSort={key:null,dir:'desc'}`
+- 排序优先级：手机端 key≠null 时优先用移动排序，否则用桌面排序
+
+## 询盘手机端筛选（V2）
+- **第一行芯片**：全部/Alibaba/1688/笨鸟/🔥A级/⚠️超时（`mobileChip(el,type)`）
+- **第二行下拉**：状态(`mb-inq-status`) / 评级(`mb-inq-grade`) / 跟单(`mb-inq-person`) / 渠道(`mb-inq-source`)
+- **搜索框**：`id="search-inq-m"`，接入 `getFilteredInq()`
+- 点击芯片时自动重置4个下拉为空（避免冲突）
+- `getFilteredInq()` 同时读取桌面筛选和手机下拉筛选
+
+## 超时判定逻辑
+- `isOverdue(i)`：状态非"已成单/未成单" 且 最后跟进距今 **≥5天** → 超时
+- 基准：最后一条跟进记录日期，无跟进则用询盘创建日期
 
 ## 执行中订单模块关键设计
 - 电脑端表头排序：日期/客户/金额/交期（`setOrdSort`，3态）
@@ -97,8 +130,9 @@
 
 ## 布局规范
 - detail-body padding=0
-- 询盘/订单用 detail-body-inner 包 padding:20px
+- 询盘详情/订单：**不用** detail-body-inner，直接用 dp-tab-content.active 的 padding:20px
 - 客户详情 Tab 用 dp-tab-content.active 的 padding:20px
+- 询盘详情 Tab1/Tab2 内容都直接在 dp-tab-content 内，无需额外包裹层
 
 ## 品牌规范
 - 主色：#2D3172（深海军蓝）
@@ -156,11 +190,12 @@
 - 手机端搜索栏全部统一为全宽 border-top 风格（询盘/客户/销售统计/执行订单）
 - 排序按钮统一3态逻辑，取消 ↕ 符号
 - 社媒联系方式加入客户档案（WhatsApp/Facebook/Instagram/Telegram 品牌SVG图标）
-- 询盘"样品阶段"拆分为"打样中"+"已打样"
-- 手机端询盘三Tab显示条数
+- 询盘状态系统V2重构：6动态状态 + flags里程碑 + 4个Tab（活跃/沉默/成单/失效）
+- 询盘详情面板改为2Tab结构（询盘详情/跟进记录），含待办录入
+- 询盘列表：移除操作列，加待办列，表头+手机端排序（日期/客户/待办）
+- 手机端询盘筛选：芯片+下拉（状态/评级/跟单/渠道）联动，搜索框 id=search-inq-m
+- 超时判定阈值改为5天（≥5天未跟进）
 - 客户成交统计Tab重构（概览紧凑/点行进编辑/删除+退回按钮在modal）
-- 失效询盘卡片加日期+失效原因+评级+热点
-- 成单询盘卡片加评级+备注+负责人+日期
 
 ## 调试经验
 - 遇到"点按钮就退出"类问题，先在浏览器 Console 直接调用函数排查（不要改代码）
@@ -184,11 +219,11 @@
 
 ## 近期待办（未完成，按优先级）
 
-### 中等改动
-**询盘页：**
-- ⬜ 手机端筛选功能完善 + 芯片快选行（参考其他页逻辑）
-
 ### 大改动（待单独讨论）
 **询盘页：**
-- ⬜ 询盘详情加跟进记录 Tab（逻辑同客户管理）
 - ⬜ 状态标签可叠加（涉及数据结构变更，影响面大）
+
+### 长期
+- ⬜ 询盘成单金额自动计入客户成交统计
+- ⬜ 客户管理加来源渠道筛选
+- ⬜ 数据看板优化（待讨论）
