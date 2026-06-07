@@ -1655,7 +1655,8 @@ function toggleInqFlag(flag){
   var el=document.getElementById(chipId);
   if(!el)return;
   var active=el.classList.toggle('flag-active');
-  if(active){el.style.background='rgba(247,212,79,.15)';el.style.color='var(--yellow)';el.style.borderColor='var(--yellow)';}
+  var isQuoted=flag==='已报价';
+  if(active){el.style.background=isQuoted?'rgba(62,207,142,.18)':'rgba(75,209,247,.18)';el.style.color=isQuoted?'var(--green)':'var(--teal)';el.style.borderColor=isQuoted?'var(--green)':'var(--teal)';}
   else{el.style.background='rgba(255,255,255,.04)';el.style.color='var(--muted)';el.style.borderColor='var(--border)';}
 }
 
@@ -1827,7 +1828,7 @@ function renderInquiries(){
       +'<div class="table-cell"><span class="source-tag">'+i.source+'</span></div>'
       +'<div class="table-cell"><div>'+i.product+'</div>'+(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.notes+'</div>':'')+'</div>'
       +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+i.grade+'级</span></div>'
-      +'<div class="table-cell"><span class="status-badge '+SC[i.status]+'">'+i.status+'</span>'+(i.flags&&i.flags.length?'<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">'+i.flags.map(function(f){var fc=f==='已报价'?'background:rgba(247,212,79,.15);color:var(--yellow)':'background:rgba(167,79,247,.15);color:var(--purple)';return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;'+fc+'">'+f+'</span>';}).join('')+'</div>':'')+'</div>'
+      +'<div class="table-cell"><span class="status-badge '+SC[i.status]+'">'+i.status+'</span>'+(i.flags&&i.flags.length?'<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">'+i.flags.map(function(f){var fc=f==='已报价'?'background:rgba(62,207,142,.18);color:var(--green)':'background:rgba(75,209,247,.18);color:var(--teal)';return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;'+fc+'">✓ '+f+'</span>';}).join('')+'</div>':'')+'</div>'
       +(function(){var ov=i.followupDate&&i.followupDate<today();return '<div class="table-cell">'+(i.followupDate?'<div>'+(ov?'<span style="font-size:14px">🔔</span> ':'<span style="font-size:9px">📅</span> ')+'<span style="font-size:'+(ov?'13':'12')+'px;color:'+(ov?'var(--red)':'var(--muted)')+';font-weight:'+(ov?'600':'400')+'">'+i.followupDate+'</span>'+(i.followupNote?'<div style="font-size:'+(ov?'12':'11')+'px;color:'+(ov?'var(--red)':'var(--green)')+';margin-top:2px">📌 '+i.followupNote+'</div>':'')+'</div>':(i.followupNote?'<div style="font-size:11px;color:var(--green)">📌 '+i.followupNote+'</div>':'<span style="font-size:12px;color:var(--muted2)">—</span>'))+'</div>';}())
       +'<div class="table-cell" style="color:var(--muted)">'+i.person+'</div>'
       +'</div>';
@@ -2404,11 +2405,11 @@ function openInqDetail(id){
   var flags=i.flags||[];
   var flagBar='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">';
   /* 已报价 / 已打样 里程碑 */
-  var flagDefs=[['已报价','background:rgba(247,212,79,.15);color:var(--yellow)'],['已打样','background:rgba(167,79,247,.15);color:var(--purple)']];
+  var flagDefs=[['已报价','background:rgba(62,207,142,.18);color:var(--green)'],['已打样','background:rgba(75,209,247,.18);color:var(--teal)']];
   flagDefs.forEach(function(fd){
     var fname=fd[0];var fstyle=fd[1];
     var active=flags.indexOf(fname)>=0;
-    flagBar+='<button class="inq-status-btn" style="font-size:11px;padding:3px 10px;'+(active?fstyle+';border-color:currentColor':'')+'" onclick="toggleInqFlagDirect('+id+',\''+fname+'\')">'+fname+'</button>';
+    flagBar+='<button class="inq-status-btn" style="font-size:11px;padding:3px 10px;'+(active?fstyle+';border-color:currentColor':'')+'" onclick="toggleInqFlagDirect('+id+',\''+fname+'\')">'+(active?'✓ ':'')+fname+'</button>';
   });
   /* 已成单 */
   var wonActive=i.status==='已成单';
@@ -3039,8 +3040,8 @@ function editInquiry(id){
     if(active){chip.classList.add('flag-active');chip.style.background=onBg;chip.style.color=onColor;chip.style.borderColor=onBorder;}
     else{chip.classList.remove('flag-active');chip.style.background='rgba(255,255,255,.04)';chip.style.color='var(--muted)';chip.style.borderColor='var(--border)';}
   };
-  resetChip('flag-chip-quoted','已报价','rgba(247,212,79,.15)','var(--yellow)','var(--yellow)');
-  resetChip('flag-chip-sampled','已打样','rgba(167,79,247,.15)','var(--purple)','var(--purple)');
+  resetChip('flag-chip-quoted','已报价','rgba(62,207,142,.18)','var(--green)','var(--green)');
+  resetChip('flag-chip-sampled','已打样','rgba(75,209,247,.18)','var(--teal)','var(--teal)');
   /* 重置图片预览区，从 DB 异步加载该询盘已有图 */
   _pendingInqImg=null;
   var prev=document.getElementById('fi-img-preview');
@@ -3562,7 +3563,7 @@ function renderMobileCards(page){
         +'<span class="source-tag">'+i.source+'</span>'
         +'<span class="status-badge '+SC[i.status]+'">'+i.status+'</span>'
         +(tf?'<span style="font-size:10px;color:var(--yellow);font-weight:600">⏰今日</span>':'')
-        +(i.flags&&i.flags.length?i.flags.map(function(f){var fc=f==='已报价'?'background:rgba(247,212,79,.15);color:var(--yellow)':'background:rgba(167,79,247,.15);color:var(--purple)';return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;'+fc+'">'+f+'</span>';}).join(''):'')
+        +(i.flags&&i.flags.length?i.flags.map(function(f){var fc=f==='已报价'?'background:rgba(62,207,142,.18);color:var(--green)':'background:rgba(75,209,247,.18);color:var(--teal)';return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;'+fc+'">✓ '+f+'</span>';}).join(''):'')
         +'</div>'
         +(i.notes?'<div style="font-size:10px;color:var(--muted2);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 '+i.notes+'</div>':'')
         +'</div>'
@@ -4237,8 +4238,8 @@ function renderInqCardView(){
     var ov=isOverdue(i);
     var flags=i.flags||[];
     var flagsHtml=flags.map(function(f){
-      var fc=f==='已报价'?'background:rgba(247,212,79,.15);color:var(--yellow)':'background:rgba(167,79,247,.15);color:var(--purple)';
-      return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;'+fc+'">'+f+'</span>';
+      var fc=f==='已报价'?'background:rgba(62,207,142,.18);color:var(--green)':'background:rgba(75,209,247,.18);color:var(--teal)';
+      return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;'+fc+'">✓ '+f+'</span>';
     }).join('');
     return '<div class="inq-card-item" id="inq-card-'+i.id+'" onclick="openInqDetail('+i.id+')">'
       +'<div class="inq-card-img-ph" id="inq-card-ph-'+i.id+'" onclick="event.stopPropagation();uploadInqImgFromCard('+i.id+')">'
