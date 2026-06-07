@@ -2190,7 +2190,7 @@ function openInqDetail(id){
   }
 
   /* Tab1：询盘详情 */
-  var tab1='<div class="detail-body-inner">';
+  var tab1='';
   tab1+='<div class="detail-section"><div class="detail-section-title">快速更新状态</div>'
     +statusBar+flagBar+convertBar+'</div>';
   tab1+='<div class="detail-section"><div class="detail-section-title">询盘信息</div>'
@@ -2215,11 +2215,10 @@ function openInqDetail(id){
   if(i.notes){
     tab1+='<div class="detail-section"><div class="detail-section-title">备注</div><div style="font-size:13px;line-height:1.6">'+i.notes+'</div></div>';
   }
-  tab1+='</div>';
 
   /* Tab2：跟进记录 */
   var fuHtml=renderFollowups(i.followups||[]);
-  var tab2='<div class="detail-body-inner">'
+  var tab2=''
     +'<div style="display:flex;gap:7px;margin-bottom:8px;align-items:center">'
     +'<div style="display:flex;flex:1;border:1px solid var(--border);border-radius:8px;background:var(--surface2)">'
     +'<div style="display:flex;align-items:center;flex-shrink:0;position:relative">'
@@ -2235,8 +2234,7 @@ function openInqDetail(id){
     +'<input class="form-input" id="dp-fu-input" placeholder="记录本次跟进内容..." style="flex:1;font-size:13px">'
     +'<button class="btn btn-primary btn-sm" onclick="addFollowup()">添加</button>'
     +'</div>'
-    +'<div id="dp-followups">'+fuHtml+'</div>'
-    +'</div>';
+    +'<div id="dp-followups">'+fuHtml+'</div>';
 
   /* 设置Tab标签：询盘详情 / 跟进记录，隐藏成交统计 */
   var dpTabs=document.getElementById('dp-tabs');
