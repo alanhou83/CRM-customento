@@ -3230,9 +3230,9 @@ function renderMobileCards(page){
         +'<div style="display:flex;gap:5px;margin-top:4px;flex-wrap:wrap">'
         +'<span class="source-tag">'+i.source+'</span>'
         +'<span class="status-badge '+SC[i.status]+'">'+i.status+'</span>'
-        +(i.flags&&i.flags.length?i.flags.map(function(f){var fc=f==='已报价'?'background:rgba(247,212,79,.15);color:var(--yellow)':'background:rgba(167,79,247,.15);color:var(--purple)';return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;'+fc+'">'+f+'</span>';}).join(''):'')
         +(ov?'<span class="mark-overdue">超时</span>':'')
         +(tf?'<span style="font-size:10px;color:var(--yellow);font-weight:600">⏰今日</span>':'')
+        +(i.flags&&i.flags.length?i.flags.map(function(f){var fc=f==='已报价'?'background:rgba(247,212,79,.15);color:var(--yellow)':'background:rgba(167,79,247,.15);color:var(--purple)';return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;'+fc+'">'+f+'</span>';}).join(''):'')
         +'</div>'
         +(i.notes?'<div style="font-size:10px;color:var(--muted2);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 '+i.notes+'</div>':'')
         +'</div>'
