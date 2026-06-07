@@ -3335,9 +3335,19 @@ function rebuildProductSelects(){
   }
 }
 
+function updateInqTabCounts(){
+  var active=inquiries.filter(function(i){return canSeeInq(i)&&!i.archived&&!i.expired;}).length;
+  var archived=inquiries.filter(function(i){return canSeeInq(i)&&i.archived;}).length;
+  var expired=inquiries.filter(function(i){return canSeeInq(i)&&i.expired;}).length;
+  var el;
+  el=document.getElementById('minq-tab-active');if(el)el.textContent='活跃 '+active;
+  el=document.getElementById('minq-tab-archive');if(el)el.textContent='成单 '+archived;
+  el=document.getElementById('minq-tab-expired');if(el)el.textContent='失效 '+expired;
+}
 function refreshAll(){
   autoExpireInquiries();
   updateNavCounts();
+  updateInqTabCounts();
   const active=document.querySelector('.page.active');if(!active)return;
   const id=active.id.replace('page-','');
   if(id==='dashboard')renderDashboard();else if(id==='hot')renderHot();else if(id==='inquiries')renderInquiries();else if(id==='customers')renderCustomers();else if(id==='oldstats')renderOldStats();else if(id==='orders')renderOrders();
