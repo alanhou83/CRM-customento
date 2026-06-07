@@ -279,7 +279,7 @@ a{color:var(--accent);text-decoration:none;}
       <div id="minq-tab-archive" onclick="switchInqTab('archive')" style="flex:1;text-align:center;padding:6px 4px;font-size:12px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer">成单</div>
       <div id="minq-tab-expired" onclick="switchInqTab('expired')" style="flex:1;text-align:center;padding:6px 4px;font-size:12px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer">失效</div>
     </div>
-    <div class="mobile-chips" id="mh-inq-chips" style="padding-bottom:6px">
+    <div class="mobile-chips" id="mh-inq-chips" style="padding-bottom:0">
       <div class="mobile-chip on" onclick="mobileChip(this,'all')">全部</div>
       <div class="mobile-chip" onclick="mobileChip(this,'Alibaba')">Alibaba</div>
       <div class="mobile-chip" onclick="mobileChip(this,'1688')">1688</div>
@@ -287,8 +287,26 @@ a{color:var(--accent);text-decoration:none;}
       <div class="mobile-chip" onclick="mobileChip(this,'grade-A')">🔥 A级</div>
       <div class="mobile-chip" onclick="mobileChip(this,'overdue')">⚠️ 超时</div>
     </div>
+    <div class="mobile-chips" style="padding-bottom:6px;margin-top:2px">
+      <select id="mb-inq-status" onchange="renderMobileCards('inq')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
+        <option value="">状态</option>
+        <option>新询盘</option><option>互动中</option><option>报价中</option><option>打样中</option><option>追单中</option>
+      </select>
+      <select id="mb-inq-grade" onchange="renderMobileCards('inq')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
+        <option value="">评级</option>
+        <option value="A">A级</option><option value="B">B级</option><option value="C">C级</option><option value="D">D级</option>
+      </select>
+      <select id="mb-inq-person" onchange="renderMobileCards('inq')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
+        <option value="">跟单</option>
+        <option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Penny</option>
+      </select>
+      <select id="mb-inq-source" onchange="renderMobileCards('inq')" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
+        <option value="">渠道</option>
+        <option>Alibaba</option><option>1688</option><option>Customento</option><option>老客户</option><option>笨鸟导入</option><option>WhatsApp</option><option>展会</option><option>其他</option>
+      </select>
+    </div>
     <div style="display:flex;align-items:center;gap:3px;width:calc(100% + 30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
-      <input placeholder="🔍 搜索询盘..." oninput="renderMobileCards('inq')" style="flex:1;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;padding:3px 0;min-width:0">
+      <input id="search-inq-m" placeholder="🔍 搜索询盘..." oninput="renderMobileCards('inq')" style="flex:1;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;padding:3px 0;min-width:0">
       <button class="sort-btn-s" id="inq-sort-date" onclick="setInqMobileSort('date')">日期 ↓</button>
       <button class="sort-btn-s" id="inq-sort-alias" onclick="setInqMobileSort('alias')">客户 ↓</button>
       <button class="sort-btn-s" id="inq-sort-followup" onclick="setInqMobileSort('followup')">待办 ↓</button>
@@ -1548,6 +1566,11 @@ function getFilteredInq(){
   const source=document.getElementById('f-source')?.value||'';
   const grade=document.getElementById('f-grade')?.value||'';
   const person=document.getElementById('f-person')?.value||'';
+  const mbStatus=(document.getElementById('mb-inq-status')?.value||'');
+  const mbGrade=(document.getElementById('mb-inq-grade')?.value||'');
+  const mbPerson=(document.getElementById('mb-inq-person')?.value||'');
+  const mbSource=(document.getElementById('mb-inq-source')?.value||'');
+  const mobileSearch=(document.getElementById('search-inq-m')?.value||'').toLowerCase();
   return inquiries.filter(i=>{
     if(!canSeeInq(i))return false;
     if(i.archived)return false;
@@ -1559,10 +1582,15 @@ function getFilteredInq(){
     if(currentInqFilter.overdue&&!isOverdue(i))return false;
     if(currentInqFilter.alan&&!i.vipStar)return false;
     if(search&&!i.alias.toLowerCase().includes(search)&&!(i.company||'').toLowerCase().includes(search)&&!i.product.toLowerCase().includes(search))return false;
+    if(mobileSearch&&!i.alias.toLowerCase().includes(mobileSearch)&&!(i.company||'').toLowerCase().includes(mobileSearch)&&!i.product.toLowerCase().includes(mobileSearch))return false;
     if(status&&i.status!==status)return false;
     if(source&&i.source!==source)return false;
     if(grade&&i.grade!==grade)return false;
     if(person&&i.person!==person)return false;
+    if(mbStatus&&i.status!==mbStatus)return false;
+    if(mbGrade&&i.grade!==mbGrade)return false;
+    if(mbPerson&&i.person!==mbPerson)return false;
+    if(mbSource&&i.source!==mbSource)return false;
     return true;
   }).sort(function(a,b){
     var sk,sd;
@@ -3247,10 +3275,16 @@ function mobileChip(el,type){
   el.closest('.mobile-chips').querySelectorAll('.mobile-chip').forEach(c=>c.classList.remove('on'));
   el.classList.add('on');
   currentInqFilter={};
+  /* 重置下拉筛选，避免芯片和下拉冲突 */
+  var selStatus=document.getElementById('mb-inq-status');if(selStatus)selStatus.value='';
+  var selGrade=document.getElementById('mb-inq-grade');if(selGrade)selGrade.value='';
+  var selPerson=document.getElementById('mb-inq-person');if(selPerson)selPerson.value='';
+  var selSource=document.getElementById('mb-inq-source');if(selSource)selSource.value='';
   if(type==='grade-A'){currentInqFilter.grade='A';}
   else if(type==='overdue'){currentInqFilter.overdue=true;}
   else if(type!=='all'){currentInqFilter.source=type;}
   renderInquiries();
+  renderMobileCards('inq');
 }
 
 function mobileChipFilter(el,page,val){
