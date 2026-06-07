@@ -2189,10 +2189,11 @@ function openInqDetail(id){
     }
   }
 
-  var html='<div class="detail-section"><div class="detail-section-title">快速更新状态</div>'
+  /* Tab1：询盘详情 */
+  var tab1='<div class="detail-body-inner">';
+  tab1+='<div class="detail-section"><div class="detail-section-title">快速更新状态</div>'
     +statusBar+flagBar+convertBar+'</div>';
-
-  html+='<div class="detail-section"><div class="detail-section-title">询盘信息</div>'
+  tab1+='<div class="detail-section"><div class="detail-section-title">询盘信息</div>'
     +'<div class="detail-row"><span class="detail-key">日期</span><span class="detail-val">'+i.date+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">渠道</span><span class="detail-val"><span class="source-tag">'+i.source+'</span></span></div>'
     +'<div class="detail-row"><span class="detail-key">产品</span><span class="detail-val">'+i.product+'</span></div>'
@@ -2200,29 +2201,60 @@ function openInqDetail(id){
     +'<div class="detail-row"><span class="detail-key">评级</span><span class="detail-val"><span class="badge '+GC[i.grade]+'">'+i.grade+'级</span></span></div>'
     +(i.amount&&i.amount>0?'<div class="detail-row"><span class="detail-key">目标金额</span><span class="detail-val" style="color:'+(i.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(i.amount,i.currency)+'</span></div>':'')
     +'<div class="detail-row"><span class="detail-key">负责人</span><span class="detail-val">'+i.person+'</span></div>'
-    +'<div class="detail-row"><span class="detail-key">下次跟进</span><span class="detail-val" style="color:'+(isTodayFu(i)?'var(--yellow)':'inherit')+'">'+(i.followupDate||'未设置')+(isTodayFu(i)?' ⏰':'')+'</span></div>'
     +(i.reason?'<div class="detail-row"><span class="detail-key">未成单原因</span><span class="detail-val" style="color:var(--red)">'+i.reason+'</span></div>':'')
     +'<div class="detail-row"><span class="detail-key">热点商机</span><span class="detail-val"><button class="btn btn-outline btn-xs" style="'+(i.isHot?'background:rgba(247,147,79,.15);color:var(--accent2);border-color:var(--accent2)':'')+'" onclick="toggleInqHot('+i.id+')">'+( i.isHot?'🔥 取消热点':'标记热点')+'</button></span></div>'
     +'</div>';
-
   if(i.email||i.phone||i.wechat||i.wangwang){
-    html+='<div class="detail-section"><div class="detail-section-title">联系方式</div>'
-      +(i.email?'<div class="detail-row"><span class="detail-key">📧</span><span class="detail-val"><a href="mailto:'+i.email+'">'+i.email+'</a></span></div>':'')
+    tab1+='<div class="detail-section"><div class="detail-section-title">联系方式</div>'
+      +(i.email?'<div class="detail-row"><span class="detail-key">📧</span><span class="detail-val"><a href="mailto:'+i.email+'" style="color:var(--accent)">'+i.email+'</a></span></div>':'')
       +(i.phone?'<div class="detail-row"><span class="detail-key">📱</span><span class="detail-val">'+i.phone+'</span></div>':'')
       +(i.wechat?'<div class="detail-row"><span class="detail-key">💬</span><span class="detail-val">'+i.wechat+'</span></div>':'')
       +(i.wangwang?'<div class="detail-row"><span class="detail-key">🛒</span><span class="detail-val">'+i.wangwang+'</span></div>':'')
       +'</div>';
   }
   if(i.notes){
-    html+='<div class="detail-section"><div class="detail-section-title">备注</div><div style="font-size:13px;line-height:1.6">'+i.notes+'</div></div>';
+    tab1+='<div class="detail-section"><div class="detail-section-title">备注</div><div style="font-size:13px;line-height:1.6">'+i.notes+'</div></div>';
   }
-  html+='<div class="detail-section"><div class="detail-section-title">跟进记录</div>'
-    +'<div id="dp-followups">'+renderFollowups(i.followups)+'</div>'
+  tab1+='</div>';
+
+  /* Tab2：跟进记录 */
+  var fuHtml=renderFollowups(i.followups||[]);
+  var tab2='<div class="detail-body-inner">'
+    +'<div style="display:flex;gap:7px;margin-bottom:8px;align-items:center">'
+    +'<div style="display:flex;flex:1;border:1px solid var(--border);border-radius:8px;background:var(--surface2)">'
+    +'<div style="display:flex;align-items:center;flex-shrink:0;position:relative">'
+    +'<input type="date" id="dp-todo-date-picker" value="'+(i.followupDate||'')+'" placeholder="📅 日期" style="border:none;background:transparent;color:'+(i.followupDate?'var(--text)':'var(--muted)')+';font-size:12px;padding:7px 4px 7px 8px;width:110px;outline:none;cursor:pointer;min-width:0">'
+    +(i.followupDate?'<span onclick="clearInqTodoDate('+i.id+')" style="font-size:11px;color:var(--muted);cursor:pointer;padding:0 6px 0 2px;line-height:1;flex-shrink:0" title="清除日期">✕</span>':'')
+    +'</div>'
+    +'<div style="width:1px;background:var(--border);margin:6px 0;flex-shrink:0"></div>'
+    +'<input id="dp-todo-note" value="'+(i.followupNote||'')+'" placeholder="待办内容..." style="border:none;background:transparent;color:var(--text);font-size:12px;padding:7px 8px;flex:1;outline:none;min-width:0">'
+    +'</div>'
+    +'<button class="btn btn-sm" onclick="saveInqTodo('+i.id+')" style="background:rgba(62,207,142,.2);color:var(--green);border:1px solid var(--green);white-space:nowrap;flex-shrink:0">待办</button>'
+    +'</div>'
+    +'<div style="display:flex;gap:7px;margin-bottom:16px">'
+    +'<input class="form-input" id="dp-fu-input" placeholder="记录本次跟进内容..." style="flex:1;font-size:13px">'
+    +'<button class="btn btn-primary btn-sm" onclick="addFollowup()">添加</button>'
+    +'</div>'
+    +'<div id="dp-followups">'+fuHtml+'</div>'
     +'</div>';
 
-  document.getElementById('detail-body').innerHTML='<div class="detail-body-inner">'+html+'</div>';
+  /* 设置Tab标签：询盘详情 / 跟进记录，隐藏成交统计 */
+  var dpTabs=document.getElementById('dp-tabs');
+  if(dpTabs){
+    dpTabs.style.display='flex';
+    var tabProfile=document.getElementById('dp-tab-profile');
+    var tabFollowup=document.getElementById('dp-tab-followup');
+    var tabSales=document.getElementById('dp-tab-sales');
+    if(tabProfile)tabProfile.textContent='询盘详情';
+    if(tabFollowup)tabFollowup.textContent='跟进记录';
+    if(tabSales)tabSales.style.display='none';
+  }
+
+  document.getElementById('detail-body').innerHTML=
+    '<div class="dp-tab-content active" id="dp-content-profile">'+tab1+'</div>'
+    +'<div class="dp-tab-content" id="dp-content-followup">'+tab2+'</div>';
   document.getElementById('dp-followup-bar').style.display='none';
-  var dpTabs=document.getElementById('dp-tabs');if(dpTabs)dpTabs.style.display='none';
+  switchDpTab('profile');
   document.getElementById('detail-panel').classList.add('open');
 }
 
@@ -2368,6 +2400,18 @@ function openCustDetail(id){
       +'</div>';
   } else {
     tab3+='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">暂无成交记录</div></div>';
+  }
+
+  /* 恢复客户Tab标签 */
+  var dpTabsC=document.getElementById('dp-tabs');
+  if(dpTabsC){
+    dpTabsC.style.display='flex';
+    var tProfile=document.getElementById('dp-tab-profile');
+    var tFollowup=document.getElementById('dp-tab-followup');
+    var tSales=document.getElementById('dp-tab-sales');
+    if(tProfile)tProfile.textContent='客户档案';
+    if(tFollowup)tFollowup.textContent='跟进记录';
+    if(tSales)tSales.style.display='';
   }
 
   document.getElementById('detail-body').innerHTML=
@@ -2527,6 +2571,35 @@ function saveTodo(custId){
   toast('待办已保存 ✓');
 }
 
+function saveInqTodo(inqId){
+  var i=inquiries.find(function(x){return x.id===inqId;});
+  if(!i)return;
+  var dateEl=document.getElementById('dp-todo-date-picker');
+  var noteEl=document.getElementById('dp-todo-note');
+  var dateVal=dateEl?dateEl.value:'';
+  var noteVal=noteEl?noteEl.value.trim():'';
+  if(!dateVal||!noteVal){
+    i.followupDate='';i.followupNote='';
+    if(dateEl)dateEl.value='';if(noteEl)noteEl.value='';
+    saveAll();refreshAll();
+    toast('⚠️ 日期和内容需同时填写，待办已清除');
+    return;
+  }
+  i.followupDate=dateVal;i.followupNote=noteVal;
+  saveAll();refreshAll();
+  toast('待办已保存 ✓');
+}
+
+function clearInqTodoDate(inqId){
+  var i=inquiries.find(function(x){return x.id===inqId;});
+  if(!i)return;
+  i.followupDate='';i.followupNote='';
+  saveAll();refreshAll();
+  openInqDetail(inqId);
+  switchDpTab('followup');
+  toast('待办已清除');
+}
+
 function clearTodoDate(custId){
   var c=customers.find(function(x){return x.id===custId;});
   if(!c)return;
@@ -2577,6 +2650,7 @@ function deleteFollowup(idx){
     i.followups.splice(idx,1);
     saveAll();
     openInqDetail(currentDetailId);
+    switchDpTab('followup');
     toast('跟进记录已删除');
   }
 }
@@ -2658,7 +2732,7 @@ function toggleTarget(){
 function addFollowup(){
   const text=document.getElementById('dp-fu-input')?.value.trim();if(!text||!currentDetailId)return;
   const entry=today()+' ['+currentUser+'] '+text;
-  if(currentDetailType==='inquiry'){const i=inquiries.find(x=>x.id===currentDetailId);if(i){if(!i.followups)i.followups=[];i.followups.push(entry);saveAll();openInqDetail(currentDetailId);refreshAll();toast('跟进记录已添加 ✓');}}
+  if(currentDetailType==='inquiry'){const i=inquiries.find(x=>x.id===currentDetailId);if(i){if(!i.followups)i.followups=[];i.followups.push(entry);saveAll();openInqDetail(currentDetailId);switchDpTab('followup');refreshAll();toast('跟进记录已添加 ✓');}}
   else if(currentDetailType==='customer'){const c=customers.find(x=>x.id===currentDetailId);if(c){if(!c.followups)c.followups=[];c.followups.push(entry);saveAll();openCustDetail(currentDetailId);switchDpTab('followup');refreshAll();toast('跟进记录已添加 ✓');}}
 }
 
