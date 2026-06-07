@@ -1157,7 +1157,7 @@ function showPage(p){
   if(window.innerWidth<=768)setMobileHeader(p);
   if(p==='dashboard')renderDashboard();
   else if(p==='hot'){renderHot();renderMobileCards('hot');}
-  else if(p==='inquiries'){currentInqFilter={};resetInqFilters();renderInquiries();}
+  else if(p==='inquiries'){currentInqFilter={};resetInqFilters();switchInqTab('active');}
   else if(p==='customers'){renderCustomers();renderMobileCards('cust');}
   else if(p==='oldstats'){renderOldStats();renderMobileCards('stats');}
   else if(p==='orders'){renderOrders();renderMobileCards('ord');}
