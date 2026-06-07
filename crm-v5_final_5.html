@@ -448,18 +448,9 @@ a{color:var(--accent);text-decoration:none;}
     <button class="btn btn-primary" onclick="openInquiryModal()">＋ 新增询盘</button>
   </div>
   <div class="page-content">
-    <div class="goal-banner"><span style="font-size:18px">🎯</span>
-      <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px">战略目标</div>
-      <div style="font-size:14px;font-weight:500;margin-top:1px">找到 <span style="color:var(--accent)">20个</span> 欧美旅游纪念品稳定客户 — 目前 <span id="target-count" style="color:var(--green)">0</span> 个</div></div>
-    </div>
-    <div id="dash-notice"></div>
-    <div class="stats-grid" id="stats-grid"></div>
-    <div class="chart-grid">
-      <div class="chart-card"><div class="chart-title">📦 产品分布</div><div id="chart-product"></div></div>
-      <div class="chart-card"><div class="chart-title">🌍 渠道来源</div><div id="chart-source"></div></div>
-      <div class="chart-card"><div class="chart-title">✅ 状态分布</div><div id="chart-status"></div></div>
-      <div class="chart-card"><div class="chart-title">📉 未成单原因</div><div id="chart-reason"></div></div>
-    </div>
+    <div id="dash-action-row" class="stats-grid"></div>
+    <div id="dash-perf-bar"></div>
+    <div id="dash-funnel-wrap"></div>
     <div id="alan-starred-section" style="display:none">
       <div class="section-title" style="margin-top:4px">👁 Alan 重点关注 <span class="section-count" id="alan-count">0</span></div>
       <div class="card-grid" id="alan-starred-list"></div>
@@ -1066,46 +1057,110 @@ function clearFilters(type){
 }
 
 function renderDashboard(){
-  const myInq=inquiries.filter(i=>canSeeInq(i));
-  const total=myInq.length,won=myInq.filter(i=>i.status==='已成单').length;
-  const hot=myInq.filter(i=>i.isHot&&!['已成单','未成单'].includes(i.status)).length;
-  const todayCount=myInq.filter(i=>isTodayFu(i)).length;
-  const overdueCount=myInq.filter(i=>isOverdue(i)).length;
-  const activeOrd=orders.filter(o=>!o.completed).length;
-  document.getElementById('target-count').textContent=customers.filter(c=>c.type==='tourist'&&c.status==='active').length;
-  const notice=document.getElementById('dash-notice');
-  if(overdueCount>0){notice.innerHTML='<div class="notice">⚠️ 有 <strong>'+overdueCount+'</strong> 条询盘超过48小时未跟进 — <span style="cursor:pointer;text-decoration:underline" onclick="filterNav(\'overdue\',\'\')" >立即查看</span></div>';}else{notice.innerHTML='';}
-  (function(){
-    var sg=document.getElementById('stats-grid');
-    sg.innerHTML='';
-    var cards=[
-      {val:hot,label:'热点商机',color:'var(--accent2)',click:"showPage('hot')"},
-      {val:todayCount,label:'今日待跟进',color:'var(--yellow)',click:"filterNav('today','')"},
-      {val:activeOrd,label:'执行中订单',color:'var(--green)',click:"showPage('orders')",sub:'up'},
-      {val:total+' <span style="font-size:16px;color:var(--muted)"> / '+myInq.filter(function(i){return i.grade==='A';}).length+'</span>',label:'总询盘 / A级',color:'var(--accent)',click:"filterNav('grade','A')",subtext:'转化率 '+(total?Math.round(won/total*100):0)+'%'}
-    ];
-    cards.forEach(function(c){
-      var d=document.createElement('div');
-      d.className='stat-card';
-      d.setAttribute('onclick',c.click);
-      d.innerHTML='<div class="stat-label">'+c.label+'</div>'
-        +'<div class="stat-value" style="color:'+c.color+'">'+c.val+'</div>'
-        +'<div class="stat-sub'+(c.sub?' '+c.sub:'')+'">'+(c.subtext||'点击查看 →')+'</div>';
-      sg.appendChild(d);
-    });
-  })()
-  const mkChart=(id,data,colorFn)=>{const max=Math.max(...Object.values(data),1);document.getElementById(id).innerHTML=Object.entries(data).length?Object.entries(data).sort((a,b)=>b[1]-a[1]).map(([k,v],i)=>`<div class="bar-item"><div class="bar-label">${k}</div><div class="bar-track"><div class="bar-fill" style="width:${v/max*100}%;background:${colorFn(i)}"></div></div><div class="bar-val">${v}</div></div>`).join(''):'<div style="color:var(--muted);font-size:12px;padding:8px 0">暂无数据</div>';};
-  const products={},sources={},statuses={},reasons={};
-  myInq.forEach(i=>{products[i.product]=(products[i.product]||0)+1;sources[i.source]=(sources[i.source]||0)+1;statuses[i.status]=(statuses[i.status]||0)+1;if(i.reason)reasons[i.reason]=(reasons[i.reason]||0)+1;});
-  mkChart('chart-product',products,i=>BC[i%BC.length]);mkChart('chart-source',sources,i=>BC[i%BC.length]);mkChart('chart-status',statuses,i=>BC[i%BC.length]);
-  document.getElementById('chart-reason').innerHTML=Object.keys(reasons).length
-    ?Object.entries(reasons).sort(function(a,b){return b[1]-a[1];}).map(function(entry){
-        var k=entry[0],v=entry[1];
-        var max=Math.max.apply(null,Object.values(reasons));
-        return '<div class="bar-item"><div class="bar-label" style="color:var(--red)">'+k+'</div><div class="bar-track"><div class="bar-fill" style="width:'+(v/max*100)+'%;background:var(--red)"></div></div><div class="bar-val">'+v+'</div></div>';
-      }).join('')
-    :'<div style="color:var(--muted);font-size:13px;padding:14px 0;text-align:center">暂无未成单记录 🎉</div>';
-  const starred=[...inquiries.filter(i=>i.vipStar&&canSeeInq(i)),...customers.filter(c=>c.vipStar&&canSeeCust(c))];
+  var myInq=inquiries.filter(function(i){return canSeeInq(i);});
+  var activeInq=myInq.filter(function(i){return !i.archived&&!i.expired&&i.status!=='沉默中';});
+  var overdueCount=myInq.filter(function(i){return isOverdue(i);}).length;
+  var todayCount=myInq.filter(function(i){return isTodayFu(i);}).length;
+  var silentWarn=myInq.filter(function(i){
+    if(i.status!=='沉默中'||!i.silentSince)return false;
+    return Math.floor((new Date()-new Date(i.silentSince))/86400000)>=5;
+  }).length;
+  var deliveryWarn=orders.filter(function(o){
+    if(o.completed||!o.delivery)return false;
+    var days=Math.floor((new Date(o.delivery)-new Date())/86400000);
+    return days>=0&&days<=7;
+  }).length;
+
+  /* ① 行动区4卡片 */
+  var ar=document.getElementById('dash-action-row');
+  var actionCards=[
+    {val:overdueCount,label:'超时未跟进',color:'var(--red)',icon:'⚠️',sub:overdueCount?'点击立即处理':'目前全部及时',click:"filterNav('overdue','')"},
+    {val:todayCount,label:'今日待办',color:'var(--yellow)',icon:'📅',sub:todayCount?'今天需要跟进':'今日暂无待办',click:"filterNav('today','')"},
+    {val:silentWarn,label:'沉默预警',color:'#888',icon:'💤',sub:'沉默≥5天',click:"switchInqTab('silent')"},
+    {val:deliveryWarn,label:'交期预警',color:'var(--accent2)',icon:'🚚',sub:'7天内到期',click:"showPage('orders')"}
+  ];
+  ar.innerHTML='';
+  actionCards.forEach(function(c){
+    var urgent=(c.val>0);
+    var d=document.createElement('div');
+    d.className='stat-card';
+    d.setAttribute('onclick',c.click);
+    d.style.cssText=urgent?'border-color:'+c.color+';background:var(--surface)':'';
+    d.innerHTML='<div class="stat-label">'+c.icon+' '+c.label+'</div>'
+      +'<div class="stat-value" style="color:'+(urgent?c.color:'var(--muted)')+'">'+c.val+'</div>'
+      +'<div class="stat-sub" style="color:'+(urgent?c.color:'var(--muted)')+'">'+c.sub+'</div>';
+    ar.appendChild(d);
+  });
+
+  /* ② 本月业绩一行 */
+  var ym=today().slice(0,7);
+  var monthSales=saleRecords.filter(function(s){return (s.date||'').slice(0,7)===ym;});
+  var monthUSD=monthSales.filter(function(s){return s.currency==='USD';}).reduce(function(a,s){return a+(+s.amount||0);},0);
+  var monthCNY=monthSales.filter(function(s){return s.currency==='CNY';}).reduce(function(a,s){return a+(+s.amount||0);},0);
+  var totalInq=activeInq.length;
+  var wonAll=myInq.filter(function(i){return i.archived&&i.status==='已成单';}).length;
+  var totalAll=myInq.length;
+  var convRate=totalAll?Math.round(wonAll/totalAll*100):0;
+  var activeOrd=orders.filter(function(o){return !o.completed;}).length;
+  var pb=document.getElementById('dash-perf-bar');
+  var amtStr='';
+  if(monthUSD>0)amtStr+='<span style="color:var(--green);font-weight:700">$'+monthUSD.toLocaleString()+'</span>';
+  if(monthCNY>0)amtStr+=(amtStr?' <span style="color:var(--muted)">·</span> ':'')+'<span style="color:var(--yellow);font-weight:700">¥'+monthCNY.toLocaleString()+'</span>';
+  if(!amtStr)amtStr='<span style="color:var(--muted)">暂无成单</span>';
+  pb.innerHTML='<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:0;flex-wrap:wrap">'
+    +'<div style="flex:1;min-width:160px;border-right:1px solid var(--border);padding-right:18px;margin-right:18px">'
+    +'<div style="font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px">本月成单</div>'
+    +'<div style="font-size:18px;line-height:1.3">'+amtStr+'</div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-top:2px">共 '+monthSales.length+' 笔</div>'
+    +'</div>'
+    +'<div style="display:flex;gap:24px;flex-wrap:wrap">'
+    +'<div style="text-align:center"><div style="font-size:11px;color:var(--muted);margin-bottom:3px">活跃询盘</div><div style="font-size:20px;font-family:var(--font-display);color:var(--accent)">'+totalInq+'</div></div>'
+    +'<div style="text-align:center"><div style="font-size:11px;color:var(--muted);margin-bottom:3px">总转化率</div><div style="font-size:20px;font-family:var(--font-display);color:var(--green)">'+convRate+'%</div></div>'
+    +'<div style="text-align:center;cursor:pointer" onclick="showPage(\'orders\')">'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:3px">执行中订单</div>'
+    +'<div style="font-size:20px;font-family:var(--font-display);color:var(--accent2)">'+activeOrd+'</div></div>'
+    +'</div>'
+    +'</div>';
+
+  /* ③ 转化漏斗 */
+  var funnelSteps=[
+    {label:'新询盘',status:'新询盘',color:'#4f8ef7'},
+    {label:'互动中',status:'互动中',color:'#6B72C3'},
+    {label:'报价中',status:'报价中',color:'#f7934f'},
+    {label:'打样中',status:'打样中',color:'#a74ff7'},
+    {label:'追单中',status:'追单中',color:'#3ecf8e'},
+    {label:'已成单',status:'已成单',color:'#f7d44f',archived:true}
+  ];
+  var fw=document.getElementById('dash-funnel-wrap');
+  var funnelHTML='<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:14px">'
+    +'<div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">转化漏斗</div>'
+    +'<div style="display:flex;align-items:flex-end;gap:6px">';
+  var maxCount=1;
+  var stepCounts=funnelSteps.map(function(s){
+    var cnt=s.archived
+      ?myInq.filter(function(i){return i.archived&&i.status==='已成单';}).length
+      :activeInq.filter(function(i){return i.status===s.status;}).length;
+    if(cnt>maxCount)maxCount=cnt;
+    return cnt;
+  });
+  funnelSteps.forEach(function(s,idx){
+    var cnt=stepCounts[idx];
+    var barH=Math.max(18,Math.round(cnt/maxCount*72));
+    funnelHTML+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer" onclick="'
+      +(s.archived?"switchInqTab('archive')":"switchInqTab('active')")+'">'
+      +'<div style="font-size:13px;font-weight:600;color:'+(cnt>0?s.color:'var(--muted)')+'">'+cnt+'</div>'
+      +'<div style="width:100%;height:'+barH+'px;background:'+(cnt>0?s.color:'var(--border)')+';border-radius:5px 5px 2px 2px;opacity:'+(cnt>0?'.85':'.4')+'"></div>'
+      +'<div style="font-size:10px;color:var(--muted);text-align:center;white-space:nowrap">'+s.label+'</div>'
+      +'</div>';
+    if(idx<funnelSteps.length-1){
+      funnelHTML+='<div style="font-size:12px;color:var(--muted);opacity:.4;padding-bottom:22px">›</div>';
+    }
+  });
+  funnelHTML+='</div></div>';
+  fw.innerHTML=funnelHTML;
+
+  /* ④ VIP 关注列表 */
+  var starred=inquiries.filter(function(i){return i.vipStar&&canSeeInq(i);}).concat(customers.filter(function(c){return c.vipStar&&canSeeCust(c);}));
   document.getElementById('alan-count').textContent=starred.length;
   const ss=document.getElementById('alan-starred-section');
   if(starred.length>0){ss.style.display='block';document.getElementById('alan-starred-list').innerHTML=starred.map(function(item){
