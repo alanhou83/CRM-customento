@@ -4267,7 +4267,7 @@ function renderInqCardView(){
       +'<span style="font-size:10px;color:var(--muted);flex-shrink:0">'+i.person+'</span>'
       +'</div>'
       +(i.followupDate||i.followupNote
-        ?(function(){var ov=i.followupDate&&i.followupDate<today();return '<div style="font-size:'+(ov?'12':'10')+'px;display:flex;align-items:center;gap:4px;overflow:hidden">'
+        ?(function(){var ov=i.followupDate&&i.followupDate<today();return '<div style="font-size:'+(ov?'12':'10')+'px;display:flex;align-items:baseline;gap:4px;overflow:hidden">'
           +(i.followupDate?'<span style="color:'+(ov?'var(--red)':'var(--muted)')+';flex-shrink:0;font-weight:'+(ov?'600':'400')+'">'+(ov?'🔔 ':'')+fmtCardDate(i.followupDate)+'</span>':'')
           +(i.followupNote?'<span style="color:var(--green);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">📌 '+i.followupNote+'</span>':'')
           +'</div>';})()
