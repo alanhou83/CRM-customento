@@ -1125,6 +1125,7 @@ const BC=['#4f8ef7','#3ecf8e','#f7934f','#f7d44f','#a74ff7','#f76f6f','#4fc9f7']
 
 function today(){return new Date().toISOString().split('T')[0];}
 function fmtCardDate(d){var mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];var p=d?d.split('-'):[];return p.length===3?mn[parseInt(p[1])-1]+'.-'+p[2]:d||'';}
+function fmtShortDate(d){var p=d?d.split('-'):[];return p.length===3?p[0].slice(2)+'.'+p[1]+'.'+p[2]:d||'';}
 function fmtAmt(a,c){if(!a||a==0)return'—';return c==='CNY'?'¥'+Number(a).toLocaleString():'$'+Number(a).toLocaleString();}
 function getQ(d){const m=new Date(d).getMonth()+1;return m<=3?'Q1':m<=6?'Q2':m<=9?'Q3':'Q4';}
 function isOverdue(i){if(['已成单','未成单'].includes(i.status))return false;const last=i.followups&&i.followups.length?i.followups[i.followups.length-1].split(' ')[0]:i.date;return Math.floor((new Date()-new Date(last))/86400000)>=5;}
@@ -4257,7 +4258,10 @@ function renderInqCardView(){
       +'<div class="inq-card-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+(ov?' <span class="mark-overdue" style="font-size:9px">超时</span>':'')+'</div>'
       +'<span class="source-tag" style="flex-shrink:0">'+i.source+'</span>'
       +'</div>'
-      +'<div class="inq-card-company">'+(i.company||i.country||'')+'</div>'
+      +'<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px">'
+      +'<div class="inq-card-company" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1">'+(i.company||i.country||'')+'</div>'
+      +'<span style="font-size:10px;color:var(--muted);flex-shrink:0">'+fmtShortDate(i.date)+'</span>'
+      +'</div>'
       +'<div class="inq-card-meta" style="margin-bottom:5px">'
       +'<span class="status-badge '+(SC[i.status]||'')+'">'+i.status+'</span>'
       +flagsHtml
