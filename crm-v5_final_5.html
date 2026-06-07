@@ -349,7 +349,14 @@ a{color:var(--accent);text-decoration:none;}
       <div class="mobile-chip" onclick="mobileChipFilter(this,'ord','已发货')">已发货</div>
       <select id="mb-ord-person" onchange="renderMobileCards('ord')" style="background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--text);padding:3px 6px;font-size:11px;outline:none;flex-shrink:0"><option value="">跟单</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Alan</option></select>
     </div>
-    <input class="mobile-search" placeholder="🔍 搜索客户..." oninput="renderMobileCards('ord')" id="mb-ord-search">
+    <div style="display:flex;align-items:center;gap:3px;width:calc(100% + 30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
+      <input id="mb-ord-search" placeholder="🔍 搜索客户..." oninput="renderMobileCards('ord')" style="flex:1;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;padding:3px 0;min-width:0">
+      <button class="sort-btn-s" id="ord-sort-date" onclick="setOrdMobileSort('date')">日期 ↓</button>
+      <button class="sort-btn-s" id="ord-sort-alias" onclick="setOrdMobileSort('alias')">客户 ↓</button>
+      <button class="sort-btn-s" id="ord-sort-product" onclick="setOrdMobileSort('product')">产品 ↓</button>
+      <button class="sort-btn-s" id="ord-sort-amount" onclick="setOrdMobileSort('amount')">金额 ↓</button>
+      <button class="sort-btn-s" id="ord-sort-delivery" onclick="setOrdMobileSort('delivery')">交期 ↓</button>
+    </div>
   </div>
   <div id="mh-stats" style="display:none">
     <div class="mobile-chips" style="gap:4px;margin-bottom:8px">
@@ -2742,6 +2749,7 @@ function doImport(){
 let mobilePageFilter={hot:{},cust:{},ord:{},stats:{}};
 var statsCurrency='';
 var statsMobileSort={key:'date',dir:'desc'};
+var ordMobileSort={key:null,dir:'desc'};
 var statsRateBase=6.89;
 var statsCurrencyMode='USD';
 var statsTableSort={key:'date',dir:'desc'};
@@ -2817,6 +2825,21 @@ function statsChipCurrency(el,val){
   ['stats-chip-all','stats-chip-usd','stats-chip-cny'].forEach(function(id){var e=document.getElementById(id);if(e)e.classList.remove('on');});
   el.classList.add('on');
   renderMobileCards('stats');
+}
+function setOrdMobileSort(key){
+  if(ordMobileSort.key===key){
+    if(ordMobileSort.dir==='desc'){ordMobileSort.dir='asc';}
+    else{ordMobileSort.key=null;ordMobileSort.dir='desc';}
+  } else {ordMobileSort.key=key;ordMobileSort.dir='desc';}
+  var labels={date:'日期',alias:'客户',product:'产品',amount:'金额',delivery:'交期'};
+  ['date','alias','product','amount','delivery'].forEach(function(k){
+    var el=document.getElementById('ord-sort-'+k);if(!el)return;
+    var isActive=ordMobileSort.key===k;
+    el.textContent=labels[k]+(isActive?(ordMobileSort.dir==='desc'?' ↓':' ↑'):' ↕');
+    el.classList.toggle('active',isActive);
+    if(!isActive){el.style.opacity='.4';}else{el.style.opacity='1';}
+  });
+  renderMobileCards('ord');
 }
 function setStatsSort(key){
   if(statsMobileSort.key===key){statsMobileSort.dir=statsMobileSort.dir==='desc'?'asc':'desc';}
@@ -3056,6 +3079,15 @@ function renderMobileCards(page){
       if(mbOrdPerson&&o.person!==mbOrdPerson)return false;
       if(mbOrdSearch&&!o.alias.toLowerCase().includes(mbOrdSearch))return false;
       return true;
+    }).sort(function(a,b){
+      var k=ordMobileSort.key,d=ordMobileSort.dir==='asc'?1:-1;
+      if(!k)return b.date.localeCompare(a.date);
+      if(k==='date')return a.date.localeCompare(b.date)*d;
+      if(k==='alias')return a.alias.localeCompare(b.alias)*d;
+      if(k==='product')return(a.product||'').localeCompare(b.product||'')*d;
+      if(k==='amount')return((+a.amount||0)-(+b.amount||0))*d;
+      if(k==='delivery')return(a.delivery||'9999').localeCompare(b.delivery||'9999')*d;
+      return 0;
     });
     const c=document.getElementById('mobile-ord-cards');if(!c)return;
     if(!filtered.length){c.innerHTML='<div class="empty"><div class="empty-icon">⚙️</div><div class="empty-text">暂无执行中订单</div></div>';return;}
