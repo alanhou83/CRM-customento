@@ -96,8 +96,8 @@ a{color:var(--accent);text-decoration:none;}
 .search-sort-wrap input::placeholder{color:var(--muted);}
 .sort-btn-s{background:none;border:none;cursor:pointer;font-size:11px;font-weight:600;padding:3px 4px;border-radius:5px;white-space:nowrap;line-height:1;opacity:.55;}
 .sort-btn-s:hover,.sort-btn-s.active{opacity:1;background:rgba(255,255,255,.08);}
-.mobile-search-wrap{display:flex;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-top:8px;padding:2px 4px 2px 2px;width:calc(100% + 30px);margin-left:-15px;margin-right:-15px;border-radius:0;border-left:none;border-right:none;}
-.mobile-search-wrap input{background:transparent;border:none;color:var(--text);padding:5px 8px;font-family:var(--font-body);font-size:13px;outline:none;flex:1;min-width:60px;width:auto;}
+.mobile-search-wrap{display:flex;align-items:center;gap:3px;width:calc(100% + 30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box;}
+.mobile-search-wrap input{background:transparent;border:none;color:var(--text);padding:3px 0;font-family:var(--font-body);font-size:13px;outline:none;flex:1;min-width:60px;width:auto;}
 .mobile-search-wrap input::placeholder{color:var(--muted);}
 .cust-filter-btn{padding:5px 10px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04);color:var(--muted);font-weight:600;white-space:nowrap;}
 .cust-filter-btn.vip-on{background:rgba(255,200,0,.15);border-color:#ffd700;color:#ffd700;}
@@ -277,7 +277,7 @@ a{color:var(--accent);text-decoration:none;}
       <div id="minq-tab-archive" onclick="switchInqTab('archive')" style="flex:1;text-align:center;padding:6px 4px;font-size:12px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer">成单</div>
       <div id="minq-tab-expired" onclick="switchInqTab('expired')" style="flex:1;text-align:center;padding:6px 4px;font-size:12px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer">失效</div>
     </div>
-    <div class="mobile-chips" id="mh-inq-chips">
+    <div class="mobile-chips" id="mh-inq-chips" style="padding-bottom:6px">
       <div class="mobile-chip on" onclick="mobileChip(this,'all')">全部</div>
       <div class="mobile-chip" onclick="mobileChip(this,'Alibaba')">Alibaba</div>
       <div class="mobile-chip" onclick="mobileChip(this,'1688')">1688</div>
@@ -285,7 +285,9 @@ a{color:var(--accent);text-decoration:none;}
       <div class="mobile-chip" onclick="mobileChip(this,'grade-A')">🔥 A级</div>
       <div class="mobile-chip" onclick="mobileChip(this,'overdue')">⚠️ 超时</div>
     </div>
-    <input class="mobile-search" placeholder="🔍 搜索询盘..." oninput="renderMobileCards('inq')">
+    <div style="display:flex;align-items:center;gap:3px;width:calc(100% + 30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
+      <input placeholder="🔍 搜索询盘..." oninput="renderMobileCards('inq')" style="flex:1;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;padding:3px 0;min-width:0">
+    </div>
   </div>
   <div id="mh-hot" style="display:none">
     <div class="mobile-chips">
@@ -307,7 +309,7 @@ a{color:var(--accent);text-decoration:none;}
       <div class="mobile-chip" id="mb-chip-active" onclick="toggleMobileQuickFilter('activeScore')">💬活跃</div>
       <div class="mobile-chip" id="mb-chip-match" onclick="toggleMobileQuickFilter('match')">🏅画像</div>
     </div>
-    <div class="mobile-chips" style="margin-top:4px">
+    <div class="mobile-chips" style="margin-top:4px;padding-bottom:6px">
       <div class="mobile-chip on" id="mb-view-card" onclick="setMobileCustView('card',this)">▦ 卡片</div>
       <div class="mobile-chip" id="mb-view-list" onclick="setMobileCustView('list',this)">☰ 列表</div>
       <select id="mb-cf-layer" onchange="renderMobileCards('cust')" style="max-width:52px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
@@ -360,7 +362,7 @@ a{color:var(--accent);text-decoration:none;}
     </div>
   </div>
   <div id="mh-stats" style="display:none">
-    <div class="mobile-chips" style="gap:4px;margin-bottom:8px">
+    <div class="mobile-chips" style="gap:4px;padding-bottom:6px">
       <div class="mobile-chip on" id="stats-chip-all" onclick="statsChipCurrency(this,'')" style="padding:3px 8px">全部</div>
       <div class="mobile-chip" id="stats-chip-usd" onclick="statsChipCurrency(this,'USD')" style="padding:3px 8px">$ 美金</div>
       <div class="mobile-chip" id="stats-chip-cny" onclick="statsChipCurrency(this,'CNY')" style="padding:3px 8px">¥ 人民币</div>
