@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>询盘卡片预览</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F0F2F8;padding:30px;color:#1a1a2e;}
+  h2{font-size:13px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;font-weight:500;}
+  .section{margin-bottom:40px;}
+
+  /* ── 电脑端 3列网格 ── */
+  .grid-desktop{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:900px;}
+
+  /* ── 手机端 2列网格 ── */
+  .grid-mobile{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:420px;}
+
+  /* ── 卡片基础样式 ── */
+  .inq-card{background:#fff;border:1px solid #e2e5f0;border-radius:12px;overflow:hidden;cursor:pointer;transition:box-shadow .2s,border-color .2s;}
+  .inq-card:hover{box-shadow:0 4px 20px rgba(45,49,114,.12);border-color:#6B72C3;}
+
+  /* 图片区 */
+  .card-img{width:100%;height:140px;object-fit:cover;display:block;background:#f0f2f8;}
+  .card-img-placeholder{width:100%;height:140px;background:linear-gradient(135deg,#e8eaf6,#f0f2f8);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:#aab0cc;font-size:12px;}
+  .card-img-placeholder span{font-size:24px;opacity:.5;}
+
+  /* 手机端图片高度小一点 */
+  .grid-mobile .card-img,
+  .grid-mobile .card-img-placeholder{height:110px;}
+
+  /* 卡片内容区 */
+  .card-body{padding:11px 13px 13px;}
+  .card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:6px;}
+  .card-name{font-size:13px;font-weight:700;color:#1a1a2e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .card-badges{display:flex;gap:4px;flex-shrink:0;align-items:center;}
+  .badge-a{background:rgba(247,147,79,.15);color:#f7934f;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;}
+  .badge-b{background:rgba(107,114,195,.15);color:#6B72C3;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;}
+  .status{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500;}
+  .s-quoted{background:rgba(247,212,79,.15);color:#c9a800;}
+  .s-sample{background:rgba(167,79,247,.15);color:#a74ff7;}
+  .s-replied{background:rgba(62,207,142,.15);color:#2ea87e;}
+  .s-following{background:rgba(79,142,247,.15);color:#3a7fd5;}
+  .s-new{background:rgba(107,114,195,.15);color:#6B72C3;}
+  .card-company{font-size:11px;color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:6px;}
+  .card-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:5px;}
+  .source-tag{font-size:10px;background:#f0f2f8;color:#6B72C3;padding:2px 7px;border-radius:10px;font-weight:500;}
+  .card-product{font-size:11px;color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .card-footer{display:flex;justify-content:space-between;align-items:center;margin-top:6px;}
+  .card-todo{font-size:10px;color:#f7934f;}
+  .card-person{font-size:10px;color:#aab0cc;}
+  .flag{font-size:10px;padding:1px 6px;border-radius:10px;}
+  .flag-q{background:rgba(247,212,79,.15);color:#c9a800;}
+  .flag-s{background:rgba(167,79,247,.15);color:#a74ff7;}
+  .hot-dot{width:7px;height:7px;border-radius:50%;background:#f7934f;display:inline-block;margin-right:2px;}
+
+  /* 手机端字号稍小 */
+  .grid-mobile .card-name{font-size:12px;}
+  .grid-mobile .card-body{padding:9px 10px 11px;}
+</style>
+</head>
+<body>
+
+<div class="section">
+  <h2>💻 电脑端 — 询盘卡片视图（3列）</h2>
+  <div class="grid-desktop">
+
+    <!-- 卡片1：有产品图 -->
+    <div class="inq-card">
+      <img class="card-img" src="https://alanhou83.github.io/CRM-customento/icon-512.png" id="img1" alt="">
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-name">Sophie M.</div>
+          <div class="card-badges">
+            <span class="badge-a">A</span>
+            <span class="status s-quoted">报价中</span>
+          </div>
+        </div>
+        <div class="card-company">Paris Gift House · 法国</div>
+        <div class="card-meta">
+          <span class="source-tag">Alibaba</span>
+          <span class="flag flag-q">已报价</span>
+          <span style="font-size:10px;color:#f7934f">🔥</span>
+        </div>
+        <div class="card-product">📦 MDF冰箱贴 · 300个</div>
+        <div class="card-footer">
+          <span class="card-todo">📅 待办 06-10</span>
+          <span class="card-person">Momi</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 卡片2：有产品图（用户上传的图） -->
+    <div class="inq-card">
+      <img class="card-img" id="img2" alt="" style="display:none">
+      <div class="card-img-placeholder" id="ph2">
+        <span>📷</span>
+        <div>点击上传产品图</div>
+      </div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-name">Yuki T. ⭐</div>
+          <div class="card-badges">
+            <span class="badge-a">A</span>
+            <span class="status s-sample">打样中</span>
+          </div>
+        </div>
+        <div class="card-company">Japan Travel Gifts Co. · 日本</div>
+        <div class="card-meta">
+          <span class="source-tag">展会</span>
+          <span class="flag flag-q">已报价</span>
+        </div>
+        <div class="card-product">📦 MDF杯垫 · 1000个</div>
+        <div class="card-footer">
+          <span class="card-todo">📅 待办 06-15</span>
+          <span class="card-person">Alan</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 卡片3：无图 -->
+    <div class="inq-card">
+      <div class="card-img-placeholder">
+        <span>📷</span>
+        <div>暂无产品图</div>
+      </div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-name">Ahmed K.</div>
+          <div class="card-badges">
+            <span class="badge-a">A</span>
+            <span class="status s-following">追单中</span>
+          </div>
+        </div>
+        <div class="card-company">Dubai Souvenir World · 阿联酋</div>
+        <div class="card-meta">
+          <span class="source-tag">WhatsApp</span>
+          <span class="flag flag-q">已报价</span>
+          <span class="flag flag-s">已打样</span>
+        </div>
+        <div class="card-product">📦 Shot Glass · 500个</div>
+        <div class="card-footer">
+          <span class="card-todo">📅 待办 06-08</span>
+          <span class="card-person">Kelly</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 卡片4 -->
+    <div class="inq-card">
+      <div class="card-img-placeholder">
+        <span>📷</span>
+        <div>暂无产品图</div>
+      </div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-name">Lars H.</div>
+          <div class="card-badges">
+            <span class="badge-a">A</span>
+            <span class="status s-new">新询盘</span>
+          </div>
+        </div>
+        <div class="card-company">Stockholm Gifts AB · 瑞典</div>
+        <div class="card-meta">
+          <span class="source-tag">Alibaba</span>
+          <span style="font-size:10px;color:#f7934f">🔥</span>
+        </div>
+        <div class="card-product">📦 MDF冰箱贴 · 400个</div>
+        <div class="card-footer">
+          <span class="card-todo">📅 待办 06-09</span>
+          <span class="card-person">Momi</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 卡片5 -->
+    <div class="inq-card">
+      <div class="card-img-placeholder">
+        <span>📷</span>
+        <div>暂无产品图</div>
+      </div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-name">Oliver B.</div>
+          <div class="card-badges">
+            <span class="badge-a">A</span>
+            <span class="status s-replied">互动中</span>
+          </div>
+        </div>
+        <div class="card-company">London Tourist Gifts · 英国</div>
+        <div class="card-meta">
+          <span class="source-tag">Alibaba</span>
+          <span style="font-size:10px;color:#f7934f">🔥</span>
+        </div>
+        <div class="card-product">📦 MDF杯垫 · 600个</div>
+        <div class="card-footer">
+          <span class="card-todo">📅 待办 06-06</span>
+          <span class="card-person">Kelly</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 卡片6 -->
+    <div class="inq-card">
+      <div class="card-img-placeholder">
+        <span>📷</span>
+        <div>暂无产品图</div>
+      </div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-name">Marco R.</div>
+          <div class="card-badges">
+            <span class="badge-a">A</span>
+            <span class="status s-new">新询盘</span>
+          </div>
+        </div>
+        <div class="card-company">Rome Souvenir Express · 意大利</div>
+        <div class="card-meta">
+          <span class="source-tag">WhatsApp</span>
+          <span style="font-size:10px;color:#f7934f">🔥</span>
+        </div>
+        <div class="card-product">📦 MDF冰箱贴 · 500个</div>
+        <div class="card-footer">
+          <span class="card-todo">📅 待办 06-12</span>
+          <span class="card-person">Momi</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section">
+  <h2>📱 手机端 — 询盘卡片视图（2列）</h2>
+  <div class="grid-mobile">
+
+    <div class="inq-card">
+      <img class="card-img" id="img3" alt="" style="display:none">
+      <div class="card-img-placeholder" id="ph3">
+        <span>📷</span>
+        <div>点击上传</div>
+      </div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-name">Sophie M.</div>
+          <div class="card-badges"><span class="badge-a">A</span></div>
+        </div>
+        <div class="card-company" style="font-size:10px">Paris Gift House</div>
+        <div style="margin:4px 0"><span class="status s-quoted">报价中</span></div>
+        <div class="card-product">📦 MDF冰箱贴</div>
+        <div class="card-footer">
+          <span class="card-todo">06-10</span>
+          <span class="card-person">Momi</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="inq-card">
+      <div class="card-img-placeholder">
+        <span>📷</span>
+        <div>暂无图片</div>
+      </div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-name">Ahmed K.</div>
+          <div class="card-badges"><span class="badge-a">A</span></div>
+        </div>
+        <div class="card-company" style="font-size:10px">Dubai Souvenir</div>
+        <div style="margin:4px 0"><span class="status s-following">追单中</span></div>
+        <div class="card-product">📦 Shot Glass</div>
+        <div class="card-footer">
+          <span class="card-todo">06-08</span>
+          <span class="card-person">Kelly</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="inq-card">
+      <div class="card-img-placeholder">
+        <span>📷</span>
+        <div>暂无图片</div>
+      </div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-name">Lars H.</div>
+          <div class="card-badges"><span class="badge-a">A</span></div>
+        </div>
+        <div class="card-company" style="font-size:10px">Stockholm Gifts</div>
+        <div style="margin:4px 0"><span class="status s-new">新询盘</span></div>
+        <div class="card-product">📦 MDF冰箱贴</div>
+        <div class="card-footer">
+          <span class="card-todo">06-09</span>
+          <span class="card-person">Momi</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="inq-card">
+      <div class="card-img-placeholder">
+        <span>📷</span>
+        <div>暂无图片</div>
+      </div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-name">Yuki T. ⭐</div>
+          <div class="card-badges"><span class="badge-a">A</span></div>
+        </div>
+        <div class="card-company" style="font-size:10px">Japan Travel Gifts</div>
+        <div style="margin:4px 0"><span class="status s-sample">打样中</span></div>
+        <div class="card-product">📦 MDF杯垫</div>
+        <div class="card-footer">
+          <span class="card-todo">06-15</span>
+          <span class="card-person">Alan</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 上传图片测试 -->
+<div style="margin-top:10px;padding:16px;background:#fff;border-radius:12px;border:1px solid #e2e5f0;max-width:420px">
+  <div style="font-size:12px;color:#888;margin-bottom:8px">👆 选一张产品图，预览放入卡片效果：</div>
+  <input type="file" accept="image/*" onchange="previewImg(this)" style="font-size:12px">
+</div>
+
+<script>
+function previewImg(input){
+  var file=input.files[0];
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var src=e.target.result;
+    ['img1','img2','img3'].forEach(function(id){
+      var img=document.getElementById(id);
+      if(img){img.src=src;img.style.display='block';}
+    });
+    ['ph2','ph3'].forEach(function(id){
+      var ph=document.getElementById(id);
+      if(ph)ph.style.display='none';
+    });
+    // 第一张卡片也换
+    var img1=document.getElementById('img1');
+    if(img1){img1.src=src;}
+  };
+  reader.readAsDataURL(file);
+}
+</script>
+</body>
+</html>
