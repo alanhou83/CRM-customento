@@ -4252,18 +4252,25 @@ function renderInqCardView(){
       +'</div>'
       +'<img class="inq-card-img" id="inq-card-img-'+i.id+'" src="" alt="" style="display:none">'
       +'<div class="inq-card-body">'
-      +'<div class="inq-card-name">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+(ov?' <span class="mark-overdue" style="font-size:9px">超时</span>':'')+'</div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:2px">'
+      +'<div class="inq-card-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+(ov?' <span class="mark-overdue" style="font-size:9px">超时</span>':'')+'</div>'
+      +'<span class="source-tag" style="flex-shrink:0">'+i.source+'</span>'
+      +'</div>'
       +'<div class="inq-card-company">'+(i.company||i.country||'')+'</div>'
-      +'<div class="inq-card-meta">'
-      +'<span class="source-tag">'+i.source+'</span>'
+      +'<div class="inq-card-meta" style="margin-bottom:5px">'
       +'<span class="status-badge '+(SC[i.status]||'')+'">'+i.status+'</span>'
       +flagsHtml
       +'</div>'
-      +'<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📦 '+i.product+(i.qty?' · '+i.qty:'')+'</div>'
-      +'<div class="inq-card-footer">'
-      +(i.followupDate?'<span style="color:'+(i.followupDate<today()?'var(--red)':'var(--accent2)')+'">📅 '+i.followupDate+'</span>':'<span></span>')
-      +'<span>'+i.person+'</span>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;gap:4px;margin-bottom:4px">'
+      +'<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">📦 '+i.product+(i.qty?' · '+i.qty:'')+'</div>'
+      +'<span style="font-size:10px;color:var(--muted);flex-shrink:0">'+i.person+'</span>'
       +'</div>'
+      +(i.followupDate||i.followupNote
+        ?'<div style="font-size:10px;display:flex;align-items:baseline;gap:4px;flex-wrap:wrap">'
+          +(i.followupDate?'<span style="color:'+(i.followupDate<today()?'var(--red)':'var(--accent2)')+';flex-shrink:0">📅 '+i.followupDate+'</span>':'')
+          +(i.followupNote?'<span style="color:var(--green);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">'+i.followupNote+'</span>':'')
+          +'</div>'
+        :'')
       +'</div>'
       +'</div>';
   }).join('');
