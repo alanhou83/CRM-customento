@@ -1099,6 +1099,9 @@ let inquiries=JSON.parse(localStorage.getItem(SK.inq)||'null')||JSON.parse(JSON.
 let customers=JSON.parse(localStorage.getItem(SK.cust)||'null')||JSON.parse(JSON.stringify(DEF_CUST));
 let orders=JSON.parse(localStorage.getItem(SK.ord)||'null')||JSON.parse(JSON.stringify(DEF_ORD));
 let saleRecords=JSON.parse(localStorage.getItem(SK.sale)||'null')||JSON.parse(JSON.stringify(DEF_SALE));
+/* 修复旧数据/演示数据中只有日期没有内容（或反之）的待办，两项必须同时有值 */
+inquiries.forEach(function(i){if(!i.followupDate||!i.followupNote){i.followupDate='';i.followupNote='';}});
+customers.forEach(function(c){if(!c.followupDate||!c.followupNote){c.followupDate='';c.followupNote='';}});
 let currentUser=localStorage.getItem(SK.user)||'Alan';
 let crmSettings=JSON.parse(localStorage.getItem(SK.settings)||'null')||{products:DEF_PRODUCTS.slice()};
 let nextInqId=inquiries.length?Math.max(...inquiries.map(i=>i.id))+1:1;
