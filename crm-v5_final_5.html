@@ -1565,8 +1565,9 @@ function getFilteredInq(){
     if(person&&i.person!==person)return false;
     return true;
   }).sort(function(a,b){
-    var sk=inqTableSort.key||inqMobileSort.key||'date';
-    var sd=inqTableSort.key?inqTableSort.dir:inqMobileSort.key?inqMobileSort.dir:'desc';
+    var sk,sd;
+    if(inqMobileSort.key){sk=inqMobileSort.key;sd=inqMobileSort.dir;}
+    else{sk=inqTableSort.key||'date';sd=inqTableSort.dir||'desc';}
     var av,bv;
     if(sk==='alias'){av=(a.alias||'').toLowerCase();bv=(b.alias||'').toLowerCase();}
     else if(sk==='followup'){av=a.followupDate||'9999';bv=b.followupDate||'9999';}
