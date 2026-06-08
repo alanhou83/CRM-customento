@@ -1125,6 +1125,7 @@ let currentInqFilter={},csvData=null;
 var dashActionTab='overdue';
 var dashTeamPeriod='month';
 var _dashOvList=[],_dashOvCustList=[],_dashTdList=[],_dashTdCustList=[],_dashDlList=[];
+var _dashOvExpanded=false,_dashTdExpanded=false,_dashVipExpanded=false;
 
 function saveAll(){localStorage.setItem(SK.inq,JSON.stringify(inquiries));localStorage.setItem(SK.cust,JSON.stringify(customers));localStorage.setItem(SK.ord,JSON.stringify(orders));localStorage.setItem(SK.sale,JSON.stringify(saleRecords));}
 function saveSettings(){localStorage.setItem(SK.settings,JSON.stringify(crmSettings));}
@@ -1273,7 +1274,7 @@ function renderDashboard(){
       var urgent=(c.val>0);
       var d=document.createElement('div');
       d.className='stat-card';
-      var click=c.tab==='silent'?"switchInqTab('silent')":'switchDashActionTab(\''+c.tab+'\')';
+      var click=c.tab==='silent'?"showPage('inquiries');switchInqTab('silent')":'switchDashActionTab(\''+c.tab+'\')';
       d.setAttribute('onclick',click);
       d.style.cssText=(urgent?'border-color:'+c.color+';background:var(--surface);':'')+'cursor:pointer';
       d.innerHTML='<div class="stat-label">'+c.icon+' '+c.label+'</div>'
@@ -1384,22 +1385,34 @@ function renderDashboard(){
   var starred=inquiries.filter(function(i){return i.vipStar&&canSeeInq(i);}).concat(customers.filter(function(c){return c.vipStar&&canSeeCust(c);}));
   document.getElementById('alan-count').textContent=starred.length;
   var ss=document.getElementById('alan-starred-section');
-  if(starred.length>0){ss.style.display='block';document.getElementById('alan-starred-list').innerHTML=starred.map(function(item){
-    var isInq=item.hasOwnProperty('source');
-    return '<div class="customer-card vip-star" onclick="'+(isInq?'openInqDetail':'openCustDetail')+'('+item.id+')">'
-      +'<div class="cc-top"><div>'
-      +'<div class="cc-alias">'+item.alias+' <span class="mark-vip">VIP</span></div>'
-      +'<div class="cc-company">'+(item.company||'')+' · '+(item.country||'')+'</div>'
-      +'</div>'
-      +(isInq?'<span class="badge '+GC[item.grade]+'">'+item.grade+'级</span>':'<span class="type-tag '+TC[item.type]+'">'+TL[item.type]+'</span>')
-      +'</div>'
-      +'<div class="cc-tags">'
-      +(isInq?'<span class="source-tag">'+item.source+'</span><span class="status-badge '+SC[item.status]+'">'+item.status+'</span>':'<span style="font-size:12px;color:var(--muted)">客户档案</span>')
-      +'</div>'
-      +'<div class="cc-meta"><span>📦 '+(isInq?item.product:getProd(item))+'</span>'
-      +(item.amount&&item.amount>0?'<span>'+fmtAmt(item.amount,item.currency)+'</span>':'')
-      +'</div></div>';
-  }).join('');}else{ss.style.display='none';}
+  if(starred.length>0){
+    ss.style.display='block';
+    var vipLimit=_dashVipExpanded?starred.length:5;
+    var vipShow=starred.slice(0,vipLimit);
+    var vipHTML=vipShow.map(function(item){
+      var isInq=item.hasOwnProperty('source');
+      return '<div class="customer-card vip-star" onclick="'+(isInq?'openInqDetail':'openCustDetail')+'('+item.id+')">'
+        +'<div class="cc-top"><div>'
+        +'<div class="cc-alias">'+item.alias+' <span class="mark-vip">VIP</span></div>'
+        +'<div class="cc-company">'+(item.company||'')+' · '+(item.country||'')+'</div>'
+        +'</div>'
+        +(isInq?'<span class="badge '+GC[item.grade]+'">'+item.grade+'级</span>':'<span class="type-tag '+TC[item.type]+'">'+TL[item.type]+'</span>')
+        +'</div>'
+        +'<div class="cc-tags">'
+        +(isInq?'<span class="source-tag">'+item.source+'</span><span class="status-badge '+SC[item.status]+'">'+item.status+'</span>':'<span style="font-size:12px;color:var(--muted)">客户档案</span>')
+        +'</div>'
+        +'<div class="cc-meta"><span>📦 '+(isInq?item.product:getProd(item))+'</span>'
+        +(item.amount&&item.amount>0?'<span>'+fmtAmt(item.amount,item.currency)+'</span>':'')
+        +'</div></div>';
+    }).join('');
+    if(starred.length>5){
+      var rest=starred.length-5;
+      vipHTML+=_dashVipExpanded
+        ?'<button class="load-more-btn" onclick="_dashVipExpanded=false;renderDashboard()">收起</button>'
+        :'<button class="load-more-btn" onclick="_dashVipExpanded=true;renderDashboard()">展开剩余 '+rest+' 条 ↓</button>';
+    }
+    document.getElementById('alan-starred-list').innerHTML=vipHTML;
+  }else{ss.style.display='none';}
   updateNavCounts();
 }
 
@@ -1427,11 +1440,11 @@ function renderDashActionList(ovList,ovCustList,tdList,tdCustList,dlList){
     if(!ov.length&&!ovc.length){
       listHTML='<div style="text-align:center;padding:16px 0;color:var(--green);font-size:13px">'+'✅'+' 没有超时未跟进</div>';
     }else{
-      listHTML='<div style="display:flex;flex-direction:column;gap:6px">';
+      var ovItems=[];
       ov.forEach(function(i){
         var last=i.followups&&i.followups.length?i.followups[i.followups.length-1].split(' ')[0]:i.date;
         var days=Math.floor((new Date()-new Date(last))/86400000);
-        listHTML+='<div onclick="openInqDetail('+i.id+')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid rgba(247,111,111,.15);border-left:3px solid var(--red);border-radius:8px;cursor:pointer">'
+        ovItems.push('<div onclick="openInqDetail('+i.id+')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid rgba(247,111,111,.15);border-left:3px solid var(--red);border-radius:8px;cursor:pointer">'
           +'<div style="flex:1;min-width:0">'
           +'<div style="font-size:13px;font-weight:500">'+i.alias+(i.company?' &middot; <span style="font-weight:400;color:var(--muted)">'+i.company+'</span>':'')+'</div>'
           +'<div style="font-size:11px;color:var(--muted);margin-top:2px">询盘 &middot; '+i.product+' &middot; '+i.person+'</div>'
@@ -1439,11 +1452,11 @@ function renderDashActionList(ovList,ovCustList,tdList,tdCustList,dlList){
           +'<div style="text-align:right;flex-shrink:0">'
           +'<div style="font-size:12px;color:var(--red);font-weight:600">'+days+'天未跟进</div>'
           +'<span class="status-badge '+(SC[i.status]||'')+'">'+i.status+'</span>'
-          +'</div></div>';
+          +'</div></div>');
       });
       ovc.forEach(function(c){
         var days=Math.floor((new Date()-new Date(c.followupDate))/86400000);
-        listHTML+='<div onclick="openCustDetail('+c.id+')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid rgba(247,111,111,.15);border-left:3px solid var(--accent2);border-radius:8px;cursor:pointer">'
+        ovItems.push('<div onclick="openCustDetail('+c.id+')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid rgba(247,111,111,.15);border-left:3px solid var(--accent2);border-radius:8px;cursor:pointer">'
           +'<div style="flex:1;min-width:0">'
           +'<div style="font-size:13px;font-weight:500">'+c.alias+(c.company?' &middot; <span style="font-weight:400;color:var(--muted)">'+c.company+'</span>':'')+'</div>'
           +'<div style="font-size:11px;color:var(--muted);margin-top:2px">客户 &middot; '+getProd(c)+' &middot; '+c.person+'</div>'
@@ -1451,17 +1464,24 @@ function renderDashActionList(ovList,ovCustList,tdList,tdCustList,dlList){
           +'<div style="text-align:right;flex-shrink:0">'
           +'<div style="font-size:12px;color:var(--accent2);font-weight:600">'+days+'天待办逾期</div>'
           +'<div style="font-size:11px;color:var(--muted)">'+(c.followupNote||'无备注')+'</div>'
-          +'</div></div>';
+          +'</div></div>');
       });
+      var ovShow=_dashOvExpanded?ovItems:ovItems.slice(0,5);
+      listHTML='<div style="display:flex;flex-direction:column;gap:6px">'+ovShow.join('');
+      if(ovItems.length>5){
+        listHTML+=_dashOvExpanded
+          ?'<button class="load-more-btn" onclick="_dashOvExpanded=false;switchDashActionTab(\'overdue\')">收起</button>'
+          :'<button class="load-more-btn" onclick="_dashOvExpanded=true;switchDashActionTab(\'overdue\')">展开剩余 '+(ovItems.length-5)+' 条 ↓</button>';
+      }
       listHTML+='</div>';
     }
   }else if(dashActionTab==='today'){
     if(!td.length&&!tc.length){
       listHTML='<div style="text-align:center;padding:16px 0;color:var(--muted);font-size:13px">今日暂无待办</div>';
     }else{
-      listHTML='<div style="display:flex;flex-direction:column;gap:6px">';
+      var tdItems=[];
       td.forEach(function(i){
-        listHTML+='<div onclick="openInqDetail('+i.id+')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--yellow);border-radius:8px;cursor:pointer">'
+        tdItems.push('<div onclick="openInqDetail('+i.id+')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--yellow);border-radius:8px;cursor:pointer">'
           +'<div style="flex:1;min-width:0">'
           +'<div style="font-size:13px;font-weight:500">'+i.alias+(i.company?' &middot; <span style="font-weight:400;color:var(--muted)">'+i.company+'</span>':'')+'</div>'
           +'<div style="font-size:11px;color:var(--muted);margin-top:2px">询盘 &middot; '+i.product+' &middot; '+i.person+'</div>'
@@ -1469,18 +1489,25 @@ function renderDashActionList(ovList,ovCustList,tdList,tdCustList,dlList){
           +'<div style="text-align:right;flex-shrink:0;max-width:130px">'
           +(i.followupNote?'<div style="font-size:11px;color:var(--green);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+'📌'+' '+i.followupNote+'</div>':'')
           +'<span class="status-badge '+(SC[i.status]||'')+'">'+i.status+'</span>'
-          +'</div></div>';
+          +'</div></div>');
       });
       tc.forEach(function(c){
-        listHTML+='<div onclick="openCustDetail('+c.id+')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;cursor:pointer">'
+        tdItems.push('<div onclick="openCustDetail('+c.id+')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;cursor:pointer">'
           +'<div style="flex:1;min-width:0">'
           +'<div style="font-size:13px;font-weight:500">'+c.alias+(c.company?' &middot; <span style="font-weight:400;color:var(--muted)">'+c.company+'</span>':'')+'</div>'
           +'<div style="font-size:11px;color:var(--muted);margin-top:2px">客户 &middot; '+c.person+'</div>'
           +'</div>'
           +'<div style="text-align:right;flex-shrink:0;max-width:130px">'
           +(c.followupNote?'<div style="font-size:11px;color:var(--green);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+'📌'+' '+c.followupNote+'</div>':'')
-          +'</div></div>';
+          +'</div></div>');
       });
+      var tdShow=_dashTdExpanded?tdItems:tdItems.slice(0,5);
+      listHTML='<div style="display:flex;flex-direction:column;gap:6px">'+tdShow.join('');
+      if(tdItems.length>5){
+        listHTML+=_dashTdExpanded
+          ?'<button class="load-more-btn" onclick="_dashTdExpanded=false;switchDashActionTab(\'today\')">收起</button>'
+          :'<button class="load-more-btn" onclick="_dashTdExpanded=true;switchDashActionTab(\'today\')">展开剩余 '+(tdItems.length-5)+' 条 ↓</button>';
+      }
       listHTML+='</div>';
     }
   }else{
