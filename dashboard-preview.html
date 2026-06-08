@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>看板预览</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F0F2F8;color:#e8eaf6;font-size:14px;}
+  :root{
+    --bg:#F0F2F8;--surface:#1e2247;--surface2:#171a3a;--border:rgba(255,255,255,.1);
+    --text:#e8eaf6;--muted:#8b91c4;--muted2:#5a6090;
+    --accent:#6B72C3;--accent2:#2D3172;--green:#3ecf8e;--yellow:#f7d44f;
+    --red:#f76f6f;--teal:#4bc9f7;--orange:#f7934f;
+  }
+  .page{max-width:900px;margin:0 auto;padding:20px 16px 80px;}
+  .page-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .page-title{font-size:20px;font-weight:700;color:#fff;}
+  .page-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .btn{padding:7px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;}
+  .btn-primary{background:var(--accent);color:#fff;}
+
+  /* 目标 banner */
+  .goal-banner{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px;}
+  .goal-banner .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;}
+  .goal-banner .val{font-size:14px;font-weight:500;margin-top:2px;}
+
+  /* 4 行动卡片 */
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:.2s;}
+  .stat-card.urgent{border-color:var(--red);}
+  .stat-card.today{border-color:var(--yellow);}
+  .stat-card.silent{border-color:#888;}
+  .stat-card.delivery{border-color:var(--accent2);border-color:#4f8ef7;}
+  .stat-label{font-size:11px;color:var(--muted);margin-bottom:6px;}
+  .stat-value{font-size:26px;font-weight:700;line-height:1;}
+  .stat-sub{font-size:11px;margin-top:4px;}
+
+  /* 业绩行 */
+  .perf-bar{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:0;flex-wrap:wrap;}
+  .perf-main{flex:1;min-width:160px;border-right:1px solid var(--border);padding-right:18px;margin-right:18px;}
+  .perf-label{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px;}
+  .perf-amount{font-size:18px;line-height:1.3;}
+  .perf-count{font-size:11px;color:var(--muted);margin-top:2px;}
+  .perf-stats{display:flex;gap:24px;flex-wrap:wrap;}
+  .perf-stat{text-align:center;}
+  .perf-stat .n{font-size:20px;font-weight:700;}
+  .perf-stat .l{font-size:11px;color:var(--muted);margin-bottom:3px;}
+
+  /* ===== 今日行动清单（新增）===== */
+  .action-section{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden;}
+  .action-header{padding:14px 18px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+  .action-header-title{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;}
+  .action-tabs{display:flex;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+  .action-tab{font-size:11px;padding:4px 10px;cursor:pointer;color:var(--muted);}
+  .action-tab.on{background:var(--accent);color:#fff;}
+
+  .action-item{display:flex;align-items:center;padding:10px 18px;border-bottom:1px solid var(--border);cursor:pointer;gap:10px;transition:.15s;}
+  .action-item:last-child{border-bottom:none;}
+  .action-item:hover{background:rgba(107,114,195,.08);}
+  .action-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+  .action-dot.red{background:var(--red);}
+  .action-dot.yellow{background:var(--yellow);}
+  .action-dot.orange{background:var(--orange);}
+  .action-left{flex:1;min-width:0;}
+  .action-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .action-note{font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .action-right{text-align:right;flex-shrink:0;}
+  .action-tag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;}
+  .tag-red{background:rgba(247,111,111,.15);color:var(--red);}
+  .tag-yellow{background:rgba(247,212,79,.15);color:var(--yellow);}
+  .tag-orange{background:rgba(247,147,79,.15);color:var(--orange);}
+  .action-person{font-size:10px;color:var(--muted2);margin-top:3px;}
+  .action-date{font-size:11px;font-weight:600;}
+  .action-empty{padding:18px;text-align:center;color:var(--muted2);font-size:12px;}
+
+  /* 漏斗 */
+  .funnel-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:14px;}
+  .section-label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;}
+  .funnel-bars{display:flex;align-items:flex-end;gap:6px;}
+  .funnel-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;}
+  .funnel-num{font-size:13px;font-weight:600;}
+  .funnel-bar{width:100%;border-radius:5px 5px 2px 2px;}
+  .funnel-name{font-size:10px;color:var(--muted);text-align:center;white-space:nowrap;}
+  .funnel-sep{font-size:12px;color:var(--muted);opacity:.4;padding-bottom:22px;}
+
+  /* VIP */
+  .vip-section{margin-bottom:14px;}
+  .section-title{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:10px;}
+  .vip-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;}
+  .vip-card{background:var(--surface);border:1px solid rgba(247,147,79,.4);border-radius:10px;padding:12px 14px;cursor:pointer;}
+  .vip-name{font-size:13px;font-weight:600;}
+  .mark-vip{font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(247,147,79,.2);color:#f7934f;font-weight:700;margin-left:4px;}
+  .vip-company{font-size:11px;color:var(--muted);margin-top:2px;}
+  .vip-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+  .badge-a{font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(247,111,111,.15);color:var(--red);font-weight:600;}
+
+  /* mobile */
+  @media(max-width:600px){
+    .stats-grid{grid-template-columns:repeat(2,1fr);}
+    .perf-main{border-right:none;padding-right:0;margin-right:0;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:12px;width:100%;}
+    .perf-stats{width:100%;justify-content:space-around;}
+  }
+</style>
+</head>
+<body style="background:#0f1230;min-height:100vh;">
+<div class="page">
+
+  <!-- 页头 -->
+  <div class="page-head">
+    <div>
+      <div class="page-title">数据看板</div>
+      <div class="page-sub">全渠道销售概览 · 2026-06-08</div>
+    </div>
+    <button class="btn btn-primary">＋ 新增询盘</button>
+  </div>
+
+  <!-- 目标 banner -->
+  <div class="goal-banner">
+    <span style="font-size:20px">🎯</span>
+    <div>
+      <div class="label">战略目标</div>
+      <div class="val">找到 <span style="color:var(--accent)">20个</span> 欧美旅游纪念品稳定客户 — 目前 <span style="color:var(--green)">7</span> 个</div>
+    </div>
+    <div style="margin-left:auto;">
+      <div style="width:180px;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;">
+        <div style="width:35%;height:100%;background:var(--green);border-radius:3px;"></div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;text-align:right">35% 达成</div>
+    </div>
+  </div>
+
+  <!-- 4 行动卡片 -->
+  <div class="stats-grid">
+    <div class="stat-card urgent">
+      <div class="stat-label">⚠️ 超时未跟进</div>
+      <div class="stat-value" style="color:var(--red)">3</div>
+      <div class="stat-sub" style="color:var(--red)">点击立即处理</div>
+    </div>
+    <div class="stat-card today">
+      <div class="stat-label">📅 今日待办</div>
+      <div class="stat-value" style="color:var(--yellow)">2</div>
+      <div class="stat-sub" style="color:var(--yellow)">今天需要跟进</div>
+    </div>
+    <div class="stat-card silent">
+      <div class="stat-label">💤 沉默预警</div>
+      <div class="stat-value" style="color:#888">1</div>
+      <div class="stat-sub" style="color:#888">沉默≥5天</div>
+    </div>
+    <div class="stat-card delivery">
+      <div class="stat-label">🚚 交期预警</div>
+      <div class="stat-value" style="color:#4f8ef7">2</div>
+      <div class="stat-sub" style="color:#4f8ef7">7天内到期</div>
+    </div>
+  </div>
+
+  <!-- 本月业绩 -->
+  <div class="perf-bar">
+    <div class="perf-main">
+      <div class="perf-label">本月成单</div>
+      <div class="perf-amount">
+        <span style="color:var(--green);font-weight:700">$12,400</span>
+        <span style="color:var(--muted)"> · </span>
+        <span style="color:var(--yellow);font-weight:700">¥38,000</span>
+      </div>
+      <div class="perf-count">共 4 笔</div>
+    </div>
+    <div class="perf-stats">
+      <div class="perf-stat">
+        <div class="l">活跃询盘</div>
+        <div class="n" style="color:var(--accent)">18</div>
+      </div>
+      <div class="perf-stat">
+        <div class="l">总转化率</div>
+        <div class="n" style="color:var(--green)">24%</div>
+      </div>
+      <div class="perf-stat" style="cursor:pointer">
+        <div class="l">执行中订单</div>
+        <div class="n" style="color:#4f8ef7">5</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 今日行动清单（新增模块）===== -->
+  <div class="action-section">
+    <div class="action-header">
+      <div class="action-header-title">📋 今日行动清单</div>
+      <div class="action-tabs">
+        <div class="action-tab on">超时 3</div>
+        <div class="action-tab">今日待办 2</div>
+        <div class="action-tab">交期预警 2</div>
+      </div>
+    </div>
+
+    <!-- 超时未跟进列表 -->
+    <div class="action-item">
+      <div class="action-dot red"></div>
+      <div class="action-left">
+        <div class="action-name">Hans M. <span class="mark-vip">VIP</span></div>
+        <div class="action-note">最后跟进：Q2 新款打样意向确认中...</div>
+      </div>
+      <div class="action-right">
+        <div><span class="action-tag tag-red">超时 19天</span></div>
+        <div class="action-person">Alan</div>
+      </div>
+    </div>
+    <div class="action-item">
+      <div class="action-dot red"></div>
+      <div class="action-left">
+        <div class="action-name">Oliver B.</div>
+        <div class="action-note">最后跟进：报价包装费，等回复</div>
+      </div>
+      <div class="action-right">
+        <div><span class="action-tag tag-red">超时 21天</span></div>
+        <div class="action-person">Kelly</div>
+      </div>
+    </div>
+    <div class="action-item">
+      <div class="action-dot red"></div>
+      <div class="action-left">
+        <div class="action-name">CAZL <span class="mark-vip">VIP</span></div>
+        <div class="action-note">最后跟进：客户确认样品颜色方案</div>
+      </div>
+      <div class="action-right">
+        <div><span class="action-tag tag-red">超时 24天</span></div>
+        <div class="action-person">Kelly</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 转化漏斗 -->
+  <div class="funnel-wrap">
+    <div class="section-label">转化漏斗</div>
+    <div class="funnel-bars">
+      <div class="funnel-col">
+        <div class="funnel-num" style="color:#4f8ef7">5</div>
+        <div class="funnel-bar" style="height:72px;background:#4f8ef7;opacity:.85"></div>
+        <div class="funnel-name">新询盘</div>
+      </div>
+      <div class="funnel-sep">›</div>
+      <div class="funnel-col">
+        <div class="funnel-num" style="color:#6B72C3">4</div>
+        <div class="funnel-bar" style="height:58px;background:#6B72C3;opacity:.85"></div>
+        <div class="funnel-name">互动中</div>
+      </div>
+      <div class="funnel-sep">›</div>
+      <div class="funnel-col">
+        <div class="funnel-num" style="color:#f7934f">3</div>
+        <div class="funnel-bar" style="height:43px;background:#f7934f;opacity:.85"></div>
+        <div class="funnel-name">报价中</div>
+      </div>
+      <div class="funnel-sep">›</div>
+      <div class="funnel-col">
+        <div class="funnel-num" style="color:#a74ff7">2</div>
+        <div class="funnel-bar" style="height:29px;background:#a74ff7;opacity:.85"></div>
+        <div class="funnel-name">打样中</div>
+      </div>
+      <div class="funnel-sep">›</div>
+      <div class="funnel-col">
+        <div class="funnel-num" style="color:#3ecf8e">2</div>
+        <div class="funnel-bar" style="height:29px;background:#3ecf8e;opacity:.85"></div>
+        <div class="funnel-name">追单中</div>
+      </div>
+      <div class="funnel-sep">›</div>
+      <div class="funnel-col">
+        <div class="funnel-num" style="color:#f7d44f">4</div>
+        <div class="funnel-bar" style="height:58px;background:#f7d44f;opacity:.85"></div>
+        <div class="funnel-name">已成单</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIP 关注 -->
+  <div class="vip-section">
+    <div class="section-title">👁 Alan 重点关注 <span style="color:var(--muted);font-weight:400">3</span></div>
+    <div class="vip-grid">
+      <div class="vip-card">
+        <div class="vip-name">GKK <span class="mark-vip">VIP</span></div>
+        <div class="vip-company">Giftware Keepsake Kingdom GmbH · 德国</div>
+        <div class="vip-bottom">
+          <span style="font-size:11px;color:var(--muted)">白耗材</span>
+          <span style="font-size:11px;color:var(--green)">★ 6/7</span>
+        </div>
+      </div>
+      <div class="vip-card">
+        <div class="vip-name">Hans M. <span class="mark-vip">VIP</span></div>
+        <div class="vip-company">München Souvenir GmbH · 德国</div>
+        <div class="vip-bottom">
+          <span style="font-size:11px;color:var(--muted)">旅游纪念品</span>
+          <span style="font-size:11px;color:var(--green)">★ 6/7</span>
+        </div>
+      </div>
+      <div class="vip-card">
+        <div class="vip-name">Yuki T. <span class="mark-vip">VIP</span></div>
+        <div class="vip-company">Japan Travel Gifts Co. · 日本</div>
+        <div class="vip-bottom">
+          <span style="font-size:11px;color:var(--muted)">旅游纪念品</span>
+          <span style="font-size:11px;color:var(--green)">★ 6/7</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
