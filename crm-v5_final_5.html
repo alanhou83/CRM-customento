@@ -2565,7 +2565,7 @@ function openCustDetail(id){
   document.getElementById('dp-sub').textContent=(c.company||'')+(c.country?' · '+c.country:'');
   document.getElementById('dp-star-btn').style.display=canVip()?'':'none';
   document.getElementById('dp-star-btn').textContent=c.vipStar?'取消VIP':'⭐ VIP';
-  document.getElementById('dp-target-btn').style.display='';
+  document.getElementById('dp-target-btn').style.display=canVip()?'':'none';
   document.getElementById('dp-target-btn').textContent=c.targetStar?'取消冲单':'🎯 冲单';
   var dpTabs=document.getElementById('dp-tabs');if(dpTabs)dpTabs.style.display='flex';
 
@@ -3015,7 +3015,7 @@ function toggleStar(){
 function toggleTarget(){
   if(!currentDetailId||currentDetailType!=='customer')return;
   const c=customers.find(x=>x.id===currentDetailId);
-  if(c){c.targetStar=!c.targetStar;saveAll();openCustDetail(currentDetailId);refreshAll();toast(c.targetStar?'🎯 已标记冲单':'已取消冲单');}
+  if(c&&canVip()){c.targetStar=!c.targetStar;saveAll();openCustDetail(currentDetailId);refreshAll();toast(c.targetStar?'🎯 已标记冲单':'已取消冲单');}
 }
 
 function addFollowup(){
