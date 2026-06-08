@@ -555,39 +555,54 @@ a{color:var(--accent);text-decoration:none;}
     </div>
   </div>
   <div id="inq-silent-view" style="display:none">
-    <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
-      <div class="table-header cols-inq"><div>日期</div><div>客户</div><div>标记</div><div>渠道</div><div>产品</div><div>评级</div><div>沉默天数</div><div>下次跟进</div><div>负责人</div><div>操作</div></div>
-      <div id="inq-silent-body"></div>
-    </div></div></div>
-    <div class="mobile-cards" id="mobile-silent-cards"></div>
+    <div id="inq-silent-list-wrap">
+      <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
+        <div class="table-header cols-inq"><div></div><div>日期</div><div>客户</div><div>标记</div><div>渠道</div><div>产品</div><div>评级</div><div>状态</div><div>沉默天数</div><div>负责人</div></div>
+        <div id="inq-silent-body"></div>
+      </div></div></div>
+      <div class="mobile-cards" id="mobile-silent-cards"></div>
+    </div>
+    <div id="inq-silent-card-wrap" style="display:none">
+      <div class="inq-card-grid" id="inq-silent-card-grid"></div>
+    </div>
   </div>
   <div id="inq-archive-view" style="display:none">
-    <div class="filters" style="padding:10px 20px">
-      <select class="filter-select" id="arc-year" onchange="renderArchive()"><option value="">所有年份</option><option>2024</option><option>2025</option><option>2026</option></select>
-      <select class="filter-select" id="arc-quarter" onchange="renderArchive()"><option value="">所有季度</option><option value="Q1">Q1</option><option value="Q2">Q2</option><option value="Q3">Q3</option><option value="Q4">Q4</option></select>
-      <select class="filter-select" id="arc-month" onchange="renderArchive()"><option value="">所有月份</option><option value="01">1月</option><option value="02">2月</option><option value="03">3月</option><option value="04">4月</option><option value="05">5月</option><option value="06">6月</option><option value="07">7月</option><option value="08">8月</option><option value="09">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select>
-      <input type="date" class="filter-select" id="arc-date-from" onchange="renderArchive()" placeholder="开始日期">
-      <input type="date" class="filter-select" id="arc-date-to" onchange="renderArchive()" placeholder="结束日期">
-      <select class="filter-select" id="arc-person" onchange="renderArchive()"><option value="">所有负责人</option><option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option></select>
-      <button class="btn btn-outline btn-sm" onclick="clearArchiveFilters()">清除</button>
+    <div id="inq-archive-list-wrap">
+      <div class="filters" style="padding:10px 20px">
+        <select class="filter-select" id="arc-year" onchange="renderArchive()"><option value="">所有年份</option><option>2024</option><option>2025</option><option>2026</option></select>
+        <select class="filter-select" id="arc-quarter" onchange="renderArchive()"><option value="">所有季度</option><option value="Q1">Q1</option><option value="Q2">Q2</option><option value="Q3">Q3</option><option value="Q4">Q4</option></select>
+        <select class="filter-select" id="arc-month" onchange="renderArchive()"><option value="">所有月份</option><option value="01">1月</option><option value="02">2月</option><option value="03">3月</option><option value="04">4月</option><option value="05">5月</option><option value="06">6月</option><option value="07">7月</option><option value="08">8月</option><option value="09">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select>
+        <input type="date" class="filter-select" id="arc-date-from" onchange="renderArchive()" placeholder="开始日期">
+        <input type="date" class="filter-select" id="arc-date-to" onchange="renderArchive()" placeholder="结束日期">
+        <select class="filter-select" id="arc-person" onchange="renderArchive()"><option value="">所有负责人</option><option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option></select>
+        <button class="btn btn-outline btn-sm" onclick="clearArchiveFilters()">清除</button>
+      </div>
+      <div style="display:flex;gap:20px;padding:6px 20px 10px;border-bottom:1px solid var(--border);font-size:12px">
+        <span style="color:var(--muted)">成交询盘：<strong id="arc-count" style="color:var(--text)">0</strong></span>
+        <span style="color:var(--muted)">$ 总额：<strong id="arc-usd" style="color:var(--green)">$0</strong></span>
+        <span style="color:var(--muted)">¥ 总额：<strong id="arc-cny" style="color:var(--yellow)">¥0</strong></span>
+      </div>
+      <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
+        <div class="table-header cols-inq"><div></div><div>成交日期</div><div>客户</div><div>标记</div><div>渠道</div><div>产品</div><div>评级</div><div>状态</div><div>成单金额</div><div>负责人</div></div>
+        <div id="inq-archive-body"></div>
+      </div></div></div>
+      <div class="mobile-cards" id="mobile-archive-cards"></div>
     </div>
-    <div style="display:flex;gap:20px;padding:6px 20px 10px;border-bottom:1px solid var(--border);font-size:12px">
-      <span style="color:var(--muted)">成交询盘：<strong id="arc-count" style="color:var(--text)">0</strong></span>
-      <span style="color:var(--muted)">$ 总额：<strong id="arc-usd" style="color:var(--green)">$0</strong></span>
-      <span style="color:var(--muted)">¥ 总额：<strong id="arc-cny" style="color:var(--yellow)">¥0</strong></span>
+    <div id="inq-archive-card-wrap" style="display:none">
+      <div class="inq-card-grid" id="inq-archive-card-grid"></div>
     </div>
-    <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
-      <div class="table-header" style="display:grid;grid-template-columns:100px 1fr 120px 120px 80px 80px"><div>成交日期</div><div>客户</div><div>产品</div><div>成交金额</div><div>来源</div><div>负责人</div></div>
-      <div id="inq-archive-body"></div>
-    </div></div></div>
-    <div class="mobile-cards" id="mobile-archive-cards"></div>
   </div>
   <div id="inq-expired-view" style="display:none">
-    <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
-      <div class="table-header cols-inq"><div>日期</div><div>客户</div><div>标记</div><div>渠道</div><div>产品</div><div>评级</div><div>状态</div><div>失效原因</div><div>负责人</div></div>
-      <div id="inq-expired-body"></div>
-    </div></div></div>
-    <div class="mobile-cards" id="mobile-expired-cards"></div>
+    <div id="inq-expired-list-wrap">
+      <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
+        <div class="table-header cols-inq"><div></div><div>日期</div><div>客户</div><div>标记</div><div>渠道</div><div>产品</div><div>评级</div><div>状态</div><div>失效原因</div><div>负责人</div></div>
+        <div id="inq-expired-body"></div>
+      </div></div></div>
+      <div class="mobile-cards" id="mobile-expired-cards"></div>
+    </div>
+    <div id="inq-expired-card-wrap" style="display:none">
+      <div class="inq-card-grid" id="inq-expired-card-grid"></div>
+    </div>
   </div>
 </div>
 
@@ -1696,6 +1711,7 @@ function convertToOrder(inqId){
 
 /* 询盘Tab切换：活跃/沉默/成单/失效 */
 function switchInqTab(tab){
+  currentInqTab=tab;
   var tabs=['active','silent','archive','expired'];
   var colors={active:'var(--accent)',silent:'#888',archive:'var(--green)',expired:'var(--red)'};
   tabs.forEach(function(t){
@@ -1711,8 +1727,8 @@ function switchInqTab(tab){
     if(chips)chips.style.display=tab==='active'?'':'none';
   });
   var toggleBtn=document.getElementById('inq-view-toggle');
-  if(toggleBtn)toggleBtn.style.display=tab==='active'?'flex':'none';
-  if(tab==="active")refreshInqActive();
+  if(toggleBtn)toggleBtn.style.display='flex';
+  if(tab==='active')refreshInqActive();
   else if(tab==='silent')renderSilent();
   else if(tab==='archive')renderArchive();
   else if(tab==='expired')renderExpired();
@@ -1736,45 +1752,83 @@ function renderArchive(){
     if(person&&i.person!==person)return false;
     return true;
   }).sort(function(a,b){return b.date.localeCompare(a.date);});
-  var usdTotal=archived.filter(function(i){return i.currency==='USD';}).reduce(function(s,i){return s+(+i.amount||0);},0);
+  var usdTotal=archived.filter(function(i){return (!i.currency||i.currency==='USD');}).reduce(function(s,i){return s+(+i.amount||0);},0);
   var cnyTotal=archived.filter(function(i){return i.currency==='CNY';}).reduce(function(s,i){return s+(+i.amount||0);},0);
   var elC=document.getElementById('arc-count');if(elC)elC.textContent=archived.length;
   var elU=document.getElementById('arc-usd');if(elU)elU.textContent='$'+usdTotal.toLocaleString();
   var elY=document.getElementById('arc-cny');if(elY)elY.textContent='¥'+cnyTotal.toLocaleString();
   var body=document.getElementById('inq-archive-body');
-  if(!body)return;
-  if(!archived.length){body.innerHTML='<div class="empty"><div class="empty-icon">📁</div><div class="empty-text">暂无成单询盘</div></div>';
-    var mobileEl=document.getElementById('mobile-archive-cards');
-    if(mobileEl)mobileEl.innerHTML='<div class="empty"><div class="empty-icon">📁</div><div class="empty-text">暂无成单询盘</div></div>';
-    return;}
-  body.innerHTML=archived.map(function(i){
-    return '<div class="table-row" style="display:grid;grid-template-columns:100px 1fr 120px 120px 80px 80px;cursor:pointer" onclick="openInqDetail('+i.id+')">'
-      +'<div class="table-cell" style="color:var(--muted);font-size:12px">'+i.date+'</div>'
-      +'<div class="table-cell"><div style="font-weight:500">'+i.alias+'</div><div style="font-size:11px;color:var(--muted)">'+(i.company||'')+'</div></div>'
-      +'<div class="table-cell">'+i.product+'</div>'
-      +'<div class="table-cell" style="font-weight:500;color:'+(i.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(i.amount||0,i.currency||'USD')+'</div>'
-      +'<div class="table-cell"><span class="source-tag">'+i.source+'</span></div>'
-      +'<div class="table-cell" style="color:var(--muted)">'+i.person+'</div>'
-      +'</div>';
-  }).join('');
-  /* 手机端归档卡片 */
   var mobileEl=document.getElementById('mobile-archive-cards');
-  if(!mobileEl)return;
-  var mHtml='';
-  archived.forEach(function(i){
-    mHtml+='<div class="mobile-card" onclick="openInqDetail('+i.id+')">'
-      +'<div class="mobile-card-top">'
-      +'<span class="mobile-card-name">'+i.alias+'</span>'
-      +'<div style="display:flex;align-items:center;gap:5px">'
-      +'<span class="badge '+GC[i.grade]+'">'+i.grade+'级</span>'
-      +'<span style="font-weight:600;color:'+(i.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(i.amount||0,i.currency||'USD')+'</span>'
-      +'</div>'
-      +'</div>'
-      +'<div class="mobile-card-bottom"><span class="source-tag">'+i.source+'</span><span style="font-size:11px;color:var(--muted)">'+i.product+'</span><div style="display:flex;flex-direction:column;align-items:flex-end;margin-left:auto"><span style="font-size:11px;color:var(--muted)">'+i.person+'</span><span style="font-size:10px;color:var(--muted2)">'+i.date+'</span></div></div>'
-      +(i.notes?'<div style="font-size:10px;color:var(--muted2);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 '+i.notes+'</div>':'')
-      +'</div>';
-  });
-  mobileEl.innerHTML=mHtml;
+  var cardGrid=document.getElementById('inq-archive-card-grid');
+  var emptyH='<div class="empty"><div class="empty-icon">📁</div><div class="empty-text">暂无成单询盘</div></div>';
+  if(!archived.length){
+    if(body)body.innerHTML=emptyH;
+    if(mobileEl)mobileEl.innerHTML=emptyH;
+    if(cardGrid)cardGrid.innerHTML='<div class="empty" style="grid-column:1/-1">'+emptyH+'</div>';
+    return;
+  }
+  if(body){
+    body.innerHTML=archived.map(function(i){
+      var marks='<div class="marks-cell">';
+      if(i.vipStar)marks+='<span class="mark-vip">VIP</span>';
+      if(i.isHot)marks+='<span class="mark-hot">热点</span>';
+      marks+='</div>';
+      var lastFu=getLastFollowupStr(i);
+      var col9='<span style="font-size:13px;font-weight:600;color:'+((!i.currency||i.currency==='USD')?'var(--green)':'var(--yellow)')+'">'+fmtAmt(i.amount||0,i.currency||'USD')+'</span>';
+      return '<div class="table-row cols-inq" onclick="openInqDetail('+i.id+')">'
+        +'<div class="table-cell" style="padding-right:0;padding-left:2px"><div class="inq-list-thumb-ph" id="arc-lph-'+i.id+'">📷</div><img class="inq-list-thumb" id="arc-limg-'+i.id+'" src="" alt="" style="display:none"></div>'
+        +'<div class="table-cell" style="color:var(--muted);font-size:12px">'+i.date+'</div>'
+        +'<div class="table-cell"><div style="font-weight:500">'+i.alias+'</div><div style="font-size:11px;color:var(--muted)">'+(i.company||'')+'</div>'+(lastFu?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+lastFu+'</div>':'')+'</div>'
+        +'<div class="table-cell">'+marks+'</div>'
+        +'<div class="table-cell"><span class="source-tag">'+i.source+'</span></div>'
+        +'<div class="table-cell"><div>'+i.product+'</div>'+(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.notes+'</div>':'')+'</div>'
+        +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+i.grade+'级</span></div>'
+        +'<div class="table-cell"><span class="status-badge '+(SC[i.status]||'')+'">'+i.status+'</span></div>'
+        +'<div class="table-cell">'+col9+'</div>'
+        +'<div class="table-cell" style="color:var(--muted)">'+i.person+'</div>'
+        +'</div>';
+    }).join('');
+    archived.forEach(function(i){
+      getImgFromDB(i.id,function(dataUrl){
+        if(!dataUrl)return;
+        var img=document.getElementById('arc-limg-'+i.id);
+        var ph=document.getElementById('arc-lph-'+i.id);
+        if(img){img.src=dataUrl;img.style.display='block';}
+        if(ph)ph.style.display='none';
+      });
+    });
+  }
+  if(mobileEl){
+    mobileEl.innerHTML=archived.map(function(i){
+      var lastFu=getLastFollowupStr(i);
+      var amtColor=(!i.currency||i.currency==='USD')?'var(--green)':'var(--yellow)';
+      return '<div style="display:flex;align-items:flex-start;padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;gap:10px;background:var(--surface)" onclick="openInqDetail('+i.id+')">'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+'</div>'
+        +(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+i.notes+'</div>':'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+(i.company||'')+(i.country?' · '+i.country:'')+'</div>')
+        +'<div style="display:flex;gap:5px;margin-top:3px;flex-wrap:wrap">'
+        +'<span class="source-tag">'+i.source+'</span>'
+        +'<span class="status-badge '+(SC[i.status]||'')+'">'+i.status+'</span>'
+        +'</div>'
+        +(lastFu?'<div style="font-size:10px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+lastFu+'</div>':'')
+        +'</div>'
+        +'<div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:3px">'
+        +'<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end">'
+        +'<span style="font-size:10px;color:var(--muted);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.product+'</span>'
+        +'<span style="font-size:10px;color:var(--muted2)">'+i.date+'</span>'
+        +'<span class="badge '+GC[i.grade]+'">'+i.grade+'级</span>'
+        +'</div>'
+        +'<div style="font-size:10px;color:var(--muted)">'+i.person+'</div>'
+        +'<div style="font-size:13px;font-weight:700;color:'+amtColor+'">'+fmtAmt(i.amount||0,i.currency||'USD')+'</div>'
+        +'</div></div>';
+    }).join('');
+  }
+  if(inqView==='card'&&cardGrid){
+    renderInqCardsGeneric(archived,'inq-archive-card-grid','arc-crd-',function(i){
+      var amtColor=(!i.currency||i.currency==='USD')?'var(--green)':'var(--yellow)';
+      return '<div style="font-size:13px;font-weight:700;color:'+amtColor+'">'+fmtAmt(i.amount||0,i.currency||'USD')+'</div>';
+    });
+  }
 }
 
 /* 渲染沉默询盘列表 */
@@ -1784,58 +1838,82 @@ function renderSilent(){
     return canSeeInq(i)&&!i.archived&&!i.expired&&i.status==='沉默中';
   }).sort(function(a,b){return (a.silentSince||a.date).localeCompare(b.silentSince||b.date);});
   var body=document.getElementById('inq-silent-body');
-  if(!body)return;
+  var mobileEl=document.getElementById('mobile-silent-cards');
+  var cardGrid=document.getElementById('inq-silent-card-grid');
+  var emptyH='<div class="empty"><div class="empty-icon">😴</div><div class="empty-text">暂无沉默询盘</div></div>';
+  function silDays(i){var base=i.silentSince||i.date;return Math.floor((new Date(todayStr)-new Date(base))/86400000);}
   if(!silent.length){
-    body.innerHTML='<div class="empty"><div class="empty-icon">😴</div><div class="empty-text">暂无沉默询盘</div></div>';
-    var mobileEl=document.getElementById('mobile-silent-cards');
-    if(mobileEl)mobileEl.innerHTML='<div class="empty"><div class="empty-icon">😴</div><div class="empty-text">暂无沉默询盘</div></div>';
+    if(body)body.innerHTML=emptyH;
+    if(mobileEl)mobileEl.innerHTML=emptyH;
+    if(cardGrid)cardGrid.innerHTML='<div class="empty" style="grid-column:1/-1">'+emptyH+'</div>';
     return;
   }
-  function silentDays(i){
-    var base=i.silentSince||i.date;
-    return Math.floor((new Date(todayStr)-new Date(base))/86400000);
+  if(body){
+    body.innerHTML=silent.map(function(i){
+      var days=silDays(i);
+      var warn=days>=7;
+      var marks='<div class="marks-cell">';
+      if(i.vipStar)marks+='<span class="mark-vip">VIP</span>';
+      if(i.isHot)marks+='<span class="mark-hot">热点</span>';
+      marks+='</div>';
+      var lastFu=getLastFollowupStr(i);
+      var col9='<span style="font-size:12px;color:'+(warn?'var(--red)':'var(--muted)')+';font-weight:'+(warn?'600':'400')+'">'+(warn?'⚠️ ':'💤 ')+'沉默'+days+'天'+(warn?' 待确认':'')+'</span>';
+      return '<div class="table-row cols-inq" onclick="openInqDetail('+i.id+')"'+(warn?' style="border-left:3px solid var(--red)"':'')+'>'
+        +'<div class="table-cell" style="padding-right:0;padding-left:2px"><div class="inq-list-thumb-ph" id="sil-lph-'+i.id+'">📷</div><img class="inq-list-thumb" id="sil-limg-'+i.id+'" src="" alt="" style="display:none"></div>'
+        +'<div class="table-cell" style="color:var(--muted);font-size:12px">'+i.date+'</div>'
+        +'<div class="table-cell"><div style="font-weight:500">'+i.alias+'</div><div style="font-size:11px;color:var(--muted)">'+(i.company||'')+'</div>'+(lastFu?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+lastFu+'</div>':'')+'</div>'
+        +'<div class="table-cell">'+marks+'</div>'
+        +'<div class="table-cell"><span class="source-tag">'+i.source+'</span></div>'
+        +'<div class="table-cell"><div>'+i.product+'</div>'+(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.notes+'</div>':'')+'</div>'
+        +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+i.grade+'级</span></div>'
+        +'<div class="table-cell"><span class="status-badge '+(SC[i.status]||'')+'">'+i.status+'</span></div>'
+        +'<div class="table-cell">'+col9+'</div>'
+        +'<div class="table-cell" style="color:var(--muted)">'+i.person+'</div>'
+        +'</div>';
+    }).join('');
+    silent.forEach(function(i){
+      getImgFromDB(i.id,function(dataUrl){
+        if(!dataUrl)return;
+        var img=document.getElementById('sil-limg-'+i.id);
+        var ph=document.getElementById('sil-lph-'+i.id);
+        if(img){img.src=dataUrl;img.style.display='block';}
+        if(ph)ph.style.display='none';
+      });
+    });
   }
-  body.innerHTML=silent.map(function(i){
-    var days=silentDays(i);
-    var warn=days>=7;
-    var daysTxt=(warn?'⚠️ ':'')+'沉默'+days+'天'+(warn?' 待确认':'');
-    var daysColor=warn?'color:var(--red)':'color:var(--muted)';
-    return '<div class="table-row" style="display:grid;grid-template-columns:100px 1fr 120px 80px 80px 120px 80px;cursor:pointer;'+(warn?'border-left:3px solid var(--red);':'')+'" onclick="openInqDetail('+i.id+')">'
-      +'<div class="table-cell" style="color:var(--muted);font-size:12px">'+(i.silentSince||i.date)+'</div>'
-      +'<div class="table-cell"><div style="font-weight:500">'+i.alias+'</div><div style="font-size:11px;color:var(--muted)">'+(i.company||'')+'</div></div>'
-      +'<div class="table-cell">'+i.product+'</div>'
-      +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+i.grade+'级</span></div>'
-      +'<div class="table-cell"><span class="source-tag">'+i.source+'</span></div>'
-      +'<div class="table-cell" style="'+daysColor+';font-size:12px">'+daysTxt+'</div>'
-      +'<div class="table-cell" style="color:var(--muted)">'+i.person+'</div>'
-      +'</div>';
-  }).join('');
-  /* 手机端沉默卡片 */
-  var mobileEl=document.getElementById('mobile-silent-cards');
-  if(!mobileEl)return;
-  var mHtml='';
-  silent.forEach(function(i){
-    var days=silentDays(i);
-    var warn=days>=7;
-    var borderStyle=warn?'border-left:3px solid var(--red);':'';
-    mHtml+='<div style="padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;'+borderStyle+'" onclick="openInqDetail('+i.id+')">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center">'
-      +'<span style="font-size:13px;font-weight:600">'+i.alias+(i.isHot?' 🔥':'')+'</span>'
-      +'<div style="display:flex;align-items:center;gap:5px">'
-      +'<span class="badge '+GC[i.grade]+'">'+i.grade+'级</span>'
-      +'<span style="font-size:11px;'+(warn?'color:var(--red);font-weight:600':'color:var(--muted)')+'">'+( warn?'⚠️ 待确认':'沉默'+days+'天')+'</span>'
-      +'</div>'
-      +'</div>'
-      +'<div style="font-size:10px;color:var(--muted2);margin-top:1px">'+i.date+'</div>'
-      +'<div style="display:flex;gap:5px;margin-top:3px;align-items:center">'
-      +'<span class="source-tag">'+i.source+'</span>'
-      +'<span style="font-size:11px;color:var(--muted)">'+i.product+'</span>'
-      +'<span style="font-size:11px;color:var(--muted);margin-left:auto">'+i.person+'</span>'
-      +'</div>'
-      +(i.notes?'<div style="font-size:10px;color:var(--muted2);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">注：'+i.notes+'</div>':'')
-      +'</div>';
-  });
-  mobileEl.innerHTML=mHtml;
+  if(mobileEl){
+    mobileEl.innerHTML=silent.map(function(i){
+      var days=silDays(i);
+      var warn=days>=7;
+      var lastFu=getLastFollowupStr(i);
+      return '<div style="display:flex;align-items:flex-start;padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;gap:10px;background:var(--surface)'+(warn?';border-left:3px solid var(--red)':'')+'" onclick="openInqDetail('+i.id+')">'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+'</div>'
+        +(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+i.notes+'</div>':'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+(i.company||'')+(i.country?' · '+i.country:'')+'</div>')
+        +'<div style="display:flex;gap:5px;margin-top:3px;flex-wrap:wrap">'
+        +'<span class="source-tag">'+i.source+'</span>'
+        +'<span class="status-badge '+(SC[i.status]||'')+'">'+i.status+'</span>'
+        +'</div>'
+        +(lastFu?'<div style="font-size:10px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+lastFu+'</div>':'')
+        +'</div>'
+        +'<div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:3px">'
+        +'<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end">'
+        +'<span style="font-size:10px;color:var(--muted);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.product+'</span>'
+        +'<span style="font-size:10px;color:var(--muted2)">'+i.date+'</span>'
+        +'<span class="badge '+GC[i.grade]+'">'+i.grade+'级</span>'
+        +'</div>'
+        +'<div style="font-size:10px;color:var(--muted)">'+i.person+'</div>'
+        +'<div style="font-size:11px;color:'+(warn?'var(--red)':'var(--muted)')+';font-weight:'+(warn?'600':'400')+'">'+(warn?'⚠️ ':'💤 ')+'沉默'+days+'天'+(warn?' 待确认':'')+'</div>'
+        +'</div></div>';
+    }).join('');
+  }
+  if(inqView==='card'&&cardGrid){
+    renderInqCardsGeneric(silent,'inq-silent-card-grid','sil-crd-',function(i){
+      var days=silDays(i);
+      var warn=days>=7;
+      return '<div style="font-size:11px;color:'+(warn?'var(--red)':'var(--muted)')+';font-weight:'+(warn?'600':'400')+'">'+(warn?'⚠️ ':'💤 ')+'沉默'+days+'天'+(warn?' 待确认':'')+'</div>';
+    });
+  }
 }
 
 /* 清除归档筛选 */
@@ -1850,52 +1928,77 @@ function clearArchiveFilters(){
 function renderExpired(){
   var expired=inquiries.filter(function(i){return i.expired&&!i.archived&&canSeeInq(i);}).sort(function(a,b){return b.date.localeCompare(a.date);});
   var body=document.getElementById('inq-expired-body');
-  if(!body)return;
+  var mobileEl=document.getElementById('mobile-expired-cards');
+  var cardGrid=document.getElementById('inq-expired-card-grid');
+  var emptyH='<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">暂无失效询盘</div></div>';
   if(!expired.length){
-    body.innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">暂无失效询盘</div></div>';
-    var mobileEl=document.getElementById('mobile-expired-cards');
-    if(mobileEl)mobileEl.innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">暂无失效询盘</div></div>';
+    if(body)body.innerHTML=emptyH;
+    if(mobileEl)mobileEl.innerHTML=emptyH;
+    if(cardGrid)cardGrid.innerHTML='<div class="empty" style="grid-column:1/-1">'+emptyH+'</div>';
     return;
   }
-  body.innerHTML=expired.map(function(i){
-    var ov=isOverdue(i);
-    var marks='<div class="marks-cell">';
-    if(i.vipStar)marks+='<span class="mark-vip">VIP</span>';
-    marks+='</div>';
-    return '<div class="table-row cols-inq" onclick="openInqDetail('+i.id+')" style="opacity:0.7">'
-      +'<div class="table-cell" style="color:var(--muted);font-size:12px">'+i.date+'</div>'
-      +'<div class="table-cell"><div style="font-weight:500">'+i.alias+'</div><div style="font-size:11px;color:var(--muted)">'+(i.company||'')+'</div></div>'
-      +'<div class="table-cell">'+marks+'</div>'
-      +'<div class="table-cell"><span class="source-tag">'+i.source+'</span></div>'
-      +'<div class="table-cell">'+i.product+'</div>'
-      +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+i.grade+'级</span></div>'
-      +'<div class="table-cell"><span class="status-badge s-lost">'+i.status+'</span></div>'
-      +'<div class="table-cell" style="font-size:12px;color:var(--muted)">'+(i.reason||'—')+'</div>'
-      +'<div class="table-cell" style="color:var(--muted)">'+i.person+'</div>'
-      +'</div>';
-  }).join('');
-  /* 手机端失效卡片 */
-  var mobileEl=document.getElementById('mobile-expired-cards');
-  if(!mobileEl)return;
-  var mHtml='';
-  expired.forEach(function(i){
-    mHtml+='<div style="padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;opacity:0.8" onclick="openInqDetail('+i.id+')">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center">'
-      +'<span style="font-size:13px;font-weight:600">'+i.alias+(i.isHot?' 🔥':'')+'</span>'
-      +'<div style="display:flex;align-items:center;gap:5px">'
-      +'<span class="badge '+GC[i.grade]+'">'+i.grade+'级</span>'
-      +'<span style="font-size:10px;color:var(--muted)">'+i.date+'</span>'
-      +'</div>'
-      +'</div>'
-      +'<div style="display:flex;gap:5px;margin-top:3px;align-items:center">'
-      +'<span class="source-tag">'+i.source+'</span>'
-      +'<span style="font-size:11px;color:var(--muted)">'+i.product+'</span>'
-      +'<span style="font-size:11px;color:var(--muted);margin-left:auto">'+i.person+'</span>'
-      +'</div>'
-      +(i.reason?'<div style="font-size:11px;color:var(--red);margin-top:3px">原因：'+i.reason+'</div>':'')
-      +'</div>';
-  });
-  mobileEl.innerHTML=mHtml||'<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">暂无失效询盘</div></div>';
+  if(body){
+    body.innerHTML=expired.map(function(i){
+      var marks='<div class="marks-cell">';
+      if(i.vipStar)marks+='<span class="mark-vip">VIP</span>';
+      if(i.isHot)marks+='<span class="mark-hot">热点</span>';
+      marks+='</div>';
+      var lastFu=getLastFollowupStr(i);
+      var col9=i.reason
+        ?'<span style="font-size:11px;color:var(--red)">'+i.reason+'</span>'
+        :'<span style="color:var(--muted2)">—</span>';
+      return '<div class="table-row cols-inq" onclick="openInqDetail('+i.id+')" style="opacity:.8">'
+        +'<div class="table-cell" style="padding-right:0;padding-left:2px"><div class="inq-list-thumb-ph" id="exp-lph-'+i.id+'">📷</div><img class="inq-list-thumb" id="exp-limg-'+i.id+'" src="" alt="" style="display:none"></div>'
+        +'<div class="table-cell" style="color:var(--muted);font-size:12px">'+i.date+'</div>'
+        +'<div class="table-cell"><div style="font-weight:500">'+i.alias+'</div><div style="font-size:11px;color:var(--muted)">'+(i.company||'')+'</div>'+(lastFu?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+lastFu+'</div>':'')+'</div>'
+        +'<div class="table-cell">'+marks+'</div>'
+        +'<div class="table-cell"><span class="source-tag">'+i.source+'</span></div>'
+        +'<div class="table-cell"><div>'+i.product+'</div>'+(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.notes+'</div>':'')+'</div>'
+        +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+i.grade+'级</span></div>'
+        +'<div class="table-cell"><span class="status-badge s-lost">'+i.status+'</span></div>'
+        +'<div class="table-cell">'+col9+'</div>'
+        +'<div class="table-cell" style="color:var(--muted)">'+i.person+'</div>'
+        +'</div>';
+    }).join('');
+    expired.forEach(function(i){
+      getImgFromDB(i.id,function(dataUrl){
+        if(!dataUrl)return;
+        var img=document.getElementById('exp-limg-'+i.id);
+        var ph=document.getElementById('exp-lph-'+i.id);
+        if(img){img.src=dataUrl;img.style.display='block';}
+        if(ph)ph.style.display='none';
+      });
+    });
+  }
+  if(mobileEl){
+    mobileEl.innerHTML=expired.map(function(i){
+      var lastFu=getLastFollowupStr(i);
+      return '<div style="display:flex;align-items:flex-start;padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;gap:10px;background:var(--surface);opacity:.85" onclick="openInqDetail('+i.id+')">'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+'</div>'
+        +(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+i.notes+'</div>':'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+(i.company||'')+(i.country?' · '+i.country:'')+'</div>')
+        +'<div style="display:flex;gap:5px;margin-top:3px;flex-wrap:wrap">'
+        +'<span class="source-tag">'+i.source+'</span>'
+        +'<span class="status-badge s-lost">'+i.status+'</span>'
+        +'</div>'
+        +(lastFu?'<div style="font-size:10px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+lastFu+'</div>':'')
+        +(i.reason?'<div style="font-size:11px;color:var(--red);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">原因：'+i.reason+'</div>':'')
+        +'</div>'
+        +'<div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:3px">'
+        +'<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end">'
+        +'<span style="font-size:10px;color:var(--muted);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.product+'</span>'
+        +'<span style="font-size:10px;color:var(--muted2)">'+i.date+'</span>'
+        +'<span class="badge '+GC[i.grade]+'">'+i.grade+'级</span>'
+        +'</div>'
+        +'<div style="font-size:10px;color:var(--muted)">'+i.person+'</div>'
+        +'</div></div>';
+    }).join('');
+  }
+  if(inqView==='card'&&cardGrid){
+    renderInqCardsGeneric(expired,'inq-expired-card-grid','exp-crd-',function(i){
+      return i.reason?'<div style="font-size:10px;color:var(--red);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">原因：'+i.reason+'</div>':'';
+    });
+  }
 }
 
 /* 45天自动失效检测，页面加载时执行 */
@@ -4541,6 +4644,7 @@ function removeInqImg(){
 
 /* ===== 询盘卡片视图 ===== */
 var inqView='list';
+var currentInqTab='active';
 
 function refreshInqActive(){
   if(inqView==='card'){renderInqCardView();}
@@ -4549,32 +4653,51 @@ function refreshInqActive(){
 
 function setInqView(v){
   inqView=v;
-  var cardWrap=document.getElementById('inq-card-view-wrap');
   var btnList=document.getElementById('inq-view-btn-list');
   var btnCard=document.getElementById('inq-view-btn-card');
   var mBtnList=document.getElementById('minq-view-btn-list');
   var mBtnCard=document.getElementById('minq-view-btn-card');
-  var mobileCards=document.getElementById('mobile-inq-cards');
   if(v==='card'){
-    var tbl=document.getElementById('inq-table-body');
-    if(tbl&&tbl.closest)tbl.closest('.table-wrap').style.display='none';
-    if(mobileCards)mobileCards.style.display='none';
-    if(cardWrap)cardWrap.style.display='block';
-    if(btnList){btnList.classList.remove('active');}
-    if(btnCard){btnCard.classList.add('active');}
+    if(btnList)btnList.classList.remove('active');
+    if(btnCard)btnCard.classList.add('active');
     if(mBtnList){mBtnList.style.background='transparent';mBtnList.style.borderColor='var(--border)';mBtnList.style.color='var(--muted)';}
     if(mBtnCard){mBtnCard.style.background='var(--accent)';mBtnCard.style.borderColor='var(--accent)';mBtnCard.style.color='#fff';}
-    renderInqCardView();
   } else {
-    var tbl2=document.getElementById('inq-table-body');
-    if(tbl2&&tbl2.closest)tbl2.closest('.table-wrap').style.display='';
-    if(mobileCards)mobileCards.style.display='';
-    if(cardWrap)cardWrap.style.display='none';
-    if(btnList){btnList.classList.add('active');}
-    if(btnCard){btnCard.classList.remove('active');}
+    if(btnList)btnList.classList.add('active');
+    if(btnCard)btnCard.classList.remove('active');
     if(mBtnList){mBtnList.style.background='var(--accent)';mBtnList.style.borderColor='var(--accent)';mBtnList.style.color='#fff';}
     if(mBtnCard){mBtnCard.style.background='transparent';mBtnCard.style.borderColor='var(--border)';mBtnCard.style.color='var(--muted)';}
-    renderMobileCards('inq');
+  }
+  if(currentInqTab==='active'){
+    var cardWrap=document.getElementById('inq-card-view-wrap');
+    var mobileCards=document.getElementById('mobile-inq-cards');
+    var tbl=document.getElementById('inq-table-body');
+    var tableWrap=tbl&&tbl.closest?tbl.closest('.table-wrap'):null;
+    if(v==='card'){
+      if(tableWrap)tableWrap.style.display='none';
+      if(mobileCards)mobileCards.style.display='none';
+      if(cardWrap)cardWrap.style.display='block';
+      renderInqCardView();
+    } else {
+      if(tableWrap)tableWrap.style.display='';
+      if(mobileCards)mobileCards.style.display='';
+      if(cardWrap)cardWrap.style.display='none';
+      renderInquiries();
+      renderMobileCards('inq');
+    }
+  } else {
+    var lw=document.getElementById('inq-'+currentInqTab+'-list-wrap');
+    var cw=document.getElementById('inq-'+currentInqTab+'-card-wrap');
+    if(v==='card'){
+      if(lw)lw.style.display='none';
+      if(cw)cw.style.display='block';
+    } else {
+      if(lw)lw.style.display='';
+      if(cw)cw.style.display='none';
+    }
+    if(currentInqTab==='silent')renderSilent();
+    else if(currentInqTab==='archive')renderArchive();
+    else if(currentInqTab==='expired')renderExpired();
   }
 }
 
@@ -4626,6 +4749,54 @@ function renderInqCardView(){
       if(!dataUrl)return;
       var img=document.getElementById('inq-card-img-'+i.id);
       var ph=document.getElementById('inq-card-ph-'+i.id);
+      if(img){img.src=dataUrl;img.style.display='block';}
+      if(ph)ph.style.display='none';
+    });
+  });
+}
+
+/* 通用卡片渲染（沉默/成单/失效）：filtered=数据，gridId=卡片容器id，imgPfx=图片元素id前缀，getExtra=返回底部额外HTML的函数 */
+function renderInqCardsGeneric(filtered,gridId,imgPfx,getExtra){
+  var grid=document.getElementById(gridId);if(!grid)return;
+  if(!filtered.length){grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📭</div><div class="empty-text">暂无询盘</div></div>';return;}
+  grid.innerHTML=filtered.map(function(i){
+    var ov=isOverdue(i);
+    var flags=i.flags||[];
+    var flagsHtml=flags.map(function(f){
+      var fc=f==='已报价'?'background:rgba(192,130,0,.18);color:#b87800':'background:rgba(210,55,115,.18);color:#c43270';
+      return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;'+fc+'">✓ '+f+'</span>';
+    }).join('');
+    return '<div class="inq-card-item" onclick="openInqDetail('+i.id+')">'
+      +'<div class="inq-card-img-ph" id="'+imgPfx+'ph-'+i.id+'">'
+      +'<span style="font-size:22px;opacity:.4">📷</span>'
+      +'<span>暂无产品图</span>'
+      +'</div>'
+      +'<img class="inq-card-img" id="'+imgPfx+'img-'+i.id+'" src="" alt="" style="display:none">'
+      +'<div class="inq-card-body">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:2px">'
+      +'<div class="inq-card-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+(ov?' <span class="mark-overdue" style="font-size:9px">超时</span>':'')+'</div>'
+      +'<span class="source-tag" style="flex-shrink:0">'+i.source+'</span>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px">'
+      +'<div class="inq-card-company" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1">'+(i.company||i.country||'')+'</div>'
+      +'<span style="font-size:10px;color:var(--muted);flex-shrink:0">'+fmtShortDate(i.date)+'</span>'
+      +'</div>'
+      +'<div class="inq-card-meta" style="margin-bottom:5px">'
+      +'<span class="status-badge '+(SC[i.status]||'')+'">'+i.status+'</span>'
+      +flagsHtml
+      +'</div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;gap:4px;margin-bottom:4px">'
+      +'<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">📦 '+i.product+(i.qty?' · '+i.qty:'')+'</div>'
+      +'<span style="font-size:10px;color:var(--muted);flex-shrink:0">'+i.person+'</span>'
+      +'</div>'
+      +getExtra(i)
+      +'</div></div>';
+  }).join('');
+  filtered.forEach(function(i){
+    getImgFromDB(i.id,function(dataUrl){
+      if(!dataUrl)return;
+      var img=document.getElementById(imgPfx+'img-'+i.id);
+      var ph=document.getElementById(imgPfx+'ph-'+i.id);
       if(img){img.src=dataUrl;img.style.display='block';}
       if(ph)ph.style.display='none';
     });
