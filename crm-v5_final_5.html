@@ -1124,7 +1124,7 @@ var _returnToSaleId=null;
 let currentInqFilter={},csvData=null;
 var dashActionTab='overdue';
 var dashTeamPeriod='month';
-var _dashOvList=[],_dashTdList=[],_dashTdCustList=[],_dashDlList=[];
+var _dashOvList=[],_dashOvCustList=[],_dashTdList=[],_dashTdCustList=[],_dashDlList=[];
 
 function saveAll(){localStorage.setItem(SK.inq,JSON.stringify(inquiries));localStorage.setItem(SK.cust,JSON.stringify(customers));localStorage.setItem(SK.ord,JSON.stringify(orders));localStorage.setItem(SK.sale,JSON.stringify(saleRecords));}
 function saveSettings(){localStorage.setItem(SK.settings,JSON.stringify(crmSettings));}
@@ -1233,6 +1233,7 @@ function renderDashboard(){
   var myInq=inquiries.filter(function(i){return canSeeInq(i);});
   var activeInq=myInq.filter(function(i){return !i.archived&&!i.expired&&i.status!=='沉默中';});
   _dashOvList=myInq.filter(isOverdue);
+  _dashOvCustList=customers.filter(function(c){var l=c.layer||getLayer(c);return canSeeCust(c)&&c.followupDate&&c.followupDate<today()&&l!=='dead';});
   _dashTdList=myInq.filter(isTodayFu);
   _dashTdCustList=customers.filter(function(c){return canSeeCust(c)&&c.followupDate===today();});
   var silentWarn=myInq.filter(function(i){
@@ -1262,7 +1263,7 @@ function renderDashboard(){
   if(ar){
     var todayTotal=_dashTdList.length+_dashTdCustList.length;
     var actionCards=[
-      {val:_dashOvList.length,label:'超时未跟进',color:'var(--red)',icon:'⚠️',sub:_dashOvList.length?'点击立即处理':'目前全部及时',tab:'overdue'},
+      {val:_dashOvList.length+_dashOvCustList.length,label:'超时未跟进',color:'var(--red)',icon:'⚠️',sub:(_dashOvList.length+_dashOvCustList.length)?'点击立即处理':'目前全部及时',tab:'overdue'},
       {val:todayTotal,label:'今日待办',color:'var(--yellow)',icon:'📅',sub:todayTotal?'今天需要跟进':'今日暂无待办',tab:'today'},
       {val:silentWarn,label:'沉默预警',color:'#888',icon:'💤',sub:'沉默≥5天',tab:'silent'},
       {val:_dashDlList.length,label:'交期预警',color:'var(--accent2)',icon:'🚚',sub:'7天内到期',tab:'delivery'}
@@ -1283,7 +1284,7 @@ function renderDashboard(){
   }
 
   /* ③ 今日行动清单 */
-  renderDashActionList(_dashOvList,_dashTdList,_dashTdCustList,_dashDlList);
+  renderDashActionList(_dashOvList,_dashOvCustList,_dashTdList,_dashTdCustList,_dashDlList);
 
   /* ④ 业绩 + 管道价值 */
   var ym=today().slice(0,7);
@@ -1402,28 +1403,29 @@ function renderDashboard(){
   updateNavCounts();
 }
 
-function renderDashActionList(ovList,tdList,tdCustList,dlList){
+function renderDashActionList(ovList,ovCustList,tdList,tdCustList,dlList){
   var el=document.getElementById('dash-action-list');
   if(!el)return;
   var ov=ovList||_dashOvList;
+  var ovc=ovCustList||_dashOvCustList;
   var td=tdList||_dashTdList;
   var tc=tdCustList||_dashTdCustList;
   var dl=dlList||_dashDlList;
-  var total=ov.length+td.length+tc.length+dl.length;
+  var total=ov.length+ovc.length+td.length+tc.length+dl.length;
   if(!total){el.innerHTML='';return;}
   var tab1a=dashActionTab==='overdue';
   var tab2a=dashActionTab==='today';
   var tab3a=dashActionTab==='delivery';
   var bbase='padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid ';
   var tabHTML='<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">'
-    +'<button onclick="switchDashActionTab(\'overdue\')" style="'+bbase+(tab1a?'var(--accent);background:var(--accent);color:#fff':'var(--border);background:var(--surface2);color:var(--muted)')+'">'+'⚠️'+' 超时 ('+ov.length+')</button>'
+    +'<button onclick="switchDashActionTab(\'overdue\')" style="'+bbase+(tab1a?'var(--accent);background:var(--accent);color:#fff':'var(--border);background:var(--surface2);color:var(--muted)')+'">'+'⚠️'+' 超时 ('+(ov.length+ovc.length)+')</button>'
     +'<button onclick="switchDashActionTab(\'today\')" style="'+bbase+(tab2a?'var(--accent);background:var(--accent);color:#fff':'var(--border);background:var(--surface2);color:var(--muted)')+'">'+'📅'+' 今日待办 ('+(td.length+tc.length)+')</button>'
     +'<button onclick="switchDashActionTab(\'delivery\')" style="'+bbase+(tab3a?'var(--accent);background:var(--accent);color:#fff':'var(--border);background:var(--surface2);color:var(--muted)')+'">'+'🚚'+' 交期预警 ('+dl.length+')</button>'
     +'</div>';
   var listHTML='';
   if(dashActionTab==='overdue'){
-    if(!ov.length){
-      listHTML='<div style="text-align:center;padding:16px 0;color:var(--green);font-size:13px">'+'✅'+' 没有超时询盘</div>';
+    if(!ov.length&&!ovc.length){
+      listHTML='<div style="text-align:center;padding:16px 0;color:var(--green);font-size:13px">'+'✅'+' 没有超时未跟进</div>';
     }else{
       listHTML='<div style="display:flex;flex-direction:column;gap:6px">';
       ov.forEach(function(i){
@@ -1432,11 +1434,23 @@ function renderDashActionList(ovList,tdList,tdCustList,dlList){
         listHTML+='<div onclick="openInqDetail('+i.id+')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid rgba(247,111,111,.15);border-left:3px solid var(--red);border-radius:8px;cursor:pointer">'
           +'<div style="flex:1;min-width:0">'
           +'<div style="font-size:13px;font-weight:500">'+i.alias+(i.company?' &middot; <span style="font-weight:400;color:var(--muted)">'+i.company+'</span>':'')+'</div>'
-          +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+i.product+' &middot; '+i.person+'</div>'
+          +'<div style="font-size:11px;color:var(--muted);margin-top:2px">询盘 &middot; '+i.product+' &middot; '+i.person+'</div>'
           +'</div>'
           +'<div style="text-align:right;flex-shrink:0">'
           +'<div style="font-size:12px;color:var(--red);font-weight:600">'+days+'天未跟进</div>'
           +'<span class="status-badge '+(SC[i.status]||'')+'">'+i.status+'</span>'
+          +'</div></div>';
+      });
+      ovc.forEach(function(c){
+        var days=Math.floor((new Date()-new Date(c.followupDate))/86400000);
+        listHTML+='<div onclick="openCustDetail('+c.id+')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid rgba(247,111,111,.15);border-left:3px solid var(--accent2);border-radius:8px;cursor:pointer">'
+          +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:13px;font-weight:500">'+c.alias+(c.company?' &middot; <span style="font-weight:400;color:var(--muted)">'+c.company+'</span>':'')+'</div>'
+          +'<div style="font-size:11px;color:var(--muted);margin-top:2px">客户 &middot; '+getProd(c)+' &middot; '+c.person+'</div>'
+          +'</div>'
+          +'<div style="text-align:right;flex-shrink:0">'
+          +'<div style="font-size:12px;color:var(--accent2);font-weight:600">'+days+'天待办逾期</div>'
+          +'<div style="font-size:11px;color:var(--muted)">'+(c.followupNote||'无备注')+'</div>'
           +'</div></div>';
       });
       listHTML+='</div>';
@@ -1495,7 +1509,7 @@ function renderDashActionList(ovList,tdList,tdCustList,dlList){
 
 function switchDashActionTab(tab){
   dashActionTab=tab;
-  renderDashActionList(_dashOvList,_dashTdList,_dashTdCustList,_dashDlList);
+  renderDashActionList(_dashOvList,_dashOvCustList,_dashTdList,_dashTdCustList,_dashDlList);
 }
 
 function renderTeamReport(){
