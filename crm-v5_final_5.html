@@ -3694,8 +3694,9 @@ function renderMobileCards(page){
           +'<div style="flex:1;min-width:0">'
           +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+cu.alias+(cu.vipStar?' <span class="mark-vip">VIP</span>':'')+(cu.targetStar?' <span style="font-size:20px">🎯</span>':'')+'</div>'
           +'<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+(cu.company||'—')+'</div>'
-          +'<div style="margin-top:3px"><span class="type-tag '+TC[cu.type]+'">'+TL[cu.type]+'</span></div>'
-          +(function(){var lf=getLastFollowupStr(cu);return lf?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">'+lf+'</div>':'';}())
+          +'<div style="margin-top:3px;display:flex;align-items:center;gap:5px;overflow:hidden"><span class="type-tag '+TC[cu.type]+'">'+TL[cu.type]+'</span>'
+          +(function(){var lf=getLastFollowupStr(cu);return lf?'<span style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0">'+lf+'</span>':'';}())
+          +'</div>'
           +'</div>'
           +'<div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;gap:3px;align-items:flex-end">'
           +'<span style="font-size:12px;font-weight:600;color:'+sc+'">★ '+score+'/7</span>'
