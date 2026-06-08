@@ -135,6 +135,29 @@ a{color:var(--accent);text-decoration:none;}
 .view-btn{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:12px;transition:all .15s;}
 .view-btn.active{background:var(--surface2);color:var(--text);border-color:var(--border2);}
 .section-count{background:var(--surface2);color:var(--muted);font-size:10px;padding:2px 6px;border-radius:8px;}
+.cust-layer-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.cust-ltab{padding:5px 13px;border-radius:20px;font-size:12px;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--muted);transition:all .15s;font-family:var(--font-body);}
+.cust-ltab:hover{color:var(--text);}
+.cust-ltab.active{color:#fff;border-color:transparent;}
+.cust-ltab[data-l="core"].active{background:var(--accent2);}
+.cust-ltab[data-l="focus"].active{background:var(--accent);}
+.cust-ltab[data-l="nurture"].active{background:var(--teal);}
+.cust-ltab[data-l="sleeping"].active{background:var(--muted2);color:var(--text);}
+.cust-ltab[data-l="dead"].active{background:rgba(247,111,111,.5);}
+.ltab-cnt{font-size:10px;opacity:.7;margin-left:3px;}
+.cc-name-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}
+.cc-name{font-size:14px;font-weight:600;line-height:1.3;}
+.cc-vip-badge{font-size:15px;flex-shrink:0;line-height:1;margin-left:6px;}
+.cc-prod-tags{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:7px;}
+.cc-prod-tag{font-size:11px;padding:2px 7px;border-radius:10px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+.cc-divider{height:1px;background:var(--border);margin:7px 0;}
+.cc-info-row{display:flex;align-items:center;justify-content:space-between;}
+.cc-src-pill{font-size:10px;padding:1px 6px;border-radius:8px;background:var(--surface2);color:var(--muted2);}
+.cc-todo{display:flex;align-items:center;gap:5px;padding:6px 9px;border-radius:7px;font-size:12px;margin-top:7px;}
+.cc-todo.ov{background:rgba(247,111,111,.1);color:#d9534f;}
+.cc-todo.soon{background:rgba(247,147,79,.1);color:#c87531;}
+.cc-todo.ok{background:rgba(62,207,142,.08);color:#2d9969;}
+.cc-todo.none{background:var(--surface2);color:var(--muted2);}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s;}
 .modal-overlay.open{opacity:1;pointer-events:all;}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:660px;max-height:92vh;overflow-y:auto;}
@@ -659,11 +682,8 @@ a{color:var(--accent);text-decoration:none;}
       <button class="cust-filter-btn" id="btn-cust-chong" onclick="toggleCustChong()">🎯 冲单</button>
     </div>
     <div id="cust-card-view">
-      <div id="cust-section-core" style="margin-bottom:20px"></div>
-      <div id="cust-section-focus" style="margin-bottom:20px"></div>
-      <div id="cust-section-nurture" style="margin-bottom:20px"></div>
-      <div id="cust-section-sleeping" style="margin-bottom:20px"></div>
-      <div id="cust-section-dead" style="margin-bottom:20px"></div>
+      <div class="cust-layer-tabs" id="cust-layer-tabs-bar"></div>
+      <div id="cust-card-grid-wrap"></div>
     </div>
     <div id="cust-list-view" style="display:none">
       <div class="table-wrap"><div class="table-scroll"><div class="table-inner" style="width:100%">
@@ -2301,6 +2321,7 @@ function clearProdTags(){
 
 
 let custView='card';
+var custCardLayer='core';
 let custLayerExpanded={core:true,focus:true,nurture:true,sleeping:true,dead:false};
 let custLayerShown={core:6,focus:6,nurture:6,sleeping:6,dead:6};
 let custLayerSort={core:'score',focus:'score',nurture:'score',sleeping:'followup',dead:'score'};
@@ -2336,6 +2357,12 @@ function setMobileCustView(v,el){
   if(cards)cards.classList.toggle('on',v==='card');
   if(list)list.classList.toggle('on',v==='list');
   renderMobileCards('cust');
+}
+
+function switchCustCardLayer(layer){
+  custCardLayer=layer;
+  custLayerShown[layer]=DEFAULT_SHOW;
+  renderCustomers();
 }
 
 function toggleMobileCustLayer(key){
@@ -2466,23 +2493,41 @@ function loadMoreLayer(layer){
 }
 
 function renderCustCard(c, layer){
-  const score=custScore(c);
-  const sc=score>=5?'var(--green)':score>=3?'var(--yellow)':'var(--muted)';
-  const cfg=LAYER_CONFIG[layer]||LAYER_CONFIG.nurture;
-  return '<div class="customer-card '+(c.vipStar?'vip-star':'')+' '+cfg.cls+'" onclick="openCustDetail('+c.id+')">'
-    +'<div class="cc-top"><div>'
-    +'<div class="cc-alias">'+c.alias+(c.vipStar?' <span class="mark-vip">VIP</span>':'')+(c.targetStar?' <span style="font-size:20px">🎯</span>':'')+'</div>'
-    +'<div class="cc-company">'+(c.company||'—')+' · '+(c.country||'')+'</div>'
-    +'</div><span class="type-tag '+TC[c.type]+'">'+TL[c.type]+'</span></div>'
-    +'<div class="cc-tags">'
-    +(c.ordered==1?'<span class="type-tag" style="background:rgba(62,207,142,.1);color:var(--green)">✅成单</span>':'')
-    +(c.repurchase==1?'<span class="type-tag" style="background:rgba(79,142,247,.1);color:var(--accent)">🔄复购</span>':'')
-    +(c.growing==1?'<span class="type-tag" style="background:rgba(247,212,79,.1);color:var(--yellow)">📈增长</span>':'')
-    +(c.activeScore==1?'<span class="type-tag" style="background:rgba(75,209,247,.1);color:var(--teal)">💬活跃</span>':'')
-    +'</div>'
-    +'<div class="cc-meta"><span>📦 '+getProd(c)+'</span><span>👤 '+c.person+'</span><span style="color:'+sc+'">★ '+score+'/7</span></div>'
-    +'<div class="score-bar"><div class="score-fill" style="width:'+(score/7*100)+'%;background:'+sc+'"></div></div>'
-    +(function(){var od=c.followupDate&&c.followupDate<today();var icon=od?'<span style="font-size:16px">🔔</span> ':'<span style="font-size:9px">📅</span> ';var dc=od?'var(--red)':'var(--muted)';var dsz=od?'13px':'12px';var nc=od?'var(--red)':'var(--green)';var nsz=od?'13px':'11px';if(c.followupDate&&c.followupNote)return '<div class="cc-last">'+icon+'<span style="font-size:'+dsz+';color:'+dc+';font-weight:'+(od?'600':'400')+'">'+c.followupDate+'</span> <span style="font-size:'+nsz+';color:'+nc+'">📌 '+c.followupNote+'</span></div>';var lf=getLastFollowupStr(c);if(lf)return '<div class="cc-last" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span style="font-size:10px;color:var(--muted)">'+lf+'</span></div>';return '';})()
+  var cfg=LAYER_CONFIG[layer]||LAYER_CONFIG.nurture;
+  var prodArr=getProdArr(c);
+  var prodHtml='';
+  for(var pi=0;pi<prodArr.length;pi++){prodHtml+='<span class="cc-prod-tag">'+prodArr[pi]+'</span>';}
+  var score=custScore(c);
+  var stars5=Math.round(score/7*5);
+  var starsHtml='';
+  for(var si=1;si<=5;si++){starsHtml+='<span style="color:'+(si<=stars5?'#c8a84b':'var(--border2)')+'">★</span>';}
+  var t=today();
+  var tmrD=new Date();tmrD.setDate(tmrD.getDate()+1);
+  var tmr=tmrD.toISOString().slice(0,10);
+  var todoHtml='';
+  if(c.followupDate){
+    if(c.followupDate<t){
+      var diff=Math.round((new Date(t)-new Date(c.followupDate))/86400000);
+      todoHtml='<div class="cc-todo ov"><span>🔴</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(c.followupNote||'跟进待办')+'</span><span style="flex-shrink:0;font-size:11px;font-weight:600">逾期'+diff+'天</span></div>';
+    } else if(c.followupDate<=tmr){
+      var dtxt=c.followupDate===t?'今天':c.followupDate;
+      todoHtml='<div class="cc-todo soon"><span>🟠</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(c.followupNote||'跟进待办')+'</span><span style="flex-shrink:0;font-size:11px;font-weight:600">'+dtxt+'</span></div>';
+    } else {
+      todoHtml='<div class="cc-todo ok"><span>📅</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(c.followupNote||'跟进待办')+'</span><span style="flex-shrink:0;font-size:11px;font-weight:600">'+c.followupDate+'</span></div>';
+    }
+  } else {
+    todoHtml='<div class="cc-todo none"><span style="opacity:.4">—</span><span>暂无待办</span></div>';
+  }
+  var lastFu=getLastFollowupStr(c);
+  var lastFuHtml=lastFu?'<div style="font-size:11px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:5px">'+lastFu+'</div>':'';
+  return '<div class="customer-card '+(c.vipStar?'vip-star ':'')+cfg.cls+'" onclick="openCustDetail('+c.id+')">'
+    +'<div class="cc-name-row"><div class="cc-name">'+c.alias+(c.targetStar?' <span style="font-size:13px">🎯</span>':'')+'</div>'+(c.vipStar?'<div class="cc-vip-badge">⭐</div>':'')+'</div>'
+    +(c.company?'<div style="font-size:11px;color:var(--muted2);margin-bottom:5px">'+(c.company)+(c.country?' · '+c.country:'')+'</div>':'')
+    +(prodHtml?'<div class="cc-prod-tags">'+prodHtml+'</div>':'')
+    +'<div class="cc-divider"></div>'
+    +lastFuHtml
+    +'<div class="cc-info-row"><div>'+starsHtml+'</div>'+(c.source?'<span class="cc-src-pill">'+c.source+'</span>':'')+'</div>'
+    +todoHtml
     +'</div>';
 }
 
@@ -2526,20 +2571,49 @@ function renderCustomers(){
   });
 
   if(custView==='card'){
-    if(layerFilter){
-      // show only target layer
-      ['core','focus','nurture','sleeping','dead'].forEach(function(l){
-        const el=document.getElementById('cust-section-'+l);
-        if(el) el.style.display='none';
-      });
-      const el=document.getElementById('cust-section-'+layerFilter);
-      if(el){el.style.display='';renderLayerSection(layerFilter,byLayer[layerFilter],'cust-section-'+layerFilter);}
+    var tabBar=document.getElementById('cust-layer-tabs-bar');
+    var gridWrap=document.getElementById('cust-card-grid-wrap');
+    if(!tabBar||!gridWrap)return;
+    var layerOrder=['core','focus','nurture','sleeping','dead'];
+    var layerTabNames={core:'🏆 核心',focus:'🌳 重点',nurture:'🔄 普通',sleeping:'💤 沉睡',dead:'☠️ 流失'};
+    var allByLayer={core:[],focus:[],nurture:[],sleeping:[],dead:[]};
+    filtered.forEach(function(c){
+      var l=c.layer||getLayer(c);
+      if(allByLayer[l])allByLayer[l].push(c);
+      else allByLayer.nurture.push(c);
+    });
+    if(layerFilter&&allByLayer[layerFilter])custCardLayer=layerFilter;
+    if(!allByLayer[custCardLayer]||!allByLayer[custCardLayer].length){
+      for(var li=0;li<layerOrder.length;li++){if(allByLayer[layerOrder[li]].length){custCardLayer=layerOrder[li];break;}}
+    }
+    var tabHtml='';
+    for(var lt=0;lt<layerOrder.length;lt++){
+      var ll=layerOrder[lt];
+      var cnt=allByLayer[ll].length;
+      tabHtml+='<button class="cust-ltab'+(custCardLayer===ll?' active':'')+'" data-l="'+ll+'" onclick="switchCustCardLayer(\''+ll+'\')">'
+        +layerTabNames[ll]+' <span class="ltab-cnt">'+cnt+'</span></button>';
+    }
+    tabBar.innerHTML=tabHtml;
+    var activeItems=allByLayer[custCardLayer]||[];
+    var shown=custLayerShown[custCardLayer]||DEFAULT_SHOW;
+    var sortVal=custLayerSort[custCardLayer]||'score';
+    var sortedItems=sortCustomers(activeItems,sortVal);
+    var visibleItems=sortedItems.slice(0,shown);
+    var remaining=sortedItems.length-shown;
+    if(!activeItems.length){
+      gridWrap.innerHTML='<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">该分层暂无客户</div>';
     } else {
-      ['core','focus','nurture','sleeping','dead'].forEach(function(l){
-        const el=document.getElementById('cust-section-'+l);
-        if(el) el.style.display='';
-        renderLayerSection(l,byLayer[l],'cust-section-'+l);
-      });
+      var gh='<div style="display:flex;justify-content:flex-end;margin-bottom:10px">'
+        +'<select class="sort-select" onchange="setSortLayer(\''+custCardLayer+'\',this.value)">'
+        +'<option value="score"'+(sortVal==='score'?' selected':'')+'>★ 评分</option>'
+        +'<option value="followup"'+(sortVal==='followup'?' selected':'')+'>⏰ 跟进</option>'
+        +'<option value="name"'+(sortVal==='name'?' selected':'')+'>A-Z</option>'
+        +'</select></div>'
+        +'<div class="card-grid">';
+      for(var vi=0;vi<visibleItems.length;vi++){gh+=renderCustCard(visibleItems[vi],custCardLayer);}
+      gh+='</div>';
+      if(remaining>0){gh+='<button class="load-more-btn" onclick="loadMoreLayer(\''+custCardLayer+'\')">展开更多（还有 '+remaining+' 个）</button>';}
+      gridWrap.innerHTML=gh;
     }
   } else {
     // List view
