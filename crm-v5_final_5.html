@@ -153,6 +153,7 @@ a{color:var(--accent);text-decoration:none;}
 .cc-divider{height:1px;background:var(--border);margin:7px 0;}
 .cc-info-row{display:flex;align-items:center;justify-content:space-between;}
 .cc-src-pill{font-size:10px;padding:1px 6px;border-radius:8px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+.cc-stat-tag{font-size:10px;padding:1px 6px;border-radius:6px;border:1px solid;background:transparent;}
 .cc-todo{display:flex;align-items:center;gap:5px;padding:6px 9px;border-radius:7px;font-size:12px;margin-top:7px;}
 .cc-todo.ov{background:rgba(247,111,111,.1);color:#d9534f;}
 .cc-todo.soon{background:rgba(247,147,79,.1);color:#c87531;}
@@ -2532,18 +2533,17 @@ function renderCustCard(c, layer){
     +(prodHtml?'<div class="cc-prod-tags">'+prodHtml+'</div>':'')
     +'<div class="cc-divider"></div>'
     +lastFuHtml
-    +'<div class="cc-info-row">'
-    +'<div style="display:flex;align-items:center;gap:6px">'
-    +starsHtml
-    +'<span style="font-size:12px;opacity:.45;letter-spacing:1px">'
-    +(c.ordered==1?'✅':'')
-    +(c.repurchase==1?'🔄':'')
-    +(c.growing==1?'📈':'')
-    +(c.activeScore==1?'💬':'')
-    +'</span>'
+    +'<div class="cc-info-row" style="margin-bottom:4px">'
+    +'<div>'+starsHtml+'</div>'
+    +(c.source?'<span class="cc-src-pill">'+c.source+'</span>':'')
     +'</div>'
-    +(c.source?'<span class="cc-src-pill">'+c.source+'</span>':'<span style="font-size:10px;color:var(--muted2)">—</span>')
-    +'</div>'
+    +(function(){var tags='';
+      if(c.ordered==1)tags+='<span class="cc-stat-tag" style="color:rgba(62,207,142,.8);border-color:rgba(62,207,142,.2)">✅ 成单</span>';
+      if(c.repurchase==1)tags+='<span class="cc-stat-tag" style="color:rgba(79,142,247,.8);border-color:rgba(79,142,247,.2)">🔄 复购</span>';
+      if(c.growing==1)tags+='<span class="cc-stat-tag" style="color:rgba(200,168,75,.8);border-color:rgba(200,168,75,.2)">📈 增长</span>';
+      if(c.activeScore==1)tags+='<span class="cc-stat-tag" style="color:rgba(79,201,247,.8);border-color:rgba(79,201,247,.2)">💬 活跃</span>';
+      return tags?'<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px">'+tags+'</div>':'';
+    })()
     +todoHtml
     +'</div>';
 }
