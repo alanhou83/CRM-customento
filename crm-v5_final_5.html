@@ -107,7 +107,7 @@ a{color:var(--accent);text-decoration:none;}
 .cust-filter-btn.chong-on{background:rgba(255,100,50,.15);border-color:#ff7840;color:#ff7840;}
 .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px;}
 .customer-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px;cursor:pointer;transition:border-color .2s;}.customer-card:hover{border-color:var(--accent);}
-.customer-card.vip-star{border-color:rgba(247,147,79,.5);}
+.customer-card.vip-star{border-color:rgba(62,207,142,.45);}
 .cc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px;}
 .cc-alias{font-size:15px;font-weight:600;}.cc-company{font-size:11px;color:var(--muted);margin-top:1px;}
 .cc-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:9px;}
@@ -2532,7 +2532,18 @@ function renderCustCard(c, layer){
     +(prodHtml?'<div class="cc-prod-tags">'+prodHtml+'</div>':'')
     +'<div class="cc-divider"></div>'
     +lastFuHtml
-    +'<div class="cc-info-row"><div>'+starsHtml+'</div>'+(c.source?'<span class="cc-src-pill">'+c.source+'</span>':'<span style="font-size:10px;color:var(--muted2)">—</span>')+'</div>'
+    +'<div class="cc-info-row">'
+    +'<div style="display:flex;align-items:center;gap:6px">'
+    +starsHtml
+    +'<span style="font-size:12px;opacity:.45;letter-spacing:1px">'
+    +(c.ordered==1?'✅':'')
+    +(c.repurchase==1?'🔄':'')
+    +(c.growing==1?'📈':'')
+    +(c.activeScore==1?'💬':'')
+    +'</span>'
+    +'</div>'
+    +(c.source?'<span class="cc-src-pill">'+c.source+'</span>':'<span style="font-size:10px;color:var(--muted2)">—</span>')
+    +'</div>'
     +todoHtml
     +'</div>';
 }
