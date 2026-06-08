@@ -62,8 +62,9 @@
 - 跟进记录Tab：顶部待办日期+内容输入 → 保存到 followupDate/followupNote；下方跟进记录列表
 
 ## 询盘列表规范（V2）
-- **列定义**（9列）：日期 / 客户 / 标记 / 渠道 / 产品 / 评级 / 状态 / 待办 / 负责人
-- `.cols-inq{grid-template-columns:80px 1fr 90px 90px 100px 55px 100px 150px 65px;}`
+- **列定义**（10列）：缩略图 / 日期 / 客户 / 标记 / 渠道 / 产品 / 评级 / 状态 / 待办 / 负责人
+- `.cols-inq{grid-template-columns:46px 80px 1fr 90px 90px 100px 55px 100px 150px 65px;}`
+- `.cols-hot` 与 `.cols-inq` 完全相同
 - 无"操作"列，点行进详情
 - 表头排序：日期/客户/待办（`setInqSort`，3态，id=`thi-date-arr`等）
 - 手机端排序：日期/客户/待办（`setInqMobileSort`，id=`inq-sort-date`等）
@@ -196,6 +197,26 @@
 - 手机端询盘筛选：芯片+下拉（状态/评级/跟单/渠道）联动，搜索框 id=search-inq-m
 - 超时判定阈值改为5天（≥5天未跟进）
 - 客户成交统计Tab重构（概览紧凑/点行进编辑/删除+退回按钮在modal）
+- 询盘/客户列表+卡片+手机端加入最后一条跟进记录显示
+- 询盘列表/热点商机加入缩略图列（IndexedDB异步加载）
+- 询盘列表电脑端+手机端卡片/列表双视图切换
+- 询盘图片上传：裁切modal（zoom滑块+双指缩放+自由拖拽+白色背景补齐）
+- flag颜色修正：已报价=琥珀色amber，已打样=玫红rose（不与状态色冲突）
+- 热点商机电脑端+手机端显示格式与询盘列表完全统一
+
+## 询盘图片上传与裁切设计
+- 图片存储：IndexedDB（`crm_inq_images` 库，key=inqId，value=base64 dataUrl），不用 localStorage
+- `saveImgToDB(id,dataUrl,cb)` / `getImgFromDB(id,cb)` / `deleteImgFromDB(id)`
+- 裁切 modal id：`crop-modal`，用 `.modal-overlay` + `.open` class 控制显隐（**不能用 display:none/flex**）
+- 裁切状态对象：`_cropState`（img/offsetX/offsetY/dragging/zoomFactor/pinchDist 等）
+- Zoom 控件：`#crop-zoom` range slider（0.5~4）+ `#crop-zoom-label` 显示倍率
+- 自由拖拽：mouse/touch 事件，**无边界限制**（`clampOffset` 为空函数）
+- 双指缩放：`touchstart` 记录 `pinchDist`，`touchmove` 计算新距离更新 `zoomFactor`
+- 滚轮缩放：`wheel` 事件，`deltaY<0` 放大，反之缩小，范围 0.5~4
+- 输出：400×400 白色背景 canvas，坐标映射公式：`imgX=offsetX-cx; scale=400/cropSize`
+- 缩略图显示：`.inq-list-thumb`（36×36 border-radius:6px）+ `.inq-list-thumb-ph`（占位符📷）
+- 编辑询盘时重置图片预览 + 从 IndexedDB 异步加载当前询盘的图片
+- `_pendingInqImg`：暂存待保存的裁切结果 dataUrl，保存询盘时写入 DB
 
 ## 调试经验
 - 遇到"点按钮就退出"类问题，先在浏览器 Console 直接调用函数排查（不要改代码）
@@ -222,6 +243,9 @@
 ### 大改动（待单独讨论）
 **询盘页：**
 - ⬜ 状态标签可叠加（涉及数据结构变更，影响面大）
+
+### 热点商机
+- ⬜ 热点商机手机端筛选（渠道/负责人芯片或下拉），现在手机端搜索只能搜名字
 
 ### 长期
 - ⬜ 询盘成单金额自动计入客户成交统计
