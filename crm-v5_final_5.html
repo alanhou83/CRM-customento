@@ -152,7 +152,7 @@ a{color:var(--accent);text-decoration:none;}
 .cc-prod-tag{font-size:11px;padding:2px 7px;border-radius:10px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
 .cc-divider{height:1px;background:var(--border);margin:7px 0;}
 .cc-info-row{display:flex;align-items:center;justify-content:space-between;}
-.cc-src-pill{font-size:10px;padding:1px 6px;border-radius:8px;background:var(--surface2);color:var(--muted2);}
+.cc-src-pill{font-size:10px;padding:1px 6px;border-radius:8px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
 .cc-todo{display:flex;align-items:center;gap:5px;padding:6px 9px;border-radius:7px;font-size:12px;margin-top:7px;}
 .cc-todo.ov{background:rgba(247,111,111,.1);color:#d9534f;}
 .cc-todo.soon{background:rgba(247,147,79,.1);color:#c87531;}
@@ -2520,13 +2520,19 @@ function renderCustCard(c, layer){
   }
   var lastFu=getLastFollowupStr(c);
   var lastFuHtml=lastFu?'<div style="font-size:11px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:5px">'+lastFu+'</div>':'';
+  var rightBadges='';
+  if(c.targetStar)rightBadges+='<span style="font-size:22px;line-height:1">🎯</span>';
+  if(c.vipStar)rightBadges+='<span class="cc-vip-badge">⭐</span>';
   return '<div class="customer-card '+(c.vipStar?'vip-star ':'')+cfg.cls+'" onclick="openCustDetail('+c.id+')">'
-    +'<div class="cc-name-row"><div class="cc-name">'+c.alias+(c.targetStar?' <span style="font-size:13px">🎯</span>':'')+'</div>'+(c.vipStar?'<div class="cc-vip-badge">⭐</div>':'')+'</div>'
+    +'<div class="cc-name-row">'
+    +'<div class="cc-name">'+c.alias+(c.vipStar?' <span class="mark-vip">VIP</span>':'')+'</div>'
+    +(rightBadges?'<div style="display:flex;gap:3px;align-items:center;flex-shrink:0;margin-left:6px">'+rightBadges+'</div>':'')
+    +'</div>'
     +(c.company?'<div style="font-size:11px;color:var(--muted2);margin-bottom:5px">'+(c.company)+(c.country?' · '+c.country:'')+'</div>':'')
     +(prodHtml?'<div class="cc-prod-tags">'+prodHtml+'</div>':'')
     +'<div class="cc-divider"></div>'
     +lastFuHtml
-    +'<div class="cc-info-row"><div>'+starsHtml+'</div>'+(c.source?'<span class="cc-src-pill">'+c.source+'</span>':'')+'</div>'
+    +'<div class="cc-info-row"><div>'+starsHtml+'</div>'+(c.source?'<span class="cc-src-pill">'+c.source+'</span>':'<span style="font-size:10px;color:var(--muted2)">—</span>')+'</div>'
     +todoHtml
     +'</div>';
 }
