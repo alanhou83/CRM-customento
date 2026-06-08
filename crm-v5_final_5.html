@@ -3695,10 +3695,11 @@ function renderMobileCards(page){
           +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+cu.alias+(cu.vipStar?' <span class="mark-vip">VIP</span>':'')+(cu.targetStar?' <span style="font-size:20px">🎯</span>':'')+'</div>'
           +'<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+(cu.company||'—')+'</div>'
           +'<div style="margin-top:3px"><span class="type-tag '+TC[cu.type]+'">'+TL[cu.type]+'</span></div>'
+          +(function(){var lf=getLastFollowupStr(cu);return lf?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">'+lf+'</div>':'';}())
           +'</div>'
           +'<div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;gap:3px;align-items:flex-end">'
           +'<span style="font-size:12px;font-weight:600;color:'+sc+'">★ '+score+'/7</span>'
-          +(function(){var od=cu.followupDate&&cu.followupDate<today();var icon=od?'<span style="font-size:16px">🔔</span> ':'<span style="font-size:9px">📅</span> ';var dc=od?'var(--red)':'var(--muted)';var nc=od?'var(--red)':'var(--green)';if(cu.followupDate&&cu.followupNote)return '<span style="font-size:11px;color:'+dc+';font-weight:'+(od?'600':'400')+'">'+icon+cu.followupDate+'</span><span style="font-size:10px;color:'+nc+'"> 📌 '+cu.followupNote+'</span>';var lf=getLastFollowupStr(cu);if(lf)return '<span style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;display:block;text-align:right">'+lf+'</span>';return '';})()
+          +(function(){if(!cu.followupDate&&!cu.followupNote)return '';var od=cu.followupDate&&cu.followupDate<today();var icon=od?'<span style="font-size:16px">🔔</span> ':'<span style="font-size:9px">📅</span> ';var dc=od?'var(--red)':'var(--muted)';var nc=od?'var(--red)':'var(--green)';if(cu.followupDate)return '<span style="font-size:11px;color:'+dc+';font-weight:'+(od?'600':'400')+'">'+icon+cu.followupDate+'</span>'+(cu.followupNote?'<span style="font-size:10px;color:'+nc+'"> 📌 '+cu.followupNote+'</span>':'');return '<span style="font-size:10px;color:var(--green)">📌 '+cu.followupNote+'</span>';})()
           +'<span style="font-size:10px;color:var(--muted2)">'+cu.person+'</span>'
           +'</div></div>';
       });
