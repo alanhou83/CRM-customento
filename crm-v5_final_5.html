@@ -349,6 +349,8 @@ a{color:var(--accent);text-decoration:none;}
         <option value="">渠道</option>
         <option>Alibaba</option><option>1688</option><option>Customento</option><option>老客户</option><option>笨鸟导入</option><option>WhatsApp</option><option>展会</option><option>其他</option>
       </select>
+      <div class="mobile-chip" id="mb-inq-chip-vip" onclick="toggleInqFilter('alan')">⭐ VIP</div>
+      <div class="mobile-chip" id="mb-inq-chip-chong" onclick="toggleInqFilter('chong')">🎯 冲单</div>
     </div>
     <div style="display:flex;align-items:center;gap:3px;width:calc(100% + 30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
       <input id="search-inq-m" placeholder="🔍 搜索询盘..." oninput="refreshInqActive()" style="flex:1;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;padding:3px 0;min-width:0">
@@ -3290,6 +3292,10 @@ function updateInqFilterUI(){
   if(dhot){if(currentInqFilter.hot)dhot.classList.add('hot-on');else dhot.classList.remove('hot-on');}
   var dov=document.getElementById('btn-inq-ov');
   if(dov){if(currentInqFilter.overdue)dov.classList.add('ov-on');else dov.classList.remove('ov-on');}
+  var mbvip=document.getElementById('mb-inq-chip-vip');
+  if(mbvip){if(currentInqFilter.alan)mbvip.classList.add('vip-on');else mbvip.classList.remove('vip-on');}
+  var mbchong=document.getElementById('mb-inq-chip-chong');
+  if(mbchong){if(currentInqFilter.chong)mbchong.classList.add('chong-on');else mbchong.classList.remove('chong-on');}
 }
 function toggleInqFilter(key){
   currentInqFilter[key]=!currentInqFilter[key];
@@ -4090,6 +4096,7 @@ function mobileChip(el,type){
   if(type==='grade-A'){currentInqFilter.grade='A';}
   else if(type==='overdue'){currentInqFilter.overdue=true;}
   else if(type!=='all'){currentInqFilter.source=type;}
+  updateInqFilterUI();
   refreshInqActive();
 }
 
