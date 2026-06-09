@@ -11,23 +11,26 @@
 - GitHub Pages：https://alanhou83.github.io/CRM-customento/crm-v5_final_5.html
 - 仓库：https://github.com/alanhou83/CRM-customento
 - PWA 已配置：manifest.json / service-worker.js / icon-192.png / icon-512.png
-- 当前 SW 版本：customento-crm-v2
+- 当前 SW 版本：customento-crm-v28
 
 ## 团队成员与权限
 - Alan：管理员，可见所有，可删除/导出/VIP+冲单标记，专属设置页
-- Kelly：销售经理，可见所有，可删除（询盘/客户/订单）
+- Kelly：销售经理，可见所有，可删除（询盘/客户/订单），**可标记询盘VIP**
 - Momi：Alibaba 负责
 - Mille：1688 负责
 - Penny：运营
 - **删除权限**：`canDelete()` 返回 Alan 或 Kelly
+- **询盘VIP权限**：`canInqVip()` 返回 Alan 或 Kelly（客户VIP/冲单仍 Alan 专属）
+- **冲单权限**：`canVip()` 返回 Alan（客户冲单 + 询盘冲单 targetStar 均 Alan 专属）
 
 ## 已完成功能
 - 6个模块：数据看板 / 热点商机 / 询盘列表 / 客户管理 / 销售统计 / 执行中订单
-- 询盘列表：标记列（VIP绿/热点橙/超时红）独立一列
+- 询盘列表：标记列（VIP绿/热点橙/超时红/🎯冲单）独立一列
 - 客户管理：5层分层（核心/重点培养/普通跟踪/沉睡/流失）+ 卡片/列表双视图 + 分批展开
 - 客户详情面板三Tab：客户档案 / 跟进记录（底部固定录入栏）/ 成交统计
 - 快速标签点击直接保存
-- 🎯冲单标签（所有人可加）+ ⭐VIP（Alan专属）
+- 🎯冲单标签：客户冲单（Alan专属）/ 询盘冲单 targetStar（Alan专属）
+- ⭐VIP：客户VIP（Alan专属）/ 询盘VIP（Alan+Kelly）
 - 跟进录入框固定底部
 - 客户列表视图：公司+产品合并一格（1fr撑满），左侧彩色竖线分层，跟进待办列（过期变红）
 - 产品多选标签（getProd/getProdArr 兼容旧字符串数据）
@@ -71,16 +74,59 @@
 - 排序状态变量：`inqTableSort={key:'date',dir:'desc'}` / `inqMobileSort={key:null,dir:'desc'}`
 - 排序优先级：手机端 key≠null 时优先用移动排序，否则用桌面排序
 
+## 询盘芯片快捷筛选
+### 电脑端（询盘筛选栏"清除"按钮右侧）
+- `<button id="btn-inq-vip">⭐ VIP</button>`（alan 键）
+- `<button id="btn-inq-chong">🎯 冲单</button>`（chong 键）
+- `<button id="btn-inq-hot">🔥 热点</button>`（hot 键）
+- `<button id="btn-inq-ov">⚠️ 超时</button>`（overdue 键）
+- CSS激活色：VIP=金色(vip-on) / 冲单=橙色(chong-on) / 热点=橙红(hot-on) / 超时=红色(ov-on)
+
+### 手机端
+- **第一行芯片**：全部/Alibaba/1688/笨鸟/🔥A级/⚠️超时/🎯冲单（id=`mb-inq-chip-chong`）
+- **第二行下拉**：状态/评级/跟单/渠道 + **⭐VIP**（id=`mb-inq-chip-vip`）
+- 🎯冲单 在第一行末尾，使用 `toggleInqFilter('chong')` 独立切换（非 mobileChip 全重置逻辑）
+- ⭐VIP 在第二行末尾，使用 `toggleInqFilter('alan')` 独立切换
+
+### 筛选逻辑函数
+- `currentInqFilter`：对象，键 alan/chong/hot/overdue/source/grade/today
+- `toggleInqFilter(key)`：切换单个键，调 `updateInqFilterUI()` + `refreshInqActive()`
+- `updateInqFilterUI()`：同步电脑端4个芯片按钮 + 手机端2个芯片高亮状态
+- `mobileChip()` 末尾调 `updateInqFilterUI()`：第一行芯片点击时清除VIP/冲单高亮
+- `clearFilters('inq')` 调 `updateInqFilterUI()`：清除按钮同步芯片高亮
+
 ## 询盘手机端筛选（V2）
-- **第一行芯片**：全部/Alibaba/1688/笨鸟/🔥A级/⚠️超时（`mobileChip(el,type)`）
-- **第二行下拉**：状态(`mb-inq-status`) / 评级(`mb-inq-grade`) / 跟单(`mb-inq-person`) / 渠道(`mb-inq-source`)
+- **第一行芯片**：全部/Alibaba/1688/笨鸟/🔥A级/⚠️超时/🎯冲单（`mobileChip` 或 `toggleInqFilter`）
+- **第二行下拉**：状态(`mb-inq-status`) / 评级(`mb-inq-grade`) / 跟单(`mb-inq-person`) / 渠道(`mb-inq-source`) / ⭐VIP
 - **搜索框**：`id="search-inq-m"`，接入 `getFilteredInq()`
-- 点击芯片时自动重置4个下拉为空（避免冲突）
+- 点击第一行普通芯片时自动重置4个下拉+VIP/冲单芯片（via updateInqFilterUI）
 - `getFilteredInq()` 同时读取桌面筛选和手机下拉筛选
+
+## 手机端询盘卡片布局（V2）
+- **名字行**（flex布局，align-items:center）：客户名 + ⭐ + 🔥 + 🎯（22px，排最后最大）
+- **第二行**：备注 / 公司·国家
+- **第三行**（标签行）：渠道 + 状态 + flags（已报价/已打样）
+- **第四行**：最后跟进记录
+- **右侧列**（flex-direction:column，align-items:flex-end）：产品+日期+评级 / **超时** 超时 Momi（超时在人名左侧同行）/ 待办日期 / 待办备注
+- 超时用红色左边框 `border-left:3px solid var(--yellow)`
 
 ## 超时判定逻辑
 - `isOverdue(i)`：状态非"已成单/未成单" 且 最后跟进距今 **≥5天** → 超时
 - 基准：最后一条跟进记录日期，无跟进则用询盘创建日期
+
+## 客户管理卡片视图（V2 重构后）
+- **5个分层Tab**：核心/重点培养/普通跟踪/沉睡/流失（`switchCustCardLayer(layer)`）
+- Tab计数：显示各层总数，含超时⚠数量角标
+- **超时判定阈值（`OVERDUE_DAYS`）**：核心20天/重点30天/普通50天/沉睡90天/流失180天
+- 超时客户：红色边框 `cust-overdue`，优先级高于 VIP 绿色边框
+- VIP客户：绿色边框 `vip-star`（rgba(62,207,142,.45)）
+- **动态评分 `custScoreEff(c)`**：7分制（成单1+复购1+增长1+画像1+活跃1+体量0-2）
+- **动态增长**：`effectiveGrowing(c)` = growing 且 90天内有成交记录（自动关闭）
+- **动态活跃**：`effectiveActiveScore(c)` = activeScore 且未超时（自动关闭）
+- 状态图标：✅成单 / 🔄复购 / 📈增长（动态）/ 💬活跃（动态）/ 🏅️画像匹配（c.match==1）
+- 🎯冲单图标（`c.targetStar`）：右上角大图标（font-size:28px）
+- 排序：`custLayerSort[layer]`，默认按 score 降序
+- 筛选栏芯片：⭐VIP / 🎯冲单 / 🔴超时（`btn-cust-vip/chong/ov`）
 
 ## 执行中订单模块关键设计
 - 电脑端表头排序：日期/客户/金额/交期（`setOrdSort`，3态）
@@ -151,9 +197,10 @@
 - 绝对不能把 HTML 的 fetch 策略改回 `caches.match → fetch` 的缓存优先写法
 - 静态资源（图片/manifest）仍可保持缓存优先
 
-**原则B：不再需要每次推送都 bump CACHE_NAME**
-- 由于 HTML 已是网络优先，内容更新无需升级版本号
-- 只有在 service-worker.js 本身的代码逻辑发生变化时才需要 bump CACHE_NAME
+**原则B：用户看不到更新时，bump CACHE_NAME 强制清缓存**
+- 正常情况浏览器普通刷新即可看到更新（HTML 网络优先）
+- 若用户反映看不到更新，先让用户强制刷新；若无效则 bump CACHE_NAME（v27→v28→v29...）
+- bump 后用户关闭重开 PWA 即可生效
 
 ## 必须遵守的规避规则（代码）
 1. JS 里绝对不能用模板字符串，必须用字符串拼接，否则引号嵌套会导致整个脚本崩溃
@@ -174,9 +221,12 @@
     - opacity:0 / opacity:0.01 覆盖层：iOS 浏览器模式不触发
     - overflow:hidden 父容器：会阻断 iOS 所有 touch 事件，绝对不能用
     - showPicker()：PWA 可用，iOS 浏览器模式不可靠
+14. 手机端卡片名字行有大小不一的 span 时必须用 flex + align-items:center，不能用 vertical-align（会导致行高撑大、文字错位）
+15. toggleInqFilter 类芯片（独立切换）不能放进 mobileChip 同一个 .mobile-chips 容器，否则 querySelectorAll 会误清除高亮；或用不同 class 区分
 
 ## 必须遵守的规避规则（部署）
 - 当前行为：浏览器普通刷新即可看到更新；PWA 关闭重开即可，无需删除重装
+- 若看不到更新：bump CACHE_NAME 强制清缓存（已到 v28）
 
 ## 工作规范
 - 所有改动代码必须先说方案，等确认后再执行
@@ -188,21 +238,15 @@
 - 每次新对话开始前确认项目文件已是最新版本
 
 ## 当前进度（最近完成）
-- 手机端搜索栏全部统一为全宽 border-top 风格（询盘/客户/销售统计/执行订单）
-- 排序按钮统一3态逻辑，取消 ↕ 符号
-- 社媒联系方式加入客户档案（WhatsApp/Facebook/Instagram/Telegram 品牌SVG图标）
-- 询盘状态系统V2重构：6动态状态 + flags里程碑 + 4个Tab（活跃/沉默/成单/失效）
-- 询盘详情面板改为2Tab结构（询盘详情/跟进记录），含待办录入
-- 询盘列表：移除操作列，加待办列，表头+手机端排序（日期/客户/待办）
-- 手机端询盘筛选：芯片+下拉（状态/评级/跟单/渠道）联动，搜索框 id=search-inq-m
-- 超时判定阈值改为5天（≥5天未跟进）
-- 客户成交统计Tab重构（概览紧凑/点行进编辑/删除+退回按钮在modal）
-- 询盘/客户列表+卡片+手机端加入最后一条跟进记录显示
-- 询盘列表/热点商机加入缩略图列（IndexedDB异步加载）
-- 询盘列表电脑端+手机端卡片/列表双视图切换
-- 询盘图片上传：裁切modal（zoom滑块+双指缩放+自由拖拽+白色背景补齐）
-- flag颜色修正：已报价=琥珀色amber，已打样=玫红rose（不与状态色冲突）
-- 热点商机电脑端+手机端显示格式与询盘列表完全统一
+- 客户管理卡片视图V2重构：5层Tab切换、动态评分(7分)、超时红框(分层阈值)、状态图标简化
+- 动态增长(90天无成交自动关)/动态活跃(超时自动关)机制
+- 客户筛选栏：⭐VIP / 🎯冲单 / 🔴超时 芯片按钮
+- 询盘列表：桌面芯片快捷筛选（VIP/冲单/热点/超时）
+- 询盘 targetStar 字段（Alan专属冲单标记）
+- canInqVip()：Kelly 也可标记询盘VIP
+- 手机端询盘第一行加🎯冲单芯片（末尾，独立切换），第二行加⭐VIP芯片
+- 手机端询盘卡片：🎯排在名字行最后(22px)，超时移至右侧跟单人名左侧同行
+- SW 升至 v28（强制清缓存）
 
 ## 询盘图片上传与裁切设计
 - 图片存储：IndexedDB（`crm_inq_images` 库，key=inqId，value=base64 dataUrl），不用 localStorage
@@ -224,6 +268,7 @@
 - `document.querySelector('#detail-body .btn-outline').getAttribute('onclick')` 可看按钮实际 onclick
 - 症状相同但原因不同：editCurrent() 漏处理 sale 类型，而非 z-index 或数据问题
 - 手机端页面不更新 → 检查是否被 `.filters{display:none}` CSS 隐藏，需在 `mh-xxx` 手机 header 里单独加筛选
+- 用户看不到更新但代码已推送 → 先让强制刷新，无效则 bump SW CACHE_NAME
 
 ## 已知未解决 Bug
 ### 待办行日期选择器跨平台问题
@@ -237,3 +282,4 @@
 3. 数据看板优化（待讨论）
 4. Supabase 迁移（后期）
 5. 钉钉 H5 嵌入（后期）
+
