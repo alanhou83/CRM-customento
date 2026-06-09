@@ -2536,7 +2536,7 @@ function renderCustCard(c, layer){
     todoHtml='<div class="cc-todo none"><span style="opacity:.4">—</span><span>暂无待办</span></div>';
   }
   var lastFu=getLastFollowupStr(c);
-  var lastFuHtml=lastFu?'<div style="font-size:11px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:5px">'+lastFu+'</div>':'';
+  var lastFuHtml='<div style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:5px;color:'+(lastFu?'var(--muted2)':'var(--border2)')+'">'+( lastFu||'— 暂无跟进记录')+'</div>';
   return '<div class="customer-card '+(isOv?'cust-overdue ':c.vipStar?'vip-star ':'')+cfg.cls+'" onclick="openCustDetail('+c.id+')">'
     +'<div class="cc-name-row">'
     +'<div class="cc-name">'+c.alias+(c.vipStar?' <span class="mark-vip">VIP</span>':'')+'</div>'
