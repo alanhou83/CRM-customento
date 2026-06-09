@@ -108,6 +108,8 @@ a{color:var(--accent);text-decoration:none;}
 .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px;}
 .customer-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px;cursor:pointer;transition:border-color .2s;}.customer-card:hover{border-color:var(--accent);}
 .customer-card.vip-star{border-color:rgba(62,207,142,.45);}
+.customer-card.cust-overdue{border-color:rgba(247,111,111,.6);}
+.cust-filter-btn.ov-on{background:rgba(247,111,111,.15);border-color:var(--red);color:var(--red);}
 .cc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px;}
 .cc-alias{font-size:15px;font-weight:600;}.cc-company{font-size:11px;color:var(--muted);margin-top:1px;}
 .cc-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:9px;}
@@ -681,6 +683,7 @@ a{color:var(--accent);text-decoration:none;}
       <button class="btn btn-outline btn-sm" onclick="clearFilters('cust')">清除</button>
       <button class="cust-filter-btn" id="btn-cust-vip" onclick="toggleCustVip()">⭐ VIP</button>
       <button class="cust-filter-btn" id="btn-cust-chong" onclick="toggleCustChong()">🎯 冲单</button>
+      <button class="cust-filter-btn" id="btn-cust-ov" onclick="toggleCustOvFilter()">🔴 超时</button>
     </div>
     <div id="cust-card-view">
       <div class="cust-layer-tabs" id="cust-layer-tabs-bar"></div>
@@ -1205,6 +1208,12 @@ function inPeriod(dateStr,period){if(!dateStr)return false;var d=new Date(),y=d.
 function showStrategicCustomers(){custQuickFilters={strategic:true};updateQuickFilterUI();showPage('customers');renderCustomers();if(window.innerWidth<=768)renderMobileCards('cust');}
 function showFormerStrategicCustomers(){custQuickFilters={formerStrategic:true};updateQuickFilterUI();showPage('customers');renderCustomers();if(window.innerWidth<=768)renderMobileCards('cust');}
 function custScore(c){var sz=+c.size;var szScore=sz<=1?0:sz===2?1:2;return +c.ordered+ +c.repurchase+ +c.growing+ +c.match+ +c.activeScore+szScore;}
+var OVERDUE_DAYS={core:20,focus:30,nurture:50,sleeping:90,dead:180};
+function getLastFollowupDate(c){if(!c.followups||!c.followups.length)return null;var last=c.followups[c.followups.length-1];var m=last.match(/^(\d{4}-\d{2}-\d{2})/);return m?m[1]:null;}
+function isCustOverdue(c){var layer=c.layer||getLayer(c);var threshold=OVERDUE_DAYS[layer]||50;var lastDate=getLastFollowupDate(c);if(!lastDate)return true;var diff=Math.round((new Date(today())-new Date(lastDate))/86400000);return diff>=threshold;}
+function effectiveActiveScore(c){return !!c.activeScore&&!isCustOverdue(c);}
+function effectiveGrowing(c){if(!c.growing)return false;var d=new Date();d.setDate(d.getDate()-90);var cutoff=d.toISOString().slice(0,10);return saleRecords.some(function(s){return s.alias===c.alias&&s.date>=cutoff;});}
+function custScoreEff(c){var sz=+c.size;var szScore=sz<=1?0:sz===2?1:2;return +c.ordered+ +c.repurchase+(effectiveGrowing(c)?1:0)+ +c.match+(effectiveActiveScore(c)?1:0)+szScore;}
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
 
 function updateNavCounts(){
@@ -2323,6 +2332,7 @@ function clearProdTags(){
 
 let custView='card';
 var custCardLayer='core';
+var custOvFilter=false;
 let custLayerExpanded={core:true,focus:true,nurture:true,sleeping:true,dead:false};
 let custLayerShown={core:6,focus:6,nurture:6,sleeping:6,dead:6};
 let custLayerSort={core:'score',focus:'score',nurture:'score',sleeping:'followup',dead:'score'};
@@ -2388,7 +2398,7 @@ function getLayer(c){
 
 function sortCustomers(items, sortBy){
   return items.slice().sort(function(a,b){
-    if(sortBy==='score') return custScore(b)-custScore(a);
+    if(sortBy==='score') return custScoreEff(b)-custScoreEff(a);
     if(sortBy==='followup'){
       if(!a.followupDate&&!b.followupDate) return 0;
       if(!a.followupDate) return 1;
@@ -2498,14 +2508,15 @@ function renderCustCard(c, layer){
   var prodArr=getProdArr(c);
   var prodHtml='';
   for(var pi=0;pi<prodArr.length;pi++){prodHtml+='<span class="cc-prod-tag">'+prodArr[pi]+'</span>';}
-  var score=custScore(c);
+  var score=custScoreEff(c);
   var starsHtml='';
   for(var si=1;si<=7;si++){starsHtml+='<span style="color:'+(si<=score?'#c8a84b':'var(--border2)')+'">★</span>';}
+  var isOv=isCustOverdue(c);
   var statusHtml='';
   if(c.ordered==1)statusHtml+='<span style="font-size:13px">✅</span>';
   if(c.repurchase==1)statusHtml+='<span style="font-size:13px">🔄</span>';
-  if(c.growing==1)statusHtml+='<span style="font-size:13px">📈</span>';
-  if(c.activeScore==1)statusHtml+='<span style="font-size:13px">💬</span>';
+  if(effectiveGrowing(c))statusHtml+='<span style="font-size:13px">📈</span>';
+  if(effectiveActiveScore(c))statusHtml+='<span style="font-size:13px">💬</span>';
   if(c.match==1)statusHtml+='<span style="font-size:13px">🏅️</span>';
   var t=today();
   var tmrD=new Date();tmrD.setDate(tmrD.getDate()+1);
@@ -2526,7 +2537,7 @@ function renderCustCard(c, layer){
   }
   var lastFu=getLastFollowupStr(c);
   var lastFuHtml=lastFu?'<div style="font-size:11px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:5px">'+lastFu+'</div>':'';
-  return '<div class="customer-card '+(c.vipStar?'vip-star ':'')+cfg.cls+'" onclick="openCustDetail('+c.id+')">'
+  return '<div class="customer-card '+(isOv?'cust-overdue ':c.vipStar?'vip-star ':'')+cfg.cls+'" onclick="openCustDetail('+c.id+')">'
     +'<div class="cc-name-row">'
     +'<div class="cc-name">'+c.alias+(c.vipStar?' <span class="mark-vip">VIP</span>':'')+'</div>'
     +(c.targetStar?'<span style="font-size:28px;line-height:1;flex-shrink:0;margin-left:6px">🎯</span>':'')
@@ -2598,30 +2609,32 @@ function renderCustomers(){
     if(!allByLayer[custCardLayer]||!allByLayer[custCardLayer].length){
       for(var li=0;li<layerOrder.length;li++){if(allByLayer[layerOrder[li]].length){custCardLayer=layerOrder[li];break;}}
     }
+    var sortVal=custLayerSort[custCardLayer]||'score';
     var tabHtml='';
     for(var lt=0;lt<layerOrder.length;lt++){
       var ll=layerOrder[lt];
       var cnt=allByLayer[ll].length;
+      var ovCnt=allByLayer[ll].filter(isCustOverdue).length;
       tabHtml+='<button class="cust-ltab'+(custCardLayer===ll?' active':'')+'" data-l="'+ll+'" onclick="switchCustCardLayer(\''+ll+'\')">'
-        +layerTabNames[ll]+' <span class="ltab-cnt">'+cnt+'</span></button>';
+        +layerTabNames[ll]+' <span class="ltab-cnt">'+(ovCnt>0&&!custOvFilter?cnt+' <span style="color:var(--red);font-size:9px">'+ovCnt+'⚠</span>':cnt)+'</span></button>';
     }
+    tabHtml+='<button class="cust-filter-btn'+(custOvFilter?' ov-on':'')+'" style="margin-left:6px" onclick="toggleCustOvFilter()">🔴 超时</button>';
+    tabHtml+='<select class="sort-select" style="margin-left:auto" onchange="setSortLayer(\''+custCardLayer+'\',this.value)">'
+      +'<option value="score"'+(sortVal==='score'?' selected':'')+'>★ 评分</option>'
+      +'<option value="followup"'+(sortVal==='followup'?' selected':'')+'>⏰ 跟进</option>'
+      +'<option value="name"'+(sortVal==='name'?' selected':'')+'>A-Z</option>'
+      +'</select>';
     tabBar.innerHTML=tabHtml;
     var activeItems=allByLayer[custCardLayer]||[];
+    if(custOvFilter)activeItems=activeItems.filter(isCustOverdue);
     var shown=custLayerShown[custCardLayer]||DEFAULT_SHOW;
-    var sortVal=custLayerSort[custCardLayer]||'score';
     var sortedItems=sortCustomers(activeItems,sortVal);
     var visibleItems=sortedItems.slice(0,shown);
     var remaining=sortedItems.length-shown;
     if(!activeItems.length){
-      gridWrap.innerHTML='<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">该分层暂无客户</div>';
+      gridWrap.innerHTML='<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">'+(custOvFilter?'该分层无超时客户':'该分层暂无客户')+'</div>';
     } else {
-      var gh='<div style="display:flex;justify-content:flex-end;margin-bottom:10px">'
-        +'<select class="sort-select" onchange="setSortLayer(\''+custCardLayer+'\',this.value)">'
-        +'<option value="score"'+(sortVal==='score'?' selected':'')+'>★ 评分</option>'
-        +'<option value="followup"'+(sortVal==='followup'?' selected':'')+'>⏰ 跟进</option>'
-        +'<option value="name"'+(sortVal==='name'?' selected':'')+'>A-Z</option>'
-        +'</select></div>'
-        +'<div class="card-grid">';
+      var gh='<div class="card-grid">';
       for(var vi=0;vi<visibleItems.length;vi++){gh+=renderCustCard(visibleItems[vi],custCardLayer);}
       gh+='</div>';
       if(remaining>0){gh+='<button class="load-more-btn" onclick="loadMoreLayer(\''+custCardLayer+'\')">展开更多（还有 '+remaining+' 个）</button>';}
@@ -2630,11 +2643,12 @@ function renderCustomers(){
   } else {
     // List view
     const allFiltered=filtered.filter(function(c){
-      if(!layerFilter)return true;
-      return (c.layer||getLayer(c))===layerFilter;
+      if(layerFilter&&(c.layer||getLayer(c))!==layerFilter)return false;
+      if(custOvFilter&&!isCustOverdue(c))return false;
+      return true;
     }).sort(function(a,b){
       var k=custGlobalSort.key;var d=custGlobalSort.dir;var diff=0;
-      if(k==='score')diff=custScore(b)-custScore(a);
+      if(k==='score')diff=custScoreEff(b)-custScoreEff(a);
       else if(k==='todo'){var da=a.followupDate||'9999',db=b.followupDate||'9999';diff=da<db?-1:da>db?1:0;}
       else if(k==='person')diff=(a.person||'').localeCompare(b.person||'');
       else if(k==='alias')diff=a.alias.localeCompare(b.alias);
@@ -2646,7 +2660,7 @@ function renderCustomers(){
     const layerColor={core:'var(--accent2)',focus:'var(--accent)',nurture:'var(--teal)',sleeping:'var(--muted2)',dead:'rgba(247,111,111,.5)'};
     if(!allFiltered.length){body.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">暂无客户</div></div>';return;}
     body.innerHTML=allFiltered.map(function(c){
-      const score=custScore(c);
+      const score=custScoreEff(c);
       const layer=c.layer||getLayer(c);
       const sc=score>=5?'var(--green)':score>=3?'var(--yellow)':'var(--muted)';
       const lc=layerColor[layer]||'var(--border)';
@@ -3252,9 +3266,12 @@ function updateQuickFilterUI(){
   if(dvip){if(custQuickFilters.vip)dvip.classList.add('vip-on');else dvip.classList.remove('vip-on');}
   var dchong=document.getElementById('btn-cust-chong');
   if(dchong){if(custQuickFilters.chong)dchong.classList.add('chong-on');else dchong.classList.remove('chong-on');}
+  var dov=document.getElementById('btn-cust-ov');
+  if(dov){if(custOvFilter)dov.classList.add('ov-on');else dov.classList.remove('ov-on');}
 }
 function toggleCustVip(){custQuickFilters.vip=!custQuickFilters.vip;updateQuickFilterUI();renderCustomers();renderMobileCards('cust');}
 function toggleCustChong(){custQuickFilters.chong=!custQuickFilters.chong;updateQuickFilterUI();renderCustomers();renderMobileCards('cust');}
+function toggleCustOvFilter(){custOvFilter=!custOvFilter;updateQuickFilterUI();renderCustomers();renderMobileCards('cust');}
 function toggleMobileQuickFilter(key){
   custQuickFilters[key]=!custQuickFilters[key];
   updateQuickFilterUI();
