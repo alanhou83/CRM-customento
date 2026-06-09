@@ -331,7 +331,7 @@ a{color:var(--accent);text-decoration:none;}
       <div class="mobile-chip" onclick="mobileChip(this,'笨鸟导入')">笨鸟</div>
       <div class="mobile-chip" onclick="mobileChip(this,'grade-A')">🔥 A级</div>
       <div class="mobile-chip" onclick="mobileChip(this,'overdue')">⚠️ 超时</div>
-      <div class="mobile-chip" id="mb-inq-chip-chong" onclick="toggleInqFilter('chong')" style="font-size:14px;padding:5px 14px;border-color:rgba(255,120,64,.5);color:var(--accent2);font-weight:700">🎯 冲单</div>
+      <div class="mobile-chip" id="mb-inq-chip-chong" onclick="toggleInqFilter('chong')">🎯 冲单</div>
     </div>
     <div class="mobile-chips" style="padding-bottom:6px;margin-top:2px">
       <select id="mb-inq-status" onchange="refreshInqActive()" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
@@ -4118,7 +4118,7 @@ function renderMobileCards(page){
       var todOv=i.followupDate&&i.followupDate<today();
       return '<div style="display:flex;align-items:flex-start;padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;gap:10px;background:var(--surface)'+(ov?';border-left:3px solid var(--yellow)':'')+'" onclick="openInqDetail('+i.id+')">'
         +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+(i.targetStar?' 🎯':'')+(ov?' <span class="mark-overdue" style="font-size:10px;vertical-align:middle">超时</span>':'')+'</div>'
+        +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+(i.targetStar?' <span style="font-size:18px;vertical-align:middle">🎯</span>':'')+(ov?' <span class="mark-overdue" style="font-size:10px;vertical-align:middle">超时</span>':'')+'</div>'
         +(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+i.notes+'</div>':'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+(i.company||'')+(i.country?' · '+i.country:'')+'</div>')
         +'<div style="display:flex;gap:5px;margin-top:3px;flex-wrap:wrap">'
         +'<span class="source-tag">'+i.source+'</span>'
