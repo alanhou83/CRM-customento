@@ -331,6 +331,7 @@ a{color:var(--accent);text-decoration:none;}
       <div class="mobile-chip" onclick="mobileChip(this,'笨鸟导入')">笨鸟</div>
       <div class="mobile-chip" onclick="mobileChip(this,'grade-A')">🔥 A级</div>
       <div class="mobile-chip" onclick="mobileChip(this,'overdue')">⚠️ 超时</div>
+      <div class="mobile-chip" id="mb-inq-chip-chong" onclick="toggleInqFilter('chong')" style="font-size:13px;padding:4px 12px">🎯 冲单</div>
     </div>
     <div class="mobile-chips" style="padding-bottom:6px;margin-top:2px">
       <select id="mb-inq-status" onchange="refreshInqActive()" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;outline:none;font-family:var(--font-body)">
@@ -350,7 +351,6 @@ a{color:var(--accent);text-decoration:none;}
         <option>Alibaba</option><option>1688</option><option>Customento</option><option>老客户</option><option>笨鸟导入</option><option>WhatsApp</option><option>展会</option><option>其他</option>
       </select>
       <div class="mobile-chip" id="mb-inq-chip-vip" onclick="toggleInqFilter('alan')">⭐ VIP</div>
-      <div class="mobile-chip" id="mb-inq-chip-chong" onclick="toggleInqFilter('chong')">🎯 冲单</div>
     </div>
     <div style="display:flex;align-items:center;gap:3px;width:calc(100% + 30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
       <input id="search-inq-m" placeholder="🔍 搜索询盘..." oninput="refreshInqActive()" style="flex:1;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;padding:3px 0;min-width:0">
