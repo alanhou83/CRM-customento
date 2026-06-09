@@ -4118,7 +4118,7 @@ function renderMobileCards(page){
       var todOv=i.followupDate&&i.followupDate<today();
       return '<div style="display:flex;align-items:flex-start;padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;gap:10px;background:var(--surface)'+(ov?';border-left:3px solid var(--yellow)':'')+'" onclick="openInqDetail('+i.id+')">'
         +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+(ov?' <span class="mark-overdue" style="font-size:10px;vertical-align:middle">超时</span>':'')+(i.targetStar?' <span style="font-size:22px;vertical-align:middle;line-height:1">🎯</span>':'')+'</div>'
+        +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:3px">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+(ov?'<span class="mark-overdue" style="font-size:10px">超时</span>':'')+(i.targetStar?'<span style="font-size:22px;line-height:1">🎯</span>':'')+'</div>'
         +(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+i.notes+'</div>':'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+(i.company||'')+(i.country?' · '+i.country:'')+'</div>')
         +'<div style="display:flex;gap:5px;margin-top:3px;flex-wrap:wrap">'
         +'<span class="source-tag">'+i.source+'</span>'
