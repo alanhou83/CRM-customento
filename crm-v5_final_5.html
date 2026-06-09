@@ -4118,13 +4118,14 @@ function renderMobileCards(page){
       var todOv=i.followupDate&&i.followupDate<today();
       return '<div style="display:flex;align-items:flex-start;padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;gap:10px;background:var(--surface)'+(ov?';border-left:3px solid var(--yellow)':'')+'" onclick="openInqDetail('+i.id+')">'
         +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:3px">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+(ov?'<span class="mark-overdue" style="font-size:10px">超时</span>':'')+(i.targetStar?'<span style="font-size:22px;line-height:1">🎯</span>':'')+'</div>'
+        +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:3px">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+(i.targetStar?'<span style="font-size:22px;line-height:1">🎯</span>':'')+'</div>'
         +(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+i.notes+'</div>':'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+(i.company||'')+(i.country?' · '+i.country:'')+'</div>')
-        +'<div style="display:flex;gap:5px;margin-top:3px;flex-wrap:wrap">'
+        +'<div style="display:flex;gap:5px;margin-top:3px;flex-wrap:wrap;align-items:center">'
         +'<span class="source-tag">'+i.source+'</span>'
         +'<span class="status-badge '+SC[i.status]+'">'+i.status+'</span>'
         +(tf?'<span style="font-size:10px;color:var(--yellow);font-weight:600">⏰今日</span>':'')
         +(i.flags&&i.flags.length?i.flags.map(function(f){var fc=f==='已报价'?'background:rgba(192,130,0,.18);color:#b87800':'background:rgba(210,55,115,.18);color:#c43270';return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;'+fc+'">✓ '+f+'</span>';}).join(''):'')
+        +(ov?'<span class="mark-overdue" style="font-size:10px;margin-left:auto">超时</span>':'')
         +'</div>'
         +(function(){var lf=getLastFollowupStr(i);return lf?'<div style="font-size:10px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+lf+'</div>':'';}())
         +'</div>'
