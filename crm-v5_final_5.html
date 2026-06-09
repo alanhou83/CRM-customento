@@ -4134,8 +4134,7 @@ function renderMobileCards(page){
         +'<span style="font-size:10px;color:var(--muted2)">'+i.date+'</span>'
         +'<span class="badge '+GC[i.grade]+'">'+i.grade+'级</span>'
         +'</div>'
-        +(ov?'<span class="mark-overdue" style="font-size:10px">超时</span>':'')
-        +'<div style="font-size:10px;color:var(--muted)">'+i.person+'</div>'
+        +'<div style="display:flex;align-items:center;gap:4px;justify-content:flex-end">'+(ov?'<span class="mark-overdue" style="font-size:10px">超时</span>':'')+'<span style="font-size:10px;color:var(--muted)">'+i.person+'</span></div>'
         +(i.followupDate?'<div style="font-size:10px;color:'+(todOv?'var(--red)':'var(--muted)')+'">'+(todOv?'🔔 ':'📅 ')+i.followupDate+'</div>':'')
         +(i.followupNote?'<div style="font-size:10px;color:'+(todOv?'var(--red)':'var(--green)')+'">📌 '+i.followupNote+'</div>':'')
         +'</div></div>';
