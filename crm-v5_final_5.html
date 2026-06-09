@@ -649,18 +649,18 @@ a{color:var(--accent);text-decoration:none;}
   <div class="page-content">
     <div class="filters">
       <div class="search-sort-wrap">
-        <input id="search-cust" placeholder="🔍 搜索代号/公司..." oninput="renderCustomers()">
+        <input id="search-cust" placeholder="🔍 搜索代号/公司..." oninput="renderCustomers()" style="width:150px">
       </div>
-      <select class="filter-select" id="cf-layer" onchange="renderCustomers()">
-        <option value="">所有分层</option>
-        <option value="core">🏆 核心客户</option>
-        <option value="focus">🌳 重点培养</option>
-        <option value="nurture">🔄 普通跟踪</option>
-        <option value="sleeping">💤 沉睡客户</option>
-        <option value="dead">☠️ 流失客户</option>
+      <select class="filter-select" id="cf-layer" onchange="renderCustomers()" style="width:88px;font-size:12px;padding:5px 6px">
+        <option value="">分层</option>
+        <option value="core">🏆 核心</option>
+        <option value="focus">🌳 重点</option>
+        <option value="nurture">🔄 普通</option>
+        <option value="sleeping">💤 沉睡</option>
+        <option value="dead">☠️ 流失</option>
       </select>
-      <select class="filter-select" id="cf-type" onchange="renderCustomers()">
-        <option value="">所有类型</option>
+      <select class="filter-select" id="cf-type" onchange="renderCustomers()" style="width:84px;font-size:12px;padding:5px 6px">
+        <option value="">类型</option>
         <option value="tourist">旅游纪念品</option>
         <option value="ecom">跨境电商</option>
         <option value="custom">来图定制</option>
@@ -668,16 +668,16 @@ a{color:var(--accent);text-decoration:none;}
         <option value="promo">促销品</option>
         <option value="personal">个人定制</option>
       </select>
-      <select class="filter-select" id="cf-person" onchange="renderCustomers()">
-        <option value="">所有负责人</option>
+      <select class="filter-select" id="cf-person" onchange="renderCustomers()" style="width:84px;font-size:12px;padding:5px 6px">
+        <option value="">负责人</option>
         <option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option>
       </select>
-      <select class="filter-select" id="cf-source" onchange="renderCustomers()">
-        <option value="">所有来源</option>
+      <select class="filter-select" id="cf-source" onchange="renderCustomers()" style="width:80px;font-size:12px;padding:5px 6px">
+        <option value="">来源</option>
         <option>Alibaba</option><option>1688</option><option>Customento</option><option>老客户</option><option>笨鸟导入</option><option>WhatsApp</option><option>展会</option><option>其他</option>
       </select>
-      <select class="filter-select" id="cf-size" onchange="renderCustomers()">
-        <option value="">客户体量</option>
+      <select class="filter-select" id="cf-size" onchange="renderCustomers()" style="width:72px;font-size:12px;padding:5px 6px">
+        <option value="">体量</option>
         <option value="4">XL</option><option value="3">L</option><option value="2">M</option><option value="1">S</option><option value="0">XS</option>
       </select>
       <button class="btn btn-outline btn-sm" onclick="clearFilters('cust')">清除</button>
@@ -2618,7 +2618,6 @@ function renderCustomers(){
       tabHtml+='<button class="cust-ltab'+(custCardLayer===ll?' active':'')+'" data-l="'+ll+'" onclick="switchCustCardLayer(\''+ll+'\')">'
         +layerTabNames[ll]+' <span class="ltab-cnt">'+(ovCnt>0&&!custOvFilter?cnt+' <span style="color:var(--red);font-size:9px">'+ovCnt+'⚠</span>':cnt)+'</span></button>';
     }
-    tabHtml+='<button class="cust-filter-btn'+(custOvFilter?' ov-on':'')+'" style="margin-left:6px" onclick="toggleCustOvFilter()">🔴 超时</button>';
     tabHtml+='<select class="sort-select" style="margin-left:auto" onchange="setSortLayer(\''+custCardLayer+'\',this.value)">'
       +'<option value="score"'+(sortVal==='score'?' selected':'')+'>★ 评分</option>'
       +'<option value="followup"'+(sortVal==='followup'?' selected':'')+'>⏰ 跟进</option>'
