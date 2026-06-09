@@ -110,6 +110,7 @@ a{color:var(--accent);text-decoration:none;}
 .customer-card.vip-star{border-color:rgba(62,207,142,.45);}
 .customer-card.cust-overdue{border-color:rgba(247,111,111,.6);}
 .cust-filter-btn.ov-on{background:rgba(247,111,111,.15);border-color:var(--red);color:var(--red);}
+.cust-filter-btn.hot-on{background:rgba(247,147,79,.2);border-color:var(--accent2);color:var(--accent2);}
 .cc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px;}
 .cc-alias{font-size:15px;font-weight:600;}.cc-company{font-size:11px;color:var(--muted);margin-top:1px;}
 .cc-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:9px;}
@@ -568,6 +569,10 @@ a{color:var(--accent);text-decoration:none;}
         <select class="filter-select" id="f-grade" onchange="refreshInqActive()"><option value="">所有评级</option><option value="A">A级</option><option value="B">B级</option><option value="C">C级</option><option value="D">D级</option></select>
         <select class="filter-select" id="f-person" onchange="refreshInqActive()"><option value="">所有负责人</option><option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option></select>
         <button class="btn btn-outline btn-sm" onclick="clearFilters('inq')">清除</button>
+        <button class="cust-filter-btn" id="btn-inq-vip" onclick="toggleInqFilter('alan')">⭐ VIP</button>
+        <button class="cust-filter-btn" id="btn-inq-chong" onclick="toggleInqFilter('chong')">🎯 冲单</button>
+        <button class="cust-filter-btn" id="btn-inq-hot" onclick="toggleInqFilter('hot')">🔥 热点</button>
+        <button class="cust-filter-btn" id="btn-inq-ov" onclick="toggleInqFilter('overdue')">⚠️ 超时</button>
       </div>
       <div id="inq-notice"></div>
       <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
@@ -1201,6 +1206,7 @@ function canDelete(){return currentUser==='Alan'||currentUser==='Kelly';}
 function canExport(){return currentUser==='Alan';}
 function canStar(){return true;}
 function canVip(){return currentUser==='Alan';}
+function canInqVip(){return currentUser==='Alan'||currentUser==='Kelly';}
 function _p2(n){return n<10?'0'+n:''+n;}
 function isStrategicCust(c){var layer=c.layer||getLayer(c);return c.type==='tourist'&&!!c.vipStar&&!!c.targetStar&&+c.repurchase===1&&+c.match===1&&layer!=='sleeping'&&layer!=='dead';}
 function isFormerStrategicCust(c){var layer=c.layer||getLayer(c);return c.type==='tourist'&&!!c.vipStar&&!!c.targetStar&&+c.repurchase===1&&+c.match===1&&(layer==='sleeping'||layer==='dead');}
@@ -1267,7 +1273,7 @@ function filterNav(type,val){
 function resetInqFilters(){['search-inq','f-status','f-source','f-grade','f-person'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('inq-title').textContent='询盘列表';document.getElementById('inq-sub').textContent='全部渠道';}
 
 function clearFilters(type){
-  if(type==='inq'){currentInqFilter={};resetInqFilters();refreshInqActive();}
+  if(type==='inq'){currentInqFilter={};resetInqFilters();updateInqFilterUI();refreshInqActive();}
   else if(type==='hot'){['search-hot','fh-source','fh-person'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderHot();}
   else if(type==='cust'){['search-cust','cf-layer','cf-type','cf-person','cf-size','cf-source'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});custQuickFilters={};updateQuickFilterUI();renderCustomers();}
   else if(type==='old'){['search-old','of-year','of-currency','of-person','of-quarter'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderOldStats();}
@@ -2233,6 +2239,8 @@ function getFilteredInq(){
     if(currentInqFilter.today&&!isTodayFu(i))return false;
     if(currentInqFilter.overdue&&!isOverdue(i))return false;
     if(currentInqFilter.alan&&!i.vipStar)return false;
+    if(currentInqFilter.hot&&!i.isHot)return false;
+    if(currentInqFilter.chong&&!i.targetStar)return false;
     if(search&&!i.alias.toLowerCase().includes(search)&&!(i.company||'').toLowerCase().includes(search)&&!i.product.toLowerCase().includes(search))return false;
     if(mobileSearch&&!i.alias.toLowerCase().includes(mobileSearch)&&!(i.company||'').toLowerCase().includes(mobileSearch)&&!i.product.toLowerCase().includes(mobileSearch))return false;
     if(status&&i.status!==status)return false;
@@ -2270,6 +2278,7 @@ function renderInquiries(){
     let marks='<div class="marks-cell">';
     if(i.vipStar) marks+='<span class="mark-vip">VIP</span>';
     if(i.isHot) marks+='<span class="mark-hot">热点</span>';
+    if(i.targetStar) marks+='<span style="font-size:14px">🎯</span>';
     if(ov) marks+='<span class="mark-overdue">超时</span>';
     marks+='</div>';
     var lastFu=getLastFollowupStr(i);
@@ -2902,9 +2911,10 @@ function openInqDetail(id){
   currentDetailId=id;currentDetailType='inquiry';
   document.getElementById('dp-title').innerHTML=i.alias+(i.vipStar?' <span class="mark-vip">VIP</span>':'')+(i.isHot?' <span class="mark-hot">热点</span>':'');
   document.getElementById('dp-sub').textContent=(i.company||'')+(i.country?' · '+i.country:'');
-  document.getElementById('dp-star-btn').style.display=canVip()?'':'none';
+  document.getElementById('dp-star-btn').style.display=canInqVip()?'':'none';
   document.getElementById('dp-star-btn').textContent=i.vipStar?'取消VIP':'⭐ VIP';
-  document.getElementById('dp-target-btn').style.display='none';
+  document.getElementById('dp-target-btn').style.display=canVip()?'':'none';
+  document.getElementById('dp-target-btn').textContent=i.targetStar?'取消冲单':'🎯 冲单';
 
   /* 状态快速切换栏（动态状态，第一类） */
   var statusColors={
@@ -3271,6 +3281,22 @@ function updateQuickFilterUI(){
 function toggleCustVip(){custQuickFilters.vip=!custQuickFilters.vip;updateQuickFilterUI();renderCustomers();renderMobileCards('cust');}
 function toggleCustChong(){custQuickFilters.chong=!custQuickFilters.chong;updateQuickFilterUI();renderCustomers();renderMobileCards('cust');}
 function toggleCustOvFilter(){custOvFilter=!custOvFilter;updateQuickFilterUI();renderCustomers();renderMobileCards('cust');}
+function updateInqFilterUI(){
+  var dvip=document.getElementById('btn-inq-vip');
+  if(dvip){if(currentInqFilter.alan)dvip.classList.add('vip-on');else dvip.classList.remove('vip-on');}
+  var dchong=document.getElementById('btn-inq-chong');
+  if(dchong){if(currentInqFilter.chong)dchong.classList.add('chong-on');else dchong.classList.remove('chong-on');}
+  var dhot=document.getElementById('btn-inq-hot');
+  if(dhot){if(currentInqFilter.hot)dhot.classList.add('hot-on');else dhot.classList.remove('hot-on');}
+  var dov=document.getElementById('btn-inq-ov');
+  if(dov){if(currentInqFilter.overdue)dov.classList.add('ov-on');else dov.classList.remove('ov-on');}
+}
+function toggleInqFilter(key){
+  currentInqFilter[key]=!currentInqFilter[key];
+  if(!currentInqFilter[key])delete currentInqFilter[key];
+  updateInqFilterUI();
+  refreshInqActive();
+}
 function toggleMobileQuickFilter(key){
   custQuickFilters[key]=!custQuickFilters[key];
   updateQuickFilterUI();
@@ -3511,14 +3537,14 @@ function editCurrent(){if(!currentDetailId)return;const _id=currentDetailId,_typ
 
 function toggleStar(){
   if(!currentDetailId)return;
-  if(currentDetailType==='inquiry'){const i=inquiries.find(x=>x.id===currentDetailId);if(i&&canVip()){i.vipStar=!i.vipStar;saveAll();openInqDetail(currentDetailId);refreshAll();toast(i.vipStar?'✅ 已标记VIP':'已取消VIP');}}
+  if(currentDetailType==='inquiry'){const i=inquiries.find(x=>x.id===currentDetailId);if(i&&canInqVip()){i.vipStar=!i.vipStar;saveAll();openInqDetail(currentDetailId);refreshAll();toast(i.vipStar?'✅ 已标记VIP':'已取消VIP');}}
   else if(currentDetailType==='customer'){const c=customers.find(x=>x.id===currentDetailId);if(c&&canVip()){c.vipStar=!c.vipStar;saveAll();openCustDetail(currentDetailId);refreshAll();toast(c.vipStar?'✅ 已标记VIP':'已取消VIP');}}
 }
 
 function toggleTarget(){
-  if(!currentDetailId||currentDetailType!=='customer')return;
-  const c=customers.find(x=>x.id===currentDetailId);
-  if(c&&canVip()){c.targetStar=!c.targetStar;saveAll();openCustDetail(currentDetailId);refreshAll();toast(c.targetStar?'🎯 已标记冲单':'已取消冲单');}
+  if(!currentDetailId)return;
+  if(currentDetailType==='inquiry'){const i=inquiries.find(x=>x.id===currentDetailId);if(i&&canVip()){i.targetStar=!i.targetStar;saveAll();openInqDetail(currentDetailId);refreshAll();toast(i.targetStar?'🎯 已标记冲单':'已取消冲单');}}
+  else if(currentDetailType==='customer'){const c=customers.find(x=>x.id===currentDetailId);if(c&&canVip()){c.targetStar=!c.targetStar;saveAll();openCustDetail(currentDetailId);refreshAll();toast(c.targetStar?'🎯 已标记冲单':'已取消冲单');}}
 }
 
 function addFollowup(){
@@ -4085,7 +4111,7 @@ function renderMobileCards(page){
       var todOv=i.followupDate&&i.followupDate<today();
       return '<div style="display:flex;align-items:flex-start;padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;gap:10px;background:var(--surface)'+(ov?';border-left:3px solid var(--yellow)':'')+'" onclick="openInqDetail('+i.id+')">'
         +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+(ov?' <span class="mark-overdue" style="font-size:10px;vertical-align:middle">超时</span>':'')+'</div>'
+        +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.alias+(i.vipStar?' ⭐':'')+(i.isHot?' 🔥':'')+(i.targetStar?' 🎯':'')+(ov?' <span class="mark-overdue" style="font-size:10px;vertical-align:middle">超时</span>':'')+'</div>'
         +(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+i.notes+'</div>':'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">'+(i.company||'')+(i.country?' · '+i.country:'')+'</div>')
         +'<div style="display:flex;gap:5px;margin-top:3px;flex-wrap:wrap">'
         +'<span class="source-tag">'+i.source+'</span>'
