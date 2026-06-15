@@ -1222,7 +1222,7 @@ function isCustOverdue(c){var layer=c.layer||getLayer(c);var threshold=OVERDUE_D
 function effectiveActiveScore(c){return !!c.activeScore&&!isCustOverdue(c);}
 function effectiveGrowing(c){if(!c.growing)return false;var d=new Date();d.setDate(d.getDate()-90);var cutoff=d.toISOString().slice(0,10);return saleRecords.some(function(s){return s.alias===c.alias&&s.date>=cutoff;});}
 function custScoreEff(c){var sz=+c.size;var szScore=sz<=1?0:sz===2?1:2;return +c.ordered+ +c.repurchase+(effectiveGrowing(c)?1:0)+ +c.match+(effectiveActiveScore(c)?1:0)+szScore;}
-function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
+function toast(msg,dur){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),dur||2500);}
 
 function updateNavCounts(){
   const myInq=inquiries.filter(i=>canSeeInq(i));
@@ -2858,7 +2858,7 @@ function openOrderDetail(id){
     +'</div>'
     +'<div style="display:flex;gap:8px;margin-top:8px">'
     +'<button class="btn btn-outline btn-sm" onclick="editOrder('+o.id+');closeDetail()">编辑</button>'
-    +'<button class="btn btn-green btn-sm" onclick="completeOrder('+o.id+');closeDetail()">✓ 标记完成</button>'
+    +'<button class="btn btn-danger btn-sm" onclick="completeOrder('+o.id+');closeDetail()">✓ 标记完成</button>'
     +'</div>';
 
   /* Tab2：跟进记录 */
@@ -2901,7 +2901,9 @@ function openOrderDetail(id){
 }
 function quickOrdStage(ordId,stage){
   var o=orders.find(function(x){return x.id===ordId;});if(!o)return;
-  o.stage=stage;saveAll();openOrderDetail(ordId);refreshAll();toast('阶段已更新：'+stage);
+  o.stage=stage;saveAll();openOrderDetail(ordId);refreshAll();
+  if(stage==='已发货'){toast('已发货 ✓ — 记得点「标记完成」才会录入销售统计',4000);}
+  else{toast('阶段已更新：'+stage);}
 }
 function saveOrdTodo(ordId){
   var o=orders.find(function(x){return x.id===ordId;});if(!o)return;
