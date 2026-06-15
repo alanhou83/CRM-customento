@@ -2832,24 +2832,89 @@ function openOrderDetail(id){
   document.getElementById('dp-title').textContent=o.alias+' — 订单';
   document.getElementById('dp-sub').textContent=o.product+' · '+fmtAmt(o.amount,o.currency);
   document.getElementById('dp-star-btn').style.display='none';
-  var html='<div class="detail-section"><div class="detail-section-title">订单信息</div>'
+  document.getElementById('dp-target-btn').style.display='none';
+
+  /* 阶段快速切换 */
+  var stages=['等待打样','打样中','客户确认样品','生产中','待发货','已发货'];
+  var stageBar='<div style="display:flex;flex-wrap:wrap;gap:6px;padding:10px 0 4px 0">';
+  stages.forEach(function(s){
+    var isActive=o.stage===s;
+    var sty=isActive?getOrdStageStyle(s):'';
+    stageBar+='<button class="inq-status-btn" style="'+sty+'" onclick="quickOrdStage('+id+',\''+s+'\')">'+s+'</button>';
+  });
+  stageBar+='</div>';
+
+  /* Tab1：订单详情 */
+  var tab1='<div class="detail-section">'+stageBar+'</div>';
+  tab1+='<div class="detail-section"><div class="detail-section-title">订单信息</div>'
     +'<div class="detail-row"><span class="detail-key">下单日期</span><span class="detail-val">'+o.date+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">客户代号</span><span class="detail-val">'+o.alias+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">产品</span><span class="detail-val">'+o.product+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">数量</span><span class="detail-val">'+(o.qty||'—')+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">订单金额</span><span class="detail-val" style="color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(o.amount,o.currency)+'</span></div>'
-    +'<div class="detail-row"><span class="detail-key">当前阶段</span><span class="detail-val"><span class="status-badge s-following">'+o.stage+'</span></span></div>'
     +'<div class="detail-row"><span class="detail-key">预计交期</span><span class="detail-val">'+(o.delivery||'未设定')+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">负责人</span><span class="detail-val">'+o.person+'</span></div>'
     +(o.notes?'<div class="detail-row"><span class="detail-key">备注</span><span class="detail-val">'+o.notes+'</span></div>':'')
     +'</div>'
     +'<div style="display:flex;gap:8px;margin-top:8px">'
     +'<button class="btn btn-outline btn-sm" onclick="editOrder('+o.id+');closeDetail()">编辑</button>'
-    +'<button class="btn btn-green btn-sm" onclick="completeOrder('+o.id+');closeDetail()">✓ 标记完成</button>'
+    +'<button class="btn btn-green btn-sm" onclick="completeOrder('+o.id+')">✓ 标记完成</button>'
     +'</div>';
-  document.getElementById('detail-body').innerHTML='<div class="detail-body-inner">'+html+'</div>';
-  var dpTabs=document.getElementById('dp-tabs');if(dpTabs)dpTabs.style.display='none';
+
+  /* Tab2：跟进记录 */
+  var fuHtml=renderFollowups(o.followups||[]);
+  var tab2=''
+    +'<div style="display:flex;gap:7px;margin-bottom:8px;align-items:center">'
+    +'<div style="display:flex;flex:1;border:1px solid var(--border);border-radius:8px;background:var(--surface2)">'
+    +'<div style="display:flex;align-items:center;flex-shrink:0;position:relative">'
+    +'<input type="date" id="dp-todo-date-picker" value="'+(o.followupDate||'')+'" placeholder="📅 日期" style="border:none;background:transparent;color:'+(o.followupDate?'var(--text)':'var(--muted)')+';font-size:12px;padding:7px 4px 7px 8px;width:110px;outline:none;cursor:pointer;min-width:0">'
+    +(o.followupDate?'<span onclick="clearOrdTodoDate('+o.id+')" style="font-size:11px;color:var(--muted);cursor:pointer;padding:0 6px 0 2px;line-height:1;flex-shrink:0" title="清除日期">✕</span>':'')
+    +'</div>'
+    +'<div style="width:1px;background:var(--border);margin:6px 0;flex-shrink:0"></div>'
+    +'<input id="dp-todo-note" value="'+(o.followupNote||'')+'" placeholder="待办内容..." style="border:none;background:transparent;color:var(--text);font-size:12px;padding:7px 8px;flex:1;outline:none;min-width:0">'
+    +'</div>'
+    +'<button class="btn btn-sm" onclick="saveOrdTodo('+o.id+')" style="background:rgba(62,207,142,.2);color:var(--green);border:1px solid var(--green);white-space:nowrap;flex-shrink:0">待办</button>'
+    +'</div>'
+    +'<div style="display:flex;gap:7px;margin-bottom:16px">'
+    +'<input class="form-input" id="dp-fu-input" placeholder="记录本次跟进内容..." style="flex:1;font-size:13px">'
+    +'<button class="btn btn-primary btn-sm" onclick="addFollowup()">添加</button>'
+    +'</div>'
+    +'<div id="dp-followups">'+fuHtml+'</div>';
+
+  /* Tab标签 */
+  var dpTabs=document.getElementById('dp-tabs');
+  if(dpTabs){
+    dpTabs.style.display='flex';
+    var tabProfile=document.getElementById('dp-tab-profile');
+    var tabFollowup=document.getElementById('dp-tab-followup');
+    var tabSales=document.getElementById('dp-tab-sales');
+    if(tabProfile)tabProfile.textContent='订单详情';
+    if(tabFollowup)tabFollowup.textContent='跟进记录';
+    if(tabSales)tabSales.style.display='none';
+  }
+  document.getElementById('detail-body').innerHTML=
+    '<div class="dp-tab-content active" id="dp-content-profile">'+tab1+'</div>'
+    +'<div class="dp-tab-content" id="dp-content-followup">'+tab2+'</div>';
+  document.getElementById('dp-followup-bar').style.display='none';
+  switchDpTab('profile');
   document.getElementById('detail-panel').classList.add('open');
+}
+function quickOrdStage(ordId,stage){
+  var o=orders.find(function(x){return x.id===ordId;});if(!o)return;
+  o.stage=stage;saveAll();openOrderDetail(ordId);refreshAll();toast('阶段已更新：'+stage);
+}
+function saveOrdTodo(ordId){
+  var o=orders.find(function(x){return x.id===ordId;});if(!o)return;
+  var dateEl=document.getElementById('dp-todo-date-picker');
+  var noteEl=document.getElementById('dp-todo-note');
+  var dateVal=dateEl?dateEl.value:'';
+  var noteVal=noteEl?noteEl.value.trim():'';
+  if(!dateVal||!noteVal){o.followupDate='';o.followupNote='';saveAll();refreshAll();toast('⚠️ 日期和内容需同时填写，待办已清除');return;}
+  o.followupDate=dateVal;o.followupNote=noteVal;saveAll();refreshAll();toast('待办已保存 ✓');
+}
+function clearOrdTodoDate(ordId){
+  var o=orders.find(function(x){return x.id===ordId;});if(!o)return;
+  o.followupDate='';o.followupNote='';saveAll();refreshAll();openOrderDetail(ordId);switchDpTab('followup');toast('待办已清除');
 }
 
 function openSaleDetail(id){
@@ -3559,6 +3624,7 @@ function addFollowup(){
   const entry=today()+' ['+currentUser+'] '+text;
   if(currentDetailType==='inquiry'){const i=inquiries.find(x=>x.id===currentDetailId);if(i){if(!i.followups)i.followups=[];i.followups.push(entry);saveAll();openInqDetail(currentDetailId);switchDpTab('followup');refreshAll();toast('跟进记录已添加 ✓');}}
   else if(currentDetailType==='customer'){const c=customers.find(x=>x.id===currentDetailId);if(c){if(!c.followups)c.followups=[];c.followups.push(entry);saveAll();openCustDetail(currentDetailId);switchDpTab('followup');refreshAll();toast('跟进记录已添加 ✓');}}
+  else if(currentDetailType==='order'){const o=orders.find(x=>x.id===currentDetailId);if(o){if(!o.followups)o.followups=[];o.followups.push(entry);saveAll();openOrderDetail(currentDetailId);switchDpTab('followup');refreshAll();toast('跟进记录已添加 ✓');}}
 }
 
 function openModal(id){document.getElementById(id).classList.add('open');}

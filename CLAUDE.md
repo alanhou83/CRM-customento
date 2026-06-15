@@ -247,6 +247,7 @@
 - 手机端询盘第一行加🎯冲单芯片（末尾，独立切换），第二行加⭐VIP芯片
 - 手机端询盘卡片：🎯排在名字行最后(22px)，超时移至右侧跟单人名左侧同行
 - SW 升至 v28（强制清缓存）
+- **修复**：询盘已成单后"转为客户"按钮失效 → 改用 `i.custConverted=true` 专用字段判断，不再与 `i.archived` 混用
 
 ## 询盘图片上传与裁切设计
 - 图片存储：IndexedDB（`crm_inq_images` 库，key=inqId，value=base64 dataUrl），不用 localStorage
