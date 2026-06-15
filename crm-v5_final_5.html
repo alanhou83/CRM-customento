@@ -2858,7 +2858,7 @@ function openOrderDetail(id){
     +'</div>'
     +'<div style="display:flex;gap:8px;margin-top:8px">'
     +'<button class="btn btn-outline btn-sm" onclick="editOrder('+o.id+');closeDetail()">编辑</button>'
-    +'<button class="btn btn-green btn-sm" onclick="completeOrder('+o.id+')">✓ 标记完成</button>'
+    +'<button class="btn btn-green btn-sm" onclick="completeOrder('+o.id+');closeDetail()">✓ 标记完成</button>'
     +'</div>';
 
   /* Tab2：跟进记录 */
