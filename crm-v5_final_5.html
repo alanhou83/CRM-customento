@@ -2912,7 +2912,7 @@ function saveOrdTodo(ordId){
   var dateVal=dateEl?dateEl.value:'';
   var noteVal=noteEl?noteEl.value.trim():'';
   if(!dateVal||!noteVal){o.followupDate='';o.followupNote='';saveAll();refreshAll();toast('⚠️ 日期和内容需同时填写，待办已清除');return;}
-  o.followupDate=dateVal;o.followupNote=noteVal;saveAll();refreshAll();toast('待办已保存 ✓');
+  o.followupDate=dateVal;o.followupNote=noteVal;saveAll();refreshAll();openOrderDetail(ordId);switchDpTab('followup');toast('待办已保存 ✓');
 }
 function clearOrdTodoDate(ordId){
   var o=orders.find(function(x){return x.id===ordId;});if(!o)return;
@@ -3458,8 +3458,7 @@ function saveTodo(custId){
   }
   c.followupDate=dateVal;
   c.followupNote=noteVal;
-  saveAll();
-  refreshAll();
+  saveAll();refreshAll();openCustDetail(custId);switchDpTab('followup');
   toast('待办已保存 ✓');
 }
 
@@ -3478,7 +3477,7 @@ function saveInqTodo(inqId){
     return;
   }
   i.followupDate=dateVal;i.followupNote=noteVal;
-  saveAll();refreshAll();
+  saveAll();refreshAll();openInqDetail(inqId);switchDpTab('followup');
   toast('待办已保存 ✓');
 }
 
