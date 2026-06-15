@@ -2843,6 +2843,7 @@ function openOrderDetail(id){
     stageBar+='<button class="inq-status-btn" style="'+sty+'" onclick="quickOrdStage('+id+',\''+s+'\')">'+s+'</button>';
   });
   stageBar+='</div>';
+  if(o.stage==='已发货'){stageBar+='<div style="font-size:12px;color:var(--yellow);background:rgba(247,186,79,.12);padding:7px 10px;border-radius:6px;border-left:3px solid var(--yellow);margin-top:4px">📦 已发货 — 点下方「✓ 标记完成」将订单录入销售统计</div>';}
 
   /* Tab1：订单详情 */
   var tab1='<div class="detail-section">'+stageBar+'</div>';
@@ -2902,8 +2903,7 @@ function openOrderDetail(id){
 function quickOrdStage(ordId,stage){
   var o=orders.find(function(x){return x.id===ordId;});if(!o)return;
   o.stage=stage;saveAll();openOrderDetail(ordId);refreshAll();
-  if(stage==='已发货'){toast('已发货 ✓ — 记得点「标记完成」才会录入销售统计',4000);}
-  else{toast('阶段已更新：'+stage);}
+  toast('阶段已更新：'+stage);
 }
 function saveOrdTodo(ordId){
   var o=orders.find(function(x){return x.id===ordId;});if(!o)return;
