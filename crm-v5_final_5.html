@@ -2192,6 +2192,7 @@ function convertInqToCust(inqId){
       customers.push(newCust);
       i.archived=true;
       i.status='已成单';
+      i.custConverted=true;
       saveAll();
       closeDetail();
       refreshAll();
@@ -2969,7 +2970,7 @@ function openInqDetail(id){
   /* 已成单时显示转为客户按钮 */
   var convertBar='';
   if(i.status==='已成单'){
-    if(i.archived){
+    if(i.custConverted){
       convertBar='<div style="padding:8px 0 4px 0"><button class="convert-btn" style="opacity:0.6;cursor:default">✅ 已转为客户</button></div>';
     } else {
       convertBar='<div style="padding:8px 0 4px 0"><button class="convert-btn" onclick="convertInqToCust('+id+')">👤 转为客户</button></div>';
