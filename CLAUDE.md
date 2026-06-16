@@ -3,7 +3,7 @@
 ## 项目基本信息
 - 当前文件：crm-v5_final_5.html
 - 技术架构：纯 HTML + JS，localStorage 存储
-- Storage key：crm_inq_v5 / crm_cust_v5 / crm_ord_v5 / crm_sale_v5 / crm_settings_v5
+- Storage key：crm_inq_v5 / crm_cust_v5 / crm_ord_v5 / crm_sale_v5 / crm_settings_v5 / crm_prod_v5
 - 未来部署：crm.customento.com（Hostinger + Supabase）
 - 嵌入方式：钉钉 H5 微应用
 
@@ -18,13 +18,27 @@
 - Kelly：销售经理，可见所有，可删除（询盘/客户/订单），**可标记询盘VIP**
 - Momi：Alibaba 负责
 - Mille：1688 负责
-- Penny：运营
+- Penny：运营，主用产品开发/采购/财务模块
 - **删除权限**：`canDelete()` 返回 Alan 或 Kelly
 - **询盘VIP权限**：`canInqVip()` 返回 Alan 或 Kelly（客户VIP/冲单仍 Alan 专属）
 - **冲单权限**：`canVip()` 返回 Alan（客户冲单 + 询盘冲单 targetStar 均 Alan 专属）
+- **成本可见权限**：`canSeeCost()` 返回 Alan 或 Penny（BOM 成本信息）
+
+## 角色导航设计（手机底部导航）
+- `NAV_CONFIG` 对象定义各角色底部导航（最多5项）：
+  - Alan：看板/询盘/客户/订单/全部（全部=overlay菜单）
+  - Kelly/Momi/Mille：看板/询盘/客户/订单/统计
+  - Penny：看板/订单/产品/采购/财务
+- `renderMobileNav()`：登录后动态渲染底部导航，`switchUser()` 时调用
+- `mobileNav('all')`：Alan 点"全部"时展开 `all-modules-overlay` 全屏模块菜单
+- `showAllModules()` / `closeAllModules()`：控制全部模块 overlay 显隐
+- `closeSettingsPage()`：关闭设置页后跳回当前角色首页（取 NAV_CONFIG 第一项）
+- 电脑端：左侧导航用 `nav-sales-section`（询盘/客户/统计，Penny隐藏）和 `nav-ops-section`（产品/采购/财务，Alan+Penny可见）
 
 ## 已完成功能
-- 6个模块：数据看板 / 热点商机 / 询盘列表 / 客户管理 / 销售统计 / 执行中订单
+- 6个核心模块：数据看板 / 热点商机 / 询盘列表 / 客户管理 / 销售统计 / 执行中订单
+- **产品开发模块**（crm_prod_v5）：项目跟踪 / 款式管理 / BOM成本（Alan+Penny可见）
+- 角色导航：NAV_CONFIG 定义各角色底部导航，手机端动态渲染
 - 询盘列表：标记列（VIP绿/热点橙/超时红/🎯冲单）独立一列
 - 客户管理：5层分层（核心/重点培养/普通跟踪/沉睡/流失）+ 卡片/列表双视图 + 分批展开
 - 客户详情面板三Tab：客户档案 / 跟进记录（底部固定录入栏）/ 成交统计
@@ -37,12 +51,76 @@
 - 管理员设置页（Alan专属，自定义产品种类，存 crm_settings_v5，动态同步所有产品选项）
 - 管理员设置页：数据备份导出/导入 JSON 功能
 - 销售统计：$ 和 ¥ 分开统计
-- 手机端：独立 header 筛选 + 底部导航（看板/询盘/客户/订单/统计）
+- 手机端：独立 header 筛选 + 底部导航（角色定制）
 - 手机端：Alan 登录时 header 右上角显示 ⚙️ 设置入口
-- 手机端底部导航订单图标：📦
 - 手机端紧凑列表满屏显示，可滚动
 - PWA 支持：可安装到手机/桌面，离线缓存
 - 社媒联系方式（WhatsApp/Facebook/Instagram/Telegram）加入客户档案，品牌SVG图标，点击跳转App；微信/旺旺加复制按钮
+
+## 产品开发模块关键设计（crm_prod_v5）
+
+### 数据结构
+- 存储：`localStorage.getItem('crm_prod_v5')`，key=`SK.prod`
+- 项目字段：id / name / stage / person / startDate / note / skus[] / followups[]
+- SKU字段：id / name / spec / cost / price / note / bom[]（BOM仅 Alan/Penny 可见）
+- BOM行字段：material / qty / unit / unitCost / totalCost
+
+### 阶段与颜色（PROD_STAGES / PROD_STAGE_COLORS）
+- 初步调研=灰 / 设计开发=蓝 / 打样中=紫 / 样品确认=黄 / 量产准备=橙 / 已完成=绿 / 搁置=红
+- `getProdStageStyle(stage)` 返回 inline CSS 字符串
+
+### 桌面列表（table-header cols-prod）
+- 7列：缩略图(52px) / 项目名称(1fr) / 阶段(110px) / 负责人(70px) / 款式数(55px) / 开始日期(88px) / 最后跟进(150px)
+- CSS：`.cols-prod{display:grid;grid-template-columns:52px 1fr 110px 70px 55px 88px 150px;}`
+- 缩略图：`prod-thumb-<id>` 异步从 IndexedDB 加载，`_setProdThumb(pid,dataUrl)` 更新
+
+### 项目图片（3张，IndexedDB）
+- key 格式：`'prod_'+projId+'_0'` / `'prod_'+projId+'_1'` / `'prod_'+projId+'_2'`
+- 复用现有 `saveImgToDB` / `getImgFromDB` / `deleteImgFromDB`
+- IndexedDB：`customento-img-v1`，object store：`imgs`
+- 详情面板图片区：3个 `.prod-img-slot`，点击触发 `uploadProdImg(projId,idx)`
+- `loadProdImagesIntoDetail(projId)`：异步加载3张图到详情面板
+- `uploadProdImg(projId,idx)`：文件选择 → 压缩至800px JPEG → 存 IndexedDB → 刷新
+- `deleteProdImg(projId,idx)`：删除并刷新槽位显示
+
+### 详情面板（openProdDetail）
+- 2 Tab：项目详情 / 跟进记录（同询盘/订单模式）
+- Tab1：图片区(3槽) + 阶段快捷切换 + 项目信息 + SKU列表（含BOM，canSeeCost()控制）
+- Tab2：待办输入 + 跟进录入 + 历史列表
+- currentDetailType='prod'，editCurrent() 分支已支持 prod
+- `quickProdStage(projId,stage)`：切换阶段后刷新详情面板
+- `addProdFollowup(projId)`：添加跟进，刷新 openProdDetail(projId)+switchDpTab('followup')
+
+### 筛选与排序
+- 电脑端：搜索框(search-prod) + 阶段下拉(fp-stage) + 负责人下拉(fp-person) + 清除
+- 手机端芯片：初步调研/设计开发/打样中/样品确认/量产准备/已完成/搁置 + 排序按钮
+- `prodChipFilter(el,stage)`：手机端芯片筛选
+- `setProdMobileSort(key)`：3态排序（日期/名称）
+- `clearFilters_prod()`：清除所有筛选
+
+### SKU与BOM Modal
+- `openSkuModal(projId,skuId)`：新建/编辑 SKU
+- BOM区域仅 `canSeeCost()` 时显示（Alan/Penny）
+- `renderBomRows(bom)`：渲染BOM行（可编辑 input）
+- `addBomRow()`：收集当前DOM BOM，添加空行，重渲染
+- `removeBomRow(btn)`：从DOM移除BOM行
+- `collectBomFromDOM()`：读取DOM BOM数据
+- `saveSkuRecord()`：保存SKU（含BOM）
+
+### 示例数据（DEF_PROD，5个项目）
+- 迷你音乐盒（打样中，2SKU含BOM）
+- 软木杯垫新款（样品确认，1SKU含BOM）
+- MDF激光冰箱贴（量产准备，3SKU含BOM）
+- 马克杯北欧简约（设计开发，2SKU无BOM）
+- 帆布环保袋（初步调研，0SKU）
+
+### 集成点
+- `SK.prod='crm_prod_v5'`
+- `showPage('proddev')`：调 renderProdDev() + renderMobileCards('prod')
+- `refreshAll()`：proddev 页时调 renderProdDev()
+- `renderMobileCards('prod')`：调 renderMobileCards_prod()
+- `editCurrent()`：prod 类型 → openProdModal(_id)
+- `setMobileHeader('proddev')`：对应 mh-prod 手机 header
 
 ## 询盘状态设计（V2 重构后）
 - **4个Tab**：活跃（非沉默中）/ 沉默 / 成单（archived）/ 失效（expired）
@@ -156,7 +234,7 @@
 - 超时交期：红色左边框 + 右列 ⚠️ 红色日期
 
 ## 手机端搜索栏统一规范
-所有页面（询盘/客户/销售统计/执行订单）搜索栏样式一致：
+所有页面（询盘/客户/销售统计/执行订单/产品开发）搜索栏样式一致：
 - mh-xxx 容器：`margin-bottom:-6px`
 - chips 行：`padding-bottom:6px`（无 margin-bottom）
 - 搜索栏容器：`display:flex;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box`
@@ -166,8 +244,13 @@
 - **3态循环**：↓（降序）→ ↑（升序）→ 取消（key=null）→ 再点回↓
 - **中性态显示**：文字+`↓`，`opacity:.4`，不加 active class（不用 ↕ 符号）
 - **激活态**：`opacity:1`，加 active class，升序时显示 `↑`
-- **实现函数**：setOrdSort / setOrdMobileSort / setCustSort / setStatsSort（逻辑完全一致）
+- **实现函数**：setOrdSort / setOrdMobileSort / setCustSort / setStatsSort / setProdMobileSort（逻辑完全一致）
 - 中性态（key=null）时按默认排序（通常按日期降序）
+
+## 页面结构规范（所有列表页统一）
+- `page.page-head` → `div.page-content`（padding:18px 28px 28px）→ `div.filters` → `div.table-wrap` → `div.table-scroll` → `div.table-inner` → `div.table-header` + body div
+- 搜索框用 `class="search-box"`（对应 CSS `.filter-select,.search-box{...}`），不能用 `filter-input`（CSS 中不存在）
+- 手机端卡片容器：`<div id="mobile-xxx-cards" class="mobile-cards">`
 
 ## 客户管理成交统计 Tab 设计
 - 成交概览压缩在标题行右侧：`次数 · $总额 · ¥总额`（0值不显示）
@@ -180,7 +263,7 @@
 - 点击列表行 → `openSaleDetail(id)`，currentDetailType='sale'
 - 详情面板头部"编辑"→ `editCurrent()` → `editSaleRecord(id)`
 - 详情面板内编辑按钮 → `editSaleFromDetail(id)`（先closeDetail再openModal）
-- `editCurrent()` 已支持：inquiry / customer / order / sale
+- `editCurrent()` 已支持：inquiry / customer / order / sale / prod
 - 产品字段：多选芯片 `fs-product-chips`，逗号分隔存储，`getSaleProductSelected()` 读取
 - `saveSaleRecord()`：编辑分支用 `sid=editingSaleId` 保存后直接 `openSaleDetail(sid)`
 - 订单完成 `doCompleteOrder(id)`：存 `fromOrderId` 字段，sales detail 有"退回执行中"按钮
@@ -195,7 +278,7 @@
 
 ## 布局规范
 - detail-body padding=0
-- 询盘详情/订单：**不用** detail-body-inner，直接用 dp-tab-content.active 的 padding:20px
+- 询盘详情/订单/产品开发：**不用** detail-body-inner，直接用 dp-tab-content.active 的 padding:20px
 - 客户详情 Tab 用 dp-tab-content.active 的 padding:20px
 - 询盘详情 Tab1/Tab2 内容都直接在 dp-tab-content 内，无需额外包裹层
 
@@ -230,7 +313,7 @@
 7. 手机端媒体查询必须覆盖：html,body{overflow:auto} / .app{overflow:visible;height:auto} / .main{overflow:visible} / .page-content{padding:0;overflow:visible}
 8. editCurrent() 必须先保存 id 再 closeDetail()，否则 id 被清空
    ⚠️ 新增 detail type 时必须同步在 editCurrent() 加对应分支，否则头部编辑按钮点了只关面板不开modal
-   当前已有：inquiry / customer / order / sale（缺任何一个就会出现"点编辑就退出"的症状）
+   当前已有：inquiry / customer / order / sale / prod（缺任何一个就会出现"点编辑就退出"的症状）
 9. str_replace 定位锚点用完后必须确认原内容完整保留（曾发生 refreshAll 函数被误删导致全站崩溃）
 10. 每次改完 JS 必须用 node --check 语法检查再给文件
 11. 手机端排序按钮中性态绝对不能用 ↕ 符号（iOS 会渲染成表情图标），统一用 ↓ + opacity:.4
@@ -241,6 +324,7 @@
     - showPicker()：PWA 可用，iOS 浏览器模式不可靠
 14. 手机端卡片名字行有大小不一的 span 时必须用 flex + align-items:center，不能用 vertical-align（会导致行高撑大、文字错位）
 15. toggleInqFilter 类芯片（独立切换）不能放进 mobileChip 同一个 .mobile-chips 容器，否则 querySelectorAll 会误清除高亮；或用不同 class 区分
+16. openProdModal 等 modal 函数中，if/else 两个分支共用同一 DOM 变量时，var 声明必须提到 if 之前（否则重复 var 声明可能导致逻辑错误），如 `var pmTitle=document.getElementById('prod-modal-title')` 提到 if 判断前
 
 ## 必须遵守的规避规则（部署）
 - 当前行为：浏览器普通刷新即可看到更新；PWA 关闭重开即可，无需删除重装
@@ -256,6 +340,10 @@
 - 每次新对话开始前确认项目文件已是最新版本
 
 ## 当前进度（最近完成）
+- **角色导航**：NAV_CONFIG 定义各角色底部导航，renderMobileNav() 动态渲染，Alan 有"全部"overlay
+- **产品开发模块**（crm_prod_v5）：完整实现，含项目列表/详情面板/SKU/BOM/3张图片/跟进记录/示例数据
+- **修复**：proddev 页缺少 page-content wrapper → 加回后边距与询盘/订单页一致
+- **修复**：搜索框 class 改为 search-box（CSS 定义的正确类名）
 - 客户管理卡片视图V2重构：5层Tab切换、动态评分(7分)、超时红框(分层阈值)、状态图标简化
 - 动态增长(90天无成交自动关)/动态活跃(超时自动关)机制
 - 客户筛选栏：⭐VIP / 🎯冲单 / 🔴超时 芯片按钮
@@ -265,13 +353,13 @@
 - 手机端询盘第一行加🎯冲单芯片（末尾，独立切换），第二行加⭐VIP芯片
 - 手机端询盘卡片：🎯排在名字行最后(22px)，超时移至右侧跟单人名左侧同行
 - SW 升至 v28（强制清缓存）
-- **修复**：询盘已成单后"转为客户"按钮失效 → 改用 `i.custConverted=true` 专用字段判断，不再与 `i.archived` 混用
+- **修复**：询盘已成单后"转为客户"按钮失效 → 改用 `i.custConverted=true` 专用字段判断
 - **执行中订单详情面板重构**：2 Tab（订单详情/跟进记录），含跟进记录和待办功能
 - **修复**：标记完成按钮 onclick 加回 closeDetail()，解决 iOS overlay 被面板拦截 touch 事件问题
-- **修复**：saveTodo/saveInqTodo/saveOrdTodo 保存后加 openXxxDetail+switchDpTab('followup')，解决详情面板不即时刷新问题
-- **优化**：已发货阶段显示常驻黄色提示条，提醒点标记完成；标记完成按钮改红色(btn-danger)
-- **优化**：订单详情 Tab1 预计交期加 📦/⚠️ 图标+超时红色；加待办显示行（规则同客户/询盘）
-- **优化**：手机端订单卡片三行布局（alias+阶段+超时+注：备注 / 产品·最后跟进 / 待办）
+- **修复**：saveTodo/saveInqTodo/saveOrdTodo 保存后加 openXxxDetail+switchDpTab('followup')
+- **优化**：已发货阶段显示常驻黄色提示条；标记完成按钮改红色(btn-danger)
+- **优化**：订单详情 Tab1 预计交期加 📦/⚠️ 图标+超时红色；加待办显示行
+- **优化**：手机端订单卡片三行布局
 - `toast(msg, dur)` 新增可选时长参数（默认 2500ms）
 
 ## 询盘图片上传与裁切设计
@@ -292,20 +380,18 @@
 - 遇到"点按钮就退出"类问题，先在浏览器 Console 直接调用函数排查（不要改代码）
 - `editSaleRecord(saleRecords[0].id)` 可直接测 modal 是否正常开
 - `document.querySelector('#detail-body .btn-outline').getAttribute('onclick')` 可看按钮实际 onclick
-- 症状相同但原因不同：editCurrent() 漏处理 sale 类型，而非 z-index 或数据问题
+- 症状相同但原因不同：editCurrent() 漏处理某 type，而非 z-index 或数据问题
 - 手机端页面不更新 → 检查是否被 `.filters{display:none}` CSS 隐藏，需在 `mh-xxx` 手机 header 里单独加筛选
 - 用户看不到更新但代码已推送 → 先让强制刷新，无效则 bump SW CACHE_NAME
-- **iOS PWA overlay 被面板遮挡**：position:fixed 全屏面板（overflow-y:auto）会拦截更高 z-index 元素的 touch 事件 → 解决方案：在触发 overlay 的同一 onclick 里先/后调 `closeDetail()`，让面板滑走再让用户与 overlay 交互
+- **iOS PWA overlay 被面板遮挡**：position:fixed 全屏面板（overflow-y:auto）会拦截更高 z-index 元素的 touch 事件 → 解决方案：在触发 overlay 的同一 onclick 里先/后调 `closeDetail()`
 - **待办保存不刷新详情面板**：saveTodo/saveInqTodo/saveOrdTodo 只调 refreshAll() 不够，必须同时调对应的 openXxxDetail(id)+switchDpTab('followup') 才能刷新面板内容
+- **feature branch 与 main 分歧**：改动在 feature branch 上时用 cherry-pick 合到 main，不能直接 push 到 feature branch
 
-
-## 待做功能（长期/后期）
-1. **【待设计】产品管理模块**（待看Alan提供的现有表格结构再设计字段）
-2. **【待设计】产品开发模块**（待看现有表格，Penny主用，新品立项/打样/定版/量产进度）
-3. **【待设计】采购跟单模块**（待看现有表格）
-4. **【暂缓】财务模块**：现有系统在用，CRM暂不做财务/采购/订单关联
-5. 数据看板优化（待讨论）
-6. **【待设计】邮件集成**：CRM内直接发邮件给客户，发送记录自动同步跟进记录（当前静态架构可做mailto快捷入口；完整自动发信+回复同步依赖Supabase阶段）
-7. Supabase 迁移（后期）
-8. 钉钉 H5 嵌入（后期）
-
+## 待做功能（优先级顺序）
+1. **【下一个】产品库模块**（prodcat）：展示已完成/量产的产品，从产品开发数据衍生，可独立新增
+2. **【之后】采购跟单模块**（procurement）：供应商/采购订单/到货跟踪
+3. **【之后】财务模块**（finance）：收款/付款/利润统计
+4. 数据看板优化（待讨论）
+5. **【待设计】邮件集成**：CRM内直接发邮件给客户，发送记录自动同步跟进记录
+6. Supabase 迁移（后期）
+7. 钉钉 H5 嵌入（后期）
