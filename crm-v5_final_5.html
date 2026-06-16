@@ -474,6 +474,8 @@ a{color:var(--accent);text-decoration:none;}
       <input id="mb-prod-search" placeholder="🔍 搜索项目..." oninput="renderMobileCards('prod')" style="flex:1;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;padding:3px 0;min-width:0">
       <button class="sort-btn-s" id="prod-sort-name" onclick="setProdMobileSort('name')">项目名 ↓</button>
       <button class="sort-btn-s" id="prod-sort-date" onclick="setProdMobileSort('date')">日期 ↓</button>
+      <button id="mprod-view-btn-list" onclick="setProdView('list')" style="padding:3px 7px;border-radius:5px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:12px;cursor:pointer;line-height:1.2;flex-shrink:0">☰</button>
+      <button id="mprod-view-btn-card" onclick="setProdView('card')" style="padding:3px 7px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;line-height:1.2;flex-shrink:0">▦</button>
     </div>
   </div>
 </div>
@@ -857,7 +859,13 @@ a{color:var(--accent);text-decoration:none;}
 <div id="page-proddev" class="page">
   <div class="page-head">
     <div><div class="page-title">🔧 产品开发</div><div class="page-sub" id="prod-sub">项目跟踪 · 款式管理 · BOM成本</div></div>
-    <button class="btn btn-primary" onclick="openProdModal()">＋ 新增项目</button>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="view-toggle">
+        <button class="view-btn active" id="prod-view-btn-list" onclick="setProdView('list')">☰ 列表</button>
+        <button class="view-btn" id="prod-view-btn-card" onclick="setProdView('card')">▦ 卡片</button>
+      </div>
+      <button class="btn btn-primary" onclick="openProdModal()">＋ 新增项目</button>
+    </div>
   </div>
   <div class="page-content">
     <div class="filters">
@@ -879,6 +887,7 @@ a{color:var(--accent);text-decoration:none;}
       </div>
       <div id="prod-table-body"></div>
     </div></div></div>
+    <div id="prod-card-view-wrap" style="display:none"><div class="inq-card-grid" id="prod-card-grid"></div></div>
     <div id="mobile-prod-cards" class="mobile-cards"></div>
   </div>
 </div>
@@ -1505,7 +1514,7 @@ function showPage(p){
   else if(p==='customers'){renderCustomers();renderMobileCards('cust');}
   else if(p==='oldstats'){renderOldStats();renderMobileCards('stats');}
   else if(p==='orders'){renderOrders();renderMobileCards('ord');}
-  else if(p==='proddev'){renderProdDev();renderMobileCards('prod');}
+  else if(p==='proddev'){setProdView(prodView);}
   else if(p==='settings'){renderSettingsPage();}
 }
 
@@ -4885,7 +4894,7 @@ function refreshAll(){
   updateInqTabCounts();
   const active=document.querySelector('.page.active');if(!active)return;
   const id=active.id.replace('page-','');
-  if(id==='dashboard')renderDashboard();else if(id==='hot')renderHot();else if(id==='inquiries')renderInquiries();else if(id==='customers')renderCustomers();else if(id==='oldstats')renderOldStats();else if(id==='orders')renderOrders();else if(id==='proddev')renderProdDev();
+  if(id==='dashboard')renderDashboard();else if(id==='hot')renderHot();else if(id==='inquiries')renderInquiries();else if(id==='customers')renderCustomers();else if(id==='oldstats')renderOldStats();else if(id==='orders')renderOrders();else if(id==='proddev'){if(prodView==='card')renderProdCardView();else renderProdDev();}
 }
 
 /* ===== IndexedDB 图片存储 ===== */
@@ -5380,6 +5389,7 @@ var editingSkuId=null;
 var currentEditingProjId=null;
 var prodChipStage='';
 var prodMobileSort={key:null,dir:'desc'};
+var prodView='list';
 
 function canSeeCost(){return currentUser==='Alan'||currentUser==='Penny';}
 function canSeeFloorPrice(){return currentUser==='Alan'||currentUser==='Penny'||currentUser==='Kelly';}
@@ -5485,6 +5495,79 @@ function renderMobileCards_prod(){
       +'<div style="font-size:10px;color:var(--muted);flex-shrink:0;text-align:right">'+(p.date||'')+'</div>'
       +'</div>';
   }).join('');
+}
+
+function setProdView(v){
+  prodView=v;
+  var btnList=document.getElementById('prod-view-btn-list');
+  var btnCard=document.getElementById('prod-view-btn-card');
+  var mBtnList=document.getElementById('mprod-view-btn-list');
+  var mBtnCard=document.getElementById('mprod-view-btn-card');
+  var cardWrap=document.getElementById('prod-card-view-wrap');
+  var prodTableBody=document.getElementById('prod-table-body');
+  var tableWrapEl=prodTableBody&&prodTableBody.closest?prodTableBody.closest('.table-wrap'):null;
+  var mobileCards=document.getElementById('mobile-prod-cards');
+  if(v==='card'){
+    if(btnList)btnList.classList.remove('active');
+    if(btnCard)btnCard.classList.add('active');
+    if(mBtnList){mBtnList.style.background='transparent';mBtnList.style.borderColor='var(--border)';mBtnList.style.color='var(--muted)';}
+    if(mBtnCard){mBtnCard.style.background='var(--accent)';mBtnCard.style.borderColor='var(--accent)';mBtnCard.style.color='#fff';}
+    if(tableWrapEl)tableWrapEl.style.display='none';
+    if(mobileCards)mobileCards.style.display='none';
+    if(cardWrap)cardWrap.style.display='block';
+    renderProdCardView();
+  } else {
+    if(btnList)btnList.classList.add('active');
+    if(btnCard)btnCard.classList.remove('active');
+    if(mBtnList){mBtnList.style.background='var(--accent)';mBtnList.style.borderColor='var(--accent)';mBtnList.style.color='#fff';}
+    if(mBtnCard){mBtnCard.style.background='transparent';mBtnCard.style.borderColor='var(--border)';mBtnCard.style.color='var(--muted)';}
+    if(tableWrapEl)tableWrapEl.style.display='';
+    if(mobileCards)mobileCards.style.display='';
+    if(cardWrap)cardWrap.style.display='none';
+    renderProdDev();
+    renderMobileCards('prod');
+  }
+}
+
+function renderProdCardView(){
+  var grid=document.getElementById('prod-card-grid');if(!grid)return;
+  var mbSearch=document.getElementById('mb-prod-search');
+  var search=mbSearch?mbSearch.value.toLowerCase():'';
+  var list=getFilteredProd();
+  if(search)list=list.filter(function(p){return p.name.toLowerCase().indexOf(search)>=0||(p.category&&p.category.toLowerCase().indexOf(search)>=0);});
+  if(!list.length){
+    grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔧</div><div class="empty-text">暂无产品开发项目</div></div>';
+    return;
+  }
+  grid.innerHTML=list.map(function(p){
+    var skuCount=(p.skus&&p.skus.length)?p.skus.length:0;
+    var lf=getLastFollowupStr(p);
+    return '<div class="inq-card-item" onclick="openProdDetail('+p.id+')">'
+      +'<div class="inq-card-img-ph" id="prod-card-img-'+p.id+'"><div style="font-size:28px">🔧</div><div>暂无图片</div></div>'
+      +'<div class="inq-card-body">'
+      +'<div class="inq-card-name">'+p.name+'</div>'
+      +'<div class="inq-card-company">'+(p.category||'未分类')+'</div>'
+      +'<div class="inq-card-meta"><span class="prod-stage" style="'+getProdStageStyle(p.stage)+'">'+p.stage+'</span>'
+      +'<span style="font-size:11px;color:var(--muted)">'+skuCount+' 款</span></div>'
+      +(lf?'<div style="font-size:10px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+lf+'</div>':'')
+      +'<div class="inq-card-footer"><span>'+(p.person||'—')+'</span><span>'+(p.date||'')+'</span></div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+  list.forEach(function(p){
+    (function(pid){
+      getImgFromDB('prod_'+pid+'_0',function(dataUrl){
+        if(!dataUrl)return;
+        var ph=document.getElementById('prod-card-img-'+pid);
+        if(ph){
+          var imgEl=document.createElement('img');
+          imgEl.className='inq-card-img';
+          imgEl.src=dataUrl;
+          ph.parentNode.replaceChild(imgEl,ph);
+        }
+      });
+    })(p.id);
+  });
 }
 
 function openProdDetail(id){
