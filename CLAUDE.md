@@ -137,6 +137,24 @@
 - 超时标记：`o.delivery && o.delivery < today()` → 红色边框 + ⚠️图标
 - mh-ord：`margin-bottom:-6px`；chips：`padding-bottom:6px`；搜索栏全宽 border-top 风格
 
+### 订单详情面板（openOrderDetail）
+- **2 Tab 结构**：订单详情 / 跟进记录（同询盘/客户面板模式）
+- **Tab1 订单详情**：阶段快速切换 → 订单信息区 → 编辑/标记完成按钮
+  - 阶段切换到"已发货"：阶段按钮下方常驻黄色提示条（📦 已发货 — 点下方「✓ 标记完成」...）
+  - 预计交期：超时 → `⚠️ 日期`（红色）；未超时 → `📦 日期`（灰色）
+  - 待办行（followupDate+followupNote 均存在时显示）：超时 → `🔔 日期 📌 内容`（红色）；正常 → `📅 日期 📌 内容`（绿色）
+  - 标记完成按钮：`btn-danger`（红色），onclick = `completeOrder(id);closeDetail()` ⚠️ closeDetail() 必须保留，否则 iOS PWA 全屏面板的 overflow-y:auto 会拦截 confirm-overlay 的 touch 事件
+- **Tab2 跟进记录**：待办输入（date+note）+ 跟进内容输入 + 历史列表
+- `saveOrdTodo(ordId)`：保存后调 `openOrderDetail(ordId);switchDpTab('followup')` 刷新面板
+- `clearOrdTodoDate(ordId)`：同上刷新模式
+- `quickOrdStage(ordId,stage)`：切换阶段后调 `openOrderDetail(ordId)` 刷新
+
+### 手机端订单卡片三行布局
+- **第1行**：`alias [阶段] 超时 注：备注`（flex 换行，备注蓝色 var(--accent2)）
+- **第2行**：`产品 · 最后跟进记录`（getLastFollowupStr，灰色，单行省略）
+- **第3行**：`📅/🔔 日期 📌 内容`（todoOvd → 红色；否则 date=灰色 note=绿色）
+- 超时交期：红色左边框 + 右列 ⚠️ 红色日期
+
 ## 手机端搜索栏统一规范
 所有页面（询盘/客户/销售统计/执行订单）搜索栏样式一致：
 - mh-xxx 容器：`margin-bottom:-6px`
@@ -248,6 +266,13 @@
 - 手机端询盘卡片：🎯排在名字行最后(22px)，超时移至右侧跟单人名左侧同行
 - SW 升至 v28（强制清缓存）
 - **修复**：询盘已成单后"转为客户"按钮失效 → 改用 `i.custConverted=true` 专用字段判断，不再与 `i.archived` 混用
+- **执行中订单详情面板重构**：2 Tab（订单详情/跟进记录），含跟进记录和待办功能
+- **修复**：标记完成按钮 onclick 加回 closeDetail()，解决 iOS overlay 被面板拦截 touch 事件问题
+- **修复**：saveTodo/saveInqTodo/saveOrdTodo 保存后加 openXxxDetail+switchDpTab('followup')，解决详情面板不即时刷新问题
+- **优化**：已发货阶段显示常驻黄色提示条，提醒点标记完成；标记完成按钮改红色(btn-danger)
+- **优化**：订单详情 Tab1 预计交期加 📦/⚠️ 图标+超时红色；加待办显示行（规则同客户/询盘）
+- **优化**：手机端订单卡片三行布局（alias+阶段+超时+注：备注 / 产品·最后跟进 / 待办）
+- `toast(msg, dur)` 新增可选时长参数（默认 2500ms）
 
 ## 询盘图片上传与裁切设计
 - 图片存储：IndexedDB（`crm_inq_images` 库，key=inqId，value=base64 dataUrl），不用 localStorage
@@ -270,6 +295,8 @@
 - 症状相同但原因不同：editCurrent() 漏处理 sale 类型，而非 z-index 或数据问题
 - 手机端页面不更新 → 检查是否被 `.filters{display:none}` CSS 隐藏，需在 `mh-xxx` 手机 header 里单独加筛选
 - 用户看不到更新但代码已推送 → 先让强制刷新，无效则 bump SW CACHE_NAME
+- **iOS PWA overlay 被面板遮挡**：position:fixed 全屏面板（overflow-y:auto）会拦截更高 z-index 元素的 touch 事件 → 解决方案：在触发 overlay 的同一 onclick 里先/后调 `closeDetail()`，让面板滑走再让用户与 overlay 交互
+- **待办保存不刷新详情面板**：saveTodo/saveInqTodo/saveOrdTodo 只调 refreshAll() 不够，必须同时调对应的 openXxxDetail(id)+switchDpTab('followup') 才能刷新面板内容
 
 ## 已知未解决 Bug
 ### 待办行日期选择器跨平台问题
