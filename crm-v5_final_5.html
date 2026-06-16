@@ -459,21 +459,31 @@ a{color:var(--accent);text-decoration:none;}
   <div class="logo"><div class="logo-title">Customento</div><div class="logo-sub">销售管理系统</div></div>
   <div class="nav-section">主菜单</div>
   <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')"><span class="nav-icon">📊</span>数据看板</div>
-  <div class="nav-item" id="nav-hot" onclick="showPage('hot')"><span class="nav-icon">🔥</span>热点商机<span class="nav-count hot" id="nc-hot">0</span></div>
-  <div class="nav-item" id="nav-inquiries" onclick="showPage('inquiries')"><span class="nav-icon">📋</span>询盘列表<span class="nav-count" id="nc-inq">0</span></div>
-  <div class="nav-item" id="nav-customers" onclick="showPage('customers')"><span class="nav-icon">👥</span>客户管理<span class="nav-count" id="nc-cust">0</span></div>
-  <div class="nav-item" id="nav-oldstats" onclick="showPage('oldstats')"><span class="nav-icon">📈</span>销售统计<span class="nav-count" id="nc-old">0</span></div>
-  <div class="nav-item" id="nav-orders" onclick="showPage('orders')"><span class="nav-icon">⚙️</span>执行中订单<span class="nav-count" id="nc-ord">0</span></div>
-  <div class="nav-section">快速筛选</div>
-  <div class="nav-item" onclick="filterNav('source','Alibaba')"><span class="nav-icon">🌐</span>Alibaba</div>
-  <div class="nav-item" onclick="filterNav('source','1688')"><span class="nav-icon">🏪</span>1688</div>
-  <div class="nav-item" onclick="filterNav('source','Customento')"><span class="nav-icon">✨</span>Customento</div>
-  <div class="nav-item" onclick="filterNav('source','笨鸟导入')"><span class="nav-icon">🐦</span>笨鸟导入</div>
-  <div class="nav-section">视图</div>
-  <div class="nav-item" onclick="filterNav('grade','A')"><span class="nav-icon">🔥</span>A级重点</div>
-  <div class="nav-item" onclick="filterNav('today','')"><span class="nav-icon">⏰</span>今日跟进</div>
-  <div class="nav-item" onclick="filterNav('overdue','')"><span class="nav-icon">⚠️</span>超时未跟进</div>
-  <div class="nav-item" onclick="filterNav('alan','')"><span class="nav-icon">👁</span>Alan重点关注</div>
+  <div class="nav-item" id="nav-orders" onclick="showPage('orders')"><span class="nav-icon">📦</span>执行中订单<span class="nav-count" id="nc-ord">0</span></div>
+  <!-- 销售团队模块 -->
+  <div id="nav-sales-section">
+    <div class="nav-item" id="nav-hot" onclick="showPage('hot')"><span class="nav-icon">🔥</span>热点商机<span class="nav-count hot" id="nc-hot">0</span></div>
+    <div class="nav-item" id="nav-inquiries" onclick="showPage('inquiries')"><span class="nav-icon">📋</span>询盘列表<span class="nav-count" id="nc-inq">0</span></div>
+    <div class="nav-item" id="nav-customers" onclick="showPage('customers')"><span class="nav-icon">👥</span>客户管理<span class="nav-count" id="nc-cust">0</span></div>
+    <div class="nav-item" id="nav-oldstats" onclick="showPage('oldstats')"><span class="nav-icon">📈</span>销售统计<span class="nav-count" id="nc-old">0</span></div>
+    <div class="nav-section">快速筛选</div>
+    <div class="nav-item" onclick="filterNav('source','Alibaba')"><span class="nav-icon">🌐</span>Alibaba</div>
+    <div class="nav-item" onclick="filterNav('source','1688')"><span class="nav-icon">🏪</span>1688</div>
+    <div class="nav-item" onclick="filterNav('source','Customento')"><span class="nav-icon">✨</span>Customento</div>
+    <div class="nav-item" onclick="filterNav('source','笨鸟导入')"><span class="nav-icon">🐦</span>笨鸟导入</div>
+    <div class="nav-section">视图</div>
+    <div class="nav-item" onclick="filterNav('grade','A')"><span class="nav-icon">🔥</span>A级重点</div>
+    <div class="nav-item" onclick="filterNav('today','')"><span class="nav-icon">⏰</span>今日跟进</div>
+    <div class="nav-item" onclick="filterNav('overdue','')"><span class="nav-icon">⚠️</span>超时未跟进</div>
+    <div class="nav-item" onclick="filterNav('alan','')"><span class="nav-icon">👁</span>Alan重点关注</div>
+  </div>
+  <!-- 运营团队模块 -->
+  <div id="nav-ops-section" style="display:none">
+    <div class="nav-item" id="nav-proddev" onclick="showPage('proddev')"><span class="nav-icon">🔧</span>产品开发</div>
+    <div class="nav-item" id="nav-prodcat" onclick="showPage('prodcat')"><span class="nav-icon">📦</span>产品库</div>
+    <div class="nav-item" id="nav-procurement" onclick="showPage('procurement')"><span class="nav-icon">🛒</span>采购跟单</div>
+    <div class="nav-item" id="nav-finance" onclick="showPage('finance')"><span class="nav-icon">💰</span>财务</div>
+  </div>
   <div id="nav-settings-wrap" style="display:none;padding:8px 12px 0">
     <div class="nav-item" id="nav-settings" onclick="showPage('settings')"><span class="nav-icon">⚙️</span>管理员设置</div>
   </div>
@@ -819,19 +829,86 @@ a{color:var(--accent);text-decoration:none;}
   </div>
 </div>
 
+<!-- 产品开发 页面 -->
+<div class="page" id="page-proddev">
+  <div class="page-header" style="display:flex;align-items:center;justify-content:space-between"><h2>🔧 产品开发</h2></div>
+  <div class="page-content" style="display:flex;align-items:center;justify-content:center;min-height:50vh">
+    <div style="text-align:center;color:var(--muted)">
+      <div style="font-size:52px;margin-bottom:14px">🔧</div>
+      <div style="font-size:17px;font-weight:600;color:var(--text);margin-bottom:6px">产品开发模块</div>
+      <div style="font-size:13px">功能开发中，即将上线</div>
+    </div>
+  </div>
+</div>
+
+<!-- 产品库 页面 -->
+<div class="page" id="page-prodcat">
+  <div class="page-header"><h2>📦 产品库</h2></div>
+  <div class="page-content" style="display:flex;align-items:center;justify-content:center;min-height:50vh">
+    <div style="text-align:center;color:var(--muted)">
+      <div style="font-size:52px;margin-bottom:14px">📦</div>
+      <div style="font-size:17px;font-weight:600;color:var(--text);margin-bottom:6px">产品库</div>
+      <div style="font-size:13px">功能开发中，即将上线</div>
+    </div>
+  </div>
+</div>
+
+<!-- 采购跟单 页面 -->
+<div class="page" id="page-procurement">
+  <div class="page-header"><h2>🛒 采购跟单</h2></div>
+  <div class="page-content" style="display:flex;align-items:center;justify-content:center;min-height:50vh">
+    <div style="text-align:center;color:var(--muted)">
+      <div style="font-size:52px;margin-bottom:14px">🛒</div>
+      <div style="font-size:17px;font-weight:600;color:var(--text);margin-bottom:6px">采购跟单</div>
+      <div style="font-size:13px">功能开发中，即将上线</div>
+    </div>
+  </div>
+</div>
+
+<!-- 财务 页面 -->
+<div class="page" id="page-finance">
+  <div class="page-header"><h2>💰 财务</h2></div>
+  <div class="page-content" style="display:flex;align-items:center;justify-content:center;min-height:50vh">
+    <div style="text-align:center;color:var(--muted)">
+      <div style="font-size:52px;margin-bottom:14px">💰</div>
+      <div style="font-size:17px;font-weight:600;color:var(--text);margin-bottom:6px">财务模块</div>
+      <div style="font-size:13px">功能开发中，即将上线</div>
+    </div>
+  </div>
+</div>
+
 </main>
 </div>
 
 <!-- MOBILE NAV -->
 <nav class="mobile-nav">
-  <div class="mobile-nav-items">
-    <div class="mobile-nav-item active" id="mnav-dashboard" onclick="mobileNav('dashboard')"><span class="mobile-nav-icon">📊</span>看板</div>
-    <div class="mobile-nav-item" id="mnav-inquiries" onclick="mobileNav('inquiries')"><span class="mobile-nav-icon">📋</span>询盘</div>
-    <div class="mobile-nav-item" id="mnav-customers" onclick="mobileNav('customers')"><span class="mobile-nav-icon">👥</span>客户</div>
-    <div class="mobile-nav-item" id="mnav-orders" onclick="mobileNav('orders')"><span class="mobile-nav-icon">📦</span>订单</div>
-    <div class="mobile-nav-item" id="mnav-oldstats" onclick="mobileNav('oldstats')"><span class="mobile-nav-icon">📈</span>统计</div>
+  <div class="mobile-nav-items" id="mobile-nav-items">
+    <!-- 由 renderMobileNav() 动态渲染 -->
   </div>
 </nav>
+
+<!-- Alan 全部模块浮层 -->
+<div id="all-modules-overlay" style="display:none;position:fixed;inset:0;background:var(--surface);z-index:300;overflow-y:auto">
+  <div style="padding:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+      <div style="font-size:16px;font-weight:600">所有模块</div>
+      <button onclick="closeAllModules()" style="background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:0 4px;line-height:1">×</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+      <div onclick="closeAllModules();mobileNav('dashboard')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">📊</span><span style="font-size:12px;color:var(--text)">看板</span></div>
+      <div onclick="closeAllModules();mobileNav('inquiries')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">📋</span><span style="font-size:12px;color:var(--text)">询盘</span></div>
+      <div onclick="closeAllModules();mobileNav('customers')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">👥</span><span style="font-size:12px;color:var(--text)">客户</span></div>
+      <div onclick="closeAllModules();mobileNav('orders')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">📦</span><span style="font-size:12px;color:var(--text)">订单</span></div>
+      <div onclick="closeAllModules();mobileNav('oldstats')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">📈</span><span style="font-size:12px;color:var(--text)">统计</span></div>
+      <div onclick="closeAllModules();mobileNav('hot')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">🔥</span><span style="font-size:12px;color:var(--text)">热点</span></div>
+      <div onclick="closeAllModules();mobileNav('proddev')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">🔧</span><span style="font-size:12px;color:var(--text)">产品开发</span></div>
+      <div onclick="closeAllModules();mobileNav('prodcat')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">📦</span><span style="font-size:12px;color:var(--text)">产品库</span></div>
+      <div onclick="closeAllModules();mobileNav('procurement')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">🛒</span><span style="font-size:12px;color:var(--text)">采购跟单</span></div>
+      <div onclick="closeAllModules();mobileNav('finance')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">💰</span><span style="font-size:12px;color:var(--text)">财务</span></div>
+      <div onclick="closeAllModules();showPage('settings')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">⚙️</span><span style="font-size:12px;color:var(--text)">设置</span></div>
+    </div>
+  </div>
+</div>
 
 <!-- 询盘 Modal -->
 <div class="modal-overlay" id="inq-modal" onclick="closeModalBg(event,'inq-modal')">
@@ -1237,6 +1314,26 @@ function updateNavCounts(){
   document.getElementById('nc-ord').textContent=orders.filter(o=>!o.completed).length;
 }
 
+var NAV_CONFIG={
+  'Alan': [{p:'dashboard',icon:'📊',label:'看板'},{p:'inquiries',icon:'📋',label:'询盘'},{p:'customers',icon:'👥',label:'客户'},{p:'orders',icon:'📦',label:'订单'},{p:'all',icon:'⊞',label:'全部'}],
+  'Kelly':[{p:'dashboard',icon:'📊',label:'看板'},{p:'inquiries',icon:'📋',label:'询盘'},{p:'customers',icon:'👥',label:'客户'},{p:'orders',icon:'📦',label:'订单'},{p:'oldstats',icon:'📈',label:'统计'}],
+  'Momi': [{p:'dashboard',icon:'📊',label:'看板'},{p:'inquiries',icon:'📋',label:'询盘'},{p:'customers',icon:'👥',label:'客户'},{p:'orders',icon:'📦',label:'订单'},{p:'oldstats',icon:'📈',label:'统计'}],
+  'Mille':[{p:'dashboard',icon:'📊',label:'看板'},{p:'inquiries',icon:'📋',label:'询盘'},{p:'customers',icon:'👥',label:'客户'},{p:'orders',icon:'📦',label:'订单'},{p:'oldstats',icon:'📈',label:'统计'}],
+  'Penny':[{p:'dashboard',icon:'📊',label:'看板'},{p:'orders',icon:'📦',label:'订单'},{p:'proddev',icon:'🔧',label:'产品'},{p:'procurement',icon:'🛒',label:'采购'},{p:'finance',icon:'💰',label:'财务'}]
+};
+
+function renderMobileNav(){
+  var cfg=NAV_CONFIG[currentUser]||NAV_CONFIG['Kelly'];
+  var navEl=document.getElementById('mobile-nav-items');
+  if(!navEl)return;
+  navEl.innerHTML=cfg.map(function(item){
+    return '<div class="mobile-nav-item" id="mnav-'+item.p+'" onclick="mobileNav(\''+item.p+'\')"><span class="mobile-nav-icon">'+item.icon+'</span>'+item.label+'</div>';
+  }).join('');
+}
+
+function showAllModules(){var o=document.getElementById('all-modules-overlay');if(o)o.style.display='';}
+function closeAllModules(){var o=document.getElementById('all-modules-overlay');if(o)o.style.display='none';}
+
 function switchUser(u){
   currentUser=u;localStorage.setItem(SK.user,u);
   document.getElementById('user-select').value=u;
@@ -1244,13 +1341,18 @@ function switchUser(u){
   document.getElementById('btn-import').style.display=canExport()?'':'none';
   var sw=document.getElementById('nav-settings-wrap');if(sw)sw.style.display=u==='Alan'?'':'none';
   var msb=document.getElementById('mobile-settings-btn');if(msb)msb.style.display=u==='Alan'?'flex':'none';
+  var salesSec=document.getElementById('nav-sales-section');
+  var opsSec=document.getElementById('nav-ops-section');
+  if(salesSec)salesSec.style.display=(u==='Penny')?'none':'';
+  if(opsSec)opsSec.style.display=(u==='Alan'||u==='Penny')?'':'none';
+  renderMobileNav();
   refreshAll();
 }
 
 function showPage(p){
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
   var pg=document.getElementById('page-'+p);if(pg)pg.classList.add('active');
-  ['dashboard','hot','inquiries','customers','oldstats','orders','settings'].forEach(id=>{const el=document.getElementById('nav-'+id);if(el)el.classList.toggle('active',id===p);});
+  ['dashboard','hot','inquiries','customers','oldstats','orders','settings','proddev','prodcat','procurement','finance'].forEach(id=>{const el=document.getElementById('nav-'+id);if(el)el.classList.toggle('active',id===p);});
   closeDetail();
   if(window.innerWidth<=768)setMobileHeader(p);
   if(p==='dashboard')renderDashboard();
@@ -4105,24 +4207,29 @@ const MOBILE_BATCH=10;
 
 function setMobileHeader(type){
   ['mh-inq','mh-hot','mh-cust','mh-ord','mh-stats'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
-  const titles={dashboard:'数据看板',inquiries:'询盘列表',hot:'🔥 热点商机',customers:'客户管理',oldstats:'📈 销售统计',orders:'📦 执行中订单',settings:'⚙️ 管理员设置'};
+  const titles={dashboard:'数据看板',inquiries:'询盘列表',hot:'🔥 热点商机',customers:'客户管理',oldstats:'📈 销售统计',orders:'📦 执行中订单',settings:'⚙️ 管理员设置',proddev:'🔧 产品开发',prodcat:'📦 产品库',procurement:'🛒 采购跟单',finance:'💰 财务'};
   document.getElementById('mobile-page-title').textContent=titles[type]||type;
   const map={inquiries:'mh-inq',hot:'mh-hot',customers:'mh-cust',orders:'mh-ord',oldstats:'mh-stats'};
   if(map[type]){const el=document.getElementById(map[type]);if(el)el.style.display='';}
   var addBtn=document.getElementById('mobile-add-btn');
   var backBtn=document.getElementById('mobile-back-btn');
   var settingsBtn=document.getElementById('mobile-settings-btn');
+  var noAddBtn=['settings','proddev','prodcat','procurement','finance'];
   if(type==='settings'){
     if(addBtn)addBtn.style.display='none';
     if(settingsBtn)settingsBtn.style.display='none';
     if(backBtn)backBtn.style.display='';
+  } else if(noAddBtn.indexOf(type)>=0){
+    if(addBtn)addBtn.style.display='none';
+    if(backBtn)backBtn.style.display='none';
+    if(settingsBtn&&currentUser==='Alan')settingsBtn.style.display='flex';
   } else {
     if(addBtn){
       addBtn.style.display='';
-      if(type==='orders')addBtn.onclick=()=>openOrderModal();
-      else if(type==='customers')addBtn.onclick=()=>openCustomerModal();
-      else if(type==='oldstats')addBtn.onclick=()=>openSaleModal();
-      else addBtn.onclick=()=>openInquiryModal();
+      if(type==='orders')addBtn.onclick=function(){openOrderModal();};
+      else if(type==='customers')addBtn.onclick=function(){openCustomerModal();};
+      else if(type==='oldstats')addBtn.onclick=function(){openSaleModal();};
+      else addBtn.onclick=function(){openInquiryModal();};
     }
     if(backBtn)backBtn.style.display='none';
     if(settingsBtn&&currentUser==='Alan')settingsBtn.style.display='flex';
@@ -4133,8 +4240,10 @@ function toggleSettingsPage(){
   if(active&&active.id==='page-settings'){closeSettingsPage();}else{showPage('settings');}
 }
 function closeSettingsPage(){
-  var el=document.getElementById('mnav-customers');
-  if(el){mobileNav('customers');}else{showPage('customers');}
+  var cfg=NAV_CONFIG[currentUser]||NAV_CONFIG['Kelly'];
+  var firstPage=cfg[0].p;
+  var el=document.getElementById('mnav-'+firstPage);
+  if(el){mobileNav(firstPage);}else{showPage(firstPage);}
 }
 
 function mobileNavAdd(){
@@ -4148,6 +4257,7 @@ function mobileNavAdd(){
 }
 
 function mobileNav(type){
+  if(type==='all'){showAllModules();return;}
   document.querySelectorAll('.mobile-nav-item').forEach(el=>el.classList.remove('active'));
   const el=document.getElementById('mnav-'+type);if(el)el.classList.add('active');
   setMobileHeader(type);
