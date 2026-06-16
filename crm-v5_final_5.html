@@ -57,6 +57,9 @@ a{color:var(--accent);text-decoration:none;}
 .s-quoted{background:rgba(247,212,79,.15);color:var(--yellow);}
 .s-sample{background:rgba(167,79,247,.15);color:var(--purple);}
 .s-won{background:rgba(62,207,142,.15);color:var(--green);}
+.s-pcat-active{background:rgba(62,207,142,.15);color:var(--green);}
+.s-pcat-sample{background:rgba(247,212,79,.15);color:var(--yellow);}
+.s-pcat-disc{background:rgba(247,111,111,.15);color:var(--red);}
 .s-lost{background:rgba(247,111,111,.15);color:var(--red);}
 .s-silent{background:rgba(150,150,150,.15);color:#888;}
 .source-tag{font-size:11px;color:var(--muted);background:var(--surface2);padding:2px 7px;border-radius:4px;white-space:nowrap;}
@@ -89,6 +92,7 @@ a{color:var(--accent);text-decoration:none;}
 .cols-hot{grid-template-columns:46px 80px 1fr 90px 90px 100px 55px 100px 150px 65px;}
 .cols-ord{grid-template-columns:85px 120px 1fr 120px 110px 100px 70px;}
 .cols-stat{grid-template-columns:110px 1fr 70px 120px 100px 70px 70px;}
+.cols-prodcat{display:grid;grid-template-columns:52px 90px 1fr 80px 120px 70px 100px 70px;gap:0;align-items:center;}
 .filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
 .filter-select,.search-box{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:8px;font-family:var(--font-body);font-size:13px;outline:none;}
 .filter-select:focus,.search-box:focus{border-color:var(--accent);}
@@ -478,6 +482,19 @@ a{color:var(--accent);text-decoration:none;}
       <button id="mprod-view-btn-card" onclick="setProdView('card')" style="padding:3px 7px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;line-height:1.2;flex-shrink:0">▦</button>
     </div>
   </div>
+  <div id="mh-prodcat" style="display:none;margin-bottom:-6px">
+    <div class="mobile-chips" style="padding-bottom:6px">
+      <div class="mobile-chip on" onclick="pcatMobileChip(this,'raw')">原材料</div>
+      <div class="mobile-chip" onclick="pcatMobileChip(this,'blank')">空白产品</div>
+      <div class="mobile-chip" onclick="pcatMobileChip(this,'custom')">定制品</div>
+      <div class="mobile-chip" onclick="pcatMobileChip(this,'service')">加工服务</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:3px;width:calc(100% + 30px);margin-left:-15px;margin-right:-15px;margin-top:-0.5px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
+      <input id="search-prodcat-m" placeholder="🔍 搜索产品..." oninput="renderMobileCards('prodcat')" style="flex:1;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;padding:3px 0;min-width:0">
+      <button id="mprodcat-view-btn-list" onclick="setPcatView('list')" style="padding:3px 7px;border-radius:5px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:12px;cursor:pointer;line-height:1.2;flex-shrink:0">☰</button>
+      <button id="mprodcat-view-btn-card" onclick="setPcatView('card')" style="padding:3px 7px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;line-height:1.2;flex-shrink:0">▦</button>
+    </div>
+  </div>
 </div>
 
 <div class="app">
@@ -854,6 +871,46 @@ a{color:var(--accent);text-decoration:none;}
         <div style="font-size:12px;color:var(--muted);margin-bottom:16px">清除所有本地数据并还原为内置演示数据。<strong style="color:var(--red)">此操作不可撤销。</strong></div>
         <button class="btn btn-outline" style="border-color:var(--red);color:var(--red)" onclick="resetDemoData()">🗑 清除数据并重置</button>
       </div>
+
+      <!-- 产品库管理区块 -->
+      <div style="margin-top:28px;padding-top:20px;border-top:2px solid var(--border)">
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px">🗂️ 产品库管理</div>
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;color:var(--muted2);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">类目前缀</div>
+          <div id="settings-pcat-categories"></div>
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <input class="form-input" id="settings-pcat-cat-code" placeholder="代码(如MUG)" style="width:90px">
+            <input class="form-input" id="settings-pcat-cat-cn" placeholder="中文名" style="flex:1">
+            <input class="form-input" id="settings-pcat-cat-en" placeholder="English" style="flex:1">
+            <input class="form-input" id="settings-pcat-cat-icon" placeholder="图标" style="width:56px">
+            <button class="btn btn-primary btn-sm" onclick="addPcatCategory()">＋</button>
+          </div>
+        </div>
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;color:var(--muted2);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">材质标签</div>
+          <div id="settings-pcat-materials"></div>
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <input class="form-input" id="settings-pcat-mat-new" placeholder="新材质..." style="flex:1">
+            <button class="btn btn-primary btn-sm" onclick="addPcatTag('pcatMaterials')">＋</button>
+          </div>
+        </div>
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;color:var(--muted2);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">工艺标签</div>
+          <div id="settings-pcat-processes"></div>
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <input class="form-input" id="settings-pcat-proc-new" placeholder="新工艺..." style="flex:1">
+            <button class="btn btn-primary btn-sm" onclick="addPcatTag('pcatProcesses')">＋</button>
+          </div>
+        </div>
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;color:var(--muted2);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">形态标签</div>
+          <div id="settings-pcat-forms"></div>
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <input class="form-input" id="settings-pcat-form-new" placeholder="新形态..." style="flex:1">
+            <button class="btn btn-primary btn-sm" onclick="addPcatTag('pcatForms')">＋</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -897,13 +954,57 @@ a{color:var(--accent);text-decoration:none;}
 
 <!-- 产品库 页面 -->
 <div class="page" id="page-prodcat">
-  <div class="page-header"><h2>📦 产品库</h2></div>
-  <div class="page-content" style="display:flex;align-items:center;justify-content:center;min-height:50vh">
-    <div style="text-align:center;color:var(--muted)">
-      <div style="font-size:52px;margin-bottom:14px">📦</div>
-      <div style="font-size:17px;font-weight:600;color:var(--text);margin-bottom:6px">产品库</div>
-      <div style="font-size:13px">功能开发中，即将上线</div>
+  <div class="page-head">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <span class="page-title">🗂️ 产品库</span>
+      <div class="tab-bar" style="flex:1;min-width:0">
+        <button class="tab-btn active" id="pcat-tab-raw" onclick="switchPcatType('raw')">原材料<span class="tab-count" id="pcat-cnt-raw">0</span></button>
+        <button class="tab-btn" id="pcat-tab-blank" onclick="switchPcatType('blank')">空白产品<span class="tab-count" id="pcat-cnt-blank">0</span></button>
+        <button class="tab-btn" id="pcat-tab-custom" onclick="switchPcatType('custom')">定制品<span class="tab-count" id="pcat-cnt-custom">0</span></button>
+        <button class="tab-btn" id="pcat-tab-service" onclick="switchPcatType('service')">加工服务<span class="tab-count" id="pcat-cnt-service">0</span></button>
+      </div>
+      <button class="btn btn-primary" onclick="openProdCatModal('')" style="white-space:nowrap">+ 新建</button>
     </div>
+  </div>
+  <div class="page-content">
+    <div class="filters">
+      <input type="text" class="search-box" id="search-prodcat" placeholder="搜索产品名称/编码..." oninput="renderProdCat()" style="min-width:180px">
+      <select class="filter-select" id="fp-pcat-category" onchange="renderProdCat()"><option value="">全部类目</option></select>
+      <select class="filter-select" id="fp-pcat-material" onchange="renderProdCat()"><option value="">全部材质</option></select>
+      <select class="filter-select" id="fp-pcat-process" onchange="renderProdCat()"><option value="">全部工艺</option></select>
+      <select class="filter-select" id="fp-pcat-status" onchange="renderProdCat()">
+        <option value="">全部状态</option>
+        <option value="active">在售</option>
+        <option value="sample">样品展示</option>
+        <option value="discontinued">停产</option>
+      </select>
+      <button class="btn btn-outline" onclick="clearFilters('prodcat')">清除</button>
+      <div style="display:flex;gap:4px;margin-left:8px">
+        <button class="btn btn-outline active" id="prodcat-view-btn-list" onclick="setPcatView('list')" title="列表">☰</button>
+        <button class="btn btn-outline" id="prodcat-view-btn-card" onclick="setPcatView('card')" title="卡片">⊞</button>
+      </div>
+    </div>
+    <div class="table-wrap" id="prodcat-table-wrap">
+      <div class="table-scroll">
+        <div class="table-inner" style="min-width:700px">
+          <div class="table-header cols-prodcat">
+            <div>图片</div>
+            <div>编码</div>
+            <div>产品名称</div>
+            <div>类目</div>
+            <div>材质/工艺</div>
+            <div>状态</div>
+            <div>参考价格</div>
+            <div>库存</div>
+          </div>
+          <div id="prodcat-table-body"></div>
+        </div>
+      </div>
+    </div>
+    <div id="prodcat-card-view-wrap" style="display:none">
+      <div class="inq-card-grid" id="prodcat-card-grid"></div>
+    </div>
+    <div id="mobile-prodcat-cards" class="mobile-cards"></div>
   </div>
 </div>
 
@@ -1265,6 +1366,120 @@ a{color:var(--accent);text-decoration:none;}
 </div>
 </div>
 
+<!-- 产品库 新建/编辑 Modal -->
+<div class="modal-overlay" id="prodcat-modal" onclick="closeModalBg(event,'prodcat-modal')">
+<div class="modal" style="max-width:680px">
+  <div class="modal-head"><div class="modal-title" id="prodcat-modal-title">新建产品</div><button class="modal-close" onclick="closeModal('prodcat-modal')">×</button></div>
+  <div class="modal-body">
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">产品类型 *</label>
+        <select class="form-input" id="fpc-type">
+          <option value="raw">原材料</option>
+          <option value="blank">空白产品</option>
+          <option value="custom">定制品</option>
+          <option value="service">加工服务</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">SKU编码 *</label><input class="form-input" type="text" id="fpc-sku-code" placeholder="如：MUG-001"></div>
+      <div class="form-group full"><label class="form-label">中文名称 *</label><input class="form-input" type="text" id="fpc-name-cn" placeholder="如：11oz白色升华马克杯"></div>
+      <div class="form-group full"><label class="form-label">英文名称</label><input class="form-input" type="text" id="fpc-name-en" placeholder="如：11oz White Sublimation Ceramic Mug"></div>
+      <div class="form-group"><label class="form-label">产品类目</label><select class="form-input" id="fpc-category"><option value="">请选择...</option></select></div>
+      <div class="form-group"><label class="form-label">状态</label>
+        <select class="form-input" id="fpc-status">
+          <option value="active">在售</option>
+          <option value="sample">样品展示</option>
+          <option value="discontinued">停产</option>
+        </select>
+      </div>
+      <div class="form-group full"><label class="form-label">材质 <span style="font-size:10px;color:var(--muted)">可多选</span></label><div id="fpc-material-chips" style="display:flex;flex-wrap:wrap;gap:6px;padding-top:4px"></div></div>
+      <div class="form-group full"><label class="form-label">工艺 <span style="font-size:10px;color:var(--muted)">可多选</span></label><div id="fpc-process-chips" style="display:flex;flex-wrap:wrap;gap:6px;padding-top:4px"></div></div>
+      <div class="form-group"><label class="form-label">形态标签</label><select class="form-input" id="fpc-form-tag"><option value="">请选择...</option></select></div>
+      <div class="form-group"><label class="form-label"><label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="fpc-can-sell" checked style="accent-color:var(--accent)"><span>可对外销售</span></label></label></div>
+      <div class="form-group"><label class="form-label"><label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="fpc-has-stock" style="accent-color:var(--accent)"><span>有库存管理</span></label></label></div>
+      <div class="form-group full"><label class="form-label">中文描述</label><textarea class="form-input form-textarea" id="fpc-desc-cn" placeholder="产品描述（中文）..."></textarea></div>
+      <div class="form-group full"><label class="form-label">英文描述</label><textarea class="form-input form-textarea" id="fpc-desc-en" placeholder="Product description (English)..."></textarea></div>
+      <div class="form-group full"><label class="form-label">备注</label><input class="form-input" type="text" id="fpc-note" placeholder="内部备注..."></div>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <div id="prodcat-delete-area"></div>
+    <div style="display:flex;gap:8px"><button class="btn btn-outline" onclick="closeModal('prodcat-modal')">取消</button><button class="btn btn-primary" onclick="saveProdCatRecord()">保存</button></div>
+  </div>
+</div>
+</div>
+
+<!-- 产品库 SKU Modal -->
+<div class="modal-overlay" id="pcat-sku-modal" onclick="closeModalBg(event,'pcat-sku-modal')">
+<div class="modal" style="max-width:680px">
+  <div class="modal-head"><div class="modal-title" id="pcat-sku-modal-title">新增SKU</div><button class="modal-close" onclick="closeModal('pcat-sku-modal')">×</button></div>
+  <div class="modal-body">
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">SKU编码</label><input class="form-input" type="text" id="fpsk-sku-code" placeholder="如：MUG-001-A"></div>
+      <div class="form-group full"><label class="form-label">规格描述（中文）*</label><input class="form-input" type="text" id="fpsk-variant-cn" placeholder="如：白色 · 裸装 · 36个/箱"></div>
+      <div class="form-group full"><label class="form-label">规格描述（英文）</label><input class="form-input" type="text" id="fpsk-variant-en" placeholder="如：White · Bulk · 36pcs/ctn"></div>
+      <div class="form-group"><label class="form-label">颜色</label><input class="form-input" type="text" id="fpsk-color" placeholder="如：白色"></div>
+      <div class="form-group"><label class="form-label">尺寸/规格</label><input class="form-input" type="text" id="fpsk-size" placeholder="如：11oz"></div>
+      <div class="form-group"><label class="form-label">形状</label><input class="form-input" type="text" id="fpsk-shape" placeholder="如：直身"></div>
+      <div class="form-group"><label class="form-label">包装方式</label>
+        <select class="form-input" id="fpsk-pack-type">
+          <option value="">请选择...</option>
+          <option value="裸装">裸装</option>
+          <option value="带盒">带盒</option>
+          <option value="散装">散装</option>
+          <option value="彩盒">彩盒</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">装箱数</label><input class="form-input" type="number" id="fpsk-qty-per-carton" placeholder="如：36"></div>
+      <div class="form-group"><label class="form-label">单件重量(g)</label><input class="form-input" type="number" id="fpsk-unit-weight" placeholder="如：330"></div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">箱尺 (cm) — 长 × 宽 × 高</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input class="form-input" type="number" id="fpsk-ctn-l" placeholder="长" step="0.1" style="flex:1">
+          <span style="color:var(--muted);font-size:14px;flex-shrink:0">×</span>
+          <input class="form-input" type="number" id="fpsk-ctn-w" placeholder="宽" step="0.1" style="flex:1">
+          <span style="color:var(--muted);font-size:14px;flex-shrink:0">×</span>
+          <input class="form-input" type="number" id="fpsk-ctn-h" placeholder="高" step="0.1" style="flex:1">
+          <span style="color:var(--muted);font-size:12px;flex-shrink:0">cm</span>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">箱重 (kg)</label><input class="form-input" type="number" id="fpsk-ctn-weight" placeholder="如：18.5" step="0.1"></div>
+    </div>
+    <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+      <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">价格</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 80px;gap:8px;align-items:end">
+        <div id="fpsk-cost-wrap" class="form-group"><label class="form-label">成本价</label><input class="form-input" type="number" id="fpsk-cost-price" placeholder="0.00" step="0.01"></div>
+        <div class="form-group"><label class="form-label">报价低</label><input class="form-input" type="number" id="fpsk-price-min" placeholder="0.00" step="0.01"></div>
+        <div class="form-group"><label class="form-label">报价高</label><input class="form-input" type="number" id="fpsk-price-max" placeholder="0.00" step="0.01"></div>
+        <div class="form-group"><label class="form-label">币种</label><select class="form-input" id="fpsk-currency"><option value="USD">$ USD</option><option value="CNY">¥ CNY</option></select></div>
+      </div>
+      <div id="fpsk-floor-wrap" style="display:none;margin-top:6px">
+        <div class="form-group"><label class="form-label">底价（仅 Alan/Penny/Kelly 可见）</label><input class="form-input" type="number" id="fpsk-floor-price" placeholder="0.00" step="0.01"></div>
+      </div>
+    </div>
+    <div id="fpsk-stock-section" style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;display:none">
+      <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">库存</div>
+      <div style="display:grid;grid-template-columns:1fr 80px 1fr;gap:8px;align-items:end">
+        <div class="form-group"><label class="form-label">当前库存</label><input class="form-input" type="number" id="fpsk-stock-qty" placeholder="0"></div>
+        <div class="form-group"><label class="form-label">单位</label><input class="form-input" type="text" id="fpsk-stock-unit" placeholder="个"></div>
+        <div class="form-group"><label class="form-label">安全库存</label><input class="form-input" type="number" id="fpsk-safety-stock" placeholder="0"></div>
+      </div>
+    </div>
+    <div id="fpsk-bom-section" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">🔩 BOM 材料清单 <span style="font-size:11px;color:var(--muted);font-weight:400">（仅限Alan/Penny）</span></div>
+        <button class="btn btn-outline btn-sm" onclick="addPcatBomRow()">＋ 添加</button>
+      </div>
+      <div id="fpsk-bom-area"><div style="font-size:12px;color:var(--muted);padding:6px 0">暂无材料，点击「添加」新增</div></div>
+    </div>
+    <div class="form-group" style="margin-top:14px"><label class="form-label">备注</label><input class="form-input" type="text" id="fpsk-note" placeholder="其他说明..."></div>
+  </div>
+  <div class="modal-foot">
+    <div id="pcat-sku-delete-area"></div>
+    <div style="display:flex;gap:8px"><button class="btn btn-outline" onclick="closeModal('pcat-sku-modal')">取消</button><button class="btn btn-primary" onclick="savePcatSkuRecord()">保存SKU</button></div>
+  </div>
+</div>
+</div>
+
 <!-- Detail Panel -->
 <div class="detail-panel" id="detail-panel">
   <div class="detail-head">
@@ -1293,7 +1508,7 @@ a{color:var(--accent);text-decoration:none;}
 <div class="toast" id="toast"></div>
 
 <script>
-const SK={inq:'crm_inq_v5',cust:'crm_cust_v5',ord:'crm_ord_v5',sale:'crm_sale_v5',user:'crm_user_v5',settings:'crm_settings_v5',prod:'crm_prod_v5'};
+const SK={inq:'crm_inq_v5',cust:'crm_cust_v5',ord:'crm_ord_v5',sale:'crm_sale_v5',user:'crm_user_v5',settings:'crm_settings_v5',prod:'crm_prod_v5',prodcat:'crm_prodcat_v5'};
 const DEF_PRODUCTS=['MDF杯垫','MDF冰箱贴','马克杯','帆布袋','T恤','Shot Glass','软木杯垫','其他'];
 const DEF_INQ=[
   /* ── 活跃询盘（各状态全覆盖）── */
@@ -1392,7 +1607,7 @@ let saleRecords=JSON.parse(localStorage.getItem(SK.sale)||'null')||JSON.parse(JS
 inquiries.forEach(function(i){if(!i.followupDate||!i.followupNote){i.followupDate='';i.followupNote='';}});
 customers.forEach(function(c){if(!c.followupDate||!c.followupNote){c.followupDate='';c.followupNote='';}});
 let currentUser=localStorage.getItem(SK.user)||'Alan';
-let crmSettings=JSON.parse(localStorage.getItem(SK.settings)||'null')||{products:DEF_PRODUCTS.slice()};
+let crmSettings=JSON.parse(localStorage.getItem(SK.settings)||'null')||{products:DEF_PRODUCTS.slice(),pcatCategories:[{code:'MUG',nameCN:'杯子类',nameEN:'Mugs',icon:'☕'},{code:'CTR',nameCN:'杯垫类',nameEN:'Coasters',icon:'🟫'},{code:'BAG',nameCN:'包袋类',nameEN:'Bags',icon:'👜'},{code:'MGN',nameCN:'冰箱贴/装饰',nameEN:'Magnets & Decor',icon:'🧲'},{code:'TEE',nameCN:'T恤/布艺',nameEN:'Apparel',icon:'👕'},{code:'TIL',nameCN:'瓷砖/板材',nameEN:'Tiles & Boards',icon:'🪨'},{code:'BRD',nameCN:'原板材',nameEN:'Raw Boards',icon:'📐'},{code:'PKG',nameCN:'包装耗材',nameEN:'Packaging',icon:'📦'},{code:'INK',nameCN:'墨水/耗材',nameEN:'Inks & Supplies',icon:'🖨️'},{code:'PAP',nameCN:'纸张',nameEN:'Paper',icon:'📄'},{code:'SVC',nameCN:'加工服务',nameEN:'Services',icon:'⚙️'},{code:'MBX',nameCN:'音乐盒',nameEN:'Music Boxes',icon:'🎵'}],pcatMaterials:['陶瓷','玻璃','搪瓷','塑料','MDF','软木','布艺','帆布','亚克力','橡胶','金属','铝合金','不锈钢','石头','大理石','卡纸','皮革','树脂'],pcatProcesses:['热转印','UV直打','DTF打印','激光切割','激光打标','丝网印刷','刺绣','水晶标','贴标','热压','烫金','压印'],pcatForms:['杯子','杯垫','冰箱贴','T恤','帆布袋','背包','瓷砖','盘子','音乐盒','钥匙扣','手机壳','相框','书签','徽章','贴纸']};
 let nextInqId=inquiries.length?Math.max(...inquiries.map(i=>i.id))+1:1;
 let nextCustId=customers.length?Math.max(...customers.map(c=>c.id))+1:1;
 let nextOrdId=orders.length?Math.max(...orders.map(o=>o.id))+1:1;
@@ -1409,6 +1624,10 @@ var _dashOvExpanded=false,_dashTdExpanded=false,_dashVipExpanded=false;
 function saveAll(){localStorage.setItem(SK.inq,JSON.stringify(inquiries));localStorage.setItem(SK.cust,JSON.stringify(customers));localStorage.setItem(SK.ord,JSON.stringify(orders));localStorage.setItem(SK.sale,JSON.stringify(saleRecords));}
 function saveSettings(){localStorage.setItem(SK.settings,JSON.stringify(crmSettings));}
 function getProducts(){return(crmSettings.products&&crmSettings.products.length)?crmSettings.products:DEF_PRODUCTS.slice();}
+function getPcatCategories(){if(!crmSettings.pcatCategories||!crmSettings.pcatCategories.length)crmSettings.pcatCategories=[{code:'MUG',nameCN:'杯子类',nameEN:'Mugs',icon:'☕'},{code:'CTR',nameCN:'杯垫类',nameEN:'Coasters',icon:'🟫'},{code:'BAG',nameCN:'包袋类',nameEN:'Bags',icon:'👜'},{code:'MGN',nameCN:'冰箱贴/装饰',nameEN:'Magnets & Decor',icon:'🧲'},{code:'TEE',nameCN:'T恤/布艺',nameEN:'Apparel',icon:'👕'},{code:'TIL',nameCN:'瓷砖/板材',nameEN:'Tiles & Boards',icon:'🪨'},{code:'BRD',nameCN:'原板材',nameEN:'Raw Boards',icon:'📐'},{code:'PKG',nameCN:'包装耗材',nameEN:'Packaging',icon:'📦'},{code:'INK',nameCN:'墨水/耗材',nameEN:'Inks & Supplies',icon:'🖨️'},{code:'PAP',nameCN:'纸张',nameEN:'Paper',icon:'📄'},{code:'SVC',nameCN:'加工服务',nameEN:'Services',icon:'⚙️'},{code:'MBX',nameCN:'音乐盒',nameEN:'Music Boxes',icon:'🎵'}];return crmSettings.pcatCategories;}
+function getPcatMaterials(){if(!crmSettings.pcatMaterials||!crmSettings.pcatMaterials.length)crmSettings.pcatMaterials=['陶瓷','玻璃','搪瓷','塑料','MDF','软木','布艺','帆布','亚克力','橡胶','金属','铝合金','不锈钢','石头','大理石','卡纸','皮革','树脂'];return crmSettings.pcatMaterials;}
+function getPcatProcesses(){if(!crmSettings.pcatProcesses||!crmSettings.pcatProcesses.length)crmSettings.pcatProcesses=['热转印','UV直打','DTF打印','激光切割','激光打标','丝网印刷','刺绣','水晶标','贴标','热压','烫金','压印'];return crmSettings.pcatProcesses;}
+function getPcatForms(){if(!crmSettings.pcatForms||!crmSettings.pcatForms.length)crmSettings.pcatForms=['杯子','杯垫','冰箱贴','T恤','帆布袋','背包','瓷砖','盘子','音乐盒','钥匙扣','手机壳','相框','书签','徽章','贴纸'];return crmSettings.pcatForms;}
 function buildProductOptions(selectedVal){
   return getProducts().map(function(p){return '<option'+(p===selectedVal?' selected':'')+'>'+p+'</option>';}).join('');
 }
@@ -1520,6 +1739,7 @@ function showPage(p){
   else if(p==='oldstats'){renderOldStats();renderMobileCards('stats');}
   else if(p==='orders'){renderOrders();renderMobileCards('ord');}
   else if(p==='proddev'){setProdView(prodView);}
+  else if(p==='prodcat'){setPcatView(pcatView);}
   else if(p==='settings'){renderSettingsPage();}
 }
 
@@ -1541,6 +1761,7 @@ function clearFilters(type){
   else if(type==='cust'){['search-cust','cf-layer','cf-type','cf-person','cf-size','cf-source'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});custQuickFilters={};updateQuickFilterUI();renderCustomers();}
   else if(type==='old'){['search-old','of-year','of-currency','of-person','of-quarter'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderOldStats();}
   else if(type==='ord'){['search-ord','ord-stage','ord-currency','ord-person'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderOrders();}
+  else if(type==='prodcat'){['search-prodcat','fp-pcat-category','fp-pcat-material','fp-pcat-process','fp-pcat-status'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});renderProdCat();}
 }
 
 function renderDashboard(){
@@ -3869,7 +4090,7 @@ function newInqFromCust(custId){
   openModal('inq-modal');
 }
 
-function editCurrent(){if(!currentDetailId)return;const _id=currentDetailId,_type=currentDetailType;closeDetail();if(_type==='inquiry')editInquiry(_id);else if(_type==='customer')editCustomer(_id);else if(_type==='order')editOrder(_id);else if(_type==='sale')editSaleRecord(_id);else if(_type==='prod')openProdModal(_id);}
+function editCurrent(){if(!currentDetailId)return;const _id=currentDetailId,_type=currentDetailType;closeDetail();if(_type==='inquiry')editInquiry(_id);else if(_type==='customer')editCustomer(_id);else if(_type==='order')editOrder(_id);else if(_type==='sale')editSaleRecord(_id);else if(_type==='prod')openProdModal(_id);else if(_type==='prodcat')openProdCatModal(_id);}
 
 function toggleStar(){
   if(!currentDetailId)return;
@@ -4365,10 +4586,10 @@ let mobileCustShown={core:10,focus:10,nurture:10,sleeping:10,dead:10};
 const MOBILE_BATCH=10;
 
 function setMobileHeader(type){
-  ['mh-inq','mh-hot','mh-cust','mh-ord','mh-stats','mh-prod'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
-  const titles={dashboard:'数据看板',inquiries:'询盘列表',hot:'🔥 热点商机',customers:'客户管理',oldstats:'📈 销售统计',orders:'📦 执行中订单',settings:'⚙️ 管理员设置',proddev:'🔧 产品开发',prodcat:'📦 产品库',procurement:'🛒 采购跟单',finance:'💰 财务'};
+  ['mh-inq','mh-hot','mh-cust','mh-ord','mh-stats','mh-prod','mh-prodcat'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  const titles={dashboard:'数据看板',inquiries:'询盘列表',hot:'🔥 热点商机',customers:'客户管理',oldstats:'📈 销售统计',orders:'📦 执行中订单',settings:'⚙️ 管理员设置',proddev:'🔧 产品开发',prodcat:'🗂️ 产品库',procurement:'🛒 采购跟单',finance:'💰 财务'};
   document.getElementById('mobile-page-title').textContent=titles[type]||type;
-  const map={inquiries:'mh-inq',hot:'mh-hot',customers:'mh-cust',orders:'mh-ord',oldstats:'mh-stats',proddev:'mh-prod'};
+  const map={inquiries:'mh-inq',hot:'mh-hot',customers:'mh-cust',orders:'mh-ord',oldstats:'mh-stats',proddev:'mh-prod',prodcat:'mh-prodcat'};
   if(map[type]){const el=document.getElementById(map[type]);if(el)el.style.display='';}
   var addBtn=document.getElementById('mobile-add-btn');
   var backBtn=document.getElementById('mobile-back-btn');
@@ -4709,6 +4930,8 @@ function renderMobileCards(page){
     }).join('');
   } else if(page==='prod'){
     renderMobileCards_prod();
+  } else if(page==='prodcat'){
+    renderMobileCards_prodcat();
   }
 }
 
@@ -4735,6 +4958,7 @@ function renderSettingsPage(){
         +'</div>';
     }).join('');
   }
+  renderPcatSettingsSection();
 }
 function addSettingsProd(){
   var inp=document.getElementById('settings-new-prod');
@@ -4899,7 +5123,7 @@ function refreshAll(){
   updateInqTabCounts();
   const active=document.querySelector('.page.active');if(!active)return;
   const id=active.id.replace('page-','');
-  if(id==='dashboard')renderDashboard();else if(id==='hot')renderHot();else if(id==='inquiries')renderInquiries();else if(id==='customers')renderCustomers();else if(id==='oldstats')renderOldStats();else if(id==='orders')renderOrders();else if(id==='proddev'){if(prodView==='card')renderProdCardView();else renderProdDev();}
+  if(id==='dashboard')renderDashboard();else if(id==='hot')renderHot();else if(id==='inquiries')renderInquiries();else if(id==='customers')renderCustomers();else if(id==='oldstats')renderOldStats();else if(id==='orders')renderOrders();else if(id==='proddev'){if(prodView==='card')renderProdCardView();else renderProdDev();}else if(id==='prodcat'){if(pcatView==='card')renderPcatCardView();else renderProdCat();}
 }
 
 /* ===== IndexedDB 图片存储 ===== */
@@ -5343,6 +5567,54 @@ function autoUpdateCustomerTags(alias){
 }
 
 (function init(){document.getElementById('user-select').value=currentUser;switchUser(currentUser);rebuildProductSelects();renderDashboard();if(window.innerWidth<=768)setMobileHeader('dashboard');})();
+
+/* ===== 产品库模块示例数据 ===== */
+var DEF_PRODCAT=[
+  /* 原材料 */
+  {id:'pr001',skuCode:'PAP-001',nameCN:'热转印纸A4',nameEN:'A4 Sublimation Transfer Paper',type:'raw',categoryCode:'PAP',materials:['纸张'],processes:['热转印'],formTag:'纸张',status:'active',canSell:true,hasStock:true,descCN:'适用热转印工艺，100张/包',descEN:'100 sheets/pack, for sublimation printing',note:'',linkedProdDevId:'',skus:[
+    {id:'prs001',skuCode:'PAP-001-A',variantCN:'A4 · 100张/包',variantEN:'A4 · 100 sheets/pack',color:'',size:'A4',shape:'',packType:'散装',qtyPerCarton:10,ctnL:32,ctnW:22,ctnH:30,ctnWeight:5,unitWeight:80,costPrice:18,priceMin:25,priceMax:35,floorPrice:22,currency:'CNY',stockQty:50,stockUnit:'包',safetyStock:5,bom:[],note:''}
+  ]},
+  {id:'pr002',skuCode:'PKG-001',nameCN:'马克杯单独礼盒',nameEN:'Individual Mug Gift Box',type:'raw',categoryCode:'PKG',materials:['卡纸'],processes:[],formTag:'包装盒',status:'active',canSell:true,hasStock:true,descCN:'适配11oz/15oz马克杯，白色天地盖',descEN:'Fits 11oz/15oz mug, white lid box',note:'',linkedProdDevId:'',skus:[
+    {id:'prs002',skuCode:'PKG-001-A',variantCN:'标准款 · 100个/箱',variantEN:'Standard · 100pcs/ctn',color:'白色',size:'标准',shape:'',packType:'裸装',qtyPerCarton:100,ctnL:40,ctnW:30,ctnH:35,ctnWeight:4.5,unitWeight:35,costPrice:0.8,priceMin:1.2,priceMax:1.8,floorPrice:1.0,currency:'CNY',stockQty:500,stockUnit:'个',safetyStock:100,bom:[],note:''}
+  ]},
+  {id:'pr003',skuCode:'PKG-002',nameCN:'马克杯外箱36装',nameEN:'Mug Outer Carton 36pcs',type:'raw',categoryCode:'PKG',materials:['卡纸'],processes:[],formTag:'外箱',status:'active',canSell:false,hasStock:true,descCN:'36个马克杯装外箱',descEN:'Outer carton for 36 mugs',note:'',linkedProdDevId:'',skus:[
+    {id:'prs003',skuCode:'PKG-002-A',variantCN:'36装规格',variantEN:'36pcs size',color:'',size:'36装',shape:'',packType:'散装',qtyPerCarton:1,ctnL:55,ctnW:38,ctnH:33,ctnWeight:1.2,unitWeight:1200,costPrice:3.5,priceMin:5,priceMax:7,floorPrice:4.5,currency:'CNY',stockQty:80,stockUnit:'个',safetyStock:20,bom:[],note:''}
+  ]},
+  /* 空白产品 */
+  {id:'pb001',skuCode:'MUG-001',nameCN:'11oz白色升华马克杯',nameEN:'11oz White Sublimation Ceramic Mug',type:'blank',categoryCode:'MUG',materials:['陶瓷'],processes:['热转印'],formTag:'杯子',status:'active',canSell:true,hasStock:true,descCN:'经典直身白色，适用热转印工艺，哑光内壁',descEN:'Classic straight shape, suitable for sublimation printing, matte inner wall',note:'主力款，常备库存',linkedProdDevId:'',skus:[
+    {id:'pbs001',skuCode:'MUG-001-A',variantCN:'白色 · 裸装 · 36个/箱',variantEN:'White · Bulk · 36pcs/ctn',color:'白色',size:'11oz',shape:'直身',packType:'裸装',qtyPerCarton:36,ctnL:52,ctnW:36,ctnH:30,ctnWeight:18.5,unitWeight:330,costPrice:2.8,priceMin:4.5,priceMax:6.5,floorPrice:3.8,currency:'USD',stockQty:288,stockUnit:'个',safetyStock:72,bom:[],note:'主备款'},
+    {id:'pbs002',skuCode:'MUG-001-B',variantCN:'白色 · 带盒 · 36个/箱',variantEN:'White · Boxed · 36pcs/ctn',color:'白色',size:'11oz',shape:'直身',packType:'带盒',qtyPerCarton:36,ctnL:54,ctnW:38,ctnH:34,ctnWeight:21.5,unitWeight:330,costPrice:3.6,priceMin:5.5,priceMax:8.0,floorPrice:4.8,currency:'USD',stockQty:72,stockUnit:'个',safetyStock:0,bom:[],note:''}
+  ]},
+  {id:'pb002',skuCode:'CTR-001',nameCN:'软木方形杯垫9.5cm',nameEN:'Cork Square Coaster 9.5cm',type:'blank',categoryCode:'CTR',materials:['软木'],processes:['热转印','UV直打'],formTag:'杯垫',status:'active',canSell:true,hasStock:true,descCN:'9.5cm方形软木杯垫，可热转印或UV直打',descEN:'9.5cm square cork coaster, suitable for sublimation or UV printing',note:'',linkedProdDevId:'',skus:[
+    {id:'pbs003',skuCode:'CTR-001-A',variantCN:'原色 · 裸装 · 100个/箱',variantEN:'Natural · Bulk · 100pcs/ctn',color:'原色',size:'9.5cm',shape:'方形',packType:'裸装',qtyPerCarton:100,ctnL:35,ctnW:35,ctnH:28,ctnWeight:6.5,unitWeight:28,costPrice:0.6,priceMin:1.0,priceMax:1.8,floorPrice:0.85,currency:'USD',stockQty:500,stockUnit:'个',safetyStock:100,bom:[],note:''}
+  ]},
+  {id:'pb003',skuCode:'BAG-001',nameCN:'帆布环保手提袋',nameEN:'Natural Canvas Tote Bag',type:'blank',categoryCode:'BAG',materials:['帆布'],processes:['DTF打印','丝网印刷','热转印'],formTag:'帆布袋',status:'active',canSell:true,hasStock:true,descCN:'280g帆布，加厚款，适合各类印花工艺',descEN:'280g canvas, heavy duty, suitable for various printing methods',note:'',linkedProdDevId:'',skus:[
+    {id:'pbs004',skuCode:'BAG-001-A',variantCN:'原色 · 短柄 · 38×42cm · 50个/箱',variantEN:'Natural · Short Handle · 38×42cm · 50pcs/ctn',color:'原色',size:'38×42cm',shape:'直立',packType:'裸装',qtyPerCarton:50,ctnL:42,ctnW:32,ctnH:35,ctnWeight:8.5,unitWeight:155,costPrice:1.8,priceMin:2.8,priceMax:4.5,floorPrice:2.3,currency:'USD',stockQty:200,stockUnit:'个',safetyStock:50,bom:[],note:''}
+  ]},
+  /* 定制品 */
+  {id:'pc001',skuCode:'MUG-D001',nameCN:'定制印图马克杯11oz',nameEN:'Custom Printed 11oz Mug',type:'custom',categoryCode:'MUG',materials:['陶瓷'],processes:['热转印'],formTag:'杯子',status:'active',canSell:true,hasStock:false,descCN:'11oz白瓷马克杯，客户提供设计，热转印工艺，单面或双面印刷',descEN:'11oz white ceramic mug, customer design, sublimation printing, single or double side',note:'按客户设计生产，不留库存',linkedProdDevId:'',skus:[
+    {id:'pcs001',skuCode:'MUG-D001-A',variantCN:'单面印 · 带盒 · 36个/箱',variantEN:'Single Side · Boxed · 36pcs/ctn',color:'白色（可选彩色）',size:'11oz',shape:'直身',packType:'带盒',qtyPerCarton:36,ctnL:54,ctnW:38,ctnH:34,ctnWeight:22,unitWeight:330,costPrice:4.5,priceMin:7.0,priceMax:12.0,floorPrice:6.0,currency:'USD',stockQty:0,stockUnit:'个',safetyStock:0,bom:[
+      {type:'ref',skuCode:'MUG-001-A',nameCN:'11oz白色升华马克杯 裸装',qty:1,unit:'个',unitCost:2.8,currency:'USD',note:'基底杯子'},
+      {type:'ref',skuCode:'PKG-001-A',nameCN:'马克杯单独礼盒',qty:1,unit:'个',unitCost:0.8,currency:'CNY',note:'单独包装'},
+      {type:'text',nameCN:'热转印纸',qty:1,unit:'张',unitCost:0.18,currency:'CNY',note:'A4热转印纸，每件约1张'},
+      {type:'text',nameCN:'热升华墨水',qty:1,unit:'件摊销',unitCost:0.3,currency:'CNY',note:'按件摊销墨水成本'}
+    ],note:''}
+  ]},
+  {id:'pc002',skuCode:'CTR-D001',nameCN:'定制印图软木杯垫',nameEN:'Custom Printed Cork Coaster',type:'custom',categoryCode:'CTR',materials:['软木'],processes:['UV直打'],formTag:'杯垫',status:'active',canSell:true,hasStock:false,descCN:'9.5cm方形软木杯垫，UV直打全彩印刷，可单面/双面',descEN:'9.5cm cork coaster, UV direct print full color, single or double side',note:'',linkedProdDevId:'',skus:[
+    {id:'pcs002',skuCode:'CTR-D001-A',variantCN:'单面UV · 裸装 · 100个/箱',variantEN:'Single Side UV · Bulk · 100pcs/ctn',color:'全彩',size:'9.5cm',shape:'方形',packType:'裸装',qtyPerCarton:100,ctnL:35,ctnW:35,ctnH:28,ctnWeight:7,unitWeight:28,costPrice:1.2,priceMin:2.0,priceMax:3.5,floorPrice:1.6,currency:'USD',stockQty:0,stockUnit:'个',safetyStock:0,bom:[
+      {type:'ref',skuCode:'CTR-001-A',nameCN:'软木方形杯垫 裸装',qty:1,unit:'个',unitCost:0.6,currency:'USD',note:'基底杯垫'},
+      {type:'text',nameCN:'UV直打墨水',qty:1,unit:'件摊销',unitCost:0.15,currency:'USD',note:'UV墨水按件摊销'}
+    ],note:''}
+  ]},
+  /* 加工服务 */
+  {id:'ps001',skuCode:'SVC-001',nameCN:'热转印打印服务',nameEN:'Sublimation Printing Service',type:'service',categoryCode:'SVC',materials:[],processes:['热转印'],formTag:'打印',status:'active',canSell:true,hasStock:false,descCN:'客户提供设计文件，我们完成热转印打印及转移',descEN:'Customer provides design file, we handle sublimation printing and transfer',note:'',linkedProdDevId:'',skus:[
+    {id:'pss001',skuCode:'SVC-001-A',variantCN:'按件计价 · 1-49件',variantEN:'Per piece · 1-49pcs',color:'',size:'',shape:'',packType:'',qtyPerCarton:0,ctnL:0,ctnW:0,ctnH:0,ctnWeight:0,unitWeight:0,costPrice:1.5,priceMin:3.0,priceMax:5.0,floorPrice:2.0,currency:'USD',stockQty:0,stockUnit:'件',safetyStock:0,bom:[],note:'含纸张和墨水摊销'},
+    {id:'pss002',skuCode:'SVC-001-B',variantCN:'按件计价 · 50-199件',variantEN:'Per piece · 50-199pcs',color:'',size:'',shape:'',packType:'',qtyPerCarton:0,ctnL:0,ctnW:0,ctnH:0,ctnWeight:0,unitWeight:0,costPrice:1.2,priceMin:2.0,priceMax:3.5,floorPrice:1.6,currency:'USD',stockQty:0,stockUnit:'件',safetyStock:0,bom:[],note:''}
+  ]},
+  {id:'ps002',skuCode:'SVC-002',nameCN:'UV直打服务',nameEN:'UV Direct Printing Service',type:'service',categoryCode:'SVC',materials:[],processes:['UV直打'],formTag:'打印',status:'active',canSell:true,hasStock:false,descCN:'UV直打全彩印刷，适合硬质平面产品',descEN:'UV direct print full color, suitable for rigid flat products',note:'',linkedProdDevId:'',skus:[
+    {id:'pss003',skuCode:'SVC-002-A',variantCN:'按件计价 · 1-99件',variantEN:'Per piece · 1-99pcs',color:'',size:'',shape:'',packType:'',qtyPerCarton:0,ctnL:0,ctnW:0,ctnH:0,ctnWeight:0,unitWeight:0,costPrice:0.8,priceMin:1.5,priceMax:3.0,floorPrice:1.0,currency:'USD',stockQty:0,stockUnit:'件',safetyStock:0,bom:[],note:''}
+  ]}
+];
 
 /* ===== 产品开发模块 ===== */
 var DEF_PROD=[
@@ -6144,6 +6416,848 @@ function deleteProdImg(projId,idx){
       else _setProdThumb(projId,d);
     });
   });
+}
+
+/* ===== 产品库模块 ===== */
+var pcatCurrentType='raw';
+var pcatView='list';
+var _editingPcatId=null;
+var _editingPcatSkuProdId=null;
+var _editingPcatSkuId=null;
+
+function getProdCatData(){
+  var s=localStorage.getItem(SK.prodcat);
+  var d=s?JSON.parse(s):{products:[]};
+  if(!d.products)d.products=[];
+  if(d.products.length===0){d.products=DEF_PRODCAT.slice();saveProdCatData(d);}
+  return d;
+}
+function saveProdCatData(d){localStorage.setItem(SK.prodcat,JSON.stringify(d));}
+
+function getPcatStatusLabel(st){
+  if(st==='active')return '在售';
+  if(st==='sample')return '样品';
+  if(st==='discontinued')return '停产';
+  return st||'—';
+}
+function getPcatStatusStyle(st){
+  if(st==='active')return 'background:rgba(62,207,142,.15);color:var(--green);';
+  if(st==='sample')return 'background:rgba(247,212,79,.15);color:var(--yellow);';
+  if(st==='discontinued')return 'background:rgba(247,111,111,.15);color:var(--red);';
+  return 'background:rgba(107,114,195,.12);color:var(--muted);';
+}
+function getPcatTypeLabel(t){
+  if(t==='raw')return '原材料';
+  if(t==='blank')return '空白品';
+  if(t==='custom')return '定制品';
+  if(t==='service')return '服务';
+  return t||'—';
+}
+function getPcatCategoryName(code){
+  var cats=getPcatCategories();
+  var c=cats.find(function(x){return x.code===code;});
+  return c?(c.icon+' '+c.nameCN):code;
+}
+
+function updatePcatTabCounts(){
+  var d=getProdCatData();
+  var types=['raw','blank','custom','service'];
+  types.forEach(function(t){
+    var cnt=d.products.filter(function(p){return p.type===t;}).length;
+    var el=document.getElementById('pcat-cnt-'+t);
+    if(el)el.textContent=cnt;
+  });
+}
+
+function switchPcatType(type){
+  pcatCurrentType=type;
+  var types=['raw','blank','custom','service'];
+  types.forEach(function(t){
+    var btn=document.getElementById('pcat-tab-'+t);
+    if(btn)btn.classList.toggle('active',t===type);
+  });
+  renderProdCat();
+  if(window.innerWidth<=768)renderMobileCards('prodcat');
+}
+
+function getFilteredProdCat(){
+  var d=getProdCatData();
+  var search=(document.getElementById('search-prodcat')||{}).value||'';
+  var mSearch=(document.getElementById('search-prodcat-m')||{}).value||'';
+  var q=(search||mSearch).toLowerCase();
+  var catF=(document.getElementById('fp-pcat-category')||{}).value||'';
+  var matF=(document.getElementById('fp-pcat-material')||{}).value||'';
+  var procF=(document.getElementById('fp-pcat-process')||{}).value||'';
+  var stF=(document.getElementById('fp-pcat-status')||{}).value||'';
+  return d.products.filter(function(p){
+    if(p.type!==pcatCurrentType)return false;
+    if(q&&p.nameCN.toLowerCase().indexOf(q)<0&&p.skuCode.toLowerCase().indexOf(q)<0&&(p.nameEN||'').toLowerCase().indexOf(q)<0)return false;
+    if(catF&&p.categoryCode!==catF)return false;
+    if(matF&&!(p.materials&&p.materials.indexOf(matF)>=0))return false;
+    if(procF&&!(p.processes&&p.processes.indexOf(procF)>=0))return false;
+    if(stF&&p.status!==stF)return false;
+    return true;
+  });
+}
+
+function renderProdCat(){
+  updatePcatTabCounts();
+  /* 填充筛选下拉 */
+  var catSel=document.getElementById('fp-pcat-category');
+  if(catSel){
+    var curCat=catSel.value;
+    var cats=getPcatCategories();
+    var catOpts='<option value="">全部类目</option>';
+    cats.forEach(function(c){catOpts+='<option value="'+c.code+'"'+(c.code===curCat?' selected':'')+'>'+c.icon+' '+c.nameCN+'</option>';});
+    catSel.innerHTML=catOpts;
+  }
+  var matSel=document.getElementById('fp-pcat-material');
+  if(matSel){
+    var curMat=matSel.value;
+    var mats=getPcatMaterials();
+    var matOpts='<option value="">全部材质</option>';
+    mats.forEach(function(m){matOpts+='<option value="'+m+'"'+(m===curMat?' selected':'')+'>'+m+'</option>';});
+    matSel.innerHTML=matOpts;
+  }
+  var procSel=document.getElementById('fp-pcat-process');
+  if(procSel){
+    var curProc=procSel.value;
+    var procs=getPcatProcesses();
+    var procOpts='<option value="">全部工艺</option>';
+    procs.forEach(function(pr){procOpts+='<option value="'+pr+'"'+(pr===curProc?' selected':'')+'>'+pr+'</option>';});
+    procSel.innerHTML=procOpts;
+  }
+  var filtered=getFilteredProdCat();
+  var body=document.getElementById('prodcat-table-body');
+  if(!body)return;
+  if(!filtered.length){
+    body.innerHTML='<div class="empty"><div class="empty-icon">🗂️</div><div class="empty-text">暂无产品</div></div>';
+    if(window.innerWidth<=768)renderMobileCards('prodcat');
+    return;
+  }
+  body.innerHTML=filtered.map(function(p){
+    var skuCount=(p.skus&&p.skus.length)?p.skus.length:0;
+    var matStr=(p.materials&&p.materials.length)?p.materials.slice(0,2).join('/'):'—';
+    var procStr=(p.processes&&p.processes.length)?p.processes.slice(0,1).join('/'):'—';
+    var matProc=matStr+(procStr!=='—'?' · '+procStr:'');
+    var priceStr='—';
+    if(p.skus&&p.skus.length){
+      var sk=p.skus[0];
+      if(sk.priceMin||sk.priceMax){
+        var cur=sk.currency==='CNY'?'¥':'$';
+        if(sk.priceMin&&sk.priceMax)priceStr=cur+sk.priceMin+'~'+sk.priceMax;
+        else priceStr=cur+(sk.priceMin||sk.priceMax);
+      }
+    }
+    var stockStr='—';
+    if(p.hasStock&&p.skus&&p.skus.length){
+      var totalStock=0;
+      p.skus.forEach(function(sk){totalStock+=(Number(sk.stockQty)||0);});
+      stockStr=totalStock+(p.skus[0].stockUnit||'');
+    } else if(!p.hasStock){
+      stockStr='按需';
+    }
+    return '<div class="table-row cols-prodcat" onclick="openProdCatDetail(\''+p.id+'\')">'+
+      '<div class="table-cell"><div class="prod-img-ph" id="pcat-thumb-'+p.id+'">🗂️</div></div>'+
+      '<div class="table-cell" style="font-size:11px;color:var(--muted);font-family:monospace">'+p.skuCode+'</div>'+
+      '<div class="table-cell" style="font-weight:500">'+p.nameCN+'</div>'+
+      '<div class="table-cell" style="font-size:11px;color:var(--muted)">'+getPcatCategoryName(p.categoryCode)+'</div>'+
+      '<div class="table-cell" style="font-size:11px;color:var(--muted2)">'+matProc+'</div>'+
+      '<div class="table-cell"><span class="status-badge" style="'+getPcatStatusStyle(p.status)+'font-size:10px;padding:1px 6px">'+getPcatStatusLabel(p.status)+'</span></div>'+
+      '<div class="table-cell" style="font-size:12px;color:var(--green);font-weight:500">'+priceStr+'</div>'+
+      '<div class="table-cell" style="font-size:11px;color:var(--muted)">'+stockStr+'</div>'+
+      '</div>';
+  }).join('');
+  /* 异步加载缩略图 */
+  filtered.forEach(function(p){
+    getImgFromDB('pcat_'+p.id+'_0',function(d){
+      var el=document.getElementById('pcat-thumb-'+p.id);if(!el)return;
+      if(d)el.outerHTML='<img id="pcat-thumb-'+p.id+'" src="'+d+'" style="width:40px;height:40px;object-fit:cover;border-radius:5px">';
+    });
+  });
+  if(window.innerWidth<=768)renderMobileCards('prodcat');
+}
+
+function renderMobileCards_prodcat(){
+  var container=document.getElementById('mobile-prodcat-cards');
+  if(!container)return;
+  var filtered=getFilteredProdCat();
+  if(!filtered.length){
+    container.innerHTML='<div class="empty"><div class="empty-icon">🗂️</div><div class="empty-text">暂无产品</div></div>';
+    return;
+  }
+  container.innerHTML=filtered.map(function(p){
+    var priceStr='—';
+    if(p.skus&&p.skus.length){
+      var sk=p.skus[0];
+      if(sk.priceMin||sk.priceMax){
+        var cur=sk.currency==='CNY'?'¥':'$';
+        if(sk.priceMin&&sk.priceMax)priceStr=cur+sk.priceMin+'~'+sk.priceMax;
+        else priceStr=cur+(sk.priceMin||sk.priceMax);
+      }
+    }
+    var matStr=(p.materials&&p.materials.length)?p.materials.slice(0,2).join('/'):'';
+    return '<div style="display:flex;align-items:flex-start;padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;gap:10px;background:var(--surface)" onclick="openProdCatDetail(\''+p.id+'\')">'+
+      '<div id="pcat-m-thumb-'+p.id+'" style="width:44px;height:44px;border-radius:7px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🗂️</div>'+
+      '<div style="flex:1;min-width:0">'+
+      '<div style="display:flex;align-items:center;gap:5px;margin-bottom:2px">'+
+      '<span style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">'+p.nameCN+'</span>'+
+      '<span class="status-badge" style="'+getPcatStatusStyle(p.status)+'font-size:10px;padding:1px 5px;flex-shrink:0">'+getPcatStatusLabel(p.status)+'</span>'+
+      '</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:1px">'+p.skuCode+(matStr?' · '+matStr:'')+'</div>'+
+      '<div style="font-size:11px;color:var(--muted2)">'+getPcatCategoryName(p.categoryCode)+' · '+(p.skus?p.skus.length:0)+'个SKU</div>'+
+      '</div>'+
+      '<div style="text-align:right;flex-shrink:0">'+
+      '<div style="font-size:13px;font-weight:600;color:var(--green)">'+priceStr+'</div>'+
+      '</div></div>';
+  }).join('');
+  /* 异步加载手机端缩略图 */
+  filtered.forEach(function(p){
+    getImgFromDB('pcat_'+p.id+'_0',function(d){
+      var el=document.getElementById('pcat-m-thumb-'+p.id);if(!el)return;
+      if(d)el.innerHTML='<img src="'+d+'" style="width:44px;height:44px;object-fit:cover;border-radius:7px">';
+    });
+  });
+}
+
+function setPcatView(v){
+  pcatView=v;
+  var btnList=document.getElementById('prodcat-view-btn-list');
+  var btnCard=document.getElementById('prodcat-view-btn-card');
+  var mBtnList=document.getElementById('mprodcat-view-btn-list');
+  var mBtnCard=document.getElementById('mprodcat-view-btn-card');
+  var cardWrap=document.getElementById('prodcat-card-view-wrap');
+  var tableWrap=document.getElementById('prodcat-table-wrap');
+  var mobileCards=document.getElementById('mobile-prodcat-cards');
+  if(v==='card'){
+    if(btnList)btnList.classList.remove('active');
+    if(btnCard)btnCard.classList.add('active');
+    if(mBtnList){mBtnList.style.background='transparent';mBtnList.style.borderColor='var(--border)';mBtnList.style.color='var(--muted)';}
+    if(mBtnCard){mBtnCard.style.background='var(--accent)';mBtnCard.style.borderColor='var(--accent)';mBtnCard.style.color='#fff';}
+    if(tableWrap)tableWrap.style.display='none';
+    if(mobileCards)mobileCards.style.display='none';
+    if(cardWrap)cardWrap.style.display='block';
+    renderPcatCardView();
+  } else {
+    if(btnList)btnList.classList.add('active');
+    if(btnCard)btnCard.classList.remove('active');
+    if(mBtnList){mBtnList.style.background='var(--accent)';mBtnList.style.borderColor='var(--accent)';mBtnList.style.color='#fff';}
+    if(mBtnCard){mBtnCard.style.background='transparent';mBtnCard.style.borderColor='var(--border)';mBtnCard.style.color='var(--muted)';}
+    if(tableWrap)tableWrap.style.display='';
+    if(mobileCards)mobileCards.style.display='';
+    if(cardWrap)cardWrap.style.display='none';
+    renderProdCat();
+    renderMobileCards('prodcat');
+  }
+}
+
+function renderPcatCardView(){
+  var grid=document.getElementById('prodcat-card-grid');if(!grid)return;
+  var filtered=getFilteredProdCat();
+  if(!filtered.length){
+    grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🗂️</div><div class="empty-text">暂无产品</div></div>';
+    return;
+  }
+  grid.innerHTML=filtered.map(function(p){
+    var skuCount=(p.skus&&p.skus.length)?p.skus.length:0;
+    var priceStr='—';
+    if(p.skus&&p.skus.length){
+      var sk=p.skus[0];
+      if(sk.priceMin||sk.priceMax){
+        var cur=sk.currency==='CNY'?'¥':'$';
+        if(sk.priceMin&&sk.priceMax)priceStr=cur+sk.priceMin+'~'+sk.priceMax;
+        else priceStr=cur+(sk.priceMin||sk.priceMax);
+      }
+    }
+    return '<div class="inq-card-item" onclick="openProdCatDetail(\''+p.id+'\')">'+
+      '<div class="inq-card-img-ph" id="pcat-card-img-'+p.id+'"><div style="font-size:28px">🗂️</div><div>暂无图片</div></div>'+
+      '<div class="inq-card-body">'+
+      '<div class="inq-card-name">'+p.nameCN+'</div>'+
+      '<div class="inq-card-company" style="font-size:10px;font-family:monospace">'+p.skuCode+'</div>'+
+      '<div class="inq-card-meta"><span class="status-badge" style="'+getPcatStatusStyle(p.status)+'font-size:10px">'+getPcatStatusLabel(p.status)+'</span>'+
+      '<span style="font-size:11px;color:var(--muted)">'+skuCount+' SKU</span></div>'+
+      '<div class="inq-card-footer"><span>'+getPcatCategoryName(p.categoryCode)+'</span><span style="color:var(--green);font-weight:600">'+priceStr+'</span></div>'+
+      '</div></div>';
+  }).join('');
+  filtered.forEach(function(p){
+    getImgFromDB('pcat_'+p.id+'_0',function(d){
+      var el=document.getElementById('pcat-card-img-'+p.id);if(!el)return;
+      if(d)el.outerHTML='<img id="pcat-card-img-'+p.id+'" src="'+d+'" class="inq-card-img">';
+    });
+  });
+}
+
+function pcatMobileChip(el,type){
+  el.closest('.mobile-chips').querySelectorAll('.mobile-chip').forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
+  pcatCurrentType=type;
+  renderMobileCards('prodcat');
+}
+
+function openProdCatDetail(id){
+  var d=getProdCatData();
+  var p=d.products.find(function(x){return x.id===id;});if(!p)return;
+  currentDetailId=id;currentDetailType='prodcat';
+  var dpTitle=document.getElementById('dp-title');if(dpTitle)dpTitle.textContent='🗂️ '+p.nameCN;
+  var dpSub=document.getElementById('dp-sub');if(dpSub)dpSub.textContent=getPcatTypeLabel(p.type)+' · '+p.skuCode;
+  var dpStar=document.getElementById('dp-star-btn');if(dpStar)dpStar.style.display='none';
+  var dpTarget=document.getElementById('dp-target-btn');if(dpTarget)dpTarget.style.display='none';
+
+  var dpTabs=document.getElementById('dp-tabs');
+  if(dpTabs){
+    dpTabs.style.display='flex';
+    var tabPr=document.getElementById('dp-tab-profile');if(tabPr)tabPr.textContent='产品详情';
+    var tabFu=document.getElementById('dp-tab-followup');if(tabFu)tabFu.style.display='none';
+    var tabSa=document.getElementById('dp-tab-sales');if(tabSa)tabSa.style.display='none';
+  }
+
+  /* 图片区 3格 */
+  var imgGallery='<div style="margin-bottom:16px">'+
+    '<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.6px">产品图片</div>'+
+    '<div style="display:flex;gap:10px">';
+  for(var idx=0;idx<3;idx++){
+    imgGallery+='<div class="prod-img-slot" id="pcat-img-slot-'+idx+'" onclick="uploadPcatImg(\''+id+'\','+idx+')">'+
+      '<div style="text-align:center"><div style="font-size:24px">📷</div><div style="font-size:10px;color:var(--muted);margin-top:4px">上传</div></div>'+
+      '</div>';
+  }
+  imgGallery+='</div></div>';
+
+  /* 产品信息 */
+  var matStr=(p.materials&&p.materials.length)?p.materials.join(' / '):'—';
+  var procStr=(p.processes&&p.processes.length)?p.processes.join(' / '):'—';
+  var infoHtml='<div class="detail-section"><div class="detail-section-title">产品信息</div>'+
+    '<div class="detail-row"><span class="detail-key">SKU编码</span><span class="detail-val" style="font-family:monospace">'+p.skuCode+'</span></div>'+
+    '<div class="detail-row"><span class="detail-key">中文名称</span><span class="detail-val">'+p.nameCN+'</span></div>'+
+    (p.nameEN?'<div class="detail-row"><span class="detail-key">英文名称</span><span class="detail-val">'+p.nameEN+'</span></div>':'')+
+    '<div class="detail-row"><span class="detail-key">类目</span><span class="detail-val">'+getPcatCategoryName(p.categoryCode)+'</span></div>'+
+    '<div class="detail-row"><span class="detail-key">类型</span><span class="detail-val">'+getPcatTypeLabel(p.type)+'</span></div>'+
+    '<div class="detail-row"><span class="detail-key">状态</span><span class="detail-val"><span class="status-badge" style="'+getPcatStatusStyle(p.status)+'font-size:11px">'+getPcatStatusLabel(p.status)+'</span></span></div>'+
+    '<div class="detail-row"><span class="detail-key">材质</span><span class="detail-val">'+matStr+'</span></div>'+
+    '<div class="detail-row"><span class="detail-key">工艺</span><span class="detail-val">'+procStr+'</span></div>'+
+    (p.formTag?'<div class="detail-row"><span class="detail-key">形态</span><span class="detail-val">'+p.formTag+'</span></div>':'')+
+    (p.descCN?'<div class="detail-row"><span class="detail-key">描述</span><span class="detail-val">'+p.descCN+'</span></div>':'')+
+    (p.note?'<div class="detail-row"><span class="detail-key">备注</span><span class="detail-val">'+p.note+'</span></div>':'')+
+    '</div>';
+
+  /* SKU列表 */
+  var skus=p.skus||[];
+  var skuHtml='<div class="detail-section"><div class="detail-section-title" style="display:flex;align-items:center;justify-content:space-between">SKU列表 <button onclick="openPcatSkuModal(\''+id+'\',null)" style="font-size:11px;padding:3px 9px;border-radius:5px;border:0.5px solid var(--accent);color:var(--accent);background:rgba(79,142,247,.12);cursor:pointer;font-weight:400">＋ 新增SKU</button></div>';
+  if(!skus.length){
+    skuHtml+='<div style="color:var(--muted);font-size:13px;padding:8px 0">暂无SKU，点击「新增SKU」添加</div>';
+  } else {
+    skus.forEach(function(sk){
+      var cur=sk.currency==='CNY'?'¥':'$';
+      var priceStr='未定价';
+      if(sk.priceMin||sk.priceMax){
+        if(sk.priceMin&&sk.priceMax)priceStr=cur+sk.priceMin+' ~ '+cur+sk.priceMax;
+        else priceStr=cur+(sk.priceMin||sk.priceMax);
+      }
+      skuHtml+='<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--surface2)">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'+
+        '<span style="font-size:13px;font-weight:600">'+sk.variantCN+'</span>'+
+        '<div style="display:flex;align-items:center;gap:8px">'+
+        '<span style="font-size:12px;color:var(--green);font-weight:500">'+priceStr+'</span>'+
+        (canSeeFloorPrice()&&sk.floorPrice?'<span style="font-size:11px;color:var(--yellow)">底：'+cur+sk.floorPrice+'</span>':'')+
+        (canSeeCost()&&sk.costPrice?'<span style="font-size:11px;color:var(--muted)">成本：'+cur+sk.costPrice+'</span>':'')+
+        '<button onclick="openPcatSkuModal(\''+id+'\',\''+sk.id+'\')" style="font-size:11px;padding:2px 8px;border-radius:4px;border:0.5px solid var(--border);background:rgba(255,255,255,.06);color:var(--muted);cursor:pointer">编辑</button>'+
+        '</div></div>'+
+        '<div style="font-size:11px;color:var(--muted2);display:flex;flex-wrap:wrap;gap:8px">'+
+        (sk.skuCode?'<span>编码：<span style="font-family:monospace">'+sk.skuCode+'</span></span>':'')+
+        (sk.color?'<span>颜色：'+sk.color+'</span>':'')+
+        (sk.size?'<span>规格：'+sk.size+'</span>':'')+
+        (sk.packType?'<span>包装：'+sk.packType+'</span>':'')+
+        (sk.qtyPerCarton?'<span>装箱：'+sk.qtyPerCarton+'pcs</span>':'')+
+        (p.hasStock?'<span style="color:'+(sk.stockQty>0?'var(--green)':'var(--red)')+'">库存：'+(sk.stockQty||0)+(sk.stockUnit||'')+'</span>':'')+
+        '</div>';
+      /* BOM */
+      if(canSeeCost()&&sk.bom&&sk.bom.length){
+        skuHtml+='<div style="margin-top:6px;border-top:1px solid var(--border);padding-top:6px">'+
+          '<div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px">🔩 BOM</div>'+
+          '<table style="width:100%;font-size:11px;border-collapse:collapse">';
+        var totalCNY=0,totalUSD=0;
+        sk.bom.forEach(function(b){
+          var cost=Number(b.unitCost)||0;var qty=Number(b.qty)||1;
+          if(b.currency==='USD')totalUSD+=cost*qty;else totalCNY+=cost*qty;
+          skuHtml+='<tr style="border-bottom:1px solid rgba(255,255,255,.04)">'+
+            '<td style="padding:2px 4px">'+(b.type==='ref'?'<span style="font-size:9px;color:var(--accent);border:0.5px solid var(--accent);border-radius:3px;padding:0 3px">引用</span> ':'')+b.nameCN+'</td>'+
+            '<td style="padding:2px 4px;text-align:right;color:var(--muted)">'+qty+(b.unit?' '+b.unit:'')+'</td>'+
+            '<td style="padding:2px 4px;text-align:right;color:var(--yellow)">'+(b.unitCost?(b.currency==='CNY'?'¥':'$')+cost:'—')+'</td></tr>';
+        });
+        var totalStr='';
+        if(totalCNY)totalStr+='¥'+totalCNY.toFixed(2)+' ';
+        if(totalUSD)totalStr+='$'+totalUSD.toFixed(2);
+        skuHtml+='<tr><td colspan="2" style="padding:3px 4px;font-weight:600;color:var(--muted);font-size:10px">合计成本</td>'+
+          '<td style="padding:3px 4px;text-align:right;font-weight:700;color:var(--accent2)">'+totalStr+'</td></tr>'+
+          '</table></div>';
+      }
+      skuHtml+='</div>';
+    });
+  }
+  skuHtml+='</div>';
+
+  var tab1=imgGallery+infoHtml+skuHtml+
+    '<div style="display:flex;gap:8px;margin-top:8px">'+
+    '<button class="btn btn-outline btn-sm" onclick="openProdCatModal(\''+id+'\')">编辑产品</button>'+
+    (canDelete()?'<button class="btn btn-danger btn-sm" onclick="deleteProdCatItem(\''+id+'\')">删除</button>':'')+
+    '</div>';
+
+  var detailBody=document.getElementById('detail-body');
+  if(detailBody){
+    detailBody.innerHTML='<div class="dp-tab-content active" id="dp-content-profile">'+tab1+'</div>';
+  }
+  var bar=document.getElementById('dp-followup-bar');if(bar)bar.style.display='none';
+  switchDpTab('profile');
+  var panel=document.getElementById('detail-panel');if(panel)panel.classList.add('open');
+  /* 异步加载图片 */
+  loadPcatImagesIntoDetail(id);
+}
+
+function loadPcatImagesIntoDetail(prodId){
+  for(var i=0;i<3;i++){
+    (function(idx){
+      var slot=document.getElementById('pcat-img-slot-'+idx);if(!slot)return;
+      getImgFromDB('pcat_'+prodId+'_'+idx,function(dataUrl){
+        var slot2=document.getElementById('pcat-img-slot-'+idx);if(!slot2)return;
+        if(dataUrl){
+          slot2.innerHTML='<img src="'+dataUrl+'" style="width:100%;height:100%;object-fit:cover">'+
+            '<div class="prod-img-del" onclick="event.stopPropagation();deletePcatImg(\''+prodId+'\','+idx+')">×</div>';
+          slot2.onclick=null;
+        } else {
+          slot2.innerHTML='<div style="text-align:center"><div style="font-size:24px">📷</div><div style="font-size:10px;color:var(--muted);margin-top:4px">上传</div></div>';
+          slot2.onclick=function(){uploadPcatImg(prodId,idx);};
+        }
+      });
+    })(i);
+  }
+}
+
+function uploadPcatImg(prodId,idx){
+  var inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*';
+  inp.onchange=function(){
+    if(!inp.files[0])return;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var img=new Image();
+      img.onload=function(){
+        var maxW=800,maxH=800;
+        var w=img.width,h=img.height;
+        if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+        if(h>maxH){w=Math.round(w*maxH/h);h=maxH;}
+        var cv=document.createElement('canvas');cv.width=w;cv.height=h;
+        cv.getContext('2d').drawImage(img,0,0,w,h);
+        var compressed=cv.toDataURL('image/jpeg',0.82);
+        saveImgToDB('pcat_'+prodId+'_'+idx,compressed,function(){
+          loadPcatImagesIntoDetail(prodId);
+        });
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(inp.files[0]);
+  };
+  inp.click();
+}
+
+function deletePcatImg(prodId,idx){
+  if(!confirm('确认删除此图片？'))return;
+  deleteImgFromDB('pcat_'+prodId+'_'+idx,function(){
+    loadPcatImagesIntoDetail(prodId);
+  });
+}
+
+function openProdCatModal(id){
+  var delArea=document.getElementById('prodcat-delete-area');if(delArea)delArea.innerHTML='';
+  /* 填充类目下拉 */
+  var catSel=document.getElementById('fpc-category');
+  if(catSel){
+    var cats=getPcatCategories();
+    var catOpts='<option value="">请选择...</option>';
+    cats.forEach(function(c){catOpts+='<option value="'+c.code+'">'+c.icon+' '+c.nameCN+'</option>';});
+    catSel.innerHTML=catOpts;
+  }
+  /* 填充形态下拉 */
+  var formSel=document.getElementById('fpc-form-tag');
+  if(formSel){
+    var forms=getPcatForms();
+    var formOpts='<option value="">请选择...</option>';
+    forms.forEach(function(f){formOpts+='<option>'+f+'</option>';});
+    formSel.innerHTML=formOpts;
+  }
+  /* 填充材质芯片 */
+  var matChips=document.getElementById('fpc-material-chips');
+  if(matChips){
+    var mats=getPcatMaterials();
+    matChips.innerHTML=mats.map(function(m){
+      return '<div onclick="togglePcatChip(this)" class="pcat-sel-chip" style="font-size:12px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer">'+m+'</div>';
+    }).join('');
+  }
+  /* 填充工艺芯片 */
+  var procChips=document.getElementById('fpc-process-chips');
+  if(procChips){
+    var procs=getPcatProcesses();
+    procChips.innerHTML=procs.map(function(pr){
+      return '<div onclick="togglePcatChip(this)" class="pcat-sel-chip" style="font-size:12px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer">'+pr+'</div>';
+    }).join('');
+  }
+  var pmTitle=document.getElementById('prodcat-modal-title');
+  var set=function(fid,val){var el=document.getElementById(fid);if(el)el.value=(val===undefined||val===null)?'':val;};
+  if(id){
+    var d=getProdCatData();
+    var p=d.products.find(function(x){return x.id===id;});if(!p)return;
+    _editingPcatId=id;
+    if(pmTitle)pmTitle.textContent='编辑产品';
+    set('fpc-sku-code',p.skuCode);set('fpc-name-cn',p.nameCN);set('fpc-name-en',p.nameEN);
+    set('fpc-type',p.type);set('fpc-category',p.categoryCode);set('fpc-status',p.status);
+    set('fpc-form-tag',p.formTag||'');set('fpc-note',p.note||'');
+    set('fpc-desc-cn',p.descCN||'');set('fpc-desc-en',p.descEN||'');
+    var csEl=document.getElementById('fpc-can-sell');if(csEl)csEl.checked=!!p.canSell;
+    var hsEl=document.getElementById('fpc-has-stock');if(hsEl)hsEl.checked=!!p.hasStock;
+    /* 高亮已选材质/工艺 */
+    if(matChips)(p.materials||[]).forEach(function(m){
+      var chip=Array.prototype.find.call(matChips.querySelectorAll('.pcat-sel-chip'),function(c){return c.textContent===m;});
+      if(chip)chip.style.cssText='font-size:12px;padding:4px 10px;border-radius:20px;border:1px solid var(--accent);background:rgba(79,142,247,.15);color:var(--accent);cursor:pointer';
+    });
+    if(procChips)(p.processes||[]).forEach(function(pr){
+      var chip=Array.prototype.find.call(procChips.querySelectorAll('.pcat-sel-chip'),function(c){return c.textContent===pr;});
+      if(chip)chip.style.cssText='font-size:12px;padding:4px 10px;border-radius:20px;border:1px solid var(--accent);background:rgba(79,142,247,.15);color:var(--accent);cursor:pointer';
+    });
+    if(delArea&&canDelete()){
+      delArea.innerHTML='<button class="btn btn-danger btn-sm" onclick="deleteProdCatItem(\''+id+'\')">🗑 删除</button>';
+    }
+  } else {
+    _editingPcatId=null;
+    if(pmTitle)pmTitle.textContent='新建产品';
+    ['fpc-sku-code','fpc-name-cn','fpc-name-en','fpc-form-tag','fpc-note','fpc-desc-cn','fpc-desc-en'].forEach(function(fid){set(fid,'');});
+    set('fpc-type',pcatCurrentType);
+    set('fpc-status','active');
+    var csEl2=document.getElementById('fpc-can-sell');if(csEl2)csEl2.checked=true;
+    var hsEl2=document.getElementById('fpc-has-stock');if(hsEl2)hsEl2.checked=false;
+  }
+  openModal('prodcat-modal');
+}
+
+function togglePcatChip(el){
+  var active=el.style.color==='var(--accent)'||el.style.borderColor==='var(--accent)';
+  if(active){
+    el.style.cssText='font-size:12px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer';
+  } else {
+    el.style.cssText='font-size:12px;padding:4px 10px;border-radius:20px;border:1px solid var(--accent);background:rgba(79,142,247,.15);color:var(--accent);cursor:pointer';
+  }
+}
+
+function getPcatSelectedChips(containerId){
+  var container=document.getElementById(containerId);
+  if(!container)return[];
+  var selected=[];
+  container.querySelectorAll('.pcat-sel-chip').forEach(function(c){
+    if(c.style.color==='var(--accent)'||c.style.borderColor==='var(--accent)')selected.push(c.textContent.trim());
+  });
+  return selected;
+}
+
+function saveProdCatRecord(){
+  var get=function(fid){var el=document.getElementById(fid);return el?el.value.trim():'';};
+  var skuCode=get('fpc-sku-code');var nameCN=get('fpc-name-cn');
+  if(!skuCode||!nameCN){alert('请填写SKU编码和中文名称');return;}
+  var canSellEl=document.getElementById('fpc-can-sell');
+  var hasStockEl=document.getElementById('fpc-has-stock');
+  var data={
+    skuCode:skuCode,nameCN:nameCN,nameEN:get('fpc-name-en'),
+    type:get('fpc-type')||pcatCurrentType,
+    categoryCode:get('fpc-category'),
+    status:get('fpc-status')||'active',
+    formTag:get('fpc-form-tag'),
+    note:get('fpc-note'),
+    descCN:get('fpc-desc-cn'),
+    descEN:get('fpc-desc-en'),
+    canSell:canSellEl?canSellEl.checked:true,
+    hasStock:hasStockEl?hasStockEl.checked:false,
+    materials:getPcatSelectedChips('fpc-material-chips'),
+    processes:getPcatSelectedChips('fpc-process-chips')
+  };
+  var d=getProdCatData();
+  if(_editingPcatId){
+    var p=d.products.find(function(x){return x.id===_editingPcatId;});
+    if(p){
+      p.skuCode=data.skuCode;p.nameCN=data.nameCN;p.nameEN=data.nameEN;
+      p.type=data.type;p.categoryCode=data.categoryCode;p.status=data.status;
+      p.formTag=data.formTag;p.note=data.note;p.descCN=data.descCN;p.descEN=data.descEN;
+      p.canSell=data.canSell;p.hasStock=data.hasStock;
+      p.materials=data.materials;p.processes=data.processes;
+    }
+    var sid=_editingPcatId;_editingPcatId=null;
+    saveProdCatData(d);closeModal('prodcat-modal');renderProdCat();openProdCatDetail(sid);
+    toast('产品已更新 ✓');
+  } else {
+    data.id='pc'+Date.now();data.skus=[];data.linkedProdDevId='';
+    d.products.push(data);
+    saveProdCatData(d);closeModal('prodcat-modal');renderProdCat();
+    toast('产品已创建 ✓');
+  }
+}
+
+function deleteProdCatItem(id){
+  if(!confirm('确认删除该产品？此操作不可撤销。'))return;
+  var d=getProdCatData();
+  d.products=d.products.filter(function(x){return x.id!==id;});
+  saveProdCatData(d);
+  var panel=document.getElementById('detail-panel');
+  if(panel&&panel.classList.contains('open')&&currentDetailType==='prodcat')closeDetail();
+  closeModal('prodcat-modal');renderProdCat();
+  toast('产品已删除');
+}
+
+function openPcatSkuModal(prodId,skuId){
+  _editingPcatSkuProdId=prodId;
+  _editingPcatSkuId=skuId||null;
+  var delArea=document.getElementById('pcat-sku-delete-area');if(delArea)delArea.innerHTML='';
+  /* BOM区域: 仅custom类型且canSeeCost时显示 */
+  var d=getProdCatData();
+  var prod=d.products.find(function(x){return x.id===prodId;});
+  var bomSection=document.getElementById('fpsk-bom-section');
+  if(bomSection)bomSection.style.display=(prod&&prod.type==='custom'&&canSeeCost())?'block':'none';
+  var costWrap=document.getElementById('fpsk-cost-wrap');
+  if(costWrap)costWrap.style.display=canSeeCost()?'block':'none';
+  var floorWrap=document.getElementById('fpsk-floor-wrap');
+  if(floorWrap)floorWrap.style.display=canSeeFloorPrice()?'block':'none';
+  var mt=document.getElementById('pcat-sku-modal-title');
+  var set=function(fid,val){var el=document.getElementById(fid);if(el)el.value=(val===undefined||val===null)?'':val;};
+  if(skuId){
+    var sk=prod?((prod.skus||[]).find(function(s){return s.id===skuId;})):null;
+    if(!sk)return;
+    if(mt)mt.textContent='编辑SKU';
+    set('fpsk-sku-code',sk.skuCode);set('fpsk-variant-cn',sk.variantCN);set('fpsk-variant-en',sk.variantEN);
+    set('fpsk-color',sk.color);set('fpsk-size',sk.size);set('fpsk-shape',sk.shape);
+    set('fpsk-pack-type',sk.packType);set('fpsk-qty-per-carton',sk.qtyPerCarton);
+    set('fpsk-unit-weight',sk.unitWeight);
+    set('fpsk-ctn-l',sk.ctnL);set('fpsk-ctn-w',sk.ctnW);set('fpsk-ctn-h',sk.ctnH);
+    set('fpsk-ctn-weight',sk.ctnWeight);
+    if(canSeeCost())set('fpsk-cost-price',sk.costPrice||'');
+    set('fpsk-price-min',sk.priceMin||'');set('fpsk-price-max',sk.priceMax||'');
+    set('fpsk-currency',sk.currency||'USD');
+    if(canSeeFloorPrice())set('fpsk-floor-price',sk.floorPrice||'');
+    set('fpsk-stock-qty',sk.stockQty||'');set('fpsk-stock-unit',sk.stockUnit||'');
+    set('fpsk-safety-stock',sk.safetyStock||'');
+    set('fpsk-note',sk.note||'');
+    if(prod&&prod.type==='custom'&&canSeeCost())renderPcatBomRows(sk.bom||[]);
+    if(delArea&&canDelete())delArea.innerHTML='<button class="btn btn-danger btn-sm" onclick="deletePcatSku(\''+prodId+'\',\''+skuId+'\')">🗑 删除SKU</button>';
+  } else {
+    if(mt)mt.textContent='新增SKU';
+    ['fpsk-sku-code','fpsk-variant-cn','fpsk-variant-en','fpsk-color','fpsk-size','fpsk-shape','fpsk-pack-type','fpsk-qty-per-carton','fpsk-unit-weight','fpsk-ctn-l','fpsk-ctn-w','fpsk-ctn-h','fpsk-ctn-weight','fpsk-cost-price','fpsk-price-min','fpsk-price-max','fpsk-floor-price','fpsk-stock-qty','fpsk-stock-unit','fpsk-safety-stock','fpsk-note'].forEach(function(fid){set(fid,'');});
+    set('fpsk-currency','USD');
+    if(prod&&prod.type==='custom'&&canSeeCost())renderPcatBomRows([]);
+  }
+  /* 库存区块: 仅hasStock产品显示 */
+  var stockSection=document.getElementById('fpsk-stock-section');
+  if(stockSection)stockSection.style.display=(prod&&prod.hasStock)?'block':'none';
+  openModal('pcat-sku-modal');
+}
+
+function renderPcatBomRows(bom){
+  var area=document.getElementById('fpsk-bom-area');if(!area)return;
+  if(!bom||!bom.length){
+    area.innerHTML='<div style="font-size:12px;color:var(--muted);padding:6px 0">暂无材料，点击「添加」新增</div>';
+    return;
+  }
+  var html='<table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:4px">'+
+    '<tr style="color:var(--muted);border-bottom:1px solid var(--border)">'+
+    '<th style="text-align:left;padding:3px 4px;font-weight:500;width:80px">类型</th>'+
+    '<th style="text-align:left;padding:3px 4px;font-weight:500">名称</th>'+
+    '<th style="text-align:left;padding:3px 4px;font-weight:500;width:45px">用量</th>'+
+    '<th style="text-align:left;padding:3px 4px;font-weight:500;width:35px">单位</th>'+
+    '<th style="text-align:left;padding:3px 4px;font-weight:500;width:90px">单价</th>'+
+    '<th style="padding:3px 4px;width:24px"></th>'+
+    '</tr>';
+  bom.forEach(function(b,idx){
+    var curOpts='<option value="CNY"'+(b.currency==='CNY'?' selected':'')+'>¥</option><option value="USD"'+(b.currency==='USD'?' selected':'')+'>$</option>';
+    var typeOpts='<option value="text"'+(b.type!=='ref'?' selected':'')+'>材料</option><option value="ref"'+(b.type==='ref'?' selected':'')+'>引用SKU</option>';
+    html+='<tr style="border-bottom:1px solid rgba(255,255,255,.04)" data-pcat-bom-idx="'+idx+'">'+
+      '<td style="padding:2px 3px"><select class="form-input" style="font-size:11px;padding:2px 4px;width:100%" data-pcatbom="type">'+typeOpts+'</select></td>'+
+      '<td style="padding:2px 3px"><input class="form-input" style="font-size:12px;padding:3px 5px" data-pcatbom="nameCN" value="'+(b.nameCN||'')+'" placeholder="名称/SKU编码"></td>'+
+      '<td style="padding:2px 3px"><input class="form-input" style="font-size:12px;padding:3px 5px;width:100%" type="number" data-pcatbom="qty" value="'+(b.qty||'')+'" placeholder="1"></td>'+
+      '<td style="padding:2px 3px"><input class="form-input" style="font-size:12px;padding:3px 5px;width:100%" data-pcatbom="unit" value="'+(b.unit||'')+'" placeholder="个"></td>'+
+      '<td style="padding:2px 3px"><div style="display:flex;gap:2px"><select class="form-input" style="font-size:12px;padding:3px 4px;width:36px" data-pcatbom="currency">'+curOpts+'</select><input class="form-input" style="font-size:12px;padding:3px 5px;flex:1;min-width:35px" type="number" data-pcatbom="unitCost" value="'+(b.unitCost||'')+'" placeholder="0.00" step="0.01"></div></td>'+
+      '<td style="padding:2px 3px;text-align:center;vertical-align:top;padding-top:6px"><button onclick="removePcatBomRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;line-height:1;padding:0 2px">×</button></td>'+
+      '</tr>';
+  });
+  html+='</table>';
+  area.innerHTML=html;
+}
+
+function addPcatBomRow(){
+  var current=collectPcatBomFromDOM();
+  current.push({type:'text',nameCN:'',qty:'',unit:'',unitCost:'',currency:'CNY'});
+  renderPcatBomRows(current);
+}
+
+function removePcatBomRow(btn){
+  var row=btn.closest('tr');if(!row)return;
+  row.parentNode.removeChild(row);
+  var area=document.getElementById('fpsk-bom-area');if(!area)return;
+  var rows=area.querySelectorAll('tr[data-pcat-bom-idx]');
+  if(!rows.length){area.innerHTML='<div style="font-size:12px;color:var(--muted);padding:6px 0">暂无材料，点击「添加」新增</div>';}
+}
+
+function collectPcatBomFromDOM(){
+  var area=document.getElementById('fpsk-bom-area');if(!area)return[];
+  var rows=area.querySelectorAll('tr[data-pcat-bom-idx]');
+  var result=[];
+  rows.forEach(function(row){
+    var get=function(attr){var el=row.querySelector('[data-pcatbom="'+attr+'"]');return el?el.value.trim():'';};
+    result.push({type:get('type')||'text',nameCN:get('nameCN'),qty:get('qty'),unit:get('unit'),unitCost:get('unitCost'),currency:get('currency')||'CNY'});
+  });
+  return result;
+}
+
+function savePcatSkuRecord(){
+  var get=function(fid){var el=document.getElementById(fid);return el?el.value.trim():'';};
+  var getN=function(fid){var el=document.getElementById(fid);return el&&el.value?Number(el.value)||0:null;};
+  var variantCN=get('fpsk-variant-cn');
+  if(!variantCN){alert('请填写规格描述');return;}
+  var d=getProdCatData();
+  var prod=d.products.find(function(x){return x.id===_editingPcatSkuProdId;});if(!prod)return;
+  if(!prod.skus)prod.skus=[];
+  var skuData={
+    skuCode:get('fpsk-sku-code'),
+    variantCN:variantCN,variantEN:get('fpsk-variant-en'),
+    color:get('fpsk-color'),size:get('fpsk-size'),shape:get('fpsk-shape'),
+    packType:get('fpsk-pack-type'),
+    qtyPerCarton:getN('fpsk-qty-per-carton'),
+    unitWeight:getN('fpsk-unit-weight'),
+    ctnL:getN('fpsk-ctn-l'),ctnW:getN('fpsk-ctn-w'),ctnH:getN('fpsk-ctn-h'),
+    ctnWeight:getN('fpsk-ctn-weight'),
+    costPrice:canSeeCost()?getN('fpsk-cost-price'):null,
+    priceMin:getN('fpsk-price-min'),priceMax:getN('fpsk-price-max'),
+    currency:get('fpsk-currency')||'USD',
+    floorPrice:canSeeFloorPrice()?getN('fpsk-floor-price'):null,
+    stockQty:prod.hasStock?getN('fpsk-stock-qty'):0,
+    stockUnit:prod.hasStock?get('fpsk-stock-unit'):'',
+    safetyStock:prod.hasStock?getN('fpsk-safety-stock'):0,
+    bom:(prod.type==='custom'&&canSeeCost())?collectPcatBomFromDOM():[],
+    note:get('fpsk-note')
+  };
+  if(_editingPcatSkuId){
+    var sk=prod.skus.find(function(s){return s.id===_editingPcatSkuId;});
+    if(sk){Object.keys(skuData).forEach(function(k){sk[k]=skuData[k];});}
+  } else {
+    skuData.id='psk'+Date.now();
+    prod.skus.push(skuData);
+  }
+  saveProdCatData(d);closeModal('pcat-sku-modal');openProdCatDetail(_editingPcatSkuProdId);
+  toast('SKU已保存 ✓');
+}
+
+function deletePcatSku(prodId,skuId){
+  if(!confirm('确认删除该SKU？'))return;
+  var d=getProdCatData();
+  var prod=d.products.find(function(x){return x.id===prodId;});if(!prod)return;
+  prod.skus=(prod.skus||[]).filter(function(s){return s.id!==skuId;});
+  saveProdCatData(d);closeModal('pcat-sku-modal');openProdCatDetail(prodId);
+  toast('SKU已删除');
+}
+
+/* 产品库设置管理 */
+function renderPcatSettingsSection(){
+  /* 类目 */
+  var catArea=document.getElementById('settings-pcat-categories');
+  if(catArea){
+    var cats=getPcatCategories();
+    if(!cats.length){catArea.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 0">暂无类目</div>';}
+    else{
+      catArea.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:6px;padding:6px 0">'+
+        cats.map(function(c,i){
+          return '<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(107,114,195,.15);border:1px solid rgba(107,114,195,.3);border-radius:6px;padding:4px 8px;font-size:12px">'+
+            '<span style="font-size:14px">'+c.icon+'</span>'+
+            '<span style="font-weight:500">'+c.code+'</span>'+
+            '<span style="color:var(--muted)">'+c.nameCN+'</span>'+
+            '<span onclick="removePcatCategory(\''+c.code+'\')" style="width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.1);display:inline-flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;color:var(--muted)">✕</span>'+
+            '</div>';
+        }).join('')+
+        '</div>';
+    }
+  }
+  /* 材质 */
+  var matArea=document.getElementById('settings-pcat-materials');
+  if(matArea){
+    var mats=getPcatMaterials();
+    matArea.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:6px;padding:6px 0">'+
+      mats.map(function(m){
+        return '<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);border-radius:20px;padding:3px 9px;font-size:12px">'+
+          '<span>'+m+'</span>'+
+          '<span onclick="removePcatTag(\'pcatMaterials\',\''+m+'\')" style="cursor:pointer;color:var(--muted);font-size:11px">✕</span>'+
+          '</div>';
+      }).join('')+
+      '</div>';
+  }
+  /* 工艺 */
+  var procArea=document.getElementById('settings-pcat-processes');
+  if(procArea){
+    var procs=getPcatProcesses();
+    procArea.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:6px;padding:6px 0">'+
+      procs.map(function(pr){
+        return '<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(167,79,247,.1);border:1px solid rgba(167,79,247,.25);border-radius:20px;padding:3px 9px;font-size:12px">'+
+          '<span>'+pr+'</span>'+
+          '<span onclick="removePcatTag(\'pcatProcesses\',\''+pr+'\')" style="cursor:pointer;color:var(--muted);font-size:11px">✕</span>'+
+          '</div>';
+      }).join('')+
+      '</div>';
+  }
+  /* 形态 */
+  var formArea=document.getElementById('settings-pcat-forms');
+  if(formArea){
+    var forms=getPcatForms();
+    formArea.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:6px;padding:6px 0">'+
+      forms.map(function(f){
+        return '<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(75,209,247,.1);border:1px solid rgba(75,209,247,.25);border-radius:20px;padding:3px 9px;font-size:12px">'+
+          '<span>'+f+'</span>'+
+          '<span onclick="removePcatTag(\'pcatForms\',\''+f+'\')" style="cursor:pointer;color:var(--muted);font-size:11px">✕</span>'+
+          '</div>';
+      }).join('')+
+      '</div>';
+  }
+}
+
+function addPcatCategory(){
+  var code=(document.getElementById('settings-pcat-cat-code')||{}).value||'';
+  var cn=(document.getElementById('settings-pcat-cat-cn')||{}).value||'';
+  var en=(document.getElementById('settings-pcat-cat-en')||{}).value||'';
+  var icon=(document.getElementById('settings-pcat-cat-icon')||{}).value||'📦';
+  code=code.trim().toUpperCase();cn=cn.trim();en=en.trim();icon=icon.trim();
+  if(!code||!cn){toast('请输入类目代码和中文名称');return;}
+  var cats=getPcatCategories();
+  if(cats.find(function(c){return c.code===code;})){toast('类目代码已存在');return;}
+  cats.push({code:code,nameCN:cn,nameEN:en,icon:icon||'📦'});
+  crmSettings.pcatCategories=cats;saveSettings();
+  ['settings-pcat-cat-code','settings-pcat-cat-cn','settings-pcat-cat-en','settings-pcat-cat-icon'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  renderPcatSettingsSection();
+  toast('类目已添加 ✓');
+}
+
+function removePcatCategory(code){
+  var cats=getPcatCategories();
+  crmSettings.pcatCategories=cats.filter(function(c){return c.code!==code;});
+  saveSettings();renderPcatSettingsSection();
+  toast('类目已删除');
+}
+
+function addPcatTag(field){
+  var inputId={pcatMaterials:'settings-pcat-mat-new',pcatProcesses:'settings-pcat-proc-new',pcatForms:'settings-pcat-form-new'}[field];
+  var inp=document.getElementById(inputId);
+  if(!inp)return;
+  var val=inp.value.trim();
+  if(!val){toast('请输入内容');return;}
+  var arr=crmSettings[field]||[];
+  if(arr.indexOf(val)>=0){toast('已存在');return;}
+  arr.push(val);crmSettings[field]=arr;
+  saveSettings();inp.value='';renderPcatSettingsSection();
+  toast('已添加：'+val);
+}
+
+function removePcatTag(field,val){
+  var arr=crmSettings[field]||[];
+  crmSettings[field]=arr.filter(function(v){return v!==val;});
+  saveSettings();renderPcatSettingsSection();
+  toast('已删除：'+val);
 }
 </script>
 <script>
