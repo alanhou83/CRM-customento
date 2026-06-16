@@ -1202,12 +1202,22 @@ a{color:var(--accent);text-decoration:none;}
     <div style="margin-bottom:14px">
       <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">规格参数</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="form-group"><label class="form-label">尺寸</label><input class="form-input" type="text" id="fsk-dimensions" placeholder="如：10×8×5 cm"></div>
+        <div class="form-group"><label class="form-label">产品尺寸</label><input class="form-input" type="text" id="fsk-dimensions" placeholder="如：10×8×5 cm"></div>
         <div class="form-group"><label class="form-label">材质</label><input class="form-input" type="text" id="fsk-material" placeholder="如：MDF+UV打印"></div>
-        <div class="form-group"><label class="form-label">重量</label><input class="form-input" type="text" id="fsk-weight" placeholder="如：120g"></div>
-        <div class="form-group"><label class="form-label">装箱数</label><input class="form-input" type="text" id="fsk-pack-qty" placeholder="如：48pcs/ctn"></div>
-        <div class="form-group"><label class="form-label">箱尺</label><input class="form-input" type="text" id="fsk-ctn-size" placeholder="如：60×40×30 cm"></div>
-        <div class="form-group"><label class="form-label">箱重</label><input class="form-input" type="text" id="fsk-ctn-weight" placeholder="如：6.5 kg"></div>
+        <div class="form-group"><label class="form-label">产品重量</label><input class="form-input" type="text" id="fsk-weight" placeholder="如：120g"></div>
+        <div class="form-group"><label class="form-label">装箱数 (pcs/ctn)</label><input class="form-input" type="number" id="fsk-pack-qty" placeholder="如：48" min="1"></div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">箱尺 (cm) — 长 × 宽 × 高</label>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input class="form-input" type="number" id="fsk-ctn-l" placeholder="长" min="0" step="0.1" style="flex:1">
+            <span style="color:var(--muted);font-size:14px;flex-shrink:0">×</span>
+            <input class="form-input" type="number" id="fsk-ctn-w" placeholder="宽" min="0" step="0.1" style="flex:1">
+            <span style="color:var(--muted);font-size:14px;flex-shrink:0">×</span>
+            <input class="form-input" type="number" id="fsk-ctn-h" placeholder="高" min="0" step="0.1" style="flex:1">
+            <span style="color:var(--muted);font-size:12px;flex-shrink:0">cm</span>
+          </div>
+        </div>
+        <div class="form-group"><label class="form-label">箱重 (kg)</label><input class="form-input" type="number" id="fsk-ctn-weight" placeholder="如：6.5" min="0" step="0.1"></div>
       </div>
     </div>
 
@@ -5323,43 +5333,43 @@ function autoUpdateCustomerTags(alias){
 /* ===== 产品开发模块 ===== */
 var DEF_PROD=[
   {id:1,name:'迷你音乐盒',category:'创意礼品',stage:'打样中',person:'Penny',date:'2026-05-10',notes:'两款尺寸共用同一套配件和供应商，Penny统一管理',followups:['2026-05-10 [Penny] 项目立项，确认两款尺寸方向','2026-05-20 [Penny] 与工厂确认样品费，预计2周出样'],skus:[
-    {id:101,name:'大号',dimensions:'12×8×6 cm',material:'木质外壳+音乐芯片',weight:'185g',packQty:'24pcs/ctn',ctnSize:'52×36×30 cm',ctnWeight:'5.2 kg',priceMin:16,priceMax:20,floorPrice:14,currency:'USD',note:'',bom:[
+    {id:101,name:'大号',dimensions:'12×8×6 cm',material:'木质外壳+音乐芯片',weight:'185g',packQty:24,ctnL:52,ctnW:36,ctnH:30,ctnWeight:5.2,priceMin:16,priceMax:20,floorPrice:14,currency:'USD',note:'',bom:[
       {id:1001,material:'木盒外壳',supplier:'顺德木工厂',qty:1,unit:'个',unitCost:28,currency:'CNY'},
       {id:1002,material:'音乐芯片',supplier:'东莞电子配件',qty:1,unit:'个',unitCost:15,currency:'CNY'},
       {id:1003,material:'包装盒',supplier:'义乌包装',qty:1,unit:'个',unitCost:5,currency:'CNY'}
     ]},
-    {id:102,name:'小号',dimensions:'8×5×4 cm',material:'木质外壳+音乐芯片',weight:'95g',packQty:'48pcs/ctn',ctnSize:'52×36×26 cm',ctnWeight:'5.5 kg',priceMin:10,priceMax:13,floorPrice:9,currency:'USD',note:'',bom:[
+    {id:102,name:'小号',dimensions:'8×5×4 cm',material:'木质外壳+音乐芯片',weight:'95g',packQty:48,ctnL:52,ctnW:36,ctnH:26,ctnWeight:5.5,priceMin:10,priceMax:13,floorPrice:9,currency:'USD',note:'',bom:[
       {id:1004,material:'木盒外壳',supplier:'顺德木工厂',qty:1,unit:'个',unitCost:18,currency:'CNY'},
       {id:1005,material:'音乐芯片',supplier:'东莞电子配件',qty:1,unit:'个',unitCost:15,currency:'CNY'},
       {id:1006,material:'包装盒',supplier:'义乌包装',qty:1,unit:'个',unitCost:3.5,currency:'CNY'}
     ]}
   ]},
   {id:2,name:'软木杯垫新款（圆形压花）',category:'软木杯垫',stage:'样品确认',person:'Penny',date:'2026-04-15',notes:'圆形压花新工艺，销售反馈需求强，优先推进',followups:['2026-04-15 [Penny] 立项，参考Alibaba热销款','2026-04-28 [Penny] 样品已收到，整体效果不错','2026-05-15 [Alan] 客户样品已寄出，等回复'],skus:[
-    {id:201,name:'标准圆形',dimensions:'直径10 cm',material:'天然软木+防滑底垫',weight:'38g',packQty:'100pcs/ctn',ctnSize:'56×38×22 cm',ctnWeight:'4.2 kg',priceMin:3,priceMax:4.5,floorPrice:2.5,currency:'USD',note:'',bom:[
+    {id:201,name:'标准圆形',dimensions:'直径10 cm',material:'天然软木+防滑底垫',weight:'38g',packQty:100,ctnL:56,ctnW:38,ctnH:22,ctnWeight:4.2,priceMin:3,priceMax:4.5,floorPrice:2.5,currency:'USD',note:'',bom:[
       {id:2001,material:'软木板材',supplier:'葡萄牙软木进口商',qty:1,unit:'片',unitCost:4.2,currency:'CNY'},
       {id:2002,material:'防滑底垫',supplier:'广州辅料',qty:1,unit:'个',unitCost:0.8,currency:'CNY'}
     ]}
   ]},
   {id:3,name:'MDF激光冰箱贴（欧洲城市系列）',category:'MDF冰箱贴',stage:'量产准备',person:'Penny',date:'2026-03-01',notes:'针对欧洲旅游纪念品市场，巴黎/伦敦/罗马三款，已有客户意向',followups:['2026-03-01 [Penny] 立项，参考现有爆款延伸','2026-03-20 [Penny] 三款设计稿确认','2026-04-10 [Penny] 样品OK，Alan确认可以推销售'],skus:[
-    {id:301,name:'巴黎埃菲尔铁塔款',dimensions:'6×8 cm',material:'3mm MDF+UV印刷+激光切割',weight:'22g',packQty:'200pcs/ctn',ctnSize:'50×40×30 cm',ctnWeight:'5 kg',priceMin:2.2,priceMax:3.2,floorPrice:1.8,currency:'USD',note:'',bom:[
+    {id:301,name:'巴黎埃菲尔铁塔款',dimensions:'6×8 cm',material:'3mm MDF+UV印刷+激光切割',weight:'22g',packQty:200,ctnL:50,ctnW:40,ctnH:30,ctnWeight:5,priceMin:2.2,priceMax:3.2,floorPrice:1.8,currency:'USD',note:'',bom:[
       {id:3001,material:'MDF板',supplier:'东莞木材',qty:1,unit:'片',unitCost:1.2,currency:'CNY'},
       {id:3002,material:'磁铁',supplier:'深圳磁性材料',qty:1,unit:'个',unitCost:0.5,currency:'CNY'},
       {id:3003,material:'UV彩印',supplier:'本厂',qty:1,unit:'次',unitCost:1.5,currency:'CNY'}
     ]},
-    {id:302,name:'伦敦大本钟款',dimensions:'6×8 cm',material:'3mm MDF+UV印刷+激光切割',weight:'22g',packQty:'200pcs/ctn',ctnSize:'50×40×30 cm',ctnWeight:'5 kg',priceMin:2.2,priceMax:3.2,floorPrice:1.8,currency:'USD',note:'',bom:[
+    {id:302,name:'伦敦大本钟款',dimensions:'6×8 cm',material:'3mm MDF+UV印刷+激光切割',weight:'22g',packQty:200,ctnL:50,ctnW:40,ctnH:30,ctnWeight:5,priceMin:2.2,priceMax:3.2,floorPrice:1.8,currency:'USD',note:'',bom:[
       {id:3004,material:'MDF板',supplier:'东莞木材',qty:1,unit:'片',unitCost:1.2,currency:'CNY'},
       {id:3005,material:'磁铁',supplier:'深圳磁性材料',qty:1,unit:'个',unitCost:0.5,currency:'CNY'},
       {id:3006,material:'UV彩印',supplier:'本厂',qty:1,unit:'次',unitCost:1.5,currency:'CNY'}
     ]},
-    {id:303,name:'罗马斗兽场款',dimensions:'7×6 cm',material:'3mm MDF+UV印刷',weight:'20g',packQty:'200pcs/ctn',ctnSize:'50×40×30 cm',ctnWeight:'4.8 kg',priceMin:2.2,priceMax:3.2,floorPrice:1.8,currency:'USD',note:'',bom:[
+    {id:303,name:'罗马斗兽场款',dimensions:'7×6 cm',material:'3mm MDF+UV印刷',weight:'20g',packQty:200,ctnL:50,ctnW:40,ctnH:30,ctnWeight:4.8,priceMin:2.2,priceMax:3.2,floorPrice:1.8,currency:'USD',note:'',bom:[
       {id:3007,material:'MDF板',supplier:'东莞木材',qty:1,unit:'片',unitCost:1.2,currency:'CNY'},
       {id:3008,material:'磁铁',supplier:'深圳磁性材料',qty:1,unit:'个',unitCost:0.5,currency:'CNY'},
       {id:3009,material:'UV彩印',supplier:'本厂',qty:1,unit:'次',unitCost:1.5,currency:'CNY'}
     ]}
   ]},
   {id:4,name:'马克杯（北欧简约系列）',category:'马克杯',stage:'设计开发',person:'Alan',date:'2026-05-28',notes:'Kelly反馈有多个客户问到马克杯，现有款式偏旧，考虑开发北欧风新款',followups:['2026-05-28 [Alan] 立项，与Kelly沟通市场方向','2026-06-05 [Penny] 联系3家马克杯工厂询价'],skus:[
-    {id:401,name:'纯色哑光款',dimensions:'直径8 cm，高9.5 cm',material:'陶瓷，哑光外壁+光面内壁',weight:'280g',packQty:'36pcs/ctn',ctnSize:'54×36×36 cm',ctnWeight:'11 kg',priceMin:5.5,priceMax:7.5,floorPrice:4.8,currency:'USD',note:'',bom:[]},
-    {id:402,name:'图案印刷款',dimensions:'直径8 cm，高9.5 cm',material:'陶瓷，全彩热转印',weight:'285g',packQty:'36pcs/ctn',ctnSize:'54×36×36 cm',ctnWeight:'11.2 kg',priceMin:6.5,priceMax:8.5,floorPrice:5.5,currency:'USD',note:'',bom:[]}
+    {id:401,name:'纯色哑光款',dimensions:'直径8×高9.5 cm',material:'陶瓷，哑光外壁+光面内壁',weight:'280g',packQty:36,ctnL:54,ctnW:36,ctnH:36,ctnWeight:11,priceMin:5.5,priceMax:7.5,floorPrice:4.8,currency:'USD',note:'',bom:[]},
+    {id:402,name:'图案印刷款',dimensions:'直径8×高9.5 cm',material:'陶瓷，全彩热转印',weight:'285g',packQty:36,ctnL:54,ctnW:36,ctnH:36,ctnWeight:11.2,priceMin:6.5,priceMax:8.5,floorPrice:5.5,currency:'USD',note:'',bom:[]}
   ]},
   {id:5,name:'帆布环保袋（可折叠购物袋）',category:'帆布袋',stage:'初步调研',person:'Penny',date:'2026-06-10',notes:'欧洲环保法规推动，可折叠设计便于携带，初步调研阶段',followups:['2026-06-10 [Penny] 立项，调研欧洲环保购物袋需求'],skus:[]}
 ];
@@ -5532,15 +5542,23 @@ function openProdDetail(id){
       skuHtml+='<div id="sku-imgs-'+sk.id+'" style="display:flex;gap:6px;margin-bottom:8px"></div>';
       /* 规格参数网格 */
       var specFields=[
-        {k:'dimensions',l:'尺寸'},{k:'material',l:'材质'},{k:'weight',l:'重量'},
-        {k:'packQty',l:'装箱数'},{k:'ctnSize',l:'箱尺'},{k:'ctnWeight',l:'箱重'}
+        {k:'dimensions',l:'产品尺寸'},{k:'material',l:'材质'},{k:'weight',l:'产品重量'},
+        {k:'packQty',l:'装箱数',fmt:function(v){return v+'pcs/ctn';}}
       ];
+      var hasCtn=sk.ctnL||sk.ctnW||sk.ctnH;
       var hasSpec=specFields.some(function(f){return sk[f.k];});
-      if(hasSpec||sk.specs){
+      if(hasSpec||hasCtn||sk.ctnWeight||sk.specs){
         skuHtml+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;font-size:11px;margin-bottom:6px">';
         specFields.forEach(function(f){
-          if(sk[f.k])skuHtml+='<div><span style="color:var(--muted)">'+f.l+'：</span>'+sk[f.k]+'</div>';
+          if(sk[f.k])skuHtml+='<div><span style="color:var(--muted)">'+f.l+'：</span>'+(f.fmt?f.fmt(sk[f.k]):sk[f.k])+'</div>';
         });
+        if(hasCtn){
+          var cbm=sk.ctnL&&sk.ctnW&&sk.ctnH?((sk.ctnL*sk.ctnW*sk.ctnH/1000000).toFixed(4)+' m³/箱'):'';
+          skuHtml+='<div style="grid-column:1/-1"><span style="color:var(--muted)">箱尺：</span>'
+            +(sk.ctnL||'?')+' × '+(sk.ctnW||'?')+' × '+(sk.ctnH||'?')+' cm'
+            +(cbm?' <span style="color:var(--accent2)">('+ cbm+')</span>':'')+'</div>';
+        }
+        if(sk.ctnWeight)skuHtml+='<div><span style="color:var(--muted)">箱重：</span>'+sk.ctnWeight+' kg/箱</div>';
         skuHtml+='</div>';
         if(sk.specs)skuHtml+='<div style="font-size:11px;color:var(--muted);margin-bottom:4px">旧规格：'+sk.specs+'</div>';
       }
@@ -5770,8 +5788,14 @@ function openSkuModal(projId,skuId){
     set('fsk-material',sk.material);
     set('fsk-weight',sk.weight);
     set('fsk-pack-qty',sk.packQty);
-    set('fsk-ctn-size',sk.ctnSize);
-    set('fsk-ctn-weight',sk.ctnWeight);
+    /* 兼容旧 ctnSize 文本格式 */
+    var ctnL=sk.ctnL,ctnW=sk.ctnW,ctnH=sk.ctnH;
+    if((!ctnL)&&sk.ctnSize){var m=sk.ctnSize.match(/(\d+\.?\d*)[^\d]+(\d+\.?\d*)[^\d]+(\d+\.?\d*)/);if(m){ctnL=m[1];ctnW=m[2];ctnH=m[3];}}
+    set('fsk-ctn-l',ctnL);set('fsk-ctn-w',ctnW);set('fsk-ctn-h',ctnH);
+    /* 兼容旧 ctnWeight 文本格式 */
+    var ctnWt=sk.ctnWeight;
+    if(ctnWt&&isNaN(Number(ctnWt))){ctnWt=parseFloat(ctnWt)||'';}
+    set('fsk-ctn-weight',ctnWt);
     set('fsk-price-min',sk.priceMin||sk.suggestedPrice||'');
     set('fsk-price-max',sk.priceMax||'');
     var curEl=document.getElementById('fsk-currency');if(curEl)curEl.value=sk.currency||'USD';
@@ -5782,7 +5806,7 @@ function openSkuModal(projId,skuId){
     loadSkuImagesIntoModal(skuId);
   } else {
     if(mt)mt.textContent='新增款式';
-    ['fsk-name','fsk-dimensions','fsk-material','fsk-weight','fsk-pack-qty','fsk-ctn-size','fsk-ctn-weight','fsk-price-min','fsk-price-max','fsk-floor-price','fsk-note'].forEach(function(fid){set(fid,'');});
+    ['fsk-name','fsk-dimensions','fsk-material','fsk-weight','fsk-pack-qty','fsk-ctn-l','fsk-ctn-w','fsk-ctn-h','fsk-ctn-weight','fsk-price-min','fsk-price-max','fsk-floor-price','fsk-note'].forEach(function(fid){set(fid,'');});
     var curEl2=document.getElementById('fsk-currency');if(curEl2)curEl2.value='USD';
     if(canSeeCost())renderBomRows([]);
   }
@@ -5857,9 +5881,11 @@ function saveSkuRecord(){
     dimensions:get('fsk-dimensions'),
     material:get('fsk-material'),
     weight:get('fsk-weight'),
-    packQty:get('fsk-pack-qty'),
-    ctnSize:get('fsk-ctn-size'),
-    ctnWeight:get('fsk-ctn-weight'),
+    packQty:getN('fsk-pack-qty'),
+    ctnL:getN('fsk-ctn-l'),
+    ctnW:getN('fsk-ctn-w'),
+    ctnH:getN('fsk-ctn-h'),
+    ctnWeight:getN('fsk-ctn-weight'),
     priceMin:getN('fsk-price-min'),
     priceMax:getN('fsk-price-max'),
     currency:get('fsk-currency')||'USD',
@@ -5872,7 +5898,8 @@ function saveSkuRecord(){
     var sk=p.skus.find(function(s){return s.id===editingSkuId;});
     if(sk){
       sk.name=skuData.name;sk.dimensions=skuData.dimensions;sk.material=skuData.material;
-      sk.weight=skuData.weight;sk.packQty=skuData.packQty;sk.ctnSize=skuData.ctnSize;
+      sk.weight=skuData.weight;sk.packQty=skuData.packQty;
+      sk.ctnL=skuData.ctnL;sk.ctnW=skuData.ctnW;sk.ctnH=skuData.ctnH;
       sk.ctnWeight=skuData.ctnWeight;sk.priceMin=skuData.priceMin;sk.priceMax=skuData.priceMax;
       sk.currency=skuData.currency;sk.note=skuData.note;
       if(canSeeFloorPrice())sk.floorPrice=skuData.floorPrice;
