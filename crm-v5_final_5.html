@@ -486,19 +486,22 @@ a{color:var(--accent);text-decoration:none;}
   <div class="nav-section">主菜单</div>
   <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')"><span class="nav-icon">📊</span>数据看板</div>
   <div class="nav-item" id="nav-orders" onclick="showPage('orders')"><span class="nav-icon">📦</span>执行中订单<span class="nav-count" id="nc-ord">0</span></div>
-  <!-- 运营团队模块（Alan+Penny可见，紧跟主导航） -->
-  <div id="nav-ops-section" style="display:none">
-    <div class="nav-item" id="nav-proddev" onclick="showPage('proddev')"><span class="nav-icon">🔧</span>产品开发</div>
-    <div class="nav-item" id="nav-prodcat" onclick="showPage('prodcat')"><span class="nav-icon">📦</span>产品库</div>
-    <div class="nav-item" id="nav-procurement" onclick="showPage('procurement')"><span class="nav-icon">🛒</span>采购跟单</div>
-    <div class="nav-item" id="nav-finance" onclick="showPage('finance')"><span class="nav-icon">💰</span>财务</div>
-  </div>
-  <!-- 销售团队模块 -->
+  <!-- 销售团队主菜单 -->
   <div id="nav-sales-section">
     <div class="nav-item" id="nav-hot" onclick="showPage('hot')"><span class="nav-icon">🔥</span>热点商机<span class="nav-count hot" id="nc-hot">0</span></div>
     <div class="nav-item" id="nav-inquiries" onclick="showPage('inquiries')"><span class="nav-icon">📋</span>询盘列表<span class="nav-count" id="nc-inq">0</span></div>
     <div class="nav-item" id="nav-customers" onclick="showPage('customers')"><span class="nav-icon">👥</span>客户管理<span class="nav-count" id="nc-cust">0</span></div>
     <div class="nav-item" id="nav-oldstats" onclick="showPage('oldstats')"><span class="nav-icon">📈</span>销售统计<span class="nav-count" id="nc-old">0</span></div>
+  </div>
+  <!-- 运营团队模块（Alan+Penny可见，紧跟销售主菜单） -->
+  <div id="nav-ops-section" style="display:none">
+    <div class="nav-item" id="nav-proddev" onclick="showPage('proddev')"><span class="nav-icon">🔧</span>产品开发</div>
+    <div class="nav-item" id="nav-prodcat" onclick="showPage('prodcat')"><span class="nav-icon">🗂️</span>产品库</div>
+    <div class="nav-item" id="nav-procurement" onclick="showPage('procurement')"><span class="nav-icon">🛒</span>采购跟单</div>
+    <div class="nav-item" id="nav-finance" onclick="showPage('finance')"><span class="nav-icon">💰</span>财务</div>
+  </div>
+  <!-- 销售快捷筛选（Penny隐藏） -->
+  <div id="nav-sales-filters">
     <div class="nav-section">快速筛选</div>
     <div class="nav-item" onclick="filterNav('source','Alibaba')"><span class="nav-icon">🌐</span>Alibaba</div>
     <div class="nav-item" onclick="filterNav('source','1688')"><span class="nav-icon">🏪</span>1688</div>
@@ -1496,8 +1499,10 @@ function switchUser(u){
   var msb=document.getElementById('mobile-settings-btn');if(msb)msb.style.display=u==='Alan'?'flex':'none';
   var salesSec=document.getElementById('nav-sales-section');
   var opsSec=document.getElementById('nav-ops-section');
+  var filtersSec=document.getElementById('nav-sales-filters');
   if(salesSec)salesSec.style.display=(u==='Penny')?'none':'';
   if(opsSec)opsSec.style.display=(u==='Alan'||u==='Penny')?'':'none';
+  if(filtersSec)filtersSec.style.display=(u==='Penny')?'none':'';
   renderMobileNav();
   refreshAll();
 }
