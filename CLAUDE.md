@@ -3,7 +3,7 @@
 ## 项目基本信息
 - 当前文件：crm-v5_final_5.html
 - 技术架构：纯 HTML + JS，localStorage 存储
-- Storage key：crm_inq_v5 / crm_cust_v5 / crm_ord_v5 / crm_sale_v5 / crm_settings_v5 / crm_prod_v5
+- Storage key：crm_inq_v5 / crm_cust_v5 / crm_ord_v5 / crm_sale_v5 / crm_settings_v5 / crm_prod_v5 / crm_prodcat_v5
 - 未来部署：crm.customento.com（Hostinger + Supabase）
 - 嵌入方式：钉钉 H5 微应用
 
@@ -339,6 +339,70 @@
 - 说"给我最终文件"时才输出最终版本
 - 每次新对话开始前确认项目文件已是最新版本
 
+## 产品库模块关键设计（crm_prodcat_v5）
+
+### 业务分类（type字段，4种）
+- `raw` = 原材料（大板/墨水/纸张/包装耗材等，有库存，可直销）
+- `blank` = 空白产品（加工后的空白品，有库存，可直销，有BOM）
+- `custom` = 定制品（客户设计，不留库存，有BOM，用于报价模板）
+- `service` = 加工服务（激光切割/UV/DTF/热转印等，按件/批计价）
+
+### 新建产品 vs 新增SKU 判断原则
+**同一产品下加SKU：** 同类产品、不同规格/厂家，功能上可替代
+  - 例：热转印纸A4，118g 1号厂家 → SKU-A；125g 2号厂家 → SKU-B（同一产品PAP-001）
+  - 例：11oz白杯，裸装36个 → SKU-A；带盒36个 → SKU-B（同一产品MUG-001）
+**新建产品：** 形态/功能完全不同，或尺寸差异大（如A4纸 vs A3纸），或品牌差异大定价完全不同
+
+### SKU编码规则
+- 格式：`[类目前缀]-[流水号]-[变体字母]`（如 MUG-001-A）
+- 前缀只管功能大类（10-15个），不编材质/尺寸/颜色（这些是属性字段）
+- 类目前缀（Alan设置页可管理）：MUG/CTR/BAG/MGN/TEE/TIL/BRD/PKG/INK/PAP/SVC/MBX
+
+### 多维标签体系（均可在设置页管理）
+- `categoryCode`：类目前缀（MUG/CTR...）
+- `materials[]`：材质标签多选（陶瓷/软木/MDF/布艺/亚克力...）
+- `processes[]`：工艺标签多选（热转印/UV直打/DTF/激光切割...）
+- `formTag`：形态单选（杯子/杯垫/冰箱贴/T恤...）
+
+### 双语字段规则
+- 产品级：`nameCN`/`nameEN` + `descCN`/`descEN`
+- SKU级：`variantCN`/`variantEN`（变体描述，如"白色·裸装·36个/箱" / "White·Bulk·36pcs/ctn"）
+- 报价给外国客户用英文，中国客户用中文，内部显示中文
+
+### SKU字段（含权限控制）
+- 变体：skuCode/variantCN/variantEN/color/size/shape/packType/qtyPerCarton/unitWeight
+- 箱规：ctnL/ctnW/ctnH(cm)/ctnWeight(kg)
+- 定价：`costPrice`（Alan+Penny）/ `priceMin`/`priceMax`（所有人）/ `floorPrice`（Alan+Penny+Kelly）/ currency
+- 库存：stockQty/stockUnit/safetyStock（hasStock=true时启用）
+- **`supplier`（供应商，仅内部可见，不进报价/规格描述）**
+- BOM：`bom[]`（定制品专用，引用行type=ref + 估算行type=text）
+
+### BOM设计（定制品）
+- 引用行（type=ref）：指向产品库其他SKU，自动带入成本价，skuCode/nameCN/qty/unit/unitCost/currency
+- 估算行（type=text）：消耗品（墨水/纸张等），自由填写，qty/unit/unitCost/currency
+- 总成本自动合计（CNY和USD分开）
+- BOM仅 canSeeCost()（Alan/Penny）可见
+
+### 图片（IndexedDB）
+- 产品级图片：key = `pcat_<prodId>_0/1/2`（3张）
+- SKU级图片：暂不单独存（可用产品级图片区分）
+
+### 库存变动类型（结构预留，采购模块联动后激活）
+1. 采购入库 2. 销售出库 3. 生产领料出库 4. 损坏补领 5. 盘点调整 6. 样品出库
+
+### 集成点
+- `SK.prodcat='crm_prodcat_v5'`
+- `showPage('prodcat')` → `setPcatView(pcatView)`
+- `refreshAll()` → prodcat页时调 `setPcatView(pcatView)`
+- `editCurrent()` 已支持 prodcat 类型
+- 设置页新增：类目/材质/工艺/形态标签管理（Alan专属）
+
+### 示例数据（DEF_PRODCAT，9个产品）
+- 原材料3：热转印纸A4(PAP-001) / 马克杯礼盒(PKG-001) / 马克杯外箱36装(PKG-002)
+- 空白产品3：11oz白杯(MUG-001,2SKU) / 软木杯垫(CTR-001) / 帆布袋(BAG-001)
+- 定制品2：印图马克杯(MUG-D001,含BOM) / 印图杯垫(CTR-D001,含BOM)
+- 加工服务2：热转印服务(SVC-001,2个价格档) / UV直打(SVC-002)
+
 ## 当前进度（最近完成）
 - **角色导航**：NAV_CONFIG 定义各角色底部导航，renderMobileNav() 动态渲染，Alan 有"全部"overlay
 - **产品开发模块**（crm_prod_v5）：完整实现，含项目列表/详情面板/SKU/BOM/3张图片/跟进记录/示例数据
@@ -388,8 +452,8 @@
 - **feature branch 与 main 分歧**：改动在 feature branch 上时用 cherry-pick 合到 main，不能直接 push 到 feature branch
 
 ## 待做功能（优先级顺序）
-1. **【下一个】产品库模块**（prodcat）：展示已完成/量产的产品，从产品开发数据衍生，可独立新增
-2. **【之后】采购跟单模块**（procurement）：供应商/采购订单/到货跟踪
+1. **【进行中】产品库模块**（prodcat）：基础完成，待完善报价单生成功能
+2. **【下一个】采购跟单模块**（procurement）：供应商/采购订单/到货跟踪
 3. **【之后】财务模块**（finance）：收款/付款/利润统计
 4. 数据看板优化（待讨论）
 5. **【待设计】邮件集成**：CRM内直接发邮件给客户，发送记录自动同步跟进记录

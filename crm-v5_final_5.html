@@ -1471,7 +1471,10 @@ a{color:var(--accent);text-decoration:none;}
       </div>
       <div id="fpsk-bom-area"><div style="font-size:12px;color:var(--muted);padding:6px 0">暂无材料，点击「添加」新增</div></div>
     </div>
-    <div class="form-group" style="margin-top:14px"><label class="form-label">备注</label><input class="form-input" type="text" id="fpsk-note" placeholder="其他说明..."></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
+      <div class="form-group"><label class="form-label">供应商 <span style="font-size:11px;color:var(--muted);font-weight:400">（仅内部）</span></label><input class="form-input" type="text" id="fpsk-supplier" placeholder="如：1号厂家 / 广州XX纸业"></div>
+      <div class="form-group"><label class="form-label">备注</label><input class="form-input" type="text" id="fpsk-note" placeholder="其他说明..."></div>
+    </div>
   </div>
   <div class="modal-foot">
     <div id="pcat-sku-delete-area"></div>
@@ -6768,6 +6771,7 @@ function openProdCatDetail(id){
         (sk.packType?'<span>包装：'+sk.packType+'</span>':'')+
         (sk.qtyPerCarton?'<span>装箱：'+sk.qtyPerCarton+'pcs</span>':'')+
         (p.hasStock?'<span style="color:'+(sk.stockQty>0?'var(--green)':'var(--red)')+'">库存：'+(sk.stockQty||0)+(sk.stockUnit||'')+'</span>':'')+
+        (sk.supplier?'<span style="color:var(--muted)">供应商：'+sk.supplier+'</span>':'')+
         '</div>';
       /* BOM */
       if(canSeeCost()&&sk.bom&&sk.bom.length){
@@ -7038,12 +7042,13 @@ function openPcatSkuModal(prodId,skuId){
     if(canSeeFloorPrice())set('fpsk-floor-price',sk.floorPrice||'');
     set('fpsk-stock-qty',sk.stockQty||'');set('fpsk-stock-unit',sk.stockUnit||'');
     set('fpsk-safety-stock',sk.safetyStock||'');
+    set('fpsk-supplier',sk.supplier||'');
     set('fpsk-note',sk.note||'');
     if(prod&&prod.type==='custom'&&canSeeCost())renderPcatBomRows(sk.bom||[]);
     if(delArea&&canDelete())delArea.innerHTML='<button class="btn btn-danger btn-sm" onclick="deletePcatSku(\''+prodId+'\',\''+skuId+'\')">🗑 删除SKU</button>';
   } else {
     if(mt)mt.textContent='新增SKU';
-    ['fpsk-sku-code','fpsk-variant-cn','fpsk-variant-en','fpsk-color','fpsk-size','fpsk-shape','fpsk-pack-type','fpsk-qty-per-carton','fpsk-unit-weight','fpsk-ctn-l','fpsk-ctn-w','fpsk-ctn-h','fpsk-ctn-weight','fpsk-cost-price','fpsk-price-min','fpsk-price-max','fpsk-floor-price','fpsk-stock-qty','fpsk-stock-unit','fpsk-safety-stock','fpsk-note'].forEach(function(fid){set(fid,'');});
+    ['fpsk-sku-code','fpsk-variant-cn','fpsk-variant-en','fpsk-color','fpsk-size','fpsk-shape','fpsk-pack-type','fpsk-qty-per-carton','fpsk-unit-weight','fpsk-ctn-l','fpsk-ctn-w','fpsk-ctn-h','fpsk-ctn-weight','fpsk-cost-price','fpsk-price-min','fpsk-price-max','fpsk-floor-price','fpsk-stock-qty','fpsk-stock-unit','fpsk-safety-stock','fpsk-supplier','fpsk-note'].forEach(function(fid){set(fid,'');});
     set('fpsk-currency','USD');
     if(prod&&prod.type==='custom'&&canSeeCost())renderPcatBomRows([]);
   }
@@ -7134,6 +7139,7 @@ function savePcatSkuRecord(){
     stockUnit:prod.hasStock?get('fpsk-stock-unit'):'',
     safetyStock:prod.hasStock?getN('fpsk-safety-stock'):0,
     bom:(prod.type==='custom'&&canSeeCost())?collectPcatBomFromDOM():[],
+    supplier:get('fpsk-supplier'),
     note:get('fpsk-note')
   };
   if(_editingPcatSkuId){
