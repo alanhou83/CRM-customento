@@ -854,35 +854,33 @@ a{color:var(--accent);text-decoration:none;}
 </div>
 
 <!-- 产品开发 页面 -->
-<div class="page" id="page-proddev">
+<div id="page-proddev" class="page">
   <div class="page-head">
     <div><div class="page-title">🔧 产品开发</div><div class="page-sub" id="prod-sub">项目跟踪 · 款式管理 · BOM成本</div></div>
     <button class="btn btn-primary" onclick="openProdModal()">＋ 新增项目</button>
   </div>
-  <div class="filters" style="padding:10px 20px">
-    <input class="filter-input" type="text" id="search-prod" placeholder="🔍 搜索项目名称..." oninput="renderProdDev()">
-    <select class="filter-select" id="fp-stage" onchange="renderProdDev()">
-      <option value="">全部阶段</option>
-      <option>初步调研</option><option>设计开发</option><option>打样中</option>
-      <option>样品确认</option><option>量产准备</option><option>已完成</option><option>搁置</option>
-    </select>
-    <select class="filter-select" id="fp-person" onchange="renderProdDev()">
-      <option value="">全部负责人</option>
-      <option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Penny</option>
-    </select>
-    <button class="btn btn-outline btn-sm" onclick="clearFilters_prod()">清除</button>
-  </div>
-  <div class="table-wrap">
-    <div class="table-scroll">
-      <div class="table-inner" style="min-width:680px">
-        <div class="table-header cols-prod">
-          <div></div><div>项目名称</div><div>阶段</div><div>负责人</div><div>款式</div><div>开始日期</div><div>最后跟进</div>
-        </div>
-        <div id="prod-table-body"></div>
-      </div>
+  <div class="page-content">
+    <div class="filters">
+      <input class="search-box" type="text" id="search-prod" placeholder="🔍 搜索项目名称..." oninput="renderProdDev()">
+      <select class="filter-select" id="fp-stage" onchange="renderProdDev()">
+        <option value="">全部阶段</option>
+        <option>初步调研</option><option>设计开发</option><option>打样中</option>
+        <option>样品确认</option><option>量产准备</option><option>已完成</option><option>搁置</option>
+      </select>
+      <select class="filter-select" id="fp-person" onchange="renderProdDev()">
+        <option value="">全部负责人</option>
+        <option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Penny</option>
+      </select>
+      <button class="btn btn-outline btn-sm" onclick="clearFilters_prod()">清除</button>
     </div>
+    <div class="table-wrap"><div class="table-scroll"><div class="table-inner" style="min-width:680px">
+      <div class="table-header cols-prod">
+        <div></div><div>项目名称</div><div>阶段</div><div>负责人</div><div>款式</div><div>开始日期</div><div>最后跟进</div>
+      </div>
+      <div id="prod-table-body"></div>
+    </div></div></div>
+    <div id="mobile-prod-cards" class="mobile-cards"></div>
   </div>
-  <div id="mobile-prod-cards" class="mobile-cards"></div>
 </div>
 
 <!-- 产品库 页面 -->
