@@ -5276,7 +5276,49 @@ function autoUpdateCustomerTags(alias){
 (function init(){document.getElementById('user-select').value=currentUser;switchUser(currentUser);rebuildProductSelects();renderDashboard();if(window.innerWidth<=768)setMobileHeader('dashboard');})();
 
 /* ===== 产品开发模块 ===== */
-var prodProjects=JSON.parse(localStorage.getItem('crm_prod_v5')||'[]');
+var DEF_PROD=[
+  {id:1,name:'迷你音乐盒',category:'创意礼品',stage:'打样中',person:'Penny',date:'2026-05-10',notes:'两款尺寸共用同一套配件和供应商，Penny统一管理',followups:['2026-05-10 [Penny] 项目立项，确认两款尺寸方向','2026-05-20 [Penny] 与工厂确认样品费，预计2周出样'],skus:[
+    {id:101,name:'大号',specs:'12cm×8cm×6cm，木质外壳',suggestedPrice:18,currency:'USD',bom:[
+      {id:1001,material:'木盒外壳',supplier:'顺德木工厂',qty:1,unit:'个',unitCost:28,currency:'CNY'},
+      {id:1002,material:'音乐芯片',supplier:'东莞电子配件',qty:1,unit:'个',unitCost:15,currency:'CNY'},
+      {id:1003,material:'包装盒',supplier:'义乌包装',qty:1,unit:'个',unitCost:5,currency:'CNY'}
+    ]},
+    {id:102,name:'小号',specs:'8cm×5cm×4cm，木质外壳',suggestedPrice:12,currency:'USD',bom:[
+      {id:1004,material:'木盒外壳',supplier:'顺德木工厂',qty:1,unit:'个',unitCost:18,currency:'CNY'},
+      {id:1005,material:'音乐芯片',supplier:'东莞电子配件',qty:1,unit:'个',unitCost:15,currency:'CNY'},
+      {id:1006,material:'包装盒',supplier:'义乌包装',qty:1,unit:'个',unitCost:3.5,currency:'CNY'}
+    ]}
+  ]},
+  {id:2,name:'软木杯垫新款（圆形压花）',category:'软木杯垫',stage:'样品确认',person:'Penny',date:'2026-04-15',notes:'圆形压花新工艺，销售反馈需求强，优先推进',followups:['2026-04-15 [Penny] 立项，参考Alibaba热销款','2026-04-28 [Penny] 样品已收到，整体效果不错','2026-05-15 [Alan] 客户样品已寄出，等回复'],skus:[
+    {id:201,name:'标准圆形',specs:'直径10cm，4mm厚，原木色',suggestedPrice:3.5,currency:'USD',bom:[
+      {id:2001,material:'软木板材',supplier:'葡萄牙软木进口商',qty:1,unit:'片',unitCost:4.2,currency:'CNY'},
+      {id:2002,material:'防滑底垫',supplier:'广州辅料',qty:1,unit:'个',unitCost:0.8,currency:'CNY'}
+    ]}
+  ]},
+  {id:3,name:'MDF激光冰箱贴（欧洲城市系列）',category:'MDF冰箱贴',stage:'量产准备',person:'Penny',date:'2026-03-01',notes:'针对欧洲旅游纪念品市场，巴黎/伦敦/罗马三款，已有客户意向',followups:['2026-03-01 [Penny] 立项，参考现有爆款延伸','2026-03-20 [Penny] 三款设计稿确认','2026-04-10 [Penny] 样品OK，Alan确认可以推销售'],skus:[
+    {id:301,name:'巴黎埃菲尔铁塔款',specs:'6cm×8cm，3mm MDF，全彩UV印刷+激光切割',suggestedPrice:2.8,currency:'USD',bom:[
+      {id:3001,material:'MDF板',supplier:'东莞木材',qty:1,unit:'片',unitCost:1.2,currency:'CNY'},
+      {id:3002,material:'磁铁',supplier:'深圳磁性材料',qty:1,unit:'个',unitCost:0.5,currency:'CNY'},
+      {id:3003,material:'UV彩印',supplier:'本厂',qty:1,unit:'次',unitCost:1.5,currency:'CNY'}
+    ]},
+    {id:302,name:'伦敦大本钟款',specs:'6cm×8cm，3mm MDF，全彩UV印刷+激光切割',suggestedPrice:2.8,currency:'USD',bom:[
+      {id:3004,material:'MDF板',supplier:'东莞木材',qty:1,unit:'片',unitCost:1.2,currency:'CNY'},
+      {id:3005,material:'磁铁',supplier:'深圳磁性材料',qty:1,unit:'个',unitCost:0.5,currency:'CNY'},
+      {id:3006,material:'UV彩印',supplier:'本厂',qty:1,unit:'次',unitCost:1.5,currency:'CNY'}
+    ]},
+    {id:303,name:'罗马斗兽场款',specs:'7cm×6cm，3mm MDF，全彩UV印刷',suggestedPrice:2.8,currency:'USD',bom:[
+      {id:3007,material:'MDF板',supplier:'东莞木材',qty:1,unit:'片',unitCost:1.2,currency:'CNY'},
+      {id:3008,material:'磁铁',supplier:'深圳磁性材料',qty:1,unit:'个',unitCost:0.5,currency:'CNY'},
+      {id:3009,material:'UV彩印',supplier:'本厂',qty:1,unit:'次',unitCost:1.5,currency:'CNY'}
+    ]}
+  ]},
+  {id:4,name:'马克杯（北欧简约系列）',category:'马克杯',stage:'设计开发',person:'Alan',date:'2026-05-28',notes:'Kelly反馈有多个客户问到马克杯，现有款式偏旧，考虑开发北欧风新款',followups:['2026-05-28 [Alan] 立项，与Kelly沟通市场方向','2026-06-05 [Penny] 联系3家马克杯工厂询价'],skus:[
+    {id:401,name:'纯色哑光款',specs:'350ml，陶瓷，哑光外表面+光面内壁',suggestedPrice:6.5,currency:'USD',bom:[]},
+    {id:402,name:'图案印刷款',specs:'350ml，陶瓷，全彩热转印',suggestedPrice:7.5,currency:'USD',bom:[]}
+  ]},
+  {id:5,name:'帆布环保袋（可折叠购物袋）',category:'帆布袋',stage:'初步调研',person:'Penny',date:'2026-06-10',notes:'欧洲环保法规推动，可折叠设计便于携带，初步调研阶段',followups:['2026-06-10 [Penny] 立项，调研欧洲环保购物袋需求'],skus:[]}
+];
+var prodProjects=JSON.parse(localStorage.getItem('crm_prod_v5')||'null')||DEF_PROD.slice();
 var nextProdId=prodProjects.length?Math.max.apply(null,prodProjects.map(function(p){return p.id;}))+1:1;
 var editingProdId=null;
 var editingSkuId=null;
