@@ -5579,7 +5579,10 @@ function openProdDetail(id){
           if(b.currency==='USD')totalUSD+=cost*qty;else totalCNY+=cost*qty;
           var bCostStr=b.unitCost?(b.currency==='CNY'?'¥':'$')+cost:'—';
           skuHtml+='<tr style="border-bottom:1px solid rgba(255,255,255,.04)">'
-            +'<td style="padding:3px 4px">'+b.material+'</td>'
+            +'<td style="padding:3px 4px">'
+              +b.material
+              +(b.note?'<div style="font-size:10px;color:var(--muted);margin-top:1px">'+b.note+'</div>':'')
+            +'</td>'
             +'<td style="padding:3px 4px;color:var(--muted)">'+(b.supplier||'—')+'</td>'
             +'<td style="padding:3px 4px;text-align:right;color:var(--muted)">'+(b.qty||'1')+(b.unit?' '+b.unit:'')+'</td>'
             +'<td style="padding:3px 4px;text-align:right;color:var(--yellow)">'+bCostStr+'</td></tr>';
@@ -5831,12 +5834,15 @@ function renderBomRows(bom){
   bom.forEach(function(b,idx){
     var curOpts='<option value="CNY"'+(b.currency==='CNY'?' selected':'')+'>¥</option><option value="USD"'+(b.currency==='USD'?' selected':'')+'>$</option>';
     html+='<tr style="border-bottom:1px solid rgba(255,255,255,.04)" data-bom-idx="'+idx+'">'
-      +'<td style="padding:2px 3px"><input class="form-input" style="font-size:12px;padding:3px 5px" data-bom="material" value="'+(b.material||'')+'" placeholder="材料名"></td>'
+      +'<td style="padding:2px 3px">'
+        +'<input class="form-input" style="font-size:12px;padding:3px 5px" data-bom="material" value="'+(b.material||'')+'" placeholder="材料名">'
+        +'<input class="form-input" style="font-size:11px;padding:2px 5px;margin-top:2px;color:var(--muted)" data-bom="note" value="'+(b.note||'')+'" placeholder="备注（成本说明...）">'
+      +'</td>'
       +'<td style="padding:2px 3px"><input class="form-input" style="font-size:12px;padding:3px 5px" data-bom="supplier" value="'+(b.supplier||'')+'" placeholder="供应商"></td>'
       +'<td style="padding:2px 3px"><input class="form-input" style="font-size:12px;padding:3px 5px;width:100%" type="number" data-bom="qty" value="'+(b.qty||'')+'" placeholder="1"></td>'
       +'<td style="padding:2px 3px"><input class="form-input" style="font-size:12px;padding:3px 5px;width:100%" data-bom="unit" value="'+(b.unit||'')+'" placeholder="个"></td>'
       +'<td style="padding:2px 3px"><div style="display:flex;gap:2px"><select class="form-input" style="font-size:12px;padding:3px 4px;width:36px" data-bom="currency">'+curOpts+'</select><input class="form-input" style="font-size:12px;padding:3px 5px;flex:1;min-width:40px" type="number" data-bom="unitCost" value="'+(b.unitCost||'')+'" placeholder="0.00" step="0.01"></div></td>'
-      +'<td style="padding:2px 3px;text-align:center"><button onclick="removeBomRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;line-height:1;padding:0 2px">×</button></td>'
+      +'<td style="padding:2px 3px;text-align:center;vertical-align:top;padding-top:6px"><button onclick="removeBomRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;line-height:1;padding:0 2px">×</button></td>'
       +'</tr>';
   });
   html+='</table>';
@@ -5845,7 +5851,7 @@ function renderBomRows(bom){
 
 function addBomRow(){
   var current=collectBomFromDOM();
-  current.push({material:'',supplier:'',qty:'',unit:'',unitCost:'',currency:'CNY'});
+  current.push({material:'',supplier:'',qty:'',unit:'',unitCost:'',currency:'CNY',note:''});
   renderBomRows(current);
 }
 
@@ -5863,7 +5869,7 @@ function collectBomFromDOM(){
   var result=[];
   rows.forEach(function(row){
     var get=function(attr){var el=row.querySelector('[data-bom="'+attr+'"]');return el?el.value.trim():'';};
-    result.push({id:Date.now()+Math.floor(Math.random()*1000),material:get('material'),supplier:get('supplier'),qty:get('qty'),unit:get('unit'),unitCost:get('unitCost'),currency:get('currency')||'CNY'});
+    result.push({id:Date.now()+Math.floor(Math.random()*1000),material:get('material'),supplier:get('supplier'),qty:get('qty'),unit:get('unit'),unitCost:get('unitCost'),currency:get('currency')||'CNY',note:get('note')});
   });
   return result;
 }
