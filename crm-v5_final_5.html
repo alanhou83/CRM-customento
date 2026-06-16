@@ -2846,6 +2846,7 @@ function openOrderDetail(id){
   if(o.stage==='已发货'){stageBar+='<div style="font-size:12px;color:var(--yellow);background:rgba(247,186,79,.12);padding:7px 10px;border-radius:6px;border-left:3px solid var(--yellow);margin-top:4px">📦 已发货 — 点下方「✓ 标记完成」将订单录入销售统计</div>';}
 
   /* Tab1：订单详情 */
+  var dOvd=o.delivery&&o.delivery<today();
   var tab1='<div class="detail-section">'+stageBar+'</div>';
   tab1+='<div class="detail-section"><div class="detail-section-title">订单信息</div>'
     +'<div class="detail-row"><span class="detail-key">下单日期</span><span class="detail-val">'+o.date+'</span></div>'
@@ -2853,9 +2854,10 @@ function openOrderDetail(id){
     +'<div class="detail-row"><span class="detail-key">产品</span><span class="detail-val">'+o.product+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">数量</span><span class="detail-val">'+(o.qty||'—')+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">订单金额</span><span class="detail-val" style="color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(o.amount,o.currency)+'</span></div>'
-    +'<div class="detail-row"><span class="detail-key">预计交期</span><span class="detail-val">'+(o.delivery||'未设定')+'</span></div>'
+    +'<div class="detail-row"><span class="detail-key">预计交期</span><span class="detail-val" style="color:'+(dOvd?'var(--red)':'')+'">'+(o.delivery?(dOvd?'⚠️ ':'📦 ')+o.delivery:'未设定')+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">负责人</span><span class="detail-val">'+o.person+'</span></div>'
     +(o.notes?'<div class="detail-row"><span class="detail-key">备注</span><span class="detail-val">'+o.notes+'</span></div>':'')
+    +(o.followupDate&&o.followupNote?'<div class="detail-row"><span class="detail-key">待办</span><span class="detail-val" style="color:'+(o.followupDate<today()?'var(--red)':'var(--green)')+'">'+((o.followupDate<today())?'🔔 ':'📅 ')+o.followupDate+' 📌 '+o.followupNote+'</span></div>':'')
     +'</div>'
     +'<div style="display:flex;gap:8px;margin-top:8px">'
     +'<button class="btn btn-outline btn-sm" onclick="editOrder('+o.id+');closeDetail()">编辑</button>'
@@ -4373,7 +4375,9 @@ function renderMobileCards(page){
     var todayStr2=today();
     c.innerHTML=filtered.map(o=>{
       var delivOvd=o.delivery&&o.delivery<todayStr2;
+      var todoOvd=o.followupDate&&o.followupDate<todayStr2;
       var stageSpan='<span style="font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;'+getOrdStageStyle(o.stage)+'">'+o.stage+'</span>';
+      var lfStr=getLastFollowupStr(o);
       return '<div style="display:flex;align-items:flex-start;padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;gap:10px;background:var(--surface)'+(delivOvd?';border-left:3px solid var(--red)':'')+'" onclick="openOrderDetail('+o.id+')">'
         +'<div style="flex:1;min-width:0">'
         +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
@@ -4381,8 +4385,9 @@ function renderMobileCards(page){
         +stageSpan
         +(delivOvd?'<span style="font-size:10px;font-weight:600;color:var(--red)">超时</span>':'')
         +'</div>'
-        +'<div style="font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+o.product+'</div>'
-        +(o.notes?'<div style="font-size:10px;color:var(--green);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📌 '+o.notes+'</div>':'')
+        +'<div style="font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+o.product+(o.notes?'<span style="color:var(--accent2)"> 注：'+o.notes+'</span>':'')+'</div>'
+        +(lfStr?'<div style="font-size:10px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+lfStr+'</div>':'')
+        +(o.followupDate?'<div style="font-size:10px;color:'+(todoOvd?'var(--red)':'var(--muted)')+';margin-top:2px">'+(todoOvd?'🔔 ':'📅 ')+o.followupDate+(o.followupNote?'<span style="color:'+(todoOvd?'var(--red)':'var(--green)')+'"> 📌 '+o.followupNote+'</span>':'')+'</div>':'')
         +'</div>'
         +'<div style="text-align:right;flex-shrink:0">'
         +'<div style="font-size:13px;font-weight:700;color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(o.amount,o.currency)+'</div>'
