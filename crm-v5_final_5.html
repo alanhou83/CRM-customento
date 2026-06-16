@@ -305,8 +305,14 @@ a{color:var(--accent);text-decoration:none;}
   .inq-card-name{font-size:12px;}
 }
 /* ===== 产品开发模块 ===== */
-.cols-prod{display:grid;grid-template-columns:1fr 110px 70px 60px 90px 160px;align-items:center;}
+.cols-prod{display:grid;grid-template-columns:52px 1fr 110px 70px 55px 88px 150px;align-items:center;}
 .prod-stage{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+.prod-img-thumb{width:44px;height:44px;border-radius:6px;object-fit:cover;display:block;}
+.prod-img-ph{width:44px;height:44px;border-radius:6px;background:var(--surface2);border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--muted3);}
+.prod-img-slot{width:100px;height:100px;border-radius:8px;border:1.5px dashed var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;flex-shrink:0;position:relative;transition:border-color .15s;}
+.prod-img-slot:hover{border-color:var(--accent);}
+.prod-img-slot img{width:100%;height:100%;object-fit:cover;}
+.prod-img-del{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;color:#fff;line-height:1;}
 </style>
 </head>
 <body>
@@ -853,7 +859,7 @@ a{color:var(--accent);text-decoration:none;}
     <div><div class="page-title">🔧 产品开发</div><div class="page-sub" id="prod-sub">项目跟踪 · 款式管理 · BOM成本</div></div>
     <button class="btn btn-primary" onclick="openProdModal()">＋ 新增项目</button>
   </div>
-  <div class="filters" id="prod-filters">
+  <div class="filters" style="padding:10px 20px">
     <input class="filter-input" type="text" id="search-prod" placeholder="🔍 搜索项目名称..." oninput="renderProdDev()">
     <select class="filter-select" id="fp-stage" onchange="renderProdDev()">
       <option value="">全部阶段</option>
@@ -866,11 +872,15 @@ a{color:var(--accent);text-decoration:none;}
     </select>
     <button class="btn btn-outline btn-sm" onclick="clearFilters_prod()">清除</button>
   </div>
-  <div class="table-wrap" id="prod-table-wrap">
-    <div class="table-head cols-prod">
-      <div>项目名称</div><div>阶段</div><div>负责人</div><div>款式数</div><div>开始日期</div><div>最后跟进</div>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <div class="table-inner" style="min-width:680px">
+        <div class="table-header cols-prod">
+          <div></div><div>项目名称</div><div>阶段</div><div>负责人</div><div>款式</div><div>开始日期</div><div>最后跟进</div>
+        </div>
+        <div id="prod-table-body"></div>
+      </div>
     </div>
-    <div id="prod-table-body"></div>
   </div>
   <div id="mobile-prod-cards" class="mobile-cards"></div>
 </div>
@@ -5377,16 +5387,28 @@ function renderProdDev(){
   body.innerHTML=filtered.map(function(p){
     var skuCount=(p.skus&&p.skus.length)?p.skus.length:0;
     var lf=getLastFollowupStr(p);
-    return '<div class="table-row cols-prod" style="cursor:pointer" onclick="openProdDetail('+p.id+')">'
+    return '<div class="table-row cols-prod" onclick="openProdDetail('+p.id+')">'
+      +'<div class="table-cell"><div class="prod-img-ph" id="prod-thumb-'+p.id+'">📷</div></div>'
       +'<div class="table-cell" style="font-weight:500">'+p.name+(p.category?'<div style="font-size:11px;color:var(--muted2);font-weight:400">'+p.category+'</div>':'')+'</div>'
       +'<div class="table-cell"><span class="prod-stage" style="'+getProdStageStyle(p.stage)+'">'+p.stage+'</span></div>'
       +'<div class="table-cell" style="color:var(--muted)">'+(p.person||'—')+'</div>'
-      +'<div class="table-cell" style="color:var(--muted);text-align:center">'+skuCount+'</div>'
+      +'<div class="table-cell" style="color:var(--muted);text-align:center">'+skuCount+'款</div>'
       +'<div class="table-cell" style="color:var(--muted);font-size:12px">'+(p.date||'—')+'</div>'
       +'<div class="table-cell" style="font-size:11px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(lf||'暂无')+'</div>'
       +'</div>';
   }).join('');
+  /* 异步加载缩略图 */
+  filtered.forEach(function(p){
+    getImgFromDB('prod_'+p.id+'_0',function(d){
+      if(!d)getImgFromDB('prod_'+p.id+'_1',function(d2){_setProdThumb(p.id,d2);});
+      else _setProdThumb(p.id,d);
+    });
+  });
   if(window.innerWidth<=768)renderMobileCards('prod');
+}
+function _setProdThumb(pid,dataUrl){
+  var el=document.getElementById('prod-thumb-'+pid);if(!el)return;
+  if(dataUrl)el.outerHTML='<img class="prod-img-thumb" id="prod-thumb-'+pid+'" src="'+dataUrl+'">';
 }
 
 function renderMobileCards_prod(){
@@ -5426,13 +5448,27 @@ function openProdDetail(id){
   var dpSub=document.getElementById('dp-sub');if(dpSub)dpSub.textContent=(p.category||'产品开发')+' · '+(p.stage||'');
   var dpStar=document.getElementById('dp-star-btn');if(dpStar)dpStar.style.display='none';
   var dpTarget=document.getElementById('dp-target-btn');if(dpTarget)dpTarget.style.display='none';
+
+  /* 阶段切换按钮 */
   var stageBar='<div style="display:flex;flex-wrap:wrap;gap:6px;padding:10px 0 4px 0">';
   PROD_STAGES.forEach(function(s){
     var isActive=p.stage===s;
-    var sty=isActive?getProdStageStyle(s):'';
-    stageBar+='<button class="inq-status-btn" style="'+sty+'" onclick="quickProdStage('+id+',\''+s+'\')">'+s+'</button>';
+    stageBar+='<button class="inq-status-btn" style="'+(isActive?getProdStageStyle(s):'')+'" onclick="quickProdStage('+id+',\''+s+'\')">'+s+'</button>';
   });
   stageBar+='</div>';
+
+  /* 图片区 — 3格 */
+  var imgGallery='<div style="margin-bottom:16px">'
+    +'<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.6px">产品图片</div>'
+    +'<div style="display:flex;gap:10px">';
+  for(var idx=0;idx<3;idx++){
+    imgGallery+='<div class="prod-img-slot" id="prod-img-slot-'+idx+'" onclick="uploadProdImg('+id+','+idx+')">'
+      +'<div style="text-align:center"><div style="font-size:24px">📷</div><div style="font-size:10px;color:var(--muted);margin-top:4px">上传</div></div>'
+      +'</div>';
+  }
+  imgGallery+='</div></div>';
+
+  /* SKU列表 */
   var skus=p.skus||[];
   var skuHtml='<div class="detail-section"><div class="detail-section-title" style="display:flex;align-items:center;justify-content:space-between">款式列表 <button onclick="openSkuModal('+id+',null)" style="font-size:11px;padding:3px 9px;border-radius:5px;border:0.5px solid var(--accent);color:var(--accent);background:rgba(79,142,247,.12);cursor:pointer;font-weight:400">＋ 新增款式</button></div>';
   if(!skus.length){
@@ -5450,25 +5486,40 @@ function openProdDetail(id){
         +(sk.specs?'<div style="font-size:11px;color:var(--muted);margin-bottom:6px">规格：'+sk.specs+'</div>':'');
       if(canSeeCost()&&sk.bom&&sk.bom.length){
         skuHtml+='<div style="margin-top:6px;border-top:1px solid var(--border);padding-top:6px">'
-          +'<div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px">BOM 材料清单</div>'
+          +'<div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px">🔩 BOM 材料清单</div>'
           +'<table style="width:100%;font-size:11px;border-collapse:collapse">'
-          +'<tr style="color:var(--muted);border-bottom:1px solid var(--border)"><th style="text-align:left;padding:2px 4px;font-weight:500">材料</th><th style="text-align:left;padding:2px 4px;font-weight:500">供应商</th><th style="text-align:right;padding:2px 4px;font-weight:500">用量</th><th style="text-align:right;padding:2px 4px;font-weight:500">单价</th></tr>';
+          +'<tr style="color:var(--muted);border-bottom:1px solid var(--border)">'
+          +'<th style="text-align:left;padding:2px 4px;font-weight:500">材料/配件</th>'
+          +'<th style="text-align:left;padding:2px 4px;font-weight:500">供应商</th>'
+          +'<th style="text-align:right;padding:2px 4px;font-weight:500">用量</th>'
+          +'<th style="text-align:right;padding:2px 4px;font-weight:500">单价</th></tr>';
+        var totalCNY=0,totalUSD=0;
         sk.bom.forEach(function(b){
-          var bCostStr=b.unitCost?(b.currency==='CNY'?'¥':'$')+Number(b.unitCost).toLocaleString():'—';
+          var cost=Number(b.unitCost)||0;var qty=Number(b.qty)||1;
+          if(b.currency==='USD')totalUSD+=cost*qty;else totalCNY+=cost*qty;
+          var bCostStr=b.unitCost?(b.currency==='CNY'?'¥':'$')+cost:'—';
           skuHtml+='<tr style="border-bottom:1px solid rgba(255,255,255,.04)">'
             +'<td style="padding:3px 4px">'+b.material+'</td>'
             +'<td style="padding:3px 4px;color:var(--muted)">'+(b.supplier||'—')+'</td>'
-            +'<td style="padding:3px 4px;text-align:right;color:var(--muted)">'+(b.qty||'')+(b.unit?' '+b.unit:'')+'</td>'
-            +'<td style="padding:3px 4px;text-align:right;color:var(--yellow)">'+bCostStr+'</td>'
-            +'</tr>';
+            +'<td style="padding:3px 4px;text-align:right;color:var(--muted)">'+(b.qty||'1')+(b.unit?' '+b.unit:'')+'</td>'
+            +'<td style="padding:3px 4px;text-align:right;color:var(--yellow)">'+bCostStr+'</td></tr>';
         });
+        var totalStr='';
+        if(totalCNY)totalStr+='¥'+totalCNY.toFixed(2)+' ';
+        if(totalUSD)totalStr+='$'+totalUSD.toFixed(2);
+        skuHtml+='<tr><td colspan="3" style="padding:4px 4px;font-weight:600;color:var(--muted);font-size:10px">合计成本</td>'
+          +'<td style="padding:4px 4px;text-align:right;font-weight:700;color:var(--accent2)">'+totalStr+'</td></tr>';
         skuHtml+='</table></div>';
+      } else if(canSeeCost()){
+        skuHtml+='<div style="font-size:11px;color:var(--muted);margin-top:4px">🔩 BOM 暂未填写</div>';
       }
       skuHtml+='</div>';
     });
   }
   skuHtml+='</div>';
-  var tab1='<div class="detail-section">'+stageBar+'</div>'
+
+  var tab1=imgGallery
+    +'<div class="detail-section">'+stageBar+'</div>'
     +'<div class="detail-section"><div class="detail-section-title">项目信息</div>'
     +'<div class="detail-row"><span class="detail-key">项目名称</span><span class="detail-val">'+p.name+'</span></div>'
     +(p.category?'<div class="detail-row"><span class="detail-key">产品分类</span><span class="detail-val">'+p.category+'</span></div>':'')
@@ -5481,21 +5532,20 @@ function openProdDetail(id){
     +'<button class="btn btn-outline btn-sm" onclick="openProdModal('+id+')">编辑项目</button>'
     +(canDelete()?'<button class="btn btn-danger btn-sm" onclick="deleteProd('+id+')">删除项目</button>':'')
     +'</div>';
+
   var fuHtml=renderFollowups(p.followups||[]);
   var tab2='<div style="display:flex;gap:7px;margin-bottom:16px">'
     +'<input class="form-input" id="dp-fu-input" placeholder="记录本次跟进内容..." style="flex:1;font-size:13px">'
     +'<button class="btn btn-primary btn-sm" onclick="addProdFollowup('+id+')">添加</button>'
     +'</div>'
     +'<div id="dp-followups">'+fuHtml+'</div>';
+
   var dpTabs=document.getElementById('dp-tabs');
   if(dpTabs){
     dpTabs.style.display='flex';
-    var tabProfile=document.getElementById('dp-tab-profile');
-    var tabFollowup=document.getElementById('dp-tab-followup');
-    var tabSales=document.getElementById('dp-tab-sales');
-    if(tabProfile)tabProfile.textContent='项目详情';
-    if(tabFollowup)tabFollowup.textContent='跟进记录';
-    if(tabSales)tabSales.style.display='none';
+    var tabPr=document.getElementById('dp-tab-profile');if(tabPr)tabPr.textContent='项目详情';
+    var tabFu=document.getElementById('dp-tab-followup');if(tabFu)tabFu.textContent='跟进记录';
+    var tabSa=document.getElementById('dp-tab-sales');if(tabSa)tabSa.style.display='none';
   }
   var detailBody=document.getElementById('detail-body');
   if(detailBody){
@@ -5506,6 +5556,8 @@ function openProdDetail(id){
   var bar=document.getElementById('dp-followup-bar');if(bar)bar.style.display='none';
   switchDpTab('profile');
   var panel=document.getElementById('detail-panel');if(panel)panel.classList.add('open');
+  /* 异步加载图片 */
+  loadProdImagesIntoDetail(id);
 }
 
 function quickProdStage(projId,stage){
@@ -5523,19 +5575,21 @@ function openProdModal(id){
     prods.forEach(function(pr){catOpts+='<option>'+pr+'</option>';});
     catSel.innerHTML=catOpts;
   }
+  var pmTitle=document.getElementById('prod-modal-title');
   if(id){
     var p=prodProjects.find(function(x){return x.id===id;});if(!p)return;
     editingProdId=id;
-    var mt=document.getElementById('prod-modal-title');if(mt)mt.textContent='编辑项目';
+    if(pmTitle)pmTitle.textContent='编辑项目';
     var set=function(fid,val){var el=document.getElementById(fid);if(el)el.value=val||'';};
-    set('fp-name',p.name);set('fp-category',p.category);set('fp-stage-modal',p.stage);set('fp-person-modal',p.person);set('fp-date',p.date);set('fp-notes',p.notes);
+    set('fp-name',p.name);set('fp-category',p.category||'');set('fp-stage-modal',p.stage);set('fp-person-modal',p.person);set('fp-date',p.date);set('fp-notes',p.notes);
     if(delArea&&canDelete()){
       delArea.innerHTML='<button class="btn btn-danger btn-sm" onclick="deleteProd('+id+')">🗑 删除</button>';
     }
   } else {
     editingProdId=null;
-    var mt=document.getElementById('prod-modal-title');if(mt)mt.textContent='新增项目';
-    ['fp-name','fp-category','fp-notes','fp-date'].forEach(function(fid){var el=document.getElementById(fid);if(el)el.value='';});
+    if(pmTitle)pmTitle.textContent='新增项目';
+    ['fp-name','fp-notes','fp-date'].forEach(function(fid){var el=document.getElementById(fid);if(el)el.value='';});
+    if(catSel)catSel.value='';
     var stEl=document.getElementById('fp-stage-modal');if(stEl)stEl.value='初步调研';
     var perEl=document.getElementById('fp-person-modal');
     if(perEl)perEl.value=(currentUser==='Momi'?'Momi':currentUser==='Mille'?'Mille':currentUser==='Penny'?'Penny':'Alan');
@@ -5727,6 +5781,68 @@ function clearFilters_prod(){
   var per=document.getElementById('fp-person');if(per)per.value='';
   prodChipStage='';
   renderProdDev();
+}
+
+/* ===== 产品图片 ===== */
+function loadProdImagesIntoDetail(projId){
+  for(var i=0;i<3;i++){
+    (function(idx){
+      var slot=document.getElementById('prod-img-slot-'+idx);if(!slot)return;
+      getImgFromDB('prod_'+projId+'_'+idx,function(dataUrl){
+        var slot2=document.getElementById('prod-img-slot-'+idx);if(!slot2)return;
+        if(dataUrl){
+          slot2.innerHTML='<img src="'+dataUrl+'" style="width:100%;height:100%;object-fit:cover">'
+            +'<div class="prod-img-del" onclick="event.stopPropagation();deleteProdImg('+projId+','+idx+')">×</div>';
+          slot2.onclick=null;
+        } else {
+          slot2.innerHTML='<div style="text-align:center"><div style="font-size:24px">📷</div><div style="font-size:10px;color:var(--muted);margin-top:4px">上传</div></div>';
+          slot2.onclick=function(){uploadProdImg(projId,idx);};
+        }
+      });
+    })(i);
+  }
+}
+
+function uploadProdImg(projId,idx){
+  var inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*';
+  inp.onchange=function(){
+    if(!inp.files[0])return;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var dataUrl=e.target.result;
+      /* 压缩到最大800px宽 */
+      var img=new Image();
+      img.onload=function(){
+        var maxW=800,maxH=800;
+        var w=img.width,h=img.height;
+        if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+        if(h>maxH){w=Math.round(w*maxH/h);h=maxH;}
+        var cv=document.createElement('canvas');cv.width=w;cv.height=h;
+        cv.getContext('2d').drawImage(img,0,0,w,h);
+        var compressed=cv.toDataURL('image/jpeg',0.82);
+        saveImgToDB('prod_'+projId+'_'+idx,compressed,function(){
+          loadProdImagesIntoDetail(projId);
+          _setProdThumb(projId,null);
+          getImgFromDB('prod_'+projId+'_0',function(d){_setProdThumb(projId,d);});
+        });
+      };
+      img.src=dataUrl;
+    };
+    reader.readAsDataURL(inp.files[0]);
+  };
+  inp.click();
+}
+
+function deleteProdImg(projId,idx){
+  if(!confirm('确认删除此图片？'))return;
+  deleteImgFromDB('prod_'+projId+'_'+idx,function(){
+    loadProdImagesIntoDetail(projId);
+    getImgFromDB('prod_'+projId+'_0',function(d){
+      if(!d)getImgFromDB('prod_'+projId+'_1',function(d2){_setProdThumb(projId,d2);});
+      else _setProdThumb(projId,d);
+    });
+  });
 }
 </script>
 <script>
