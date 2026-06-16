@@ -4384,7 +4384,7 @@ function renderMobileCards(page){
         +'<span style="font-size:13px;font-weight:600;white-space:nowrap">'+o.alias+'</span>'
         +stageSpan
         +(delivOvd?'<span style="font-size:10px;font-weight:600;color:var(--red);white-space:nowrap">超时</span>':'')
-        +(o.notes?'<span style="font-size:10px;color:var(--accent2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">注：'+o.notes+'</span>':'')
+        +(o.notes?'<span style="font-size:10px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">注：'+o.notes+'</span>':'')
         +'</div>'
         +'<div style="font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+o.product+(lfStr?' · '+lfStr:'')+'</div>'
         +(o.followupDate?'<div style="font-size:10px;color:'+(todoOvd?'var(--red)':'var(--muted)')+';margin-top:2px">'+(todoOvd?'🔔 ':'📅 ')+o.followupDate+(o.followupNote?'<span style="color:'+(todoOvd?'var(--red)':'var(--green)')+'"> 📌 '+o.followupNote+'</span>':'')+'</div>':'')
