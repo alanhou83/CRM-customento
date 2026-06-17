@@ -1061,7 +1061,7 @@ a{color:var(--accent);text-decoration:none;}
     </div>
     <div class="table-wrap" id="proc-table-wrap">
       <div class="table-scroll">
-        <div class="table-inner">
+        <div class="table-inner" style="min-width:800px">
           <div class="table-header cols-proc">
             <div>PO编号</div>
             <div>供应商</div>
@@ -7515,6 +7515,7 @@ function switchProcTab(tab){
     if(supWrap)supWrap.style.display='none';
     if(addBtn){addBtn.textContent='+ 新建采购单';addBtn.setAttribute('onclick','openProcModal(\'\')');}
     renderProcurement();
+    renderMobileCards('proc');
   }
   updateProcTabCounts();
 }
@@ -7579,7 +7580,7 @@ function renderProcurement(){
   var html='';
   pos.forEach(function(p){
     var totalStr='';
-    if(p.totalCNY)totalStr+='Y'+p.totalCNY.toFixed(2);
+    if(p.totalCNY)totalStr+='¥'+p.totalCNY.toFixed(2);
     if(p.totalUSD)totalStr+=(totalStr?' ':'')+'$'+p.totalUSD.toFixed(2);
     var ovd=isPoOverdue(p);
     var itemSummary=(p.items&&p.items.length)?(p.items[0].nameCN+(p.items.length>1?' 等'+p.items.length+'项':'')):'—';
@@ -7640,15 +7641,17 @@ function openProcDetail(id){
   currentDetailId=id;
   var dpTitle=document.getElementById('dp-title');
   var dpTab1=document.getElementById('dp-tab-profile');
-  var dpTab2=document.getElementById('dp-tab-sales');
+  var dpTab2=document.getElementById('dp-tab-followup');
+  var dpTab3=document.getElementById('dp-tab-sales');
   if(dpTitle)dpTitle.textContent=p.poNumber;
   if(dpTab1){dpTab1.textContent='采购详情';dpTab1.style.display='';}
-  if(dpTab2)dpTab2.style.display='none';
+  if(dpTab2){dpTab2.textContent='跟进记录';dpTab2.style.display='';}
+  if(dpTab3)dpTab3.style.display='none';
   switchDpTab('profile');
   var body=document.getElementById('detail-body');
   if(!body)return;
   var totalStr='';
-  if(p.totalCNY)totalStr+='Y'+p.totalCNY.toFixed(2);
+  if(p.totalCNY)totalStr+='¥'+p.totalCNY.toFixed(2);
   if(p.totalUSD)totalStr+=(totalStr?' ':'')+'$'+p.totalUSD.toFixed(2);
   var ovd=isPoOverdue(p);
   var stages=['草稿','已发PO','生产中','已发货','已到货','已入库'];
@@ -7669,8 +7672,8 @@ function openProcDetail(id){
       '<div style="font-weight:600;margin-bottom:2px">'+(item.skuCode?'<span style="font-family:monospace;color:var(--accent);margin-right:6px">'+item.skuCode+'</span>':'')+item.nameCN+'</div>'+
       '<div style="color:var(--muted);display:flex;gap:12px;flex-wrap:wrap">'+
       '<span>数量：'+item.qty+' '+item.unit+'</span>'+
-      '<span>单价：'+(item.currency==='CNY'?'Y':'$')+item.unitCost+'</span>'+
-      '<span>小计：'+(item.currency==='CNY'?'Y':'$')+(item.qty*item.unitCost).toFixed(2)+'</span>'+
+      '<span>单价：'+(item.currency==='CNY'?'¥':'$')+item.unitCost+'</span>'+
+      '<span>小计：'+(item.currency==='CNY'?'¥':'$')+(item.qty*item.unitCost).toFixed(2)+'</span>'+
       (item.receivedQty?'<span style="color:var(--green)">已到：'+item.receivedQty+' '+item.unit+'</span>':'')+
       '</div></div>';
   });
@@ -7691,7 +7694,7 @@ function openProcDetail(id){
   var tab1Html=stageHtml+receiptBtn+infoHtml+itemsHtml;
   var tab2Html=renderProcFollowupTab(p);
   body.innerHTML='<div class="dp-tab-content active" id="dp-content-profile" style="padding:20px">'+tab1Html+'</div>'+
-    '<div class="dp-tab-content" id="dp-content-sales" style="padding:20px">'+tab2Html+'</div>';
+    '<div class="dp-tab-content" id="dp-content-followup" style="padding:20px">'+tab2Html+'</div>';
   openDetailPanel();
 }
 function renderProcFollowupTab(p){
@@ -7721,7 +7724,7 @@ function addProcFollowup(id){
   p.followups.push({id:'pf'+Date.now(),date:today(),content:inp.value.trim(),person:currentUser});
   saveProcData(d);
   openProcDetail(id);
-  switchDpTab('sales');
+  switchDpTab('followup');
   toast('跟进已保存');
 }
 function quickProcStage(id,stage){
@@ -7732,6 +7735,7 @@ function quickProcStage(id,stage){
   if(stage==='已到货'&&!p.receivedDate)p.receivedDate=today();
   saveProcData(d);
   renderProcurement();
+  renderMobileCards('proc');
   openProcDetail(id);
   toast('阶段已更新：'+stage);
 }
@@ -7889,7 +7893,7 @@ function updateProcTotal(){
   if(display){
     if(totalCNY||totalUSD){
       var str='合计：';
-      if(totalCNY)str+='Y'+totalCNY.toFixed(2)+' ';
+      if(totalCNY)str+='¥'+totalCNY.toFixed(2)+' ';
       if(totalUSD)str+='$'+totalUSD.toFixed(2);
       display.textContent=str;
       display.style.display='';
@@ -7924,6 +7928,7 @@ function saveProcRecord(){
   saveProcData(d);
   closeModal('proc-modal');
   renderProcurement();
+  renderMobileCards('proc');
   updateProcTabCounts();
   toast('采购单已保存');
 }
@@ -7934,6 +7939,7 @@ function deleteProcRecord(id){
   saveProcData(d);
   closeDetail();
   renderProcurement();
+  renderMobileCards('proc');
   updateProcTabCounts();
   toast('已删除');
 }
@@ -8016,7 +8022,7 @@ function renderMobileCards_proc(){
   pos.forEach(function(p){
     var ovd=isPoOverdue(p);
     var totalStr='';
-    if(p.totalCNY)totalStr+='Y'+p.totalCNY.toFixed(2);
+    if(p.totalCNY)totalStr+='¥'+p.totalCNY.toFixed(2);
     if(p.totalUSD)totalStr+=(totalStr?' ':'')+'$'+p.totalUSD.toFixed(2);
     var itemSummary=(p.items&&p.items.length)?(p.items[0].nameCN+(p.items.length>1?' 等'+p.items.length+'项':'')):'—';
     var lastFollowup=(p.followups&&p.followups.length)?p.followups[p.followups.length-1].content:'';
