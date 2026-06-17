@@ -1031,7 +1031,7 @@ a{color:var(--accent);text-decoration:none;}
 </div>
 
 <!-- 报价单 页面 -->
-<div class="page" id="page-quote" style="display:none">
+<div class="page" id="page-quote">
   <div class="page-head">
     <div class="page-title">📋 报价单</div>
     <div style="display:flex;gap:8px">
@@ -3772,9 +3772,11 @@ function openOrderDetail(id){
     var tabProfile=document.getElementById('dp-tab-profile');
     var tabFollowup=document.getElementById('dp-tab-followup');
     var tabSales=document.getElementById('dp-tab-sales');
+    var tabQuoteOrd=document.getElementById('dp-tab-quote');
     if(tabProfile)tabProfile.textContent='订单详情';
     if(tabFollowup)tabFollowup.textContent='跟进记录';
     if(tabSales)tabSales.style.display='none';
+    if(tabQuoteOrd)tabQuoteOrd.style.display='none';
   }
   document.getElementById('detail-body').innerHTML=
     '<div class="dp-tab-content active" id="dp-content-profile">'+tab1+'</div>'
@@ -6799,6 +6801,7 @@ function openProdDetail(id){
     var tabPr=document.getElementById('dp-tab-profile');if(tabPr)tabPr.textContent='项目详情';
     var tabFu=document.getElementById('dp-tab-followup');if(tabFu)tabFu.textContent='跟进记录';
     var tabSa=document.getElementById('dp-tab-sales');if(tabSa)tabSa.style.display='none';
+    var tabQu2=document.getElementById('dp-tab-quote');if(tabQu2)tabQu2.style.display='none';
   }
   var detailBody=document.getElementById('detail-body');
   if(detailBody){
@@ -7519,6 +7522,7 @@ function openProdCatDetail(id){
     var tabPr=document.getElementById('dp-tab-profile');if(tabPr)tabPr.textContent='产品详情';
     var tabFu=document.getElementById('dp-tab-followup');if(tabFu)tabFu.style.display='none';
     var tabSa=document.getElementById('dp-tab-sales');if(tabSa)tabSa.style.display='none';
+    var tabQu3=document.getElementById('dp-tab-quote');if(tabQu3)tabQu3.style.display='none';
   }
 
   /* 图片区 3格 */
@@ -8307,10 +8311,12 @@ function openProcDetail(id){
   var dpTab1=document.getElementById('dp-tab-profile');
   var dpTab2=document.getElementById('dp-tab-followup');
   var dpTab3=document.getElementById('dp-tab-sales');
+  var dpTab4=document.getElementById('dp-tab-quote');
   if(dpTitle)dpTitle.textContent=p.poNumber;
   if(dpTab1){dpTab1.textContent='采购详情';dpTab1.style.display='';}
   if(dpTab2){dpTab2.textContent='跟进记录';dpTab2.style.display='';}
   if(dpTab3)dpTab3.style.display='none';
+  if(dpTab4)dpTab4.style.display='none';
   switchDpTab('profile');
   var body=document.getElementById('detail-body');
   if(!body)return;
@@ -9279,6 +9285,7 @@ function openQuoteDetail(id){
     var t1=document.getElementById('dp-tab-profile');if(t1){t1.textContent='报价详情';t1.style.display='';}
     var t2=document.getElementById('dp-tab-followup');if(t2)t2.style.display='none';
     var t3=document.getElementById('dp-tab-sales');if(t3)t3.style.display='none';
+    var t4=document.getElementById('dp-tab-quote');if(t4)t4.style.display='none';
   }
   var cur=q.currency==='USD'?'$':'¥';
   var itemsHtml='';
