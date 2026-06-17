@@ -5740,16 +5740,35 @@ function lookupSkuProdId(skuCode){
   }
   return null;
 }
+function lookupSkuId(skuCode){
+  if(!skuCode)return null;
+  var d=getProdCatData();
+  for(var pi=0;pi<d.products.length;pi++){
+    var skus=d.products[pi].skus||[];
+    for(var si=0;si<skus.length;si++){
+      if(skus[si].skuCode===skuCode)return skus[si].id;
+    }
+  }
+  return null;
+}
 function loadItemThumbs(items,prefix){
   if(!items||!items.length)return;
   items.forEach(function(item,idx){
     var imgEl=document.getElementById(prefix+'-ith-'+idx);
     if(!imgEl)return;
+    var skuId=lookupSkuId(item.skuCode);
     var prodId=lookupSkuProdId(item.skuCode);
-    if(!prodId)return;
-    getImgFromDB('pcat_'+prodId+'_0',function(dataUrl){
-      if(dataUrl&&imgEl){imgEl.src=dataUrl;imgEl.style.display='';}
-    });
+    if(!skuId&&!prodId)return;
+    if(skuId){
+      getImgFromDB('pcat_sku_'+skuId,function(d1){
+        if(d1&&imgEl){imgEl.src=d1;imgEl.style.display='';}
+        else if(prodId){
+          getImgFromDB('pcat_'+prodId+'_0',function(d2){if(d2&&imgEl){imgEl.src=d2;imgEl.style.display='';}});
+        }
+      });
+    } else {
+      getImgFromDB('pcat_'+prodId+'_0',function(d){if(d&&imgEl){imgEl.src=d;imgEl.style.display='';}});
+    }
   });
 }
 function deleteImgFromDB(id,cb){
@@ -7368,7 +7387,11 @@ function openProdCatDetail(id){
         if(sk.priceMin&&sk.priceMax)priceStr=cur+sk.priceMin+' ~ '+cur+sk.priceMax;
         else priceStr=cur+(sk.priceMin||sk.priceMax);
       }
-      skuHtml+='<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--surface2)">'+
+      skuHtml+='<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--surface2);display:flex;gap:10px;align-items:flex-start">'+
+        '<div id="pcat-sku-img-slot-'+sk.id+'" onclick="uploadPcatSkuImg(\''+sk.id+'\')" title="点击上传SKU图片" style="width:44px;height:44px;border-radius:6px;border:1.5px dashed var(--border);background:var(--surface);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:border-color .15s" onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+
+        '<span style="font-size:18px;color:var(--muted)">📷</span>'+
+        '</div>'+
+        '<div style="flex:1;min-width:0">'+
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'+
         '<span style="font-size:13px;font-weight:600">'+sk.variantCN+'</span>'+
         '<div style="display:flex;align-items:center;gap:8px">'+
@@ -7407,7 +7430,7 @@ function openProdCatDetail(id){
           '<td style="padding:3px 4px;text-align:right;font-weight:700;color:var(--accent2)">'+totalStr+'</td></tr>'+
           '</table></div>';
       }
-      skuHtml+='</div>';
+      skuHtml+='</div></div>';
     });
   }
   skuHtml+='</div>';
@@ -7427,6 +7450,7 @@ function openProdCatDetail(id){
   var panel=document.getElementById('detail-panel');if(panel)panel.classList.add('open');
   /* 异步加载图片 */
   loadPcatImagesIntoDetail(id);
+  loadPcatSkuImagesIntoDetail(skus);
 }
 
 function loadPcatImagesIntoDetail(prodId){
@@ -7479,6 +7503,45 @@ function deletePcatImg(prodId,idx){
   if(!confirm('确认删除此图片？'))return;
   deleteImgFromDB('pcat_'+prodId+'_'+idx,function(){
     loadPcatImagesIntoDetail(prodId);
+  });
+}
+function uploadPcatSkuImg(skuId){
+  var inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*';
+  inp.onchange=function(){
+    if(!inp.files[0])return;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var img=new Image();
+      img.onload=function(){
+        var maxW=600,maxH=600;
+        var w=img.width,h=img.height;
+        if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+        if(h>maxH){w=Math.round(w*maxH/h);h=maxH;}
+        var cv=document.createElement('canvas');cv.width=w;cv.height=h;
+        cv.getContext('2d').drawImage(img,0,0,w,h);
+        var compressed=cv.toDataURL('image/jpeg',0.82);
+        saveImgToDB('pcat_sku_'+skuId,compressed,function(){
+          var slot=document.getElementById('pcat-sku-img-slot-'+skuId);
+          if(slot){slot.innerHTML='<img src="'+compressed+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px">';}
+        });
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(inp.files[0]);
+  };
+  inp.click();
+}
+function loadPcatSkuImagesIntoDetail(skus){
+  if(!skus||!skus.length)return;
+  skus.forEach(function(sk){
+    var slot=document.getElementById('pcat-sku-img-slot-'+sk.id);
+    if(!slot)return;
+    getImgFromDB('pcat_sku_'+sk.id,function(dataUrl){
+      if(dataUrl&&slot){
+        slot.innerHTML='<img src="'+dataUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:5px">';
+      }
+    });
   });
 }
 
