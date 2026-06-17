@@ -3552,16 +3552,18 @@ function openOrderDetail(id){
   var itemsHtml='';
   if(o.items&&o.items.length){
     itemsHtml='<div class="detail-section"><div class="detail-section-title">产品明细</div>'
-      +'<div style="display:grid;grid-template-columns:1fr 60px 44px 80px 70px;gap:3px;margin-bottom:4px;padding:0 2px">'
+      +'<div style="display:grid;grid-template-columns:36px 1fr 58px 44px 76px 68px;gap:3px;margin-bottom:4px;padding:0 2px">'
+      +'<div></div>'
       +'<div style="font-size:11px;color:var(--muted)">产品</div>'
       +'<div style="font-size:11px;color:var(--muted)">数量</div>'
       +'<div style="font-size:11px;color:var(--muted)">单位</div>'
       +'<div style="font-size:11px;color:var(--muted)">单价</div>'
       +'<div style="font-size:11px;color:var(--muted);text-align:right">小计</div>'
       +'</div>';
-    o.items.forEach(function(item){
+    o.items.forEach(function(item,idx){
       var cur=o.currency==='USD'?'$':'¥';
-      itemsHtml+='<div style="display:grid;grid-template-columns:1fr 60px 44px 80px 70px;gap:3px;padding:5px 2px;border-top:1px solid var(--border)">'
+      itemsHtml+='<div style="display:grid;grid-template-columns:36px 1fr 58px 44px 76px 68px;gap:3px;padding:5px 2px;border-top:1px solid var(--border);align-items:center">'
+        +'<img id="ord-ith-'+idx+'" style="width:36px;height:36px;border-radius:5px;object-fit:cover;display:none;background:var(--surface2)">'
         +'<div style="font-size:13px;color:var(--text)">'+(item.nameCN||'—')+(item.skuCode?'<div style="font-size:10px;color:var(--muted)">'+item.skuCode+'</div>':'')+'</div>'
         +'<div style="font-size:13px;color:var(--text)">'+(item.qty||'—')+'</div>'
         +'<div style="font-size:13px;color:var(--muted)">'+(item.unit||'')+'</div>'
@@ -3640,6 +3642,7 @@ function openOrderDetail(id){
   document.getElementById('dp-followup-bar').style.display='none';
   switchDpTab('profile');
   document.getElementById('detail-panel').classList.add('open');
+  if(o.items&&o.items.length)loadItemThumbs(o.items,'ord');
 }
 function quickOrdStage(ordId,stage){
   var o=orders.find(function(x){return x.id===ordId;});if(!o)return;
@@ -5724,6 +5727,29 @@ function getImgFromDB(id,cb){
     var req=tx.objectStore('imgs').get(id);
     req.onsuccess=function(){cb(req.result?req.result.img:null);};
     req.onerror=function(){cb(null);};
+  });
+}
+function lookupSkuProdId(skuCode){
+  if(!skuCode)return null;
+  var d=getProdCatData();
+  for(var pi=0;pi<d.products.length;pi++){
+    var skus=d.products[pi].skus||[];
+    for(var si=0;si<skus.length;si++){
+      if(skus[si].skuCode===skuCode)return d.products[pi].id;
+    }
+  }
+  return null;
+}
+function loadItemThumbs(items,prefix){
+  if(!items||!items.length)return;
+  items.forEach(function(item,idx){
+    var imgEl=document.getElementById(prefix+'-ith-'+idx);
+    if(!imgEl)return;
+    var prodId=lookupSkuProdId(item.skuCode);
+    if(!prodId)return;
+    getImgFromDB('pcat_'+prodId+'_0',function(dataUrl){
+      if(dataUrl&&imgEl){imgEl.src=dataUrl;imgEl.style.display='';}
+    });
   });
 }
 function deleteImgFromDB(id,cb){
@@ -8067,15 +8093,17 @@ function openProcDetail(id){
     receiptBtn='<div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:13px;color:var(--yellow)">货已到仓，等待入库确认</span><button class="btn btn-primary btn-sm" onclick="openReceiptModal(\''+id+'\')">确认入库</button></div>';
   }
   var itemsHtml='<div class="detail-section"><div class="detail-section-title">采购明细</div>';
-  (p.items||[]).forEach(function(item){
-    itemsHtml+='<div style="border:1px solid var(--border);border-radius:7px;padding:8px 12px;margin-bottom:6px;background:var(--surface2);font-size:12px">'+
-      '<div style="font-weight:600;margin-bottom:2px">'+(item.skuCode?'<span style="font-family:monospace;color:var(--accent);margin-right:6px">'+item.skuCode+'</span>':'')+item.nameCN+'</div>'+
+  (p.items||[]).forEach(function(item,idx){
+    itemsHtml+='<div style="border:1px solid var(--border);border-radius:7px;padding:8px 10px;margin-bottom:6px;background:var(--surface2);font-size:12px;display:flex;gap:8px;align-items:flex-start">'+
+      '<img id="proc-ith-'+idx+'" style="width:38px;height:38px;border-radius:5px;object-fit:cover;flex-shrink:0;display:none;background:var(--surface)">'+
+      '<div style="flex:1;min-width:0">'+
+      '<div style="font-weight:600;margin-bottom:3px">'+(item.skuCode?'<span style="font-family:monospace;color:var(--accent);margin-right:6px">'+item.skuCode+'</span>':'')+item.nameCN+'</div>'+
       '<div style="color:var(--muted);display:flex;gap:12px;flex-wrap:wrap">'+
       '<span>数量：'+item.qty+' '+item.unit+'</span>'+
       '<span>单价：'+(item.currency==='CNY'?'¥':'$')+item.unitCost+'</span>'+
       '<span>小计：'+(item.currency==='CNY'?'¥':'$')+(item.qty*item.unitCost).toFixed(2)+'</span>'+
       (item.receivedQty?'<span style="color:var(--green)">已到：'+item.receivedQty+' '+item.unit+'</span>':'')+
-      '</div></div>';
+      '</div></div></div>';
   });
   if(p.fees&&p.fees.length){
     itemsHtml+='<div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border)">';
@@ -8106,6 +8134,7 @@ function openProcDetail(id){
   body.innerHTML='<div class="dp-tab-content active" id="dp-content-profile" style="padding:20px">'+tab1Html+'</div>'+
     '<div class="dp-tab-content" id="dp-content-followup" style="padding:20px">'+tab2Html+'</div>';
   var panel=document.getElementById('detail-panel');if(panel)panel.classList.add('open');
+  if(p.items&&p.items.length)loadItemThumbs(p.items,'proc');
 }
 function renderProcFollowupTab(p){
   var id=p.id;
