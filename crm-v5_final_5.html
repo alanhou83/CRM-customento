@@ -1796,8 +1796,14 @@ const DEF_CUST=[
   {id:30,alias:'Marco R.',company:'Rome Souvenir Express',country:'意大利',person:'Momi',type:'tourist',layer:'track',product:'MDF冰箱贴',followupDate:'2026-06-12',ordered:0,repurchase:0,growing:0,match:1,activeScore:1,size:1,email:'marco@romesouvenir.it',phone:'+39 06 555 3344',wechat:'',wangwang:'',notes:'罗马斗兽场主题，新询盘，预算5000美金很有诚意',vipStar:false,followups:[]},
 ];
 const DEF_ORD=[
-  {id:1,date:'2026-05-02',alias:'GKK',product:'MDF冰箱贴',qty:'各200个',amount:8000,currency:'USD',stage:'生产中',delivery:'2026-06-20',person:'Alan',notes:'年度复单，已收定金',completed:false},
-  {id:2,date:'2026-05-10',alias:'CAZL',product:'MDF冰箱贴',qty:'多款各100个',amount:4500,currency:'USD',stage:'打样中',delivery:'2026-06-30',person:'Kelly',notes:'新款设计，需要确认颜色',completed:false},
+  {id:1,date:'2026-05-02',alias:'GKK',product:'多品类',qty:'',amount:8000,currency:'USD',stage:'生产中',delivery:'2026-06-20',person:'Alan',notes:'年度复单，已收定金',linkedProcId:'PO-2026-003',completed:false,fees:[],items:[
+    {id:'oi001',skuCode:'MGN-D001-A',nameCN:'MDF冰箱贴（圆形）',qty:500,unit:'个',unitPrice:8,subtotal:4000},
+    {id:'oi002',skuCode:'MGN-D001-B',nameCN:'MDF冰箱贴（方形）',qty:500,unit:'个',unitPrice:8,subtotal:4000}
+  ]},
+  {id:2,date:'2026-05-10',alias:'CAZL',product:'多品类',qty:'',amount:4500,currency:'USD',stage:'打样中',delivery:'2026-06-30',person:'Kelly',notes:'新款设计，需要确认颜色',linkedProcId:'',completed:false,fees:[{id:'of001',name:'打样费',amount:200,currency:'USD'}],items:[
+    {id:'oi003',skuCode:'MGN-D001-A',nameCN:'MDF冰箱贴（圆形）',qty:300,unit:'个',unitPrice:8,subtotal:2400},
+    {id:'oi004',skuCode:'CTR-D001-A',nameCN:'印图软木杯垫',qty:300,unit:'个',unitPrice:7,subtotal:2100}
+  ]},
 ];
 const DEF_SALE=[
   {id:1,date:'2026-01-15',alias:'GKK',product:'MDF冰箱贴',amount:5000,currency:'USD',person:'Alan',notes:'Q1复单'},
@@ -5621,6 +5627,28 @@ function rebuildProductSelects(){
   }
 }
 
+function migrateOrdItems(){
+  /* 给旧演示订单补 items/linkedProcId 字段（仅一次，_itemsMigrated 标记后跳过） */
+  var migrated=false;
+  var defMap={};
+  DEF_ORD.forEach(function(d){defMap[d.id]=d;});
+  orders.forEach(function(o){
+    if(o._itemsMigrated)return;
+    if(!o.items)o.items=[];
+    if(o.linkedProcId===undefined)o.linkedProcId='';
+    if(!o.fees)o.fees=[];
+    /* 若是演示数据（id 在 defMap 中）且无 items，复制演示 items */
+    var def=defMap[o.id];
+    if(def&&def.items&&def.items.length&&!o.items.length){
+      o.items=JSON.parse(JSON.stringify(def.items));
+      o.linkedProcId=def.linkedProcId||'';
+      o.fees=def.fees&&def.fees.length?JSON.parse(JSON.stringify(def.fees)):[];
+      migrated=true;
+    }
+    o._itemsMigrated=true;
+  });
+  if(migrated)saveAll();
+}
 function migrateInqStatuses(){
   var migrated=false;
   /* 一次性修复：归档询盘状态被误改为追单中的，恢复为已成单 */
@@ -5662,6 +5690,7 @@ function updateInqTabCounts(){
   el=document.getElementById('inq-count-expired');if(el)el.textContent=expired;
 }
 function refreshAll(){
+  migrateOrdItems();
   migrateInqStatuses();
   autoExpireInquiries();
   updateNavCounts();
