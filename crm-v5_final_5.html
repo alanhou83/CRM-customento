@@ -1167,6 +1167,13 @@ a{color:var(--accent);text-decoration:none;}
       </div>
       <div id="fproc-total-display" style="text-align:right;font-size:13px;color:var(--green);font-weight:600;margin-top:8px;display:none"></div>
     </div>
+    <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">额外费用（可选）</div>
+        <button class="btn btn-outline btn-sm" type="button" onclick="addProcFee()">+ 添加费用</button>
+      </div>
+      <div id="fproc-fees-area"><div style="font-size:12px;color:var(--muted);padding:4px 0">如打样费、运费、快递费等</div></div>
+    </div>
     <div class="form-group" style="margin-top:14px"><label class="form-label">备注</label><input class="form-input" type="text" id="fproc-note" placeholder="其他说明..."></div>
   </div>
   <div class="modal-foot">
@@ -1375,6 +1382,14 @@ a{color:var(--accent);text-decoration:none;}
       <div class="form-group"><label class="form-label">预计交期</label><input class="form-input" type="date" id="fo-delivery"></div>
       <div class="form-group"><label class="form-label">负责人</label><select class="form-input" id="fo-person"><option>Kelly</option><option>Momi</option><option>Mille</option><option>Alan</option></select></div>
       <div class="form-group full"><label class="form-label">备注</label><textarea class="form-input form-textarea" id="fo-notes" placeholder="订单特殊要求、注意事项..."></textarea></div>
+    </div>
+    <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">额外费用（可选）</div>
+        <button class="btn btn-outline btn-sm" type="button" onclick="addOrdFee()">+ 添加费用</button>
+      </div>
+      <div id="ford-fees-area"><div style="font-size:12px;color:var(--muted);padding:4px 0">向客户收取的额外费用，如打样费、运费等</div></div>
+      <div id="ford-fees-total" style="text-align:right;font-size:12px;color:var(--muted);margin-top:4px;display:none"></div>
     </div>
   </div>
   <div class="modal-foot"><div id="order-delete-area"></div><div style="display:flex;gap:8px"><button class="btn btn-outline" onclick="closeModal('order-modal')">取消</button><button class="btn btn-primary" onclick="saveOrder()">保存</button></div></div>
@@ -3506,7 +3521,20 @@ function openOrderDetail(id){
     +'<div class="detail-row"><span class="detail-key">客户代号</span><span class="detail-val">'+o.alias+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">产品</span><span class="detail-val">'+o.product+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">数量</span><span class="detail-val">'+(o.qty||'—')+'</span></div>'
-    +'<div class="detail-row"><span class="detail-key">订单金额</span><span class="detail-val" style="color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(o.amount,o.currency)+'</span></div>'
+    +'<div class="detail-row"><span class="detail-key">产品金额</span><span class="detail-val" style="color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(o.amount,o.currency)+'</span></div>'
+    +(function(){
+      if(!o.fees||!o.fees.length)return'';
+      var feeUSD=0,feeCNY=0;
+      o.fees.forEach(function(f){if(f.currency==='USD')feeUSD+=f.amount;else feeCNY+=f.amount;});
+      var feeListStr=o.fees.map(function(f){return f.name+' '+(f.currency==='USD'?'$':'¥')+f.amount.toFixed(2);}).join(' · ');
+      var mainAmt=Number(o.amount)||0;
+      var sameFee=o.currency==='USD'?feeUSD:feeCNY;
+      var diffFee=o.currency==='USD'?feeCNY:feeUSD;
+      var diffCurStr=o.currency==='USD'?'¥':'$';
+      var totalStr=fmtAmt(mainAmt+sameFee,o.currency)+(diffFee?(' + '+diffCurStr+diffFee.toFixed(2)):'');
+      return '<div class="detail-row"><span class="detail-key">额外费用</span><span class="detail-val" style="color:var(--muted2)">'+feeListStr+'</span></div>'
+        +'<div class="detail-row"><span class="detail-key">合计</span><span class="detail-val" style="color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+';font-weight:600">'+totalStr+'</span></div>';
+    })()
     +'<div class="detail-row"><span class="detail-key">预计交期</span><span class="detail-val" style="color:'+(dOvd?'var(--red)':'')+'">'+(o.delivery?(dOvd?'⚠️ ':'📦 ')+o.delivery:'未设定')+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">负责人</span><span class="detail-val">'+o.person+'</span></div>'
     +(o.notes?'<div class="detail-row"><span class="detail-key">备注</span><span class="detail-val">'+o.notes+'</span></div>':'')
@@ -4414,6 +4442,7 @@ function openOrderModal(){
   document.getElementById('fo-date').value=today();document.getElementById('fo-currency').value='USD';document.getElementById('fo-stage').value='生产中';
   document.getElementById('fo-person').value=currentUser==='Momi'?'Momi':currentUser==='Mille'?'Mille':'Kelly';
   ['fo-alias','fo-qty','fo-amount','fo-delivery','fo-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  renderOrdFees([]);
   openModal('order-modal');
 }
 
@@ -4423,12 +4452,106 @@ function editOrder(id){
   document.getElementById('order-delete-area').innerHTML=canDelete()?'<button class="btn btn-danger btn-sm" onclick="confirmDelete(\'ord\','+id+')">🗑 删除</button>':'';
   const set=(fid,val)=>{const el=document.getElementById(fid);if(el)el.value=val||'';};
   set('fo-date',o.date);set('fo-alias',o.alias);set('fo-qty',o.qty);set('fo-amount',o.amount);set('fo-currency',o.currency);set('fo-stage',o.stage);set('fo-delivery',o.delivery);set('fo-person',o.person);set('fo-notes',o.notes);
+  renderOrdFees(o.fees||[],o.currency);
   openModal('order-modal');
 }
 
+function addOrdFee(){
+  var area=document.getElementById('ford-fees-area');
+  if(!area)return;
+  var rows=area.querySelectorAll('[data-ord-fee]');
+  if(!rows.length)area.innerHTML='';
+  var idx=rows.length;
+  var feeNames=['打样费','快递费','运费','开模费','包装费','其他'];
+  var div=document.createElement('div');
+  div.setAttribute('data-ord-fee',idx);
+  div.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:6px';
+  div.innerHTML='<select data-ofee="name" class="form-input" style="flex:1;min-width:80px">'
+    +feeNames.map(function(n){return '<option>'+n+'</option>';}).join('')
+    +'</select>'
+    +'<input data-ofee="amount" type="number" class="form-input" placeholder="金额" style="width:88px" oninput="updateOrdFeeTotal()">'
+    +'<select data-ofee="currency" class="form-input" style="width:80px">'
+    +'<option value="USD">$ USD</option><option value="CNY">¥ CNY</option>'
+    +'</select>'
+    +'<span onclick="removeOrdFee(this)" style="cursor:pointer;color:var(--muted);font-size:18px;flex-shrink:0;padding:0 4px;line-height:1">×</span>';
+  area.appendChild(div);
+}
+function removeOrdFee(btn){
+  var row=btn.parentElement;
+  if(row&&row.parentElement)row.parentElement.removeChild(row);
+  updateOrdFeeTotal();
+}
+function updateOrdFeeTotal(){
+  var area=document.getElementById('ford-fees-area');
+  var totalEl=document.getElementById('ford-fees-total');
+  if(!area||!totalEl)return;
+  var rows=area.querySelectorAll('[data-ord-fee]');
+  var totalUSD=0,totalCNY=0;
+  rows.forEach(function(row){
+    var amtEl=row.querySelector('[data-ofee="amount"]');
+    var curEl=row.querySelector('[data-ofee="currency"]');
+    var amt=amtEl?Number(amtEl.value)||0:0;
+    var cur=curEl?curEl.value:'USD';
+    if(cur==='USD')totalUSD+=amt;else totalCNY+=amt;
+  });
+  if(totalUSD||totalCNY){
+    var str='费用小计：';
+    if(totalUSD)str+='$'+totalUSD.toFixed(2)+' ';
+    if(totalCNY)str+='¥'+totalCNY.toFixed(2);
+    totalEl.textContent=str;
+    totalEl.style.display='';
+  } else {
+    totalEl.style.display='none';
+  }
+}
+function collectOrdFeesFromDOM(){
+  var area=document.getElementById('ford-fees-area');
+  if(!area)return[];
+  var rows=area.querySelectorAll('[data-ord-fee]');
+  var result=[];
+  rows.forEach(function(row){
+    var nameEl=row.querySelector('[data-ofee="name"]');
+    var amtEl=row.querySelector('[data-ofee="amount"]');
+    var curEl=row.querySelector('[data-ofee="currency"]');
+    var name=nameEl?nameEl.value:'';
+    var amount=amtEl?Number(amtEl.value)||0:0;
+    var currency=curEl?curEl.value:'USD';
+    if(name&&amount>0)result.push({id:'of'+Date.now()+Math.floor(Math.random()*1000),name:name,amount:amount,currency:currency});
+  });
+  return result;
+}
+function renderOrdFees(fees){
+  var area=document.getElementById('ford-fees-area');
+  var totalEl=document.getElementById('ford-fees-total');
+  if(!area)return;
+  if(!fees||!fees.length){
+    area.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0">向客户收取的额外费用，如打样费、运费等</div>';
+    if(totalEl)totalEl.style.display='none';
+    return;
+  }
+  area.innerHTML='';
+  var feeNames=['打样费','快递费','运费','开模费','包装费','其他'];
+  fees.forEach(function(fee,idx){
+    var div=document.createElement('div');
+    div.setAttribute('data-ord-fee',idx);
+    div.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:6px';
+    div.innerHTML='<select data-ofee="name" class="form-input" style="flex:1;min-width:80px">'
+      +feeNames.map(function(n){return '<option'+(n===fee.name?' selected':'')+'>'+n+'</option>';}).join('')
+      +'</select>'
+      +'<input data-ofee="amount" type="number" class="form-input" placeholder="金额" value="'+(fee.amount||'')+'" style="width:88px" oninput="updateOrdFeeTotal()">'
+      +'<select data-ofee="currency" class="form-input" style="width:80px">'
+      +'<option value="USD"'+(fee.currency==='USD'?' selected':'')+'>$ USD</option>'
+      +'<option value="CNY"'+(fee.currency==='CNY'?' selected':'')+'>¥ CNY</option>'
+      +'</select>'
+      +'<span onclick="removeOrdFee(this)" style="cursor:pointer;color:var(--muted);font-size:18px;flex-shrink:0;padding:0 4px;line-height:1">×</span>';
+    area.appendChild(div);
+  });
+  updateOrdFeeTotal();
+}
 function saveOrder(){
   const alias=document.getElementById('fo-alias').value.trim();if(!alias){alert('请填写客户代号');return;}
-  const data={date:document.getElementById('fo-date').value,alias,product:document.getElementById('fo-product').value,qty:document.getElementById('fo-qty').value,amount:document.getElementById('fo-amount').value||0,currency:document.getElementById('fo-currency').value,stage:document.getElementById('fo-stage').value,delivery:document.getElementById('fo-delivery').value,person:document.getElementById('fo-person').value,notes:document.getElementById('fo-notes').value,completed:false};
+  const ordFees=collectOrdFeesFromDOM();
+  const data={date:document.getElementById('fo-date').value,alias,product:document.getElementById('fo-product').value,qty:document.getElementById('fo-qty').value,amount:document.getElementById('fo-amount').value||0,currency:document.getElementById('fo-currency').value,stage:document.getElementById('fo-stage').value,delivery:document.getElementById('fo-delivery').value,person:document.getElementById('fo-person').value,notes:document.getElementById('fo-notes').value,completed:false,fees:ordFees};
   if(editingOrdId){const o=orders.find(x=>x.id===editingOrdId);if(o)Object.assign(o,data);}
   else{orders.push({id:nextOrdId++,...data});}
   saveAll();closeModal('order-modal');refreshAll();toast('订单已保存 ✓');
@@ -7676,6 +7799,16 @@ function openProcDetail(id){
       (item.receivedQty?'<span style="color:var(--green)">已到：'+item.receivedQty+' '+item.unit+'</span>':'')+
       '</div></div>';
   });
+  if(p.fees&&p.fees.length){
+    itemsHtml+='<div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border)">';
+    p.fees.forEach(function(fee){
+      itemsHtml+='<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 12px 3px 12px;color:var(--muted2)">'
+        +'<span>'+fee.name+'</span>'
+        +'<span style="color:var(--yellow)">+'+(fee.currency==='CNY'?'¥':'$')+fee.amount.toFixed(2)+'</span>'
+        +'</div>';
+    });
+    itemsHtml+='</div>';
+  }
   itemsHtml+='</div>';
   var ovdColor=ovd?'var(--red)':'inherit';
   var ovdPrefix=ovd?'! ':'';
@@ -7815,6 +7948,7 @@ function openProcModal(id,linkedOrderId,linkedOrderAlias){
     set('fproc-payment-status',p.paymentStatus||'未付款');
     set('fproc-note',p.note||'');
     renderProcItems(p.items||[]);
+    renderProcFees(p.fees||[]);
     if(canDelete())delArea.innerHTML='<button class="btn btn-danger btn-sm" onclick="deleteProcRecord(\''+id+'\')">删除采购单</button>';
   } else {
     if(mt)mt.textContent='新建采购单';
@@ -7826,6 +7960,7 @@ function openProcModal(id,linkedOrderId,linkedOrderAlias){
     set('fproc-payment-status','未付款');
     set('fproc-note','');
     renderProcItems([]);
+    renderProcFees([]);
   }
   updateProcTotal();
   openModal('proc-modal');
@@ -7883,10 +8018,14 @@ function collectProcItemsFromDOM(){
 }
 function updateProcTotal(){
   var items=collectProcItemsFromDOM();
+  var fees=collectProcFeesFromDOM();
   var totalCNY=0,totalUSD=0;
   items.forEach(function(item){
     var sub=(item.qty||0)*(item.unitCost||0);
     if(item.currency==='USD')totalUSD+=sub;else totalCNY+=sub;
+  });
+  fees.forEach(function(fee){
+    if(fee.currency==='USD')totalUSD+=fee.amount;else totalCNY+=fee.amount;
   });
   var display=document.getElementById('fproc-total-display');
   if(display){
@@ -7901,6 +8040,74 @@ function updateProcTotal(){
     }
   }
 }
+function addProcFee(){
+  var area=document.getElementById('fproc-fees-area');
+  if(!area)return;
+  var rows=area.querySelectorAll('[data-proc-fee]');
+  if(!rows.length)area.innerHTML='';
+  var idx=rows.length;
+  var feeNames=['打样费','快递费','运费','开模费','包装费','其他'];
+  var div=document.createElement('div');
+  div.setAttribute('data-proc-fee',idx);
+  div.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:6px';
+  div.innerHTML='<select data-pfee="name" class="form-input" style="flex:1;min-width:80px">'
+    +feeNames.map(function(n){return '<option>'+n+'</option>';}).join('')
+    +'</select>'
+    +'<input data-pfee="amount" type="number" class="form-input" placeholder="金额" style="width:90px" oninput="updateProcTotal()">'
+    +'<select data-pfee="currency" class="form-input" style="width:80px">'
+    +'<option value="CNY">¥ CNY</option><option value="USD">$ USD</option>'
+    +'</select>'
+    +'<span onclick="removeProcFee(this)" style="cursor:pointer;color:var(--muted);font-size:18px;flex-shrink:0;padding:0 4px;line-height:1">×</span>';
+  area.appendChild(div);
+  updateProcTotal();
+}
+function removeProcFee(btn){
+  var row=btn.parentElement;
+  if(row&&row.parentElement)row.parentElement.removeChild(row);
+  updateProcTotal();
+}
+function collectProcFeesFromDOM(){
+  var area=document.getElementById('fproc-fees-area');
+  if(!area)return[];
+  var rows=area.querySelectorAll('[data-proc-fee]');
+  var result=[];
+  rows.forEach(function(row){
+    var nameEl=row.querySelector('[data-pfee="name"]');
+    var amtEl=row.querySelector('[data-pfee="amount"]');
+    var curEl=row.querySelector('[data-pfee="currency"]');
+    var name=nameEl?nameEl.value:'';
+    var amount=amtEl?Number(amtEl.value)||0:0;
+    var currency=curEl?curEl.value:'CNY';
+    if(name&&amount>0)result.push({id:'pf'+Date.now()+Math.floor(Math.random()*1000),name:name,amount:amount,currency:currency});
+  });
+  return result;
+}
+function renderProcFees(fees){
+  var area=document.getElementById('fproc-fees-area');
+  if(!area)return;
+  if(!fees||!fees.length){
+    area.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0">如打样费、运费、快递费等</div>';
+    return;
+  }
+  area.innerHTML='';
+  var feeNames=['打样费','快递费','运费','开模费','包装费','其他'];
+  fees.forEach(function(fee,idx){
+    var div=document.createElement('div');
+    div.setAttribute('data-proc-fee',idx);
+    div.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:6px';
+    div.innerHTML='<select data-pfee="name" class="form-input" style="flex:1;min-width:80px">'
+      +feeNames.map(function(n){return '<option'+(n===fee.name?' selected':'')+'>'+n+'</option>';}).join('')
+      +'</select>'
+      +'<input data-pfee="amount" type="number" class="form-input" placeholder="金额" value="'+(fee.amount||'')+'" style="width:90px" oninput="updateProcTotal()">'
+      +'<select data-pfee="currency" class="form-input" style="width:80px">'
+      +'<option value="CNY"'+(fee.currency==='CNY'?' selected':'')+'>¥ CNY</option>'
+      +'<option value="USD"'+(fee.currency==='USD'?' selected':'')+'>$ USD</option>'
+      +'</select>'
+      +'<span onclick="removeProcFee(this)" style="cursor:pointer;color:var(--muted);font-size:18px;flex-shrink:0;padding:0 4px;line-height:1">×</span>';
+    area.appendChild(div);
+  });
+  updateProcTotal();
+}
 function saveProcRecord(){
   var get=function(fid){var el=document.getElementById(fid);return el?el.value.trim():'';};
   var supplierId=get('fproc-supplier-id');
@@ -7910,8 +8117,10 @@ function saveProcRecord(){
   var d=getProcData();
   var sup=d.suppliers.find(function(s){return s.id===supplierId;});
   var totalCNY=0,totalUSD=0;
+  var fees=collectProcFeesFromDOM();
   items.forEach(function(item){var sub=item.qty*item.unitCost;if(item.currency==='USD')totalUSD+=sub;else totalCNY+=sub;});
-  var procData={supplierId:supplierId,supplierName:sup?sup.name:'',linkedOrderId:_procLinkedOrderId||'',linkedOrderAlias:_procLinkedOrderAlias||'',person:get('fproc-person'),expectedDate:get('fproc-expected-date'),paymentStatus:get('fproc-payment-status'),note:get('fproc-note'),items:items,totalCNY:totalCNY,totalUSD:totalUSD,paymentIds:[]};
+  fees.forEach(function(fee){if(fee.currency==='USD')totalUSD+=fee.amount;else totalCNY+=fee.amount;});
+  var procData={supplierId:supplierId,supplierName:sup?sup.name:'',linkedOrderId:_procLinkedOrderId||'',linkedOrderAlias:_procLinkedOrderAlias||'',person:get('fproc-person'),expectedDate:get('fproc-expected-date'),paymentStatus:get('fproc-payment-status'),note:get('fproc-note'),items:items,fees:fees,totalCNY:totalCNY,totalUSD:totalUSD,paymentIds:[]};
   if(_editingProcId){
     var p=d.pos.find(function(x){return x.id===_editingProcId;});
     if(p){Object.keys(procData).forEach(function(k){p[k]=procData[k];});}
