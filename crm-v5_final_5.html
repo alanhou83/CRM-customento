@@ -1375,13 +1375,37 @@ a{color:var(--accent);text-decoration:none;}
     <div class="form-grid">
       <div class="form-group"><label class="form-label">下单日期</label><input class="form-input" type="date" id="fo-date"></div>
       <div class="form-group"><label class="form-label">客户代号 *</label><input class="form-input" type="text" id="fo-alias" placeholder="如：GKK"></div>
-      <div class="form-group"><label class="form-label">产品</label><select class="form-input" id="fo-product"><option>MDF杯垫</option><option>MDF冰箱贴</option><option>马克杯</option><option>帆布袋</option><option>T恤</option><option>多品类</option><option>其他</option></select></div>
-      <div class="form-group"><label class="form-label">数量</label><input class="form-input" type="text" id="fo-qty" placeholder="如：500个"></div>
-      <div class="form-group"><label class="form-label">订单金额</label><div class="amount-row"><input class="form-input" type="number" id="fo-amount" placeholder="金额"><select class="form-input" id="fo-currency"><option value="USD">$ 美金</option><option value="CNY">¥ 人民币</option></select></div></div>
       <div class="form-group"><label class="form-label">当前阶段</label><select class="form-input" id="fo-stage"><option>等待打样</option><option>打样中</option><option>客户确认样品</option><option>生产中</option><option>待发货</option><option>已发货</option></select></div>
       <div class="form-group"><label class="form-label">预计交期</label><input class="form-input" type="date" id="fo-delivery"></div>
       <div class="form-group"><label class="form-label">负责人</label><select class="form-input" id="fo-person"><option>Kelly</option><option>Momi</option><option>Mille</option><option>Alan</option></select></div>
       <div class="form-group full"><label class="form-label">备注</label><textarea class="form-input form-textarea" id="fo-notes" placeholder="订单特殊要求、注意事项..."></textarea></div>
+    </div>
+    <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">产品明细</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <select class="form-input" id="fo-currency" style="width:100px" onchange="updateOrdItemTotal()"><option value="USD">$ 美金</option><option value="CNY">¥ 人民币</option></select>
+          <button class="btn btn-outline btn-sm" type="button" onclick="addOrdItem()">+ 添加产品</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 62px 44px 82px 60px;gap:4px;margin-bottom:3px;padding:0 2px">
+        <div style="font-size:11px;color:var(--muted)">产品</div>
+        <div style="font-size:11px;color:var(--muted)">数量</div>
+        <div style="font-size:11px;color:var(--muted)">单位</div>
+        <div style="font-size:11px;color:var(--muted)">单价</div>
+        <div style="font-size:11px;color:var(--muted);text-align:right">小计</div>
+      </div>
+      <datalist id="ord-sku-datalist"></datalist>
+      <div id="ford-items-area"><div style="font-size:12px;color:var(--muted);padding:4px 0">点击「+ 添加产品」；无明细时在下方填写合计金额</div></div>
+      <div id="ford-items-total" style="text-align:right;font-size:13px;font-weight:600;margin-top:4px;display:none"></div>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
+        <div style="font-size:12px;color:var(--muted);white-space:nowrap">合计金额</div>
+        <input class="form-input" type="number" id="fo-amount" placeholder="无明细时填写合计" style="flex:1">
+      </div>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
+        <div style="font-size:12px;color:var(--muted);white-space:nowrap">关联采购单</div>
+        <input class="form-input" type="text" id="fo-linkedprocid" placeholder="采购单号（可选，如 PO-2026-001）" style="flex:1">
+      </div>
     </div>
     <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -2403,14 +2427,16 @@ function renderHot(){
 }
 
 function convertToOrder(inqId){
-  const i=inquiries.find(x=>x.id===inqId);if(!i)return;
+  var i=inquiries.find(function(x){return x.id===inqId;});if(!i)return;
   editingOrdId=null;
   document.getElementById('order-modal-title').textContent='转为执行中订单';
   document.getElementById('fo-date').value=today();document.getElementById('fo-alias').value=i.alias;
-  document.getElementById('fo-qty').value=i.qty||'';document.getElementById('fo-amount').value=i.amount||'';
   document.getElementById('fo-currency').value=i.currency||'USD';document.getElementById('fo-stage').value='生产中';
   document.getElementById('fo-delivery').value='';document.getElementById('fo-person').value=i.person;
-  document.getElementById('fo-notes').value='从热点商机转入';document.getElementById('order-delete-area').innerHTML='';
+  document.getElementById('fo-notes').value='从询盘转入';document.getElementById('order-delete-area').innerHTML='';
+  var amtEl=document.getElementById('fo-amount');if(amtEl)amtEl.value='';
+  var lpEl=document.getElementById('fo-linkedprocid');if(lpEl)lpEl.value='';
+  renderOrdItems([]);renderOrdFees([]);populateOrdSkuDatalist();
   i.status='已成单';i.isHot=false;saveAll();refreshAll();
   openModal('order-modal');toast('询盘已标记已成单，请填写订单详情');
 }
@@ -3498,7 +3524,8 @@ function openOrderDetail(id){
   const o=orders.find(function(x){return x.id===id;});if(!o)return;
   currentDetailId=id;currentDetailType='order';
   document.getElementById('dp-title').textContent=o.alias+' — 订单';
-  document.getElementById('dp-sub').textContent=o.product+' · '+fmtAmt(o.amount,o.currency);
+  var dpSubProduct=(o.items&&o.items.length)?o.items.map(function(it){return it.nameCN;}).join('·'):(o.product||'');
+  document.getElementById('dp-sub').textContent=dpSubProduct+' · '+fmtAmt(o.amount,o.currency);
   document.getElementById('dp-star-btn').style.display='none';
   document.getElementById('dp-target-btn').style.display='none';
 
@@ -3516,12 +3543,37 @@ function openOrderDetail(id){
   /* Tab1：订单详情 */
   var dOvd=o.delivery&&o.delivery<today();
   var tab1='<div class="detail-section">'+stageBar+'</div>';
+  var itemsHtml='';
+  if(o.items&&o.items.length){
+    itemsHtml='<div class="detail-section"><div class="detail-section-title">产品明细</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 60px 44px 80px 70px;gap:3px;margin-bottom:4px;padding:0 2px">'
+      +'<div style="font-size:11px;color:var(--muted)">产品</div>'
+      +'<div style="font-size:11px;color:var(--muted)">数量</div>'
+      +'<div style="font-size:11px;color:var(--muted)">单位</div>'
+      +'<div style="font-size:11px;color:var(--muted)">单价</div>'
+      +'<div style="font-size:11px;color:var(--muted);text-align:right">小计</div>'
+      +'</div>';
+    o.items.forEach(function(item){
+      var cur=o.currency==='USD'?'$':'¥';
+      itemsHtml+='<div style="display:grid;grid-template-columns:1fr 60px 44px 80px 70px;gap:3px;padding:5px 2px;border-top:1px solid var(--border)">'
+        +'<div style="font-size:13px;color:var(--text)">'+(item.nameCN||'—')+(item.skuCode?'<div style="font-size:10px;color:var(--muted)">'+item.skuCode+'</div>':'')+'</div>'
+        +'<div style="font-size:13px;color:var(--text)">'+(item.qty||'—')+'</div>'
+        +'<div style="font-size:13px;color:var(--muted)">'+(item.unit||'')+'</div>'
+        +'<div style="font-size:13px;color:var(--text)">'+cur+(item.unitPrice?Number(item.unitPrice).toFixed(2):'—')+'</div>'
+        +'<div style="font-size:13px;font-weight:600;text-align:right;color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+cur+(item.subtotal?Number(item.subtotal).toFixed(2):'—')+'</div>'
+        +'</div>';
+    });
+    var itemTotal=0;o.items.forEach(function(it){itemTotal+=it.subtotal||0;});
+    itemsHtml+='<div style="display:flex;justify-content:flex-end;padding:6px 2px 0;border-top:1px solid var(--border)">'
+      +'<span style="font-size:13px;font-weight:600;color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+'">小计 '+fmtAmt(itemTotal,o.currency)+'</span>'
+      +'</div></div>';
+  }
+  tab1+=itemsHtml;
   tab1+='<div class="detail-section"><div class="detail-section-title">订单信息</div>'
     +'<div class="detail-row"><span class="detail-key">下单日期</span><span class="detail-val">'+o.date+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">客户代号</span><span class="detail-val">'+o.alias+'</span></div>'
-    +'<div class="detail-row"><span class="detail-key">产品</span><span class="detail-val">'+o.product+'</span></div>'
-    +'<div class="detail-row"><span class="detail-key">数量</span><span class="detail-val">'+(o.qty||'—')+'</span></div>'
-    +'<div class="detail-row"><span class="detail-key">产品金额</span><span class="detail-val" style="color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(o.amount,o.currency)+'</span></div>'
+    +((!o.items||!o.items.length)?'<div class="detail-row"><span class="detail-key">产品</span><span class="detail-val">'+(o.product||'—')+'</span></div>'+'<div class="detail-row"><span class="detail-key">数量</span><span class="detail-val">'+(o.qty||'—')+'</span></div>'+'<div class="detail-row"><span class="detail-key">产品金额</span><span class="detail-val" style="color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(o.amount,o.currency)+'</span></div>':'')
+    +(o.linkedProcId?'<div class="detail-row"><span class="detail-key">关联采购单</span><span class="detail-val">'+o.linkedProcId+'</span></div>':'')
     +(function(){
       if(!o.fees||!o.fees.length)return'';
       var feeUSD=0,feeCNY=0;
@@ -4242,12 +4294,8 @@ function newOrdFromCust(custId){
   document.getElementById('fo-stage').value='生产中';
   document.getElementById('fo-alias').value=c.alias||'';
   document.getElementById('fo-person').value=c.person||'Kelly';
-  ['fo-qty','fo-amount','fo-delivery','fo-notes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
-  var prodArr=getProdArr(c);
-  var prodEl=document.getElementById('fo-product');
-  if(prodEl&&prodArr.length){
-    for(var i=0;i<prodEl.options.length;i++){if(prodEl.options[i].value===prodArr[0]||prodEl.options[i].text===prodArr[0]){prodEl.selectedIndex=i;break;}}
-  }
+  ['fo-amount','fo-delivery','fo-notes','fo-linkedprocid'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  renderOrdItems([]);renderOrdFees([]);populateOrdSkuDatalist();
   openModal('order-modal');
 }
 
@@ -4441,21 +4489,206 @@ function openOrderModal(){
   editingOrdId=null;document.getElementById('order-modal-title').textContent='新增订单';document.getElementById('order-delete-area').innerHTML='';
   document.getElementById('fo-date').value=today();document.getElementById('fo-currency').value='USD';document.getElementById('fo-stage').value='生产中';
   document.getElementById('fo-person').value=currentUser==='Momi'?'Momi':currentUser==='Mille'?'Mille':'Kelly';
-  ['fo-alias','fo-qty','fo-amount','fo-delivery','fo-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['fo-alias','fo-amount','fo-delivery','fo-notes','fo-linkedprocid'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  renderOrdItems([]);
   renderOrdFees([]);
+  populateOrdSkuDatalist();
   openModal('order-modal');
 }
 
 function editOrder(id){
-  const o=orders.find(x=>x.id===id);if(!o)return;
+  var o=orders.find(function(x){return x.id===id;});if(!o)return;
   editingOrdId=id;document.getElementById('order-modal-title').textContent='编辑订单';
   document.getElementById('order-delete-area').innerHTML=canDelete()?'<button class="btn btn-danger btn-sm" onclick="confirmDelete(\'ord\','+id+')">🗑 删除</button>':'';
-  const set=(fid,val)=>{const el=document.getElementById(fid);if(el)el.value=val||'';};
-  set('fo-date',o.date);set('fo-alias',o.alias);set('fo-qty',o.qty);set('fo-amount',o.amount);set('fo-currency',o.currency);set('fo-stage',o.stage);set('fo-delivery',o.delivery);set('fo-person',o.person);set('fo-notes',o.notes);
-  renderOrdFees(o.fees||[],o.currency);
+  var setV=function(fid,val){var el=document.getElementById(fid);if(el)el.value=val||'';};
+  setV('fo-date',o.date);setV('fo-alias',o.alias);setV('fo-currency',o.currency||'USD');setV('fo-stage',o.stage);setV('fo-delivery',o.delivery);setV('fo-person',o.person);setV('fo-notes',o.notes);
+  setV('fo-amount',o.amount||'');setV('fo-linkedprocid',o.linkedProcId||'');
+  renderOrdItems(o.items||[],o.currency);
+  renderOrdFees(o.fees||[]);
+  populateOrdSkuDatalist();
   openModal('order-modal');
 }
 
+function populateOrdSkuDatalist(){
+  var dl=document.getElementById('ord-sku-datalist');
+  if(!dl)return;
+  dl.innerHTML='';
+  var d=getProdCatData();
+  d.products.forEach(function(prod){
+    (prod.skus||[]).forEach(function(sku){
+      var label=(sku.variantCN||prod.nameCN)+(sku.skuCode?' ('+sku.skuCode+')':'');
+      var opt=document.createElement('option');
+      opt.value=label;
+      dl.appendChild(opt);
+    });
+    if(!prod.skus||!prod.skus.length){
+      var opt2=document.createElement('option');
+      opt2.value=prod.nameCN;
+      dl.appendChild(opt2);
+    }
+  });
+}
+function addOrdItem(){
+  var area=document.getElementById('ford-items-area');
+  if(!area)return;
+  var rows=area.querySelectorAll('[data-ord-item]');
+  if(!rows.length)area.innerHTML='';
+  var idx=rows.length;
+  var div=document.createElement('div');
+  div.setAttribute('data-ord-item',idx);
+  div.style.cssText='display:grid;grid-template-columns:1fr 62px 44px 82px 60px;gap:4px;align-items:center;margin-bottom:5px';
+  div.innerHTML='<input list="ord-sku-datalist" data-oitem="name" class="form-input" placeholder="产品名称" style="min-width:0;font-size:12px" oninput="onOrdItemProductInput(this)">'
+    +'<input data-oitem="qty" type="number" class="form-input" placeholder="数量" style="font-size:12px" oninput="updateOrdItemSubtotal(this)">'
+    +'<input data-oitem="unit" class="form-input" placeholder="单位" value="个" style="font-size:12px">'
+    +'<input data-oitem="unitprice" type="number" class="form-input" placeholder="单价" style="font-size:12px" oninput="updateOrdItemSubtotal(this)">'
+    +'<div style="display:flex;align-items:center;justify-content:flex-end;gap:2px">'
+    +'<span data-oitem="subtotal" style="font-size:12px;color:var(--muted)">—</span>'
+    +'<span onclick="removeOrdItem(this)" style="cursor:pointer;color:var(--muted);font-size:18px;padding:0 2px;line-height:1;flex-shrink:0">×</span>'
+    +'</div>'
+    +'<input type="hidden" data-oitem="skucode" value="">';
+  area.appendChild(div);
+}
+function onOrdItemProductInput(inputEl){
+  var val=inputEl.value;
+  var matchParen=val.match(/\(([A-Z]+-\d+(?:-[A-Z]+)?)\)$/);
+  if(matchParen){
+    var skuCode=matchParen[1];
+    var d=getProdCatData();
+    var foundSku=null,foundProd=null;
+    for(var pi=0;pi<d.products.length;pi++){
+      var pr=d.products[pi];
+      for(var si=0;si<(pr.skus||[]).length;si++){
+        if(pr.skus[si].skuCode===skuCode){foundSku=pr.skus[si];foundProd=pr;break;}
+      }
+      if(foundSku)break;
+    }
+    if(foundSku){
+      var row=inputEl.closest('[data-ord-item]');
+      if(!row)return;
+      var skuEl=row.querySelector('[data-oitem="skucode"]');
+      var unitEl=row.querySelector('[data-oitem="unit"]');
+      var priceEl=row.querySelector('[data-oitem="unitprice"]');
+      if(skuEl)skuEl.value=skuCode;
+      if(unitEl&&foundSku.unit)unitEl.value=foundSku.unit;
+      if(priceEl&&foundSku.priceMin)priceEl.value=foundSku.priceMin;
+      inputEl.value=foundSku.variantCN||foundProd.nameCN;
+      updateOrdItemSubtotal(inputEl);
+    }
+  } else {
+    updateOrdItemTotal();
+  }
+}
+function updateOrdItemSubtotal(inputEl){
+  var row=inputEl.closest('[data-ord-item]');
+  if(!row)return;
+  var qtyEl=row.querySelector('[data-oitem="qty"]');
+  var priceEl=row.querySelector('[data-oitem="unitprice"]');
+  var subtotalEl=row.querySelector('[data-oitem="subtotal"]');
+  var qty=qtyEl?Number(qtyEl.value)||0:0;
+  var price=priceEl?Number(priceEl.value)||0:0;
+  var sub=qty*price;
+  if(subtotalEl){
+    var curEl=document.getElementById('fo-currency');
+    var cur=curEl?curEl.value:'USD';
+    subtotalEl.textContent=sub>0?((cur==='USD'?'$':'¥')+sub.toFixed(2)):'—';
+    subtotalEl.style.color=sub>0?(cur==='USD'?'var(--green)':'var(--yellow)'):'var(--muted)';
+  }
+  updateOrdItemTotal();
+}
+function updateOrdItemTotal(){
+  var area=document.getElementById('ford-items-area');
+  var totalEl=document.getElementById('ford-items-total');
+  var amtEl=document.getElementById('fo-amount');
+  if(!area||!totalEl)return;
+  var rows=area.querySelectorAll('[data-ord-item]');
+  var total=0;
+  rows.forEach(function(row){
+    var qtyEl=row.querySelector('[data-oitem="qty"]');
+    var priceEl=row.querySelector('[data-oitem="unitprice"]');
+    total+=(Number(qtyEl?qtyEl.value:0)||0)*(Number(priceEl?priceEl.value:0)||0);
+  });
+  var curEl=document.getElementById('fo-currency');
+  var cur=curEl?curEl.value:'USD';
+  if(rows.length&&total>0){
+    totalEl.textContent='明细合计：'+(cur==='USD'?'$':'¥')+total.toFixed(2);
+    totalEl.style.color=cur==='USD'?'var(--green)':'var(--yellow)';
+    totalEl.style.display='';
+    if(amtEl){amtEl.value=total.toFixed(2);amtEl.setAttribute('readonly','readonly');amtEl.style.color='var(--muted)';}
+  } else {
+    totalEl.style.display='none';
+    if(amtEl){amtEl.removeAttribute('readonly');amtEl.style.color='';}
+  }
+}
+function removeOrdItem(btn){
+  var row=btn.closest('[data-ord-item]');
+  if(row&&row.parentElement)row.parentElement.removeChild(row);
+  var area=document.getElementById('ford-items-area');
+  if(area&&!area.querySelectorAll('[data-ord-item]').length){
+    area.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0">点击「+ 添加产品」；无明细时在下方填写合计金额</div>';
+    updateOrdItemTotal();
+  } else {
+    updateOrdItemTotal();
+  }
+}
+function collectOrdItemsFromDOM(){
+  var area=document.getElementById('ford-items-area');
+  if(!area)return[];
+  var rows=area.querySelectorAll('[data-ord-item]');
+  var result=[];
+  rows.forEach(function(row){
+    var nameEl=row.querySelector('[data-oitem="name"]');
+    var skuEl=row.querySelector('[data-oitem="skucode"]');
+    var qtyEl=row.querySelector('[data-oitem="qty"]');
+    var unitEl=row.querySelector('[data-oitem="unit"]');
+    var priceEl=row.querySelector('[data-oitem="unitprice"]');
+    var name=nameEl?nameEl.value.trim():'';
+    var qty=Number(qtyEl?qtyEl.value:0)||0;
+    var unitPrice=Number(priceEl?priceEl.value:0)||0;
+    if(!name&&!qty)return;
+    result.push({
+      id:'oi'+Date.now()+Math.floor(Math.random()*1000),
+      skuCode:skuEl?skuEl.value:'',
+      nameCN:name||'—',
+      qty:qty,
+      unit:unitEl?unitEl.value:'个',
+      unitPrice:unitPrice,
+      subtotal:Math.round(qty*unitPrice*100)/100
+    });
+  });
+  return result;
+}
+function renderOrdItems(items,currency){
+  var area=document.getElementById('ford-items-area');
+  var totalEl=document.getElementById('ford-items-total');
+  var amtEl=document.getElementById('fo-amount');
+  if(!area)return;
+  if(!items||!items.length){
+    area.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0">点击「+ 添加产品」；无明细时在下方填写合计金额</div>';
+    if(totalEl)totalEl.style.display='none';
+    if(amtEl){amtEl.removeAttribute('readonly');amtEl.style.color='';}
+    return;
+  }
+  var cur=currency||'USD';
+  area.innerHTML='';
+  items.forEach(function(item,idx){
+    var div=document.createElement('div');
+    div.setAttribute('data-ord-item',idx);
+    div.style.cssText='display:grid;grid-template-columns:1fr 62px 44px 82px 60px;gap:4px;align-items:center;margin-bottom:5px';
+    var sub=item.subtotal>0?((cur==='USD'?'$':'¥')+Number(item.subtotal).toFixed(2)):'—';
+    var subColor=item.subtotal>0?(cur==='USD'?'var(--green)':'var(--yellow)'):'var(--muted)';
+    div.innerHTML='<input list="ord-sku-datalist" data-oitem="name" class="form-input" placeholder="产品名称" value="'+(item.nameCN||'')+'" style="min-width:0;font-size:12px" oninput="onOrdItemProductInput(this)">'
+      +'<input data-oitem="qty" type="number" class="form-input" placeholder="数量" value="'+(item.qty||'')+'" style="font-size:12px" oninput="updateOrdItemSubtotal(this)">'
+      +'<input data-oitem="unit" class="form-input" placeholder="单位" value="'+(item.unit||'个')+'" style="font-size:12px">'
+      +'<input data-oitem="unitprice" type="number" class="form-input" placeholder="单价" value="'+(item.unitPrice||'')+'" style="font-size:12px" oninput="updateOrdItemSubtotal(this)">'
+      +'<div style="display:flex;align-items:center;justify-content:flex-end;gap:2px">'
+      +'<span data-oitem="subtotal" style="font-size:12px;color:'+subColor+'">'+sub+'</span>'
+      +'<span onclick="removeOrdItem(this)" style="cursor:pointer;color:var(--muted);font-size:18px;padding:0 2px;line-height:1;flex-shrink:0">×</span>'
+      +'</div>'
+      +'<input type="hidden" data-oitem="skucode" value="'+(item.skuCode||'')+'">';
+    area.appendChild(div);
+  });
+  updateOrdItemTotal();
+}
 function addOrdFee(){
   var area=document.getElementById('ford-fees-area');
   if(!area)return;
@@ -4549,11 +4782,27 @@ function renderOrdFees(fees){
   updateOrdFeeTotal();
 }
 function saveOrder(){
-  const alias=document.getElementById('fo-alias').value.trim();if(!alias){alert('请填写客户代号');return;}
-  const ordFees=collectOrdFeesFromDOM();
-  const data={date:document.getElementById('fo-date').value,alias,product:document.getElementById('fo-product').value,qty:document.getElementById('fo-qty').value,amount:document.getElementById('fo-amount').value||0,currency:document.getElementById('fo-currency').value,stage:document.getElementById('fo-stage').value,delivery:document.getElementById('fo-delivery').value,person:document.getElementById('fo-person').value,notes:document.getElementById('fo-notes').value,completed:false,fees:ordFees};
-  if(editingOrdId){const o=orders.find(x=>x.id===editingOrdId);if(o)Object.assign(o,data);}
-  else{orders.push({id:nextOrdId++,...data});}
+  var alias=document.getElementById('fo-alias').value.trim();if(!alias){alert('请填写客户代号');return;}
+  var currency=(document.getElementById('fo-currency')||{}).value||'USD';
+  var ordItems=collectOrdItemsFromDOM();
+  var ordFees=collectOrdFeesFromDOM();
+  var derivedProduct='其他',derivedQty='',derivedAmount=0;
+  if(ordItems.length>0){
+    derivedProduct=ordItems.length===1?ordItems[0].nameCN:'多品类';
+    derivedQty=ordItems.length===1?(ordItems[0].qty+(ordItems[0].unit||'')):'';
+    derivedAmount=0;
+    ordItems.forEach(function(item){derivedAmount+=item.subtotal||0;});
+    derivedAmount=Math.round(derivedAmount*100)/100;
+    var amtEl=document.getElementById('fo-amount');
+    if(amtEl)amtEl.value=derivedAmount;
+  } else {
+    var manualAmt=document.getElementById('fo-amount');
+    derivedAmount=manualAmt?Number(manualAmt.value)||0:0;
+  }
+  var linkedProcId=(document.getElementById('fo-linkedprocid')||{}).value||'';
+  var data={date:document.getElementById('fo-date').value,alias:alias,product:derivedProduct,qty:derivedQty,amount:derivedAmount,currency:currency,items:ordItems,linkedProcId:linkedProcId,stage:document.getElementById('fo-stage').value,delivery:document.getElementById('fo-delivery').value,person:document.getElementById('fo-person').value,notes:document.getElementById('fo-notes').value,completed:false,fees:ordFees};
+  if(editingOrdId){var eo=orders.find(function(x){return x.id===editingOrdId;});if(eo){data.completed=eo.completed;data.followups=eo.followups;Object.assign(eo,data);}}
+  else{orders.push({id:nextOrdId++,followups:[],completed:false,fees:ordFees,items:ordItems,linkedProcId:linkedProcId,product:derivedProduct,qty:derivedQty,amount:derivedAmount,currency:currency,stage:document.getElementById('fo-stage').value,date:document.getElementById('fo-date').value,alias:alias,delivery:document.getElementById('fo-delivery').value,person:document.getElementById('fo-person').value,notes:document.getElementById('fo-notes').value});}
   saveAll();closeModal('order-modal');refreshAll();toast('订单已保存 ✓');
 }
 
