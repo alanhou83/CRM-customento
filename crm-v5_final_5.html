@@ -1828,6 +1828,7 @@ a{color:var(--accent);text-decoration:none;}
     <div class="dp-tab active" id="dp-tab-profile" onclick="switchDpTab('profile')">客户档案</div>
     <div class="dp-tab" id="dp-tab-followup" onclick="switchDpTab('followup')">跟进记录</div>
     <div class="dp-tab" id="dp-tab-sales" onclick="switchDpTab('sales')">成交统计</div>
+    <div class="dp-tab" id="dp-tab-quote" onclick="switchDpTab('quote')" style="display:none">报价单</div>
   </div>
   <div class="detail-body" id="detail-body"></div>
   <div id="dp-followup-bar" style="display:none;padding:12px 20px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0">
@@ -1937,12 +1938,23 @@ const DEF_SALE=[
   {id:4,date:'2026-04-05',alias:'HZFS',product:'T恤',amount:12000,currency:'CNY',person:'Mille',notes:'DTF订单'},
   {id:5,date:'2026-05-02',alias:'GKK',product:'MDF冰箱贴',amount:8000,currency:'USD',person:'Alan',notes:'Q2复单'},
 ];
+const DEF_QUOTE=[
+  {id:'qt_1001',_num:1,qtNum:'QT-2026-001',date:'2026-05-10',validUntil:'2026-06-10',custAlias:'GKK',custCompany:'Gift Kingdom Korea',currency:'USD',person:'Alan',status:'confirmed',inqId:null,followups:[],
+    items:[{skuCode:'MGN-D001',nameCN:'MDF激光冰箱贴',nameEN:'MDF Laser Fridge Magnet',specCN:'6cm×8cm，全彩激光',specEN:'6×8cm, Full-color Laser',moq:500,qty:2000,unit:'pcs',unitPrice:0.85,subtotal:1700,leadTimeCN:'30天',leadTimeEN:'30 days'}],
+    totalAmount:1700,paymentTermsCN:'T/T 30% 定金，70% 发货前付清',paymentTermsEN:'T/T 30% deposit, 70% before shipment',shippingTermsCN:'FOB 深圳',shippingTermsEN:'FOB Shenzhen',notesCN:'',notesEN:''},
+  {id:'qt_1002',_num:2,qtNum:'QT-2026-002',date:'2026-05-18',validUntil:'2026-06-18',custAlias:'CAZL',custCompany:'Casa Zola',currency:'USD',person:'Kelly',status:'sent',inqId:null,followups:[],
+    items:[{skuCode:'CTR-D001',nameCN:'软木杯垫印图',nameEN:'Printed Cork Coaster',specCN:'10cm圆形，DTF印刷',specEN:'10cm Round, DTF Print',moq:200,qty:500,unit:'pcs',unitPrice:1.20,subtotal:600,leadTimeCN:'25天',leadTimeEN:'25 days'},{skuCode:'MUG-D001',nameCN:'印图马克杯',nameEN:'Printed Mug',specCN:'11oz，热转印全彩',specEN:'11oz, Full-color Sublimation',moq:100,qty:300,unit:'pcs',unitPrice:2.50,subtotal:750,leadTimeCN:'20天',leadTimeEN:'20 days'}],
+    totalAmount:1350,paymentTermsCN:'T/T 30% 定金，70% 发货前付清',paymentTermsEN:'T/T 30% deposit, 70% before shipment',shippingTermsCN:'FOB 深圳',shippingTermsEN:'FOB Shenzhen',notesCN:'套装搭配建议',notesEN:'Recommend bundle set packaging'},
+  {id:'qt_1003',_num:3,qtNum:'QT-2026-003',date:'2026-06-01',validUntil:'2026-07-01',custAlias:'GKK',custCompany:'Gift Kingdom Korea',currency:'USD',person:'Alan',status:'draft',inqId:null,followups:[],
+    items:[{skuCode:'MUG-D001',nameCN:'印图马克杯',nameEN:'Printed Mug',specCN:'11oz白杯，热转印，定制图案',specEN:'11oz White Mug, Sublimation, Custom Design',moq:100,qty:500,unit:'pcs',unitPrice:2.80,subtotal:1400,leadTimeCN:'25天',leadTimeEN:'25 days'}],
+    totalAmount:1400,paymentTermsCN:'T/T 30% 定金，70% 发货前付清',paymentTermsEN:'T/T 30% deposit, 70% before shipment',shippingTermsCN:'FOB 深圳',shippingTermsEN:'FOB Shenzhen',notesCN:'',notesEN:''},
+];
 
 let inquiries=JSON.parse(localStorage.getItem(SK.inq)||'null')||JSON.parse(JSON.stringify(DEF_INQ));
 let customers=JSON.parse(localStorage.getItem(SK.cust)||'null')||JSON.parse(JSON.stringify(DEF_CUST));
 let orders=JSON.parse(localStorage.getItem(SK.ord)||'null')||JSON.parse(JSON.stringify(DEF_ORD));
 let saleRecords=JSON.parse(localStorage.getItem(SK.sale)||'null')||JSON.parse(JSON.stringify(DEF_SALE));
-var quoteRecords=JSON.parse(localStorage.getItem(SK.quote)||'null')||[];var nextQuoteId=quoteRecords.length?Math.max.apply(null,quoteRecords.map(function(q){return q._num||0;}))+1:1;
+var quoteRecords=JSON.parse(localStorage.getItem(SK.quote)||'null')||JSON.parse(JSON.stringify(DEF_QUOTE));var nextQuoteId=quoteRecords.length?Math.max.apply(null,quoteRecords.map(function(q){return q._num||0;}))+1:1;
 /* 修复旧数据/演示数据中只有日期没有内容（或反之）的待办，两项必须同时有值 */
 inquiries.forEach(function(i){if(!i.followupDate||!i.followupNote){i.followupDate='';i.followupNote='';}});
 customers.forEach(function(c){if(!c.followupDate||!c.followupNote){c.followupDate='';c.followupNote='';}});
@@ -3981,9 +3993,11 @@ function openInqDetail(id){
     var tabProfile=document.getElementById('dp-tab-profile');
     var tabFollowup=document.getElementById('dp-tab-followup');
     var tabSales=document.getElementById('dp-tab-sales');
+    var tabQuote=document.getElementById('dp-tab-quote');
     if(tabProfile)tabProfile.textContent='询盘详情';
     if(tabFollowup)tabFollowup.textContent='跟进记录';
     if(tabSales)tabSales.style.display='none';
+    if(tabQuote)tabQuote.style.display='none';
   }
 
   document.getElementById('detail-body').innerHTML=
@@ -4002,7 +4016,7 @@ function openInqDetail(id){
 }
 
 function switchDpTab(tab){
-  ['profile','followup','sales'].forEach(function(t){
+  ['profile','followup','sales','quote'].forEach(function(t){
     var btn=document.getElementById('dp-tab-'+t);
     var content=document.getElementById('dp-content-'+t);
     if(btn)btn.classList.toggle('active',t===tab);
@@ -4145,6 +4159,30 @@ function openCustDetail(id){
     tab3+='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">暂无成交记录</div></div>';
   }
 
+  // Tab 4: 报价单历史
+  var custQuotes=quoteRecords.filter(function(q){return q.custAlias===c.alias;})
+    .sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
+  var tab4='<div class="detail-section">'
+    +'<div class="detail-section-title" style="display:flex;align-items:center;justify-content:space-between">报价记录'
+    +'<button onclick="newQuoteFromCust(\''+c.alias+'\',\''+c.id+'\')" style="font-size:11px;padding:3px 9px;border-radius:5px;border:0.5px solid var(--accent);color:var(--accent);background:rgba(79,142,247,.12);cursor:pointer;font-weight:400">+ 新建报价单</button>'
+    +'</div>';
+  if(custQuotes.length){
+    custQuotes.forEach(function(q){
+      var cur=q.currency==='USD'?'$':'¥';
+      var prodStr=(q.items&&q.items.length)?q.items.map(function(it){return it.nameCN||it.nameEN||'';}).join(' · '):'—';
+      tab4+='<div onclick="openQuoteDetail(\''+q.id+'\')" style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer">'
+        +'<div><div style="font-family:monospace;font-size:12px;color:var(--accent)">'+q.qtNum+'</div>'
+        +'<div style="font-size:11px;color:var(--muted)">'+q.date+(prodStr!=='—'?' · '+prodStr:'')+'</div></div>'
+        +'<div style="text-align:right">'
+        +'<div style="font-weight:600;color:'+(q.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+cur+(q.totalAmount?q.totalAmount.toFixed(2):'—')+'</div>'
+        +'<span class="status-badge" style="'+getQuoteStatusStyle(q.status)+';font-size:10px">'+getQuoteStatusLabel(q.status)+'</span>'
+        +'</div></div>';
+    });
+  } else {
+    tab4+='<div style="font-size:12px;color:var(--muted);padding:8px 0">暂无报价单，点击右上角新建</div>';
+  }
+  tab4+='</div>';
+
   /* 恢复客户Tab标签 */
   var dpTabsC=document.getElementById('dp-tabs');
   if(dpTabsC){
@@ -4152,15 +4190,18 @@ function openCustDetail(id){
     var tProfile=document.getElementById('dp-tab-profile');
     var tFollowup=document.getElementById('dp-tab-followup');
     var tSales=document.getElementById('dp-tab-sales');
-    if(tProfile)tProfile.textContent='客户档案';
-    if(tFollowup)tFollowup.textContent='跟进记录';
+    var tQuote=document.getElementById('dp-tab-quote');
+    if(tProfile){tProfile.textContent='客户档案';tProfile.style.display='';}
+    if(tFollowup){tFollowup.textContent='跟进记录';tFollowup.style.display='';}
     if(tSales)tSales.style.display='';
+    if(tQuote)tQuote.style.display='';
   }
 
   document.getElementById('detail-body').innerHTML=
     '<div class="dp-tab-content active" id="dp-content-profile">'+tab1+'</div>'
     +'<div class="dp-tab-content" id="dp-content-followup">'+tab2+'</div>'
-    +'<div class="dp-tab-content" id="dp-content-sales">'+tab3+'</div>';
+    +'<div class="dp-tab-content" id="dp-content-sales">'+tab3+'</div>'
+    +'<div class="dp-tab-content" id="dp-content-quote">'+tab4+'</div>';
 
   document.getElementById('dp-followup-bar').style.display='none';
   switchDpTab('profile');
@@ -8826,6 +8867,31 @@ function openQuoteModal(id){
     renderQtItems([]);
     window._pendingQtInqId=null;
   }
+  populateQtSkuDatalist();
+  openModal('quote-modal');
+}
+
+function newQuoteFromCust(custAlias,custId){
+  _editingQuoteId=null;
+  var titleEl=document.getElementById('quote-modal-title');
+  var delArea=document.getElementById('qt-delete-area');
+  if(titleEl)titleEl.textContent='新建报价单';
+  if(delArea)delArea.innerHTML='';
+  var setV=function(fid,val){var el=document.getElementById(fid);if(el)el.value=val||'';};
+  var validD=new Date();validD.setDate(validD.getDate()+30);
+  setV('fo-qt-date',today());
+  setV('fo-qt-valid',validD.toISOString().slice(0,10));
+  setV('fo-qt-alias',custAlias||'');
+  setV('fo-qt-company','');
+  setV('fo-qt-currency','USD');
+  setV('fo-qt-person',currentUser||'Kelly');
+  setV('fo-qt-status','draft');
+  setV('fo-qt-pay-cn','T/T 30% 定金，70% 发货前付清');
+  setV('fo-qt-pay-en','T/T 30% deposit, 70% before shipment');
+  setV('fo-qt-ship-cn','FOB 深圳');setV('fo-qt-ship-en','FOB Shenzhen');
+  setV('fo-qt-notes-cn','');setV('fo-qt-notes-en','');
+  window._pendingQtInqId=null;
+  renderQtItems([]);
   populateQtSkuDatalist();
   openModal('quote-modal');
 }
