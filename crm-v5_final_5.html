@@ -1939,7 +1939,7 @@ const DEF_SALE=[
   {id:5,date:'2026-05-02',alias:'GKK',product:'MDF冰箱贴',amount:8000,currency:'USD',person:'Alan',notes:'Q2复单'},
 ];
 const DEF_QUOTE=[
-  {id:'qt_1001',_num:1,qtNum:'QT-2026-001',date:'2026-05-10',validUntil:'2026-06-10',custAlias:'GKK',custCompany:'Gift Kingdom Korea',currency:'USD',person:'Alan',status:'confirmed',inqId:null,followups:[],
+  {id:'qt_1001',_num:1,qtNum:'QT-2026-001',date:'2026-05-10',validUntil:'2026-06-10',custAlias:'GKK',custCompany:'Gift Kingdom Korea',currency:'USD',person:'Alan',status:'accepted',inqId:null,followups:[],
     items:[{skuCode:'MGN-D001',nameCN:'MDF激光冰箱贴',nameEN:'MDF Laser Fridge Magnet',specCN:'6cm×8cm，全彩激光',specEN:'6×8cm, Full-color Laser',moq:500,qty:2000,unit:'pcs',unitPrice:0.85,subtotal:1700,leadTimeCN:'30天',leadTimeEN:'30 days'}],
     totalAmount:1700,paymentTermsCN:'T/T 30% 定金，70% 发货前付清',paymentTermsEN:'T/T 30% deposit, 70% before shipment',shippingTermsCN:'FOB 深圳',shippingTermsEN:'FOB Shenzhen',notesCN:'',notesEN:''},
   {id:'qt_1002',_num:2,qtNum:'QT-2026-002',date:'2026-05-18',validUntil:'2026-06-18',custAlias:'CAZL',custCompany:'Casa Zola',currency:'USD',person:'Kelly',status:'sent',inqId:null,followups:[],
@@ -8827,11 +8827,28 @@ function getQuoteStatusLabel(s){
   if(s==='lost')return '已丢失';
   return s||'草稿';
 }
+function getQuoteStatusColor(s){
+  if(s==='accepted')return 'var(--green)';
+  if(s==='sent')return 'var(--accent)';
+  if(s==='lost')return 'var(--red)';
+  return 'var(--muted)';
+}
+function getQuoteStatusBg(s){
+  if(s==='accepted')return 'rgba(62,207,142,.2)';
+  if(s==='sent')return 'rgba(79,142,247,.2)';
+  if(s==='lost')return 'rgba(247,111,111,.2)';
+  return 'rgba(180,180,180,.15)';
+}
 function getQuoteStatusStyle(s){
-  if(s==='accepted')return 'background:rgba(62,207,142,.15);color:var(--green);';
-  if(s==='sent')return 'background:rgba(79,142,247,.15);color:var(--accent);';
-  if(s==='lost')return 'background:rgba(247,111,111,.15);color:var(--red);';
-  return 'background:rgba(180,180,180,.15);color:var(--muted);';
+  return 'background:'+getQuoteStatusBg(s)+';color:'+getQuoteStatusColor(s)+';';
+}
+function quickQtStatus(qtId,status){
+  var q=quoteRecords.find(function(x){return x.id===qtId;});if(!q)return;
+  q.status=status;
+  saveQuoteData();
+  refreshAll();
+  openQuoteDetail(qtId);
+  toast('状态已更新：'+getQuoteStatusLabel(status));
 }
 
 function genQuoteNumber(){
@@ -9302,13 +9319,21 @@ function openQuoteDetail(id){
       +'</div></div>';
   });
   var totalAmt=q.totalAmount||0;
+  var qtStatuses=[['draft','草稿'],['sent','已发送'],['accepted','已接受'],['lost','已丢失']];
+  var statusBar='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">';
+  qtStatuses.forEach(function(pair){
+    var isActive=q.status===pair[0];
+    statusBar+='<button onclick="quickQtStatus(\''+q.id+'\',\''+pair[0]+'\')" style="font-size:12px;padding:5px 12px;border-radius:6px;border:1.5px solid '+(isActive?'transparent':'var(--border)')+';background:'+(isActive?getQuoteStatusBg(pair[0]):'rgba(255,255,255,.04)')+';color:'+(isActive?getQuoteStatusColor(pair[0]):'var(--muted)')+';cursor:pointer;font-weight:'+(isActive?'600':'400')+'">'+pair[1]+'</button>';
+  });
+  statusBar+='</div>';
   var tab1='<div class="detail-section">'
-    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
-    +'<span class="status-badge" style="'+getQuoteStatusStyle(q.status)+';font-size:12px">'+getQuoteStatusLabel(q.status)+'</span>'
-    +'<div style="display:flex;gap:6px">'
+    +statusBar
+    +'<div style="display:flex;gap:6px;margin-bottom:4px">'
     +'<button class="btn btn-outline btn-sm" onclick="openQuoteModal(\''+q.id+'\')">编辑</button>'
     +'<button class="btn btn-primary btn-sm" onclick="openQuotePreview(\''+q.id+'\',\'cn\')">预览报价单</button>'
-    +'</div></div>'
+    +'</div>'
+    +'</div>'
+    +'<div class="detail-section">'
     +'<div class="detail-row"><span class="detail-key">报价单号</span><span class="detail-val" style="font-family:monospace;color:var(--accent)">'+q.qtNum+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">日期</span><span class="detail-val">'+q.date+'</span></div>'
     +(q.validUntil?'<div class="detail-row"><span class="detail-key">有效期至</span><span class="detail-val">'+q.validUntil+'</span></div>':'')
