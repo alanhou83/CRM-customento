@@ -497,11 +497,10 @@ a{color:var(--accent);text-decoration:none;}
     </div>
   </div>
   <div id="mh-procurement" style="display:none;margin-bottom:-6px">
-    <div class="mobile-header-title">&#x1F6D2; 采购跟单</div>
     <div class="mobile-chips" style="padding-bottom:6px">
-      <button class="chip active" id="mproc-chip-active" onclick="procMobileTab('active',this)">进行中</button>
-      <button class="chip" id="mproc-chip-done" onclick="procMobileTab('done',this)">已入库</button>
-      <button class="chip" id="mproc-chip-suppliers" onclick="procMobileTab('suppliers',this)">供应商</button>
+      <div class="mobile-chip on" id="mproc-chip-active" onclick="procMobileTab('active',this)">进行中</div>
+      <div class="mobile-chip" id="mproc-chip-done" onclick="procMobileTab('done',this)">已入库</div>
+      <div class="mobile-chip" id="mproc-chip-suppliers" onclick="procMobileTab('suppliers',this)">供应商</div>
     </div>
     <div style="display:flex;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
       <input type="text" class="search-box" id="search-proc-m" placeholder="搜索..." oninput="renderMobileCards('proc')" style="flex:1">
@@ -7695,7 +7694,7 @@ function openProcDetail(id){
   var tab2Html=renderProcFollowupTab(p);
   body.innerHTML='<div class="dp-tab-content active" id="dp-content-profile" style="padding:20px">'+tab1Html+'</div>'+
     '<div class="dp-tab-content" id="dp-content-followup" style="padding:20px">'+tab2Html+'</div>';
-  openDetailPanel();
+  var panel=document.getElementById('detail-panel');if(panel)panel.classList.add('open');
 }
 function renderProcFollowupTab(p){
   var id=p.id;
@@ -7998,8 +7997,8 @@ function deleteSupplier(id){
 var procMobileCurrentTab='active';
 function procMobileTab(tab,el){
   procMobileCurrentTab=tab;
-  document.querySelectorAll('#mh-procurement .chip').forEach(function(c){c.classList.remove('active');});
-  if(el)el.classList.add('active');
+  document.querySelectorAll('#mh-procurement .mobile-chip').forEach(function(c){c.classList.remove('on');});
+  if(el)el.classList.add('on');
   renderMobileCards('proc');
 }
 function renderMobileCards_proc(){
