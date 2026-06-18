@@ -4698,15 +4698,12 @@ function populateOrdSkuDatalist(){
   var d=getProdCatData();
   d.products.forEach(function(prod){
     (prod.skus||[]).forEach(function(sku){
-      var label=(sku.variantCN||prod.nameCN)+(sku.skuCode?' ('+sku.skuCode+')':'');
-      var opt=document.createElement('option');
-      opt.value=label;
-      dl.appendChild(opt);
+      var variant=sku.variantCN||'';
+      var label=prod.nameCN+(variant?' · '+variant:'')+(sku.skuCode?' ('+sku.skuCode+')':'');
+      var opt=document.createElement('option');opt.value=label;dl.appendChild(opt);
     });
     if(!prod.skus||!prod.skus.length){
-      var opt2=document.createElement('option');
-      opt2.value=prod.nameCN;
-      dl.appendChild(opt2);
+      var opt2=document.createElement('option');opt2.value=prod.nameCN;dl.appendChild(opt2);
     }
   });
 }
@@ -8954,11 +8951,19 @@ function populateQtSkuDatalist(){
     var skus=prod.skus||[];
     if(skus.length){
       skus.forEach(function(sku){
-        var label=(sku.variantCN||prod.nameCN)+(sku.skuCode?' ('+sku.skuCode+')':'');
-        var opt=document.createElement('option');opt.value=label;dl.appendChild(opt);
+        var variant=sku.variantCN||'';
+        /* 产品名在前，变体在后，便于按产品名搜索 */
+        var cnLabel=prod.nameCN+(variant?' · '+variant:'')+(sku.skuCode?' ('+sku.skuCode+')':'');
+        var optCN=document.createElement('option');optCN.value=cnLabel;dl.appendChild(optCN);
+        /* 英文选项，便于英文关键词搜索 */
+        if(prod.nameEN||sku.variantEN){
+          var enLabel=(prod.nameEN||prod.nameCN)+(sku.variantEN?' · '+sku.variantEN:'')+(sku.skuCode?' ('+sku.skuCode+')':'');
+          if(enLabel!==cnLabel){var optEN=document.createElement('option');optEN.value=enLabel;dl.appendChild(optEN);}
+        }
       });
     } else {
-      var opt2=document.createElement('option');opt2.value=prod.nameCN;dl.appendChild(opt2);
+      var lbl=prod.nameCN+(prod.nameEN?' / '+prod.nameEN:'');
+      var opt=document.createElement('option');opt.value=lbl;dl.appendChild(opt);
     }
   });
 }
@@ -9013,13 +9018,14 @@ function onQtItemProductInput(inputEl){
   var skuEl=g('skucode');var nameEnEl=g('nameen');var specCnEl=g('speccn');var specEnEl=g('specen');
   var unitEl=g('unit');var priceEl=g('unitprice');var moqEl=g('moq');
   if(skuEl)skuEl.value=skuCode;
+  /* namecn 字段设为产品名（不是变体名），变体放到规格字段 */
+  inputEl.value=foundProd.nameCN||'';
   if(nameEnEl&&!nameEnEl.value)nameEnEl.value=foundProd.nameEN||foundProd.nameCN||'';
-  if(specCnEl&&!specCnEl.value)specCnEl.value=foundSku.variantCN||'';
-  if(specEnEl&&!specEnEl.value)specEnEl.value=foundSku.variantEN||'';
+  if(specCnEl)specCnEl.value=foundSku.variantCN||'';
+  if(specEnEl)specEnEl.value=foundSku.variantEN||'';
   if(unitEl)unitEl.value=foundSku.unit||'pcs';
-  if(priceEl&&!priceEl.value&&foundSku.priceMin)priceEl.value=foundSku.priceMin;
-  if(moqEl&&!moqEl.value&&foundSku.moq)moqEl.value=foundSku.moq;
-  inputEl.value=foundSku.variantCN||foundProd.nameCN||'';
+  if(priceEl)priceEl.value=foundSku.priceMin||foundSku.priceMax||'';
+  if(moqEl)moqEl.value=foundSku.moq||'';
   updateQtItemSubtotal(inputEl);
 }
 
