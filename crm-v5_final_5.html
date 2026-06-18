@@ -9020,7 +9020,7 @@ function onQtItemProductInput(inputEl){
   if(skuEl)skuEl.value=skuCode;
   /* namecn 字段设为产品名（不是变体名），变体放到规格字段 */
   inputEl.value=foundProd.nameCN||'';
-  if(nameEnEl&&!nameEnEl.value)nameEnEl.value=foundProd.nameEN||foundProd.nameCN||'';
+  if(nameEnEl)nameEnEl.value=foundProd.nameEN||foundProd.nameCN||'';
   if(specCnEl)specCnEl.value=foundSku.variantCN||'';
   if(specEnEl)specEnEl.value=foundSku.variantEN||'';
   if(unitEl)unitEl.value=foundSku.unit||'pcs';
