@@ -9187,69 +9187,91 @@ function renderQuotePreviewContent(){
   var isCN=_qtPreviewLang==='cn';
   var cur=q.currency==='USD'?'$':'¥';
   var html='';
-  html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;border-bottom:2px solid #2D3172;padding-bottom:16px">'
-    +'<div><div style="font-size:22px;font-weight:700;color:#2D3172;letter-spacing:1px">CUSTOMENTO</div>'
-    +'<div style="font-size:11px;color:#888;margin-top:2px">crm.customento.com</div></div>'
+  /* 头部：紧凑 */
+  html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;border-bottom:2px solid #2D3172;padding-bottom:10px">'
+    +'<div><div style="font-size:17px;font-weight:700;color:#2D3172;letter-spacing:1px">CUSTOMENTO</div>'
+    +'<div style="font-size:9px;color:#888;margin-top:1px">crm.customento.com</div></div>'
     +'<div style="text-align:right">'
-    +'<div style="font-size:18px;font-weight:600;color:#333">'+(isCN?'报价单':'QUOTATION')+'</div>'
-    +'<div style="font-size:12px;color:#666;margin-top:4px">'+q.qtNum+'</div>'
-    +'<div style="font-size:11px;color:#888">'+(isCN?'日期：':'Date: ')+q.date+'</div>'
-    +'<div style="font-size:11px;color:#888">'+(isCN?'有效期至：':'Valid Until: ')+(q.validUntil||'—')+'</div>'
+    +'<div style="font-size:14px;font-weight:700;color:#333">'+(isCN?'报价单':'QUOTATION')+'</div>'
+    +'<div style="font-size:11px;color:#666;margin-top:2px;font-family:monospace">'+q.qtNum+'</div>'
+    +'<div style="font-size:10px;color:#888">'+(isCN?'日期：':'Date: ')+q.date+'</div>'
+    +(q.validUntil?'<div style="font-size:10px;color:#888">'+(isCN?'有效期至：':'Valid: ')+q.validUntil+'</div>':'')
     +'</div></div>';
-  html+='<div style="margin-bottom:20px;background:#f8f9fc;padding:12px 16px;border-radius:6px">'
-    +'<div style="font-size:11px;color:#888;margin-bottom:4px">'+(isCN?'客户信息':'CUSTOMER')+'</div>'
-    +'<div style="font-size:14px;font-weight:600;color:#333">'+(q.custCompany||q.custAlias)+'</div>'
-    +(q.custCompany?'<div style="font-size:12px;color:#666">'+q.custAlias+'</div>':'')
+  /* 客户信息：紧凑 */
+  html+='<div style="margin-bottom:12px;background:#f8f9fc;padding:8px 12px;border-radius:6px;display:flex;justify-content:space-between;align-items:center">'
+    +'<div><div style="font-size:9px;color:#888;margin-bottom:2px;text-transform:uppercase;letter-spacing:.5px">'+(isCN?'客户':'Customer')+'</div>'
+    +'<div style="font-size:13px;font-weight:600;color:#333">'+(q.custCompany||q.custAlias)+'</div>'
+    +(q.custCompany?'<div style="font-size:11px;color:#666">'+q.custAlias+'</div>':'')
+    +'</div>'
+    +'<div style="text-align:right"><div style="font-size:9px;color:#888;margin-bottom:2px">'+(isCN?'货币':'Currency')+'</div>'
+    +'<div style="font-size:12px;font-weight:600;color:#333">'+q.currency+'</div></div>'
     +'</div>';
-  html+='<table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:12px">';
-  html+='<thead><tr style="background:#2D3172;color:#fff">'
-    +'<th style="padding:8px 10px;text-align:left;font-weight:600">'+(isCN?'产品':'Product')+'</th>'
-    +'<th style="padding:8px 10px;text-align:left">'+(isCN?'规格':'Spec')+'</th>'
-    +'<th style="padding:8px 6px;text-align:center">MOQ</th>'
-    +'<th style="padding:8px 6px;text-align:center">'+(isCN?'数量':'Qty')+'</th>'
-    +'<th style="padding:8px 6px;text-align:center">'+(isCN?'单位':'Unit')+'</th>'
-    +'<th style="padding:8px 8px;text-align:right">'+(isCN?'单价':'Unit Price')+'</th>'
-    +'<th style="padding:8px 8px;text-align:right">'+(isCN?'小计':'Subtotal')+'</th>'
-    +'<th style="padding:8px 8px;text-align:center">'+(isCN?'交期':'Lead Time')+'</th>'
-    +'</tr></thead><tbody>';
+  /* 产品明细：卡片布局 */
+  html+='<div style="font-size:9px;font-weight:700;color:#2D3172;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;padding-bottom:4px;border-bottom:1.5px solid #2D3172">'
+    +(isCN?'报价明细':'Quotation Details')+'</div>';
   var totalAmt=0;
   (q.items||[]).forEach(function(item,idx){
-    var bg=idx%2===0?'#fff':'#f8f9fc';
     var name=isCN?(item.nameCN||item.nameEN||''):(item.nameEN||item.nameCN||'');
     var spec=isCN?(item.specCN||item.specEN||''):(item.specEN||item.specCN||'');
     var lt=isCN?(item.leadTimeCN||item.leadTimeEN||''):(item.leadTimeEN||item.leadTimeCN||'');
     totalAmt+=item.subtotal||0;
-    html+='<tr style="background:'+bg+';border-bottom:1px solid #e8e8e8">'
-      +'<td style="padding:9px 10px;font-weight:600;color:#333">'+name+'</td>'
-      +'<td style="padding:9px 10px;color:#666">'+spec+'</td>'
-      +'<td style="padding:9px 6px;text-align:center;color:#666">'+(item.moq||'—')+'</td>'
-      +'<td style="padding:9px 6px;text-align:center;color:#333">'+item.qty+'</td>'
-      +'<td style="padding:9px 6px;text-align:center;color:#666">'+item.unit+'</td>'
-      +'<td style="padding:9px 8px;text-align:right;color:#333">'+cur+Number(item.unitPrice||0).toFixed(2)+'</td>'
-      +'<td style="padding:9px 8px;text-align:right;font-weight:600;color:#2D3172">'+cur+Number(item.subtotal||0).toFixed(2)+'</td>'
-      +'<td style="padding:9px 8px;text-align:center;color:#666">'+lt+'</td>'
-      +'</tr>';
+    html+='<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:'+(idx%2===0?'#fff':'#f8f9fc')+';border:1px solid #eee;border-radius:6px;margin-bottom:6px">'
+      +'<div id="qt-prev-img-'+idx+'" style="width:60px;height:60px;border-radius:6px;background:#f0f2f8;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center">'
+      +'<span style="font-size:22px">📦</span>'
+      +'</div>'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-weight:700;font-size:13px;color:#222;margin-bottom:3px">'+name+'</div>'
+      +(spec?'<div style="font-size:11px;color:#555;margin-bottom:5px">'+spec+'</div>':'')
+      +'<div style="display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:#777">'
+      +(item.moq?'<span>MOQ: <b style="color:#444">'+item.moq+'</b></span>':'')
+      +'<span>'+(isCN?'数量':'Qty')+': <b style="color:#444">'+item.qty+' '+item.unit+'</b></span>'
+      +'<span>'+(isCN?'单价':'Unit')+': <b style="color:#444">'+cur+Number(item.unitPrice||0).toFixed(2)+'</b></span>'
+      +(lt?'<span>'+(isCN?'交期':'Lead')+': <b style="color:#444">'+lt+'</b></span>':'')
+      +'</div>'
+      +'</div>'
+      +'<div style="text-align:right;flex-shrink:0;padding-left:6px">'
+      +'<div style="font-size:15px;font-weight:700;color:'+(q.currency==='USD'?'#1a8f5c':'#b8890a')+'">'+cur+Number(item.subtotal||0).toFixed(2)+'</div>'
+      +'<div style="font-size:9px;color:#aaa;margin-top:1px">'+(isCN?'小计':'Subtotal')+'</div>'
+      +'</div>'
+      +'</div>';
   });
-  html+='<tr style="background:#2D3172;color:#fff"><td colspan="6" style="padding:8px 10px;text-align:right;font-weight:600">'+(isCN?'合计':'TOTAL')+'</td>'
-    +'<td style="padding:8px 8px;text-align:right;font-weight:700;font-size:14px">'+cur+totalAmt.toFixed(2)+'</td><td></td></tr>';
-  html+='</tbody></table>';
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;font-size:12px">';
-  html+='<div><div style="font-weight:600;color:#2D3172;margin-bottom:4px">'+(isCN?'付款方式':'Payment Terms')+'</div>'
-    +'<div style="color:#444">'+(isCN?(q.paymentTermsCN||'—'):(q.paymentTermsEN||'—'))+'</div></div>';
-  html+='<div><div style="font-weight:600;color:#2D3172;margin-bottom:4px">'+(isCN?'装运条款':'Shipping Terms')+'</div>'
-    +'<div style="color:#444">'+(isCN?(q.shippingTermsCN||'—'):(q.shippingTermsEN||'—'))+'</div></div>';
+  /* 合计行 */
+  html+='<div style="text-align:right;padding:9px 14px;background:#2D3172;border-radius:6px;color:#fff;font-size:15px;font-weight:700;margin-bottom:14px">'
+    +(isCN?'合计 ':'Total ')+cur+totalAmt.toFixed(2)+'</div>';
+  /* 条款 */
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;font-size:11px">';
+  html+='<div><div style="font-weight:700;color:#2D3172;margin-bottom:3px;font-size:10px">'+(isCN?'付款方式':'PAYMENT TERMS')+'</div>'
+    +'<div style="color:#444;line-height:1.4">'+(isCN?(q.paymentTermsCN||'—'):(q.paymentTermsEN||'—'))+'</div></div>';
+  html+='<div><div style="font-weight:700;color:#2D3172;margin-bottom:3px;font-size:10px">'+(isCN?'装运条款':'SHIPPING TERMS')+'</div>'
+    +'<div style="color:#444;line-height:1.4">'+(isCN?(q.shippingTermsCN||'—'):(q.shippingTermsEN||'—'))+'</div></div>';
   html+='</div>';
   var notesCurrent=isCN?q.notesCN:q.notesEN;
   if(notesCurrent){
-    html+='<div style="background:#fffbea;border-left:3px solid #f5a623;padding:10px 14px;border-radius:0 6px 6px 0;font-size:12px;color:#666;margin-bottom:16px">'
-      +'<div style="font-weight:600;color:#444;margin-bottom:4px">'+(isCN?'备注':'Notes')+'</div>'
+    html+='<div style="background:#fffbea;border-left:3px solid #f5a623;padding:8px 12px;border-radius:0 6px 6px 0;font-size:11px;color:#555;margin-bottom:12px">'
+      +'<div style="font-weight:600;color:#444;margin-bottom:2px;font-size:10px">'+(isCN?'备注':'NOTES')+'</div>'
       +notesCurrent+'</div>';
   }
-  html+='<div style="margin-top:24px;border-top:1px solid #eee;padding-top:12px;font-size:10px;color:#aaa;text-align:center">CUSTOMENTO · '+(isCN?'本报价单有效期至 ':'This quotation is valid until ')+(q.validUntil||'—')+'</div>';
+  html+='<div style="margin-top:12px;border-top:1px solid #eee;padding-top:8px;font-size:9px;color:#aaa;text-align:center">CUSTOMENTO · '
+    +(isCN?'本报价单有效期至 ':'Valid until ')+(q.validUntil||'—')+'</div>';
   var cont=document.getElementById('quote-preview-content');
   if(cont)cont.innerHTML=html;
   var btn=document.getElementById('qt-lang-btn');
   if(btn)btn.textContent=isCN?'切换 English':'切换 中文';
+  /* 异步加载产品图片 */
+  (q.items||[]).forEach(function(item,idx){
+    var slot=document.getElementById('qt-prev-img-'+idx);if(!slot)return;
+    var skuId=lookupSkuId(item.skuCode);
+    var prodId=lookupSkuProdId(item.skuCode);
+    function setImg(src){if(slot)slot.innerHTML='<img src="'+src+'" style="width:60px;height:60px;object-fit:cover;border-radius:6px">';}
+    if(skuId){
+      getImgFromDB('pcat_sku_'+skuId,function(d1){
+        if(d1)setImg(d1);
+        else if(prodId){getImgFromDB('pcat_'+prodId+'_0',function(d2){if(d2)setImg(d2);});}
+      });
+    } else if(prodId){
+      getImgFromDB('pcat_'+prodId+'_0',function(d){if(d)setImg(d);});
+    }
+  });
 }
 
 function renderQuotePage(){
