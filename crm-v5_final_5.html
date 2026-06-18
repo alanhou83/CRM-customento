@@ -3957,8 +3957,6 @@ function openInqDetail(id){
   if(i.notes){
     tab1+='<div class="detail-section"><div class="detail-section-title">备注</div><div style="font-size:13px;line-height:1.6">'+i.notes+'</div></div>';
   }
-  /* 报价单区域 */
-  tab1+='<div class="detail-section"><div class="detail-section-title" style="display:flex;align-items:center;justify-content:space-between">报价单 <button onclick="newQuoteFromInq('+i.id+')" style="font-size:11px;padding:3px 9px;border-radius:5px;border:0.5px solid var(--accent);color:var(--accent);background:rgba(79,142,247,.12);cursor:pointer;font-weight:400">+ 新建报价单</button></div>'+renderInqQuoteListInline(i.id)+'</div>';
   /* 产品图片占位，异步填充 */
   tab1+='<div class="detail-section" id="dp-inq-img-section" style="display:none">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
@@ -3988,7 +3986,32 @@ function openInqDetail(id){
     +'</div>'
     +'<div id="dp-followups">'+fuHtml+'</div>';
 
-  /* 设置Tab标签：询盘详情 / 跟进记录，隐藏成交统计 */
+  /* Tab3：报价单 */
+  var inqQuotes=quoteRecords.filter(function(q){return q.inqId===id;})
+    .sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
+  var tab3='<div class="detail-section">'
+    +'<div class="detail-section-title" style="display:flex;align-items:center;justify-content:space-between">报价记录'
+    +'<button onclick="newQuoteFromInq('+i.id+')" style="font-size:11px;padding:3px 9px;border-radius:5px;border:0.5px solid var(--accent);color:var(--accent);background:rgba(79,142,247,.12);cursor:pointer;font-weight:400">+ 新建报价单</button>'
+    +'</div>';
+  if(!inqQuotes.length){
+    tab3+='<div style="font-size:12px;color:var(--muted);padding:8px 0">暂无关联报价单</div>';
+  }else{
+    inqQuotes.forEach(function(q){
+      var cur=q.currency==='USD'?'$':'¥';
+      tab3+='<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="openQuoteDetail(\''+q.id+'\')">'
+        +'<div>'
+        +'<div style="font-family:monospace;font-size:12px;color:var(--accent)">'+q.qtNum+'</div>'
+        +'<div style="font-size:11px;color:var(--muted)">'+q.date+(q.items&&q.items.length?' · '+q.items.map(function(it){return it.nameCN||it.nameEN||'';}).join(' · '):'')+'</div>'
+        +'</div>'
+        +'<div style="text-align:right">'
+        +'<div style="font-weight:600;color:'+(q.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+cur+(q.totalAmount?q.totalAmount.toFixed(2):'—')+'</div>'
+        +'<span class="status-badge" style="'+getQuoteStatusStyle(q.status)+';font-size:10px">'+getQuoteStatusLabel(q.status)+'</span>'
+        +'</div></div>';
+    });
+  }
+  tab3+='</div>';
+
+  /* 设置Tab标签：询盘详情 / 跟进记录 / 报价单，隐藏成交统计 */
   var dpTabs=document.getElementById('dp-tabs');
   if(dpTabs){
     dpTabs.style.display='flex';
@@ -3999,12 +4022,13 @@ function openInqDetail(id){
     if(tabProfile)tabProfile.textContent='询盘详情';
     if(tabFollowup)tabFollowup.textContent='跟进记录';
     if(tabSales)tabSales.style.display='none';
-    if(tabQuote)tabQuote.style.display='none';
+    if(tabQuote){tabQuote.style.display='';tabQuote.textContent='报价单'+(inqQuotes.length?' ('+inqQuotes.length+')':'');}
   }
 
   document.getElementById('detail-body').innerHTML=
     '<div class="dp-tab-content active" id="dp-content-profile">'+tab1+'</div>'
-    +'<div class="dp-tab-content" id="dp-content-followup">'+tab2+'</div>';
+    +'<div class="dp-tab-content" id="dp-content-followup">'+tab2+'</div>'
+    +'<div class="dp-tab-content" id="dp-content-quote">'+tab3+'</div>';
   document.getElementById('dp-followup-bar').style.display='none';
   switchDpTab('profile');
   document.getElementById('detail-panel').classList.add('open');
