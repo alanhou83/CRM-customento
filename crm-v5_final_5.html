@@ -1966,6 +1966,7 @@ let nextOrdId=orders.length?Math.max(...orders.map(o=>o.id))+1:1;
 let nextSaleId=saleRecords.length?Math.max(...saleRecords.map(s=>s.id))+1:1;
 let editingInqId=null,editingCustId=null,editingOrdId=null,editingSaleId=null;
 let currentDetailId=null,currentDetailType=null;
+var _prevDetailContext=null;
 var _returnToSaleId=null;
 let currentInqFilter={},csvData=null;
 var dashActionTab='overdue';
@@ -4487,7 +4488,17 @@ function deleteFollowup(idx){
   }
 }
 
-function closeDetail(){document.getElementById('detail-panel').classList.remove('open');currentDetailId=null;currentDetailType=null;}
+function closeDetail(){
+  if(_prevDetailContext){
+    var ctx=_prevDetailContext;_prevDetailContext=null;
+    if(ctx.type==='inquiry')openInqDetail(ctx.id);
+    else if(ctx.type==='customer')openCustDetail(ctx.id);
+    if(ctx.tab)switchDpTab(ctx.tab);
+    return;
+  }
+  document.getElementById('detail-panel').classList.remove('open');
+  currentDetailId=null;currentDetailType=null;
+}
 
 function newOrdFromCust(custId){
   var c=customers.find(function(x){return x.id===custId;});
@@ -9342,6 +9353,12 @@ function renderQuotePage(){
 
 function openQuoteDetail(id){
   var q=quoteRecords.find(function(x){return x.id===id;});if(!q)return;
+  /* 记录来源，便于关闭时返回；已在报价详情内刷新时保留原来源 */
+  if(currentDetailType==='inquiry'||currentDetailType==='customer'){
+    _prevDetailContext={type:currentDetailType,id:currentDetailId,tab:'quote'};
+  } else if(currentDetailType!=='quote'){
+    _prevDetailContext=null;
+  }
   currentDetailId=id;currentDetailType='quote';
   var dpTitle=document.getElementById('dp-title');if(dpTitle)dpTitle.textContent=q.qtNum+' - '+q.custAlias;
   var dpSub=document.getElementById('dp-sub');
