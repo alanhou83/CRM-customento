@@ -11,7 +11,7 @@
 - GitHub Pages：https://alanhou83.github.io/CRM-customento/crm-v5_final_5.html
 - 仓库：https://github.com/alanhou83/CRM-customento
 - PWA 已配置：manifest.json / service-worker.js / icon-192.png / icon-512.png
-- 当前 SW 版本：customento-crm-v28
+- 当前 SW 版本：customento-crm-v30
 
 ## 团队成员与权限
 - Alan：管理员，可见所有，可删除/导出/VIP+冲单标记，专属设置页
@@ -28,16 +28,20 @@
 - `NAV_CONFIG` 对象定义各角色底部导航（最多5项）：
   - Alan：看板/询盘/客户/订单/全部（全部=overlay菜单）
   - Kelly/Momi/Mille：看板/询盘/客户/订单/统计
-  - Penny：看板/订单/产品/采购/财务
+  - Penny：看板/订单/产品/采购/供应商
 - `renderMobileNav()`：登录后动态渲染底部导航，`switchUser()` 时调用
 - `mobileNav('all')`：Alan 点"全部"时展开 `all-modules-overlay` 全屏模块菜单
 - `showAllModules()` / `closeAllModules()`：控制全部模块 overlay 显隐
 - `closeSettingsPage()`：关闭设置页后跳回当前角色首页（取 NAV_CONFIG 第一项）
-- 电脑端：左侧导航用 `nav-sales-section`（询盘/客户/统计，Penny隐藏）和 `nav-ops-section`（产品/采购/财务，Alan+Penny可见）
+- 电脑端：左侧导航用 `nav-sales-section`（询盘/客户/统计，Penny隐藏）和 `nav-ops-section`（产品/采购/供应商/财务，Alan+Penny可见）
 
 ## 已完成功能
 - 6个核心模块：数据看板 / 热点商机 / 询盘列表 / 客户管理 / 销售统计 / 执行中订单
 - **产品开发模块**（crm_prod_v5）：项目跟踪 / 款式管理 / BOM成本（Alan+Penny可见）
+- **产品库模块**（crm_prodcat_v5）：4种类型/SKU/多维标签/双语/定价权限/BOM引用行
+- **报价单模块**（crm_quote_v5）：新建/编辑/详情/预览/打印/询盘客户Tab集成
+- **采购跟单模块**（crm_proc_v5）：采购单/阶段跟踪/入库确认
+- **供应商管理模块**（crm_proc_v5 suppliers数组）：独立页面，详情面板含2Tab（供应商档案/采购历史）
 - 角色导航：NAV_CONFIG 定义各角色底部导航，手机端动态渲染
 - 询盘列表：标记列（VIP绿/热点橙/超时红/🎯冲单）独立一列
 - 客户管理：5层分层（核心/重点培养/普通跟踪/沉睡/流失）+ 卡片/列表双视图 + 分批展开
@@ -133,8 +137,9 @@
 - 手机端Tab计数 id：`minq-tab-active/silent/archive/expired`
 
 ## 询盘详情面板设计（V2）
-- **2个Tab**：询盘详情 / 跟进记录
-- Tab标签：`dp-tab-profile`="询盘详情"，`dp-tab-sales` 隐藏（客户详情时恢复"客户档案"+显示销售Tab）
+- **3个Tab**：询盘详情 / 跟进记录 / 报价单
+- Tab标签：`dp-tab-profile`="询盘详情"，`dp-tab-sales` 隐藏（客户详情时恢复"客户档案"+显示销售Tab），`dp-tab-quote`="报价单（N）"
+- 报价单Tab：显示该询盘关联的报价单列表 + 新建报价单按钮，计数显示在Tab标签括号内
 - 状态区第一行：6个动态状态按钮
 - 状态区第二行：已报价标记 / 已打样标记 / 已成单（action）/ 失效（action）
 - 无"快速更新状态"标题行
@@ -313,7 +318,7 @@
 7. 手机端媒体查询必须覆盖：html,body{overflow:auto} / .app{overflow:visible;height:auto} / .main{overflow:visible} / .page-content{padding:0;overflow:visible}
 8. editCurrent() 必须先保存 id 再 closeDetail()，否则 id 被清空
    ⚠️ 新增 detail type 时必须同步在 editCurrent() 加对应分支，否则头部编辑按钮点了只关面板不开modal
-   当前已有：inquiry / customer / order / sale / prod（缺任何一个就会出现"点编辑就退出"的症状）
+   当前已有：inquiry / customer / order / sale / prod / quote / proc / supplier / prodcat（缺任何一个就会出现"点编辑就退出"的症状）
 9. str_replace 定位锚点用完后必须确认原内容完整保留（曾发生 refreshAll 函数被误删导致全站崩溃）
 10. 每次改完 JS 必须用 node --check 语法检查再给文件
 11. 手机端排序按钮中性态绝对不能用 ↕ 符号（iOS 会渲染成表情图标），统一用 ↓ + opacity:.4
@@ -328,7 +333,7 @@
 
 ## 必须遵守的规避规则（部署）
 - 当前行为：浏览器普通刷新即可看到更新；PWA 关闭重开即可，无需删除重装
-- 若看不到更新：bump CACHE_NAME 强制清缓存（已到 v28）
+- 若看不到更新：bump CACHE_NAME 强制清缓存（已到 v30）
 
 ## 工作规范
 - 所有改动代码必须先说方案，等确认后再执行
@@ -403,27 +408,47 @@
 - 定制品2：印图马克杯(MUG-D001,含BOM) / 印图杯垫(CTR-D001,含BOM)
 - 加工服务2：热转印服务(SVC-001,2个价格档) / UV直打(SVC-002)
 
+## 供应商管理模块关键设计
+
+### 架构
+- 独立页面 `page-suppliers`（不放在采购Tab内），与客户管理同级
+- 数据存储：`crm_proc_v5` 的 `suppliers` 数组（与采购单共用同一存储 key）
+- Penny 手机底部导航第5项为供应商（替代原财务）
+
+### 供应商列表（cols-suppliers）
+- 6列：供应商名(1fr) / 联系人(80px) / 主营产品(1fr) / 货币(60px) / 付款条件(120px) / 进行中PO(80px)
+- CSS：`.cols-suppliers{display:grid;grid-template-columns:1fr 80px 1fr 60px 120px 80px;}`
+- `renderSuppliersPage()` 渲染列表
+
+### 供应商详情面板（openSupplierDetail）
+- `currentDetailType='supplier'`
+- **2 Tab**：供应商档案 / 采购历史
+  - Tab1：联系信息（电话/微信/邮件）+ 主营产品/货币/付款条件/备注 + 新建采购单按钮
+  - Tab2（复用 dp-tab-followup，textContent改'采购历史'）：该供应商的全部PO列表，每项显示 PO号+阶段+产品明细(品名/数量/单价)+日期/负责人/合计金额
+- 从供应商详情进入 `openProcDetail` 时，用 `_prevDetailContext` 保存来源，X退出后回到供应商采购历史Tab
+
+### 集成点
+- `showPage('suppliers')` → `renderSuppliersPage()`
+- `editCurrent()` 支持 supplier → `openSupplierModal(id)`
+- `createProcFromSupplier(supplierId)` → `openProcModal('')` 并预选供应商
+
 ## 当前进度（最近完成）
 - **角色导航**：NAV_CONFIG 定义各角色底部导航，renderMobileNav() 动态渲染，Alan 有"全部"overlay
 - **产品开发模块**（crm_prod_v5）：完整实现，含项目列表/详情面板/SKU/BOM/3张图片/跟进记录/示例数据
-- **修复**：proddev 页缺少 page-content wrapper → 加回后边距与询盘/订单页一致
-- **修复**：搜索框 class 改为 search-box（CSS 定义的正确类名）
+- **产品库模块**（crm_prodcat_v5）：完整实现，4种类型/SKU/多维标签/BOM/图片
+- **报价单模块**（crm_quote_v5）：新建/编辑/详情/预览/打印/CN+EN双语
+- **采购跟单模块**：采购单CRUD/阶段跟踪/入库确认/从订单下推/关联订单
+- **供应商管理模块**：独立页面 page-suppliers，详情含供应商档案+采购历史2Tab
+- **询盘报价单Tab**：询盘详情新增第3个Tab显示关联报价单列表（含数量角标）
+- **_prevDetailContext**：报价单/采购单详情X退出后回到父面板对应Tab（询盘→报价单Tab；供应商→采购历史Tab）
+- **修复**：Tab display状态持久化 → 各 detail opener 都显式 `style.display=''` 重置所有tab
+- **关联字段模糊搜索**：采购单「关联销售订单」/订单「关联采购单」均支持实时下拉搜索
+- **修复**：手机端采购Tab误显供应商卡片 → `renderMobileCards_proc()` 加 suppliers 分支
+- SW 升至 v30（强制清缓存）
 - 客户管理卡片视图V2重构：5层Tab切换、动态评分(7分)、超时红框(分层阈值)、状态图标简化
 - 动态增长(90天无成交自动关)/动态活跃(超时自动关)机制
-- 客户筛选栏：⭐VIP / 🎯冲单 / 🔴超时 芯片按钮
-- 询盘列表：桌面芯片快捷筛选（VIP/冲单/热点/超时）
-- 询盘 targetStar 字段（Alan专属冲单标记）
-- canInqVip()：Kelly 也可标记询盘VIP
-- 手机端询盘第一行加🎯冲单芯片（末尾，独立切换），第二行加⭐VIP芯片
-- 手机端询盘卡片：🎯排在名字行最后(22px)，超时移至右侧跟单人名左侧同行
-- SW 升至 v28（强制清缓存）
-- **修复**：询盘已成单后"转为客户"按钮失效 → 改用 `i.custConverted=true` 专用字段判断
-- **执行中订单详情面板重构**：2 Tab（订单详情/跟进记录），含跟进记录和待办功能
-- **修复**：标记完成按钮 onclick 加回 closeDetail()，解决 iOS overlay 被面板拦截 touch 事件问题
-- **修复**：saveTodo/saveInqTodo/saveOrdTodo 保存后加 openXxxDetail+switchDpTab('followup')
-- **优化**：已发货阶段显示常驻黄色提示条；标记完成按钮改红色(btn-danger)
-- **优化**：订单详情 Tab1 预计交期加 📦/⚠️ 图标+超时红色；加待办显示行
-- **优化**：手机端订单卡片三行布局
+- 询盘 targetStar 字段（Alan专属冲单标记），canInqVip() 含 Kelly
+- 执行中订单详情面板：2 Tab（订单详情/跟进记录），含跟进记录、待办、已发货提示条
 - `toast(msg, dur)` 新增可选时长参数（默认 2500ms）
 
 ## 询盘图片上传与裁切设计
@@ -439,6 +464,23 @@
 - 缩略图显示：`.inq-list-thumb`（36×36 border-radius:6px）+ `.inq-list-thumb-ph`（占位符📷）
 - 编辑询盘时重置图片预览 + 从 IndexedDB 异步加载当前询盘的图片
 - `_pendingInqImg`：暂存待保存的裁切结果 dataUrl，保存询盘时写入 DB
+
+## 详情面板导航机制（_prevDetailContext）
+- `var _prevDetailContext=null;`：全局变量，记录进入子详情前的父面板状态
+- 场景：从询盘/客户的报价单Tab → 进入报价单详情；从供应商详情 → 进入采购单详情
+- 保存时机：在 `openQuoteDetail` / `openProcDetail` 顶部，若 `currentDetailType` 是父类型则保存 `{type, id, tab}`
+- ⚠️ 刷新时不能覆盖：`openQuoteDetail` 内部刷新（`currentDetailType==='quote'`）时必须用 `else if` 跳过清除，否则 `_prevDetailContext` 丢失
+- `closeDetail()` 优先检查 `_prevDetailContext`：若存在则恢复父面板（`openXxxDetail(ctx.id)` + `switchDpTab(ctx.tab)`）并清空，否则才真正关闭面板
+- Tab display 状态持久化 bug：各 detail opener 设 `display:none` 的 tab，在其他 opener 里必须显式 `style.display=''` 重置，否则跨面板切换后 tab 消失
+
+## 关联字段模糊搜索自动补全
+- CSS：`.autocomplete-dd`（绝对定位下拉，z-index:9999）/ `.autocomplete-item`（可点击项）
+- **采购单 `fproc-linked-order`**：模糊搜索活跃订单（alias/product），选中后存 `_procLinkedOrderId`（数字id）+ `_procLinkedOrderAlias`（客户简称）
+  - `onProcLinkedOrderInput(el)` / `onProcLinkedOrderBlur(el)` / `selectProcLinkedOrder(ordId,alias)`
+  - `openProcModal` 编辑模式下需从 `p.linkedOrderId/p.linkedOrderAlias` 恢复两个变量
+- **订单 `fo-linkedprocid`**：模糊搜索PO（poNumber/supplierName），选中后填入 PO号文本，保存时直接读字段值
+  - `onOrdLinkedProcInput(el)` / `onOrdLinkedProcBlur(el)` / `selectOrdLinkedProc(poNumber)`
+- 使用 `onmousedown + e.preventDefault()` 防止 blur 在点击前触发导致下拉消失
 
 ## 调试经验
 - 遇到"点按钮就退出"类问题，先在浏览器 Console 直接调用函数排查（不要改代码）
