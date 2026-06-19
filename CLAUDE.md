@@ -413,7 +413,7 @@
 ### 架构
 - 独立页面 `page-suppliers`（不放在采购Tab内），与客户管理同级
 - 数据存储：`crm_proc_v5` 的 `suppliers` 数组（与采购单共用同一存储 key）
-- Penny 手机底部导航第5项为供应商（替代原财务）
+- Penny 手机底部导航第3项为库存，第5项为供应商
 
 ### 供应商列表（cols-suppliers）
 - 6列：供应商名(1fr) / 联系人(80px) / 主营产品(1fr) / 货币(60px) / 付款条件(120px) / 进行中PO(80px)
@@ -432,7 +432,57 @@
 - `editCurrent()` 支持 supplier → `openSupplierModal(id)`
 - `createProcFromSupplier(supplierId)` → `openProcModal('')` 并预选供应商
 
+## 库存管理模块关键设计（crm_inv_v5）
+
+### 核心原则
+- 所有库存变动 = 显式流水记录，不自动触发，不可删除
+- 只有 Alan 和 Penny 可确认库存变动（`canInvControl()`）
+- 当前库存 = 该 SKU 所有流水 qty 之和（正=入库，负=出库）
+- 数据只来自 prodcat 中 `hasStock=true` 的 SKU（原材料+空白产品）
+
+### 存储与数据结构
+- `SK.inv='crm_inv_v5'`，`getInvData()` / `saveInvData(d)`
+- 流水记录字段：`id / date / skuCode / nameCN / unit / movementType / qty / sourceType / sourceId / person / note`
+- movementType：采购入库 / 销售出库 / 手工入库 / 样品出库 / 生产领料出库 / 损坏报废 / 盘点调整
+
+### 页面（page-inventory）
+- 台账视图：8列（SKU编码/品名/规格/单位/现有库存/安全库存/状态/最近变动）
+- `.cols-inv{grid-template-columns:100px 1fr 120px 60px 80px 80px 70px 120px;}`
+- 状态：充足(绿) / 预警(qty≤safetyStock,黄) / 缺货(qty≤0,红)
+- 筛选：搜索框 + 状态下拉 + 手机端芯片（全部/缺货/预警/充足）
+
+### 详情面板（openInvDetail）
+- `currentDetailType='inv'`，`currentDetailId=skuCode`
+- Tab1 库存详情：库存数量/安全库存/状态 + 快速手工录入按钮（Penny/Alan）
+- Tab2 流水记录：所有该SKU流水，按日期降序
+
+### 4个Modal
+- `inv-adj-modal`：手工录入（手工入库/样品出库/生产领料出库/损坏报废），SKU模糊搜索
+- `inv-inbound-modal`：采购入库单确认，从 PO「已到货」进入，填实际到货数量，打印/确认后 PO 变「已入库」
+- `inv-outbound-modal`：销售出库单确认，从订单「待发货/已发货」进入，打印/确认后扣减库存
+- `stocktake-modal`：盘库对账，展示系统库存 vs 实盘，差异生成「盘点调整」流水
+
+### 打印单据（printInvDoc）
+- `printInvDoc('inbound')`：打开新窗口打印入库单（PO号/供应商/明细/签收栏）
+- `printInvDoc('outbound')`：打开新窗口打印出库单（客户/明细/发货人签字栏）
+
+### 集成点
+- PO 详情「已到货」状态：只有 Penny/Alan 看到「生成入库单」按钮，其他人看到提示
+- 订单详情「待发货/已发货」状态：只有 Penny/Alan 看到「生成出库单」按钮
+- `showPage('inventory')` → `renderInventoryPage()` + `renderMobileCards('inv')`
+- `clearFilters('inv')`：清除库存筛选
+- Penny 手机底部导航第3项：库存（替代产品）
+
+### 关键函数
+- `canInvControl()`：返回 Penny 或 Alan
+- `getCurrentStock(skuCode)`：计算当前库存
+- `getStockedSkus()`：从 prodcat 获取 hasStock=true 的 SKU 列表
+- `getPcatForInv()`：读取 prodcat localStorage 数据
+- `invChipFilter(el,status)`：手机端芯片筛选
+- `updateStDiff(el,sysQty)`：盘库对账实时显示差异
+
 ## 当前进度（最近完成）
+- **库存管理模块**（crm_inv_v5）：完整实现，含台账/流水/入库单/出库单/盘库对账/打印
 - **角色导航**：NAV_CONFIG 定义各角色底部导航，renderMobileNav() 动态渲染，Alan 有"全部"overlay
 - **产品开发模块**（crm_prod_v5）：完整实现，含项目列表/详情面板/SKU/BOM/3张图片/跟进记录/示例数据
 - **产品库模块**（crm_prodcat_v5）：完整实现，4种类型/SKU/多维标签/BOM/图片
@@ -440,15 +490,10 @@
 - **采购跟单模块**：采购单CRUD/阶段跟踪/入库确认/从订单下推/关联订单
 - **供应商管理模块**：独立页面 page-suppliers，详情含供应商档案+采购历史2Tab
 - **询盘报价单Tab**：询盘详情新增第3个Tab显示关联报价单列表（含数量角标）
-- **_prevDetailContext**：报价单/采购单详情X退出后回到父面板对应Tab（询盘→报价单Tab；供应商→采购历史Tab）
-- **修复**：Tab display状态持久化 → 各 detail opener 都显式 `style.display=''` 重置所有tab
+- **_prevDetailContext**：报价单/采购单详情X退出后回到父面板对应Tab
 - **关联字段模糊搜索**：采购单「关联销售订单」/订单「关联采购单」均支持实时下拉搜索
-- **修复**：手机端采购Tab误显供应商卡片 → `renderMobileCards_proc()` 加 suppliers 分支
 - SW 升至 v30（强制清缓存）
-- 客户管理卡片视图V2重构：5层Tab切换、动态评分(7分)、超时红框(分层阈值)、状态图标简化
-- 动态增长(90天无成交自动关)/动态活跃(超时自动关)机制
 - 询盘 targetStar 字段（Alan专属冲单标记），canInqVip() 含 Kelly
-- 执行中订单详情面板：2 Tab（订单详情/跟进记录），含跟进记录、待办、已发货提示条
 - `toast(msg, dur)` 新增可选时长参数（默认 2500ms）
 
 ## 询盘图片上传与裁切设计
@@ -498,7 +543,7 @@
 2. **【已完成】报价单模块**（quote）：新建/编辑/详情/预览/打印/询盘客户Tab集成
 3. **【已完成】采购跟单模块**（procurement）：供应商管理/采购单/阶段跟踪/入库确认
 4. **【待资料】打印模板**：订单 + 采购单各需支持3个公司抬头，等待公司资料（名称/地址/税号/Logo等）
-5. **【之后】库存管理模块**（inventory）：库存台账/收发明细/盘库对账
+5. **【已完成】库存管理模块**（inventory）：台账/流水/入库单/出库单/盘库对账/打印
 6. **【之后】财务模块**（finance）：账户流水/应收应付/P&L报表
 7. 数据看板优化（待讨论）
 8. **【待设计】邮件集成**：CRM内直接发邮件给客户，发送记录自动同步跟进记录
