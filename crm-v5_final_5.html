@@ -321,6 +321,10 @@ a{color:var(--accent);text-decoration:none;}
 .prod-img-slot img{width:100%;height:100%;object-fit:cover;}
 .prod-img-del{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;color:#fff;line-height:1;}
 @media print {.app,header,nav,.detail-panel,#quote-preview-overlay>div>div:first-child{display:none !important;}#quote-preview-overlay{position:static !important;background:white !important;}#quote-preview-content{box-shadow:none !important;}}
+.autocomplete-dd{position:absolute;z-index:9999;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);max-height:200px;overflow-y:auto;width:100%;top:calc(100% + 2px);left:0;}
+.autocomplete-item{padding:8px 12px;font-size:13px;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);}
+.autocomplete-item:last-child{border-bottom:none;}
+.autocomplete-item:hover{background:var(--surface2);}
 </style>
 </head>
 <body>
@@ -1299,7 +1303,7 @@ a{color:var(--accent);text-decoration:none;}
           <option value="Penny">Penny</option>
         </select>
       </div>
-      <div class="form-group"><label class="form-label">关联销售订单（可选）</label><input class="form-input" type="text" id="fproc-linked-order" placeholder="如：ORD-2026-001" readonly style="background:var(--surface2);color:var(--muted)"></div>
+      <div class="form-group"><label class="form-label">关联销售订单（可选）</label><div style="position:relative"><input class="form-input" type="text" id="fproc-linked-order" placeholder="输入客户简称或产品名模糊搜索..." oninput="onProcLinkedOrderInput(this)" onblur="onProcLinkedOrderBlur(this)"><div id="proc-order-dd" class="autocomplete-dd" style="display:none"></div></div></div>
       <div class="form-group"><label class="form-label">预计交期</label><input class="form-input" type="date" id="fproc-expected-date"></div>
       <div class="form-group"><label class="form-label">付款状态</label>
         <select class="form-input" id="fproc-payment-status">
@@ -1556,7 +1560,7 @@ a{color:var(--accent);text-decoration:none;}
       </div>
       <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
         <div style="font-size:12px;color:var(--muted);white-space:nowrap">关联采购单</div>
-        <input class="form-input" type="text" id="fo-linkedprocid" placeholder="采购单号（可选，如 PO-2026-001）" style="flex:1">
+        <div style="position:relative;flex:1"><input class="form-input" type="text" id="fo-linkedprocid" placeholder="输入供应商名称或PO号模糊搜索..." style="width:100%;box-sizing:border-box" oninput="onOrdLinkedProcInput(this)" onblur="onOrdLinkedProcBlur(this)"><div id="ord-proc-dd" class="autocomplete-dd" style="display:none"></div></div>
       </div>
     </div>
     <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
@@ -8675,6 +8679,8 @@ function openProcModal(id,linkedOrderId,linkedOrderAlias){
     set('fproc-po-number',p.poNumber);
     set('fproc-supplier-id',p.supplierId);
     set('fproc-person',p.person);
+    _procLinkedOrderId=p.linkedOrderId||'';
+    _procLinkedOrderAlias=p.linkedOrderAlias||'';
     set('fproc-linked-order',p.linkedOrderAlias||p.linkedOrderId||'');
     set('fproc-expected-date',p.expectedDate||'');
     set('fproc-payment-status',p.paymentStatus||'未付款');
@@ -8698,6 +8704,73 @@ function openProcModal(id,linkedOrderId,linkedOrderAlias){
   openModal('proc-modal');
 }
 function onProcSupplierChange(){}
+function onProcLinkedOrderInput(el){
+  var q=(el.value||'').toLowerCase().trim();
+  var dd=document.getElementById('proc-order-dd');
+  if(!dd)return;
+  dd.innerHTML='';
+  if(!q){dd.style.display='none';_procLinkedOrderId='';_procLinkedOrderAlias='';return;}
+  var activeOrds=orders.filter(function(o){
+    return !o.completed&&((o.alias||'').toLowerCase().indexOf(q)>=0||(o.product||'').toLowerCase().indexOf(q)>=0);
+  }).slice(0,6);
+  if(!activeOrds.length){dd.style.display='none';return;}
+  activeOrds.forEach(function(o){
+    var lbl=(o.alias||'—')+' · '+(o.product||'')+' · '+(o.stage||'')+' ('+o.date+')';
+    var div=document.createElement('div');
+    div.className='autocomplete-item';
+    div.textContent=lbl;
+    (function(ord){div.onmousedown=function(e){e.preventDefault();selectProcLinkedOrder(ord.id,ord.alias||'');};})(o);
+    dd.appendChild(div);
+  });
+  dd.style.display='block';
+}
+function onProcLinkedOrderBlur(el){
+  var dd=document.getElementById('proc-order-dd');
+  setTimeout(function(){if(dd)dd.style.display='none';},200);
+  var val=el.value.trim();
+  if(!val){_procLinkedOrderId='';_procLinkedOrderAlias='';}
+  else if(!_procLinkedOrderAlias){_procLinkedOrderAlias=val;_procLinkedOrderId='';}
+}
+function selectProcLinkedOrder(ordId,alias){
+  var el=document.getElementById('fproc-linked-order');
+  if(el)el.value=alias||String(ordId);
+  _procLinkedOrderId=ordId;
+  _procLinkedOrderAlias=alias;
+  var dd=document.getElementById('proc-order-dd');
+  if(dd)dd.style.display='none';
+}
+function onOrdLinkedProcInput(el){
+  var q=(el.value||'').toLowerCase().trim();
+  var dd=document.getElementById('ord-proc-dd');
+  if(!dd)return;
+  dd.innerHTML='';
+  if(!q){dd.style.display='none';return;}
+  var d=getProcData();
+  var matches=d.pos.filter(function(p){
+    return (p.poNumber||'').toLowerCase().indexOf(q)>=0||(p.supplierName||'').toLowerCase().indexOf(q)>=0;
+  }).slice(0,6);
+  if(!matches.length){dd.style.display='none';return;}
+  matches.forEach(function(p){
+    var items=p.items&&p.items.length?(p.items[0].nameCN||'')+(p.items.length>1?' 等'+p.items.length+'项':''):'—';
+    var lbl=p.poNumber+' · '+p.supplierName+' · '+items+' ('+p.createDate+')';
+    var div=document.createElement('div');
+    div.className='autocomplete-item';
+    div.textContent=lbl;
+    (function(pNum){div.onmousedown=function(e){e.preventDefault();selectOrdLinkedProc(pNum);};})(p.poNumber);
+    dd.appendChild(div);
+  });
+  dd.style.display='block';
+}
+function onOrdLinkedProcBlur(el){
+  var dd=document.getElementById('ord-proc-dd');
+  setTimeout(function(){if(dd)dd.style.display='none';},200);
+}
+function selectOrdLinkedProc(poNumber){
+  var el=document.getElementById('fo-linkedprocid');
+  if(el)el.value=poNumber;
+  var dd=document.getElementById('ord-proc-dd');
+  if(dd)dd.style.display='none';
+}
 function renderProcItems(items){
   var area=document.getElementById('fproc-items-area');
   if(!area)return;
