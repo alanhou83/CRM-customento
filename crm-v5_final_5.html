@@ -10885,7 +10885,7 @@ function openInvDocModal(direction,sourceType,sourceId){
   var voidArea=document.getElementById('inv-doc-void-area');
   if(voidArea)voidArea.innerHTML='';
   var phEl=document.getElementById('fdoc-planqty-header');
-  if(phEl)phEl.textContent=sourceType==='po'?'剩余可入':'参考数量';
+  if(phEl)phEl.textContent=sourceType==='po'?'剩余可入':sourceType==='order'?'计划数量':'参考数量';
   renderInvDocLines();
   openModal('inv-doc-modal');
 }
@@ -10931,7 +10931,7 @@ function editInvDoc(docId){
   }else{if(partyRow)partyRow.style.display='none';}
   var voidArea=document.getElementById('inv-doc-void-area');if(voidArea)voidArea.innerHTML='';
   var phEl2=document.getElementById('fdoc-planqty-header');
-  if(phEl2)phEl2.textContent=doc.sourceType==='po'?'剩余可入':'参考数量';
+  if(phEl2)phEl2.textContent=doc.sourceType==='po'?'剩余可入':doc.sourceType==='order'?'计划数量':'参考数量';
   renderInvDocLines();
   openModal('inv-doc-modal');
 }
@@ -10939,12 +10939,12 @@ function editInvDoc(docId){
 function _onInvDocQtyChange(el,idx){
   var val=parseFloat(el.value)||0;
   if(_invDocLines[idx])_invDocLines[idx].actualQty=val;
-  if(_invDocSourceType==='po'){
+  if(_invDocSourceType==='po'||_invDocSourceType==='order'){
     var maxQ=(_invDocLines[idx]&&_invDocLines[idx].planQty)||0;
     if(val>maxQ&&maxQ>0){
       el.style.border='2px solid var(--red)';
       el.style.color='var(--red)';
-      el.title='超过剩余待入数量（'+maxQ+'），请修正';
+      el.title='超过计划数量（'+maxQ+'），请修正';
     }else{
       el.style.border='1px solid var(--border)';
       el.style.color='var(--text)';
@@ -10956,15 +10956,15 @@ function _onInvDocQtyChange(el,idx){
 function renderInvDocLines(){
   var tbody=document.getElementById('inv-doc-lines-body');
   if(!tbody)return;
-  var isPo=_invDocSourceType==='po';
+  var isLimited=_invDocSourceType==='po'||_invDocSourceType==='order';
   var html='';
   _invDocLines.forEach(function(line,idx){
     var stockColor=line.currentStock<=0?'var(--red)':line.currentStock<(line.actualQty||0)?'var(--yellow)':'var(--muted)';
-    var planQtyStr=isPo?('<span style="color:var(--accent);font-weight:600">'+(line.planQty||0)+'</span>'):('<span style="color:var(--muted)">'+(line.planQty||0)+'</span>');
-    var over=isPo&&(line.actualQty||0)>(line.planQty||0)&&(line.planQty||0)>0;
+    var planQtyStr=isLimited?('<span style="color:var(--accent);font-weight:600">'+(line.planQty||0)+'</span>'):('<span style="color:var(--muted)">'+(line.planQty||0)+'</span>');
+    var over=isLimited&&(line.actualQty||0)>(line.planQty||0)&&(line.planQty||0)>0;
     var qtyBorder=over?'2px solid var(--red)':'1px solid var(--border)';
     var qtyColor=over?'var(--red)':'var(--text)';
-    var maxAttr=isPo?' max="'+(line.planQty||999999)+'"':'';
+    var maxAttr=isLimited?' max="'+(line.planQty||999999)+'"':'';
     html+='<tr style="border-bottom:1px solid var(--border)">';
     html+='<td style="padding:4px"><div style="position:relative">';
     html+='<input type="text" value="'+line.skuCode+'" placeholder="SKU编码" oninput="onInvDocSkuInput(this,'+idx+')" onblur="onInvDocSkuBlur(this,'+idx+')" style="width:100%;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:12px;font-family:monospace;box-sizing:border-box">';
@@ -11040,14 +11040,14 @@ function saveInvDoc(action){
   var docNo=noEl?noEl.textContent:'';
   if(!docType){toast('请选择类型');return;}
   if(!_invDocLines.length){toast('请至少添加一行明细');return;}
-  if(action==='confirm'&&_invDocSourceType==='po'){
+  if(action==='confirm'&&(_invDocSourceType==='po'||_invDocSourceType==='order')){
     var qtyErrors=[];
     _invDocLines.forEach(function(l){
       if((l.actualQty||0)>(l.planQty||0)&&(l.planQty||0)>0){
-        qtyErrors.push((l.nameCN||l.skuCode)+': 本次 '+(l.actualQty||0)+' 超过剩余待入 '+(l.planQty||0));
+        qtyErrors.push((l.nameCN||l.skuCode)+': 本次 '+(l.actualQty||0)+' 超过计划数量 '+(l.planQty||0));
       }
     });
-    if(qtyErrors.length){toast('超过剩余数量，无法确认：'+qtyErrors.join('；'),5000);return;}
+    if(qtyErrors.length){toast('超过计划数量，无法确认：'+qtyErrors.join('；'),5000);return;}
   }
   if(action==='confirm'){var hasAny=false;_invDocLines.forEach(function(l){if((l.actualQty||0)>0)hasAny=true;});if(!hasAny){toast('实际数量不能全为0');return;}}
   var d=getInvData();
