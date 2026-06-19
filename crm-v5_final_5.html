@@ -10063,7 +10063,7 @@ function openInvDetail(skuCode){
   var tabSales=document.getElementById('dp-tab-sales');
   var tabQuote=document.getElementById('dp-tab-quote');
   if(tabProfile){tabProfile.textContent='库存详情';tabProfile.style.display='';}
-  if(tabFollowup){tabFollowup.textContent='流水记录';tabFollowup.style.display='';}
+  if(tabFollowup)tabFollowup.style.display='none';
   if(tabSales)tabSales.style.display='none';
   if(tabQuote)tabQuote.style.display='none';
   var headTitle=document.getElementById('detail-head-title');
@@ -10102,10 +10102,16 @@ function openInvDetail(skuCode){
         +'</div>';
     });
   }
-  var tab1='<div style="padding:20px">'+statusHtml+'</div>';
-  var tab2='<div style="padding:20px">'+(canInvControl()?'<div style="margin-bottom:12px"><button class="btn btn-primary btn-sm" onclick="openInvAdjModal(\'\',\''+skuCode+'\')">+ 手工录入</button></div>':'')+'<div>'+mvHtml+'</div></div>';
+  var mvSection='<div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px">'
+    +'<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">'
+    +'<span>收发明细</span>'
+    +(canInvControl()?'<button class="btn btn-outline btn-sm" onclick="openInvAdjModal(\'\',\''+skuCode+'\')">+ 手工录入</button>':'')
+    +'</div>'
+    +'<div>'+mvHtml+'</div>'
+    +'</div>';
+  var tab1='<div style="padding:20px">'+statusHtml+mvSection+'</div>';
   var db=document.getElementById('detail-body');
-  if(db)db.innerHTML='<div class="dp-tab-content active" id="dp-content-profile">'+tab1+'</div>'+'<div class="dp-tab-content" id="dp-content-followup">'+tab2+'</div>';
+  if(db)db.innerHTML='<div class="dp-tab-content active" id="dp-content-profile">'+tab1+'</div>'+'<div class="dp-tab-content" id="dp-content-followup"></div>';
   panel.classList.add('open');
   switchDpTab('profile');
 }
