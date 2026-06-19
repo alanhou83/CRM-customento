@@ -94,6 +94,7 @@ a{color:var(--accent);text-decoration:none;}
 .cols-stat{grid-template-columns:110px 1fr 70px 120px 100px 70px 70px;}
 .cols-prodcat{display:grid;grid-template-columns:52px 90px 1fr 80px 120px 70px 100px 70px;gap:0;align-items:center;}
 .cols-proc{display:grid;grid-template-columns:100px 120px 90px 1fr 90px 90px 90px 80px 60px;gap:0;align-items:center;}
+.cols-suppliers{display:grid;grid-template-columns:1fr 80px 1fr 60px 120px 80px;gap:0;align-items:center;}
 .filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
 .filter-select,.search-box{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:8px;font-family:var(--font-body);font-size:13px;outline:none;}
 .filter-select:focus,.search-box:focus{border-color:var(--accent);}
@@ -511,10 +512,14 @@ a{color:var(--accent);text-decoration:none;}
     <div class="mobile-chips" style="padding-bottom:6px">
       <div class="mobile-chip on" id="mproc-chip-active" onclick="procMobileTab('active',this)">进行中</div>
       <div class="mobile-chip" id="mproc-chip-done" onclick="procMobileTab('done',this)">已入库</div>
-      <div class="mobile-chip" id="mproc-chip-suppliers" onclick="procMobileTab('suppliers',this)">供应商</div>
     </div>
     <div style="display:flex;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
       <input type="text" class="search-box" id="search-proc-m" placeholder="搜索..." oninput="renderMobileCards('proc')" style="flex:1">
+    </div>
+  </div>
+  <div id="mh-suppliers" style="display:none;margin-bottom:-6px">
+    <div style="display:flex;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
+      <input type="text" class="search-box" id="search-suppliers-m" placeholder="搜索供应商..." oninput="renderMobileCards('suppliers')" style="flex:1">
     </div>
   </div>
 </div>
@@ -537,6 +542,7 @@ a{color:var(--accent);text-decoration:none;}
     <div class="nav-item" id="nav-proddev" onclick="showPage('proddev')"><span class="nav-icon">🔧</span>产品开发</div>
     <div class="nav-item" id="nav-prodcat" onclick="showPage('prodcat')"><span class="nav-icon">🗂️</span>产品库</div>
     <div class="nav-item" id="nav-procurement" onclick="showPage('procurement')"><span class="nav-icon">🛒</span>采购跟单</div>
+    <div class="nav-item" id="nav-suppliers" onclick="showPage('suppliers')"><span class="nav-icon">🏭</span>供应商管理</div>
     <div class="nav-item" id="nav-finance" onclick="showPage('finance')"><span class="nav-icon">💰</span>财务</div>
   </div>
   <!-- 销售快捷筛选（Penny隐藏） -->
@@ -1076,7 +1082,6 @@ a{color:var(--accent);text-decoration:none;}
       <div class="tab-bar" style="flex:1;min-width:0">
         <button class="tab-btn active" id="proc-tab-active" onclick="switchProcTab('active')">进行中<span class="tab-count" id="proc-cnt-active"></span></button>
         <button class="tab-btn" id="proc-tab-done" onclick="switchProcTab('done')">已入库<span class="tab-count" id="proc-cnt-done"></span></button>
-        <button class="tab-btn" id="proc-tab-suppliers" onclick="switchProcTab('suppliers')">供应商<span class="tab-count" id="proc-cnt-suppliers"></span></button>
       </div>
       <button class="btn btn-primary" id="proc-add-btn" onclick="openProcModal('')" style="white-space:nowrap">+ 新建采购单</button>
     </div>
@@ -1103,10 +1108,6 @@ a{color:var(--accent);text-decoration:none;}
       <select class="filter-select" id="fp-proc-person" onchange="renderProcurement()"><option value="">全部负责人</option></select>
       <button class="btn btn-outline" onclick="clearFilters('proc')">清除</button>
     </div>
-    <div class="filters" id="proc-supplier-filters" style="display:none">
-      <input type="text" class="search-box" id="search-proc-supplier" placeholder="搜索供应商名称/产品..." oninput="renderProcSuppliers()" style="min-width:200px">
-      <button class="btn btn-primary" onclick="openSupplierModal('')">+ 新增供应商</button>
-    </div>
     <div class="table-wrap" id="proc-table-wrap">
       <div class="table-scroll">
         <div class="table-inner" style="min-width:800px">
@@ -1129,6 +1130,31 @@ a{color:var(--accent);text-decoration:none;}
       <div id="proc-supplier-body"></div>
     </div>
     <div id="mobile-proc-cards" class="mobile-cards"></div>
+    <div id="mobile-suppliers-cards" class="mobile-cards" style="display:none"></div>
+  </div>
+</div>
+
+<!-- 供应商管理 页面 -->
+<div class="page" id="page-suppliers">
+  <div class="page-head">
+    <h1 class="page-title">🏭 供应商管理</h1>
+    <button class="btn btn-primary" onclick="openSupplierModal('')">+ 新增供应商</button>
+  </div>
+  <div class="page-content">
+    <div class="filters">
+      <input class="search-box" id="search-suppliers" placeholder="搜索供应商/产品..." oninput="renderSuppliersPage()">
+      <button class="btn btn-outline btn-sm" onclick="clearFilters('suppliers')">清除</button>
+    </div>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <div class="table-inner">
+          <div class="table-header cols-suppliers">
+            <div>供应商</div><div>联系人</div><div>主营产品</div><div>货币</div><div>付款条件</div><div>进行中PO</div>
+          </div>
+          <div id="suppliers-list-body"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1171,6 +1197,7 @@ a{color:var(--accent);text-decoration:none;}
       <div onclick="closeAllModules();mobileNav('proddev')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">🔧</span><span style="font-size:12px;color:var(--text)">产品开发</span></div>
       <div onclick="closeAllModules();mobileNav('prodcat')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">📦</span><span style="font-size:12px;color:var(--text)">产品库</span></div>
       <div onclick="closeAllModules();mobileNav('procurement')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">🛒</span><span style="font-size:12px;color:var(--text)">采购跟单</span></div>
+      <div onclick="closeAllModules();mobileNav('suppliers')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">🏭</span><span style="font-size:12px;color:var(--text)">供应商</span></div>
       <div onclick="closeAllModules();mobileNav('finance')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">💰</span><span style="font-size:12px;color:var(--text)">财务</span></div>
       <div onclick="closeAllModules();showPage('quote')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">📋</span><span style="font-size:12px;color:var(--text)">报价单</span></div>
       <div onclick="closeAllModules();showPage('settings')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">⚙️</span><span style="font-size:12px;color:var(--text)">设置</span></div>
@@ -2047,7 +2074,7 @@ var NAV_CONFIG={
   'Kelly':[{p:'dashboard',icon:'📊',label:'看板'},{p:'inquiries',icon:'📋',label:'询盘'},{p:'customers',icon:'👥',label:'客户'},{p:'orders',icon:'📦',label:'订单'},{p:'quote',icon:'📋',label:'报价'}],
   'Momi': [{p:'dashboard',icon:'📊',label:'看板'},{p:'inquiries',icon:'📋',label:'询盘'},{p:'customers',icon:'👥',label:'客户'},{p:'orders',icon:'📦',label:'订单'},{p:'quote',icon:'📋',label:'报价'}],
   'Mille':[{p:'dashboard',icon:'📊',label:'看板'},{p:'inquiries',icon:'📋',label:'询盘'},{p:'customers',icon:'👥',label:'客户'},{p:'orders',icon:'📦',label:'订单'},{p:'quote',icon:'📋',label:'报价'}],
-  'Penny':[{p:'dashboard',icon:'📊',label:'看板'},{p:'orders',icon:'📦',label:'订单'},{p:'proddev',icon:'🔧',label:'产品'},{p:'procurement',icon:'🛒',label:'采购'},{p:'finance',icon:'💰',label:'财务'}]
+  'Penny':[{p:'dashboard',icon:'📊',label:'看板'},{p:'orders',icon:'📦',label:'订单'},{p:'proddev',icon:'🔧',label:'产品'},{p:'procurement',icon:'🛒',label:'采购'},{p:'suppliers',icon:'🏭',label:'供应商'}]
 };
 
 function renderMobileNav(){
@@ -2082,7 +2109,7 @@ function switchUser(u){
 function showPage(p){
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
   var pg=document.getElementById('page-'+p);if(pg)pg.classList.add('active');
-  ['dashboard','hot','inquiries','customers','oldstats','orders','settings','proddev','prodcat','procurement','finance'].forEach(id=>{const el=document.getElementById('nav-'+id);if(el)el.classList.toggle('active',id===p);});
+  ['dashboard','hot','inquiries','customers','oldstats','orders','settings','proddev','prodcat','procurement','finance','suppliers'].forEach(id=>{const el=document.getElementById('nav-'+id);if(el)el.classList.toggle('active',id===p);});
   closeDetail();
   if(window.innerWidth<=768)setMobileHeader(p);
   if(p==='dashboard')renderDashboard();
@@ -2095,6 +2122,7 @@ function showPage(p){
   else if(p==='prodcat'){setPcatView(pcatView);}
   else if(p==='procurement'){switchProcTab(procCurrentTab);}
   else if(p==='quote'){renderQuotePage();renderMobileCards('quote');}
+  else if(p==='suppliers'){renderSuppliersPage();renderMobileCards('suppliers');setMobileHeader('suppliers');}
   else if(p==='settings'){renderSettingsPage();}
 }
 
@@ -2119,6 +2147,7 @@ function clearFilters(type){
   else if(type==='prodcat'){['search-prodcat','fp-pcat-category','fp-pcat-material','fp-pcat-process','fp-pcat-status'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});renderProdCat();}
   else if(type==='proc'){var el;el=document.getElementById('search-proc');if(el)el.value='';el=document.getElementById('fp-proc-supplier');if(el)el.value='';el=document.getElementById('fp-proc-stage');if(el)el.value='';el=document.getElementById('fp-proc-payment');if(el)el.value='';el=document.getElementById('fp-proc-person');if(el)el.value='';renderProcurement();}
   else if(type==='quote'){var sqe=document.getElementById('search-quote');if(sqe)sqe.value='';var fqs=document.getElementById('fq-status');if(fqs)fqs.value='';var fqp=document.getElementById('fq-person');if(fqp)fqp.value='';renderQuotePage();}
+  else if(type==='suppliers'){var sse=document.getElementById('search-suppliers');if(sse)sse.value='';renderSuppliersPage();}
 }
 
 function renderDashboard(){
@@ -4493,6 +4522,7 @@ function closeDetail(){
     var ctx=_prevDetailContext;_prevDetailContext=null;
     if(ctx.type==='inquiry')openInqDetail(ctx.id);
     else if(ctx.type==='customer')openCustDetail(ctx.id);
+    else if(ctx.type==='supplier')openSupplierDetail(ctx.id);
     if(ctx.tab)switchDpTab(ctx.tab);
     return;
   }
@@ -4554,7 +4584,7 @@ function newInqFromCust(custId){
   openModal('inq-modal');
 }
 
-function editCurrent(){if(!currentDetailId)return;const _id=currentDetailId,_type=currentDetailType;closeDetail();if(_type==='inquiry')editInquiry(_id);else if(_type==='customer')editCustomer(_id);else if(_type==='order')editOrder(_id);else if(_type==='sale')editSaleRecord(_id);else if(_type==='prod')openProdModal(_id);else if(_type==='prodcat')openProdCatModal(_id);else if(_type==='proc')openProcModal(_id);else if(_type==='quote'){var qid=_id;openQuoteModal(qid);}}
+function editCurrent(){if(!currentDetailId)return;const _id=currentDetailId,_type=currentDetailType;closeDetail();if(_type==='inquiry')editInquiry(_id);else if(_type==='customer')editCustomer(_id);else if(_type==='order')editOrder(_id);else if(_type==='sale')editSaleRecord(_id);else if(_type==='prod')openProdModal(_id);else if(_type==='prodcat')openProdCatModal(_id);else if(_type==='proc')openProcModal(_id);else if(_type==='supplier')openSupplierModal(_id);else if(_type==='quote'){var qid=_id;openQuoteModal(qid);}}
 
 function toggleStar(){
   if(!currentDetailId)return;
@@ -5344,15 +5374,15 @@ let mobileCustShown={core:10,focus:10,nurture:10,sleeping:10,dead:10};
 const MOBILE_BATCH=10;
 
 function setMobileHeader(type){
-  ['mh-inq','mh-hot','mh-cust','mh-ord','mh-stats','mh-prod','mh-prodcat','mh-procurement','mh-quote'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
-  const titles={dashboard:'数据看板',inquiries:'询盘列表',hot:'🔥 热点商机',customers:'客户管理',oldstats:'📈 销售统计',orders:'📦 执行中订单',settings:'⚙️ 管理员设置',proddev:'🔧 产品开发',prodcat:'🗂️ 产品库',procurement:'🛒 采购跟单',finance:'💰 财务',quote:'📋 报价单'};
+  ['mh-inq','mh-hot','mh-cust','mh-ord','mh-stats','mh-prod','mh-prodcat','mh-procurement','mh-quote','mh-suppliers'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  const titles={dashboard:'数据看板',inquiries:'询盘列表',hot:'🔥 热点商机',customers:'客户管理',oldstats:'📈 销售统计',orders:'📦 执行中订单',settings:'⚙️ 管理员设置',proddev:'🔧 产品开发',prodcat:'🗂️ 产品库',procurement:'🛒 采购跟单',finance:'💰 财务',quote:'📋 报价单',suppliers:'🏭 供应商管理'};
   document.getElementById('mobile-page-title').textContent=titles[type]||type;
-  const map={inquiries:'mh-inq',hot:'mh-hot',customers:'mh-cust',orders:'mh-ord',oldstats:'mh-stats',proddev:'mh-prod',prodcat:'mh-prodcat',procurement:'mh-procurement',quote:'mh-quote'};
+  const map={inquiries:'mh-inq',hot:'mh-hot',customers:'mh-cust',orders:'mh-ord',oldstats:'mh-stats',proddev:'mh-prod',prodcat:'mh-prodcat',procurement:'mh-procurement',quote:'mh-quote',suppliers:'mh-suppliers'};
   if(map[type]){const el=document.getElementById(map[type]);if(el)el.style.display='';}
   var addBtn=document.getElementById('mobile-add-btn');
   var backBtn=document.getElementById('mobile-back-btn');
   var settingsBtn=document.getElementById('mobile-settings-btn');
-  var noAddBtn=['settings','prodcat','procurement','finance'];
+  var noAddBtn=['settings','prodcat','procurement','finance','suppliers'];
   if(type==='settings'){
     if(addBtn)addBtn.style.display='none';
     if(settingsBtn)settingsBtn.style.display='none';
@@ -5693,6 +5723,8 @@ function renderMobileCards(page){
     renderMobileCards_prodcat();
   } else if(page==='proc'){
     renderMobileCards_proc();
+  } else if(page==='suppliers'){
+    renderMobileCards_suppliers();
   } else if(page==='quote'){
     renderMobileCards_quote();
   }
@@ -5909,7 +5941,7 @@ function refreshAll(){
   updateInqTabCounts();
   const active=document.querySelector('.page.active');if(!active)return;
   const id=active.id.replace('page-','');
-  if(id==='dashboard')renderDashboard();else if(id==='hot')renderHot();else if(id==='inquiries')renderInquiries();else if(id==='customers')renderCustomers();else if(id==='oldstats')renderOldStats();else if(id==='orders')renderOrders();else if(id==='proddev'){if(prodView==='card')renderProdCardView();else renderProdDev();}else if(id==='prodcat'){if(pcatView==='card')renderPcatCardView();else renderProdCat();}else if(id==='procurement')switchProcTab(procCurrentTab);else if(id==='quote')renderQuotePage();
+  if(id==='dashboard')renderDashboard();else if(id==='hot')renderHot();else if(id==='inquiries')renderInquiries();else if(id==='customers')renderCustomers();else if(id==='oldstats')renderOldStats();else if(id==='orders')renderOrders();else if(id==='proddev'){if(prodView==='card')renderProdCardView();else renderProdDev();}else if(id==='prodcat'){if(pcatView==='card')renderPcatCardView();else renderProdCat();}else if(id==='procurement')switchProcTab(procCurrentTab);else if(id==='quote')renderQuotePage();else if(id==='suppliers')renderSuppliersPage();
 }
 
 /* ===== IndexedDB 图片存储 ===== */
@@ -8195,39 +8227,26 @@ function genPoNumber(){
 var procCurrentTab='active';
 function switchProcTab(tab){
   procCurrentTab=tab;
-  ['active','done','suppliers'].forEach(function(t){var btn=document.getElementById('proc-tab-'+t);if(btn)btn.classList.toggle('active',t===tab);});
+  ['active','done'].forEach(function(t){var btn=document.getElementById('proc-tab-'+t);if(btn)btn.classList.toggle('active',t===tab);});
   var poFilters=document.getElementById('proc-po-filters');
-  var supFilters=document.getElementById('proc-supplier-filters');
   var tableWrap=document.getElementById('proc-table-wrap');
   var supWrap=document.getElementById('proc-supplier-wrap');
   var addBtn=document.getElementById('proc-add-btn');
-  if(tab==='suppliers'){
-    if(poFilters)poFilters.style.display='none';
-    if(supFilters)supFilters.style.display='';
-    if(tableWrap)tableWrap.style.display='none';
-    if(supWrap)supWrap.style.display='';
-    if(addBtn){addBtn.textContent='+ 新增供应商';addBtn.setAttribute('onclick','openSupplierModal(\'\')');}
-    renderProcSuppliers();
-  } else {
-    if(poFilters)poFilters.style.display='';
-    if(supFilters)supFilters.style.display='none';
-    if(tableWrap)tableWrap.style.display='';
-    if(supWrap)supWrap.style.display='none';
-    if(addBtn){addBtn.textContent='+ 新建采购单';addBtn.setAttribute('onclick','openProcModal(\'\')');}
-    renderProcurement();
-    renderMobileCards('proc');
-  }
+  if(poFilters)poFilters.style.display='';
+  if(tableWrap)tableWrap.style.display='';
+  if(supWrap)supWrap.style.display='none';
+  if(addBtn){addBtn.textContent='+ 新建采购单';addBtn.setAttribute('onclick','openProcModal(\'\')');}
+  renderProcurement();
+  renderMobileCards('proc');
   updateProcTabCounts();
 }
 function updateProcTabCounts(){
   var d=getProcData();
   var active=d.pos.filter(function(p){return p.stage!=='已入库';}).length;
   var done=d.pos.filter(function(p){return p.stage==='已入库';}).length;
-  var supCnt=d.suppliers.filter(function(s){return s.active!==false;}).length;
   var el;
   el=document.getElementById('proc-cnt-active');if(el)el.textContent=active||'';
   el=document.getElementById('proc-cnt-done');if(el)el.textContent=done||'';
-  el=document.getElementById('proc-cnt-suppliers');if(el)el.textContent=supCnt||'';
 }
 function getFilteredPos(){
   var d=getProcData();
@@ -8300,6 +8319,131 @@ function renderProcurement(){
   });
   body.innerHTML=html;
 }
+function renderSuppliersPage(){
+  var body=document.getElementById('suppliers-list-body');if(!body)return;
+  var d=getProcData();
+  var searchEl=document.getElementById('search-suppliers');
+  var search=searchEl?searchEl.value.toLowerCase():'';
+  var list=(d.suppliers||[]).filter(function(s){
+    if(!search)return true;
+    return (s.name||'').toLowerCase().indexOf(search)>=0||(s.mainProducts||'').toLowerCase().indexOf(search)>=0;
+  });
+  if(!list.length){body.innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)">暂无供应商，点击右上角新增</div>';return;}
+  body.innerHTML=list.map(function(s){
+    var activePo=(d.pos||[]).filter(function(p){return p.supplierId===s.id&&p.stage!=='已入库';}).length;
+    return '<div class="table-row cols-suppliers" onclick="openSupplierDetail(\''+s.id+'\')" style="cursor:pointer">'
+      +'<div style="font-weight:500">'+s.name+'</div>'
+      +'<div style="font-size:12px;color:var(--muted)">'+(s.contact||'—')+'</div>'
+      +'<div style="font-size:12px;color:var(--muted2)">'+(s.mainProducts||'—')+'</div>'
+      +'<div style="font-size:12px;color:var(--muted)">'+(s.currency||'CNY')+'</div>'
+      +'<div style="font-size:12px;color:var(--muted)">'+(s.paymentTerms||'—')+'</div>'
+      +'<div>'+(activePo?'<span style="background:rgba(79,142,247,.2);color:var(--accent);font-size:11px;padding:2px 8px;border-radius:10px">'+activePo+' 进行中</span>':'<span style="color:var(--muted);font-size:11px">—</span>')+'</div>'
+      +'</div>';
+  }).join('');
+}
+function renderMobileCards_suppliers(){
+  var cont=document.getElementById('mobile-suppliers-cards');if(!cont)return;
+  var d=getProcData();
+  var searchEl=document.getElementById('search-suppliers-m');
+  var search=searchEl?searchEl.value.toLowerCase():'';
+  var list=(d.suppliers||[]).filter(function(s){
+    if(!search)return true;
+    return (s.name||'').toLowerCase().indexOf(search)>=0||(s.mainProducts||'').toLowerCase().indexOf(search)>=0;
+  });
+  if(!list.length){cont.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted)">暂无供应商</div>';return;}
+  var html='';
+  list.forEach(function(s){
+    var activePo=(d.pos||[]).filter(function(p){return p.supplierId===s.id&&p.stage!=='已入库';}).length;
+    var donePo=(d.pos||[]).filter(function(p){return p.supplierId===s.id&&p.stage==='已入库';}).length;
+    html+='<div class="mobile-card" onclick="openSupplierDetail(\''+s.id+'\')" style="cursor:pointer">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
+      +'<span style="font-size:14px;font-weight:600">'+s.name+'</span>'
+      +(activePo?'<span style="font-size:11px;background:rgba(79,142,247,.2);color:var(--accent);padding:2px 8px;border-radius:10px">进行中 '+activePo+'</span>':'')
+      +'</div>'
+      +(s.mainProducts?'<div style="font-size:12px;color:var(--muted2);margin-bottom:3px">'+s.mainProducts+'</div>':'')
+      +'<div style="display:flex;gap:12px;font-size:11px;color:var(--muted)">'
+      +(s.contact?'<span>👤 '+s.contact+'</span>':'')
+      +(s.phone?'<span>📱 '+s.phone+'</span>':'')
+      +'</div>'
+      +(s.paymentTerms?'<div style="font-size:11px;color:var(--muted);margin-top:2px">付款：'+s.paymentTerms+(donePo?' · 历史'+donePo+'单':'')+'</div>':'')
+      +'</div>';
+  });
+  cont.innerHTML=html;
+}
+function openSupplierDetail(id){
+  var d=getProcData();
+  var s=(d.suppliers||[]).find(function(x){return x.id===id;});if(!s)return;
+  currentDetailId=id;currentDetailType='supplier';
+  _prevDetailContext=null;
+  var dpTitle=document.getElementById('dp-title');if(dpTitle)dpTitle.textContent='🏭 '+s.name;
+  var dpSub=document.getElementById('dp-sub');if(dpSub)dpSub.textContent=(s.mainProducts||'供应商')+(s.currency?' · '+s.currency:'');
+  var dpStar=document.getElementById('dp-star-btn');if(dpStar)dpStar.style.display='none';
+  var dpTgt=document.getElementById('dp-target-btn');if(dpTgt)dpTgt.style.display='none';
+  var dpTabs=document.getElementById('dp-tabs');
+  if(dpTabs){
+    dpTabs.style.display='flex';
+    var tPr=document.getElementById('dp-tab-profile');if(tPr){tPr.textContent='供应商档案';tPr.style.display='';}
+    var tFu=document.getElementById('dp-tab-followup');if(tFu){tFu.textContent='采购历史';tFu.style.display='';}
+    var tSa=document.getElementById('dp-tab-sales');if(tSa)tSa.style.display='none';
+    var tQu=document.getElementById('dp-tab-quote');if(tQu)tQu.style.display='none';
+  }
+  var tab1='<div class="detail-section">'
+    +'<div class="detail-section-title" style="display:flex;align-items:center;justify-content:space-between">基本信息'
+    +'<button onclick="openProcModal(\'\')" style="font-size:11px;padding:3px 9px;border-radius:5px;border:0.5px solid var(--accent);color:var(--accent);background:rgba(79,142,247,.12);cursor:pointer">+ 新建采购单</button>'
+    +'</div>'
+    +'<div class="detail-row"><span class="detail-key">供应商</span><span class="detail-val">'+s.name+'</span></div>'
+    +(s.contact?'<div class="detail-row"><span class="detail-key">联系人</span><span class="detail-val">'+s.contact+'</span></div>':'')
+    +(s.phone?'<div class="detail-row"><span class="detail-key">📱 电话</span><span class="detail-val">'+s.phone+'</span></div>':'')
+    +(s.wechat?'<div class="detail-row"><span class="detail-key">💬 微信</span><span class="detail-val" style="display:flex;align-items:center;gap:6px;justify-content:flex-end">'+s.wechat+'<button onclick="navigator.clipboard.writeText(\''+s.wechat+'\').then(function(){toast(\'已复制\')})" style="font-size:10px;padding:2px 7px;border-radius:4px;border:0.5px solid var(--border);background:rgba(255,255,255,.06);color:var(--muted);cursor:pointer;flex-shrink:0">复制</button></span></div>':'')
+    +(s.email?'<div class="detail-row"><span class="detail-key">📧 邮箱</span><span class="detail-val"><a href="mailto:'+s.email+'" style="color:var(--accent)">'+s.email+'</a></span></div>':'')
+    +'</div>'
+    +'<div class="detail-section">'
+    +'<div class="detail-section-title">采购信息</div>'
+    +(s.mainProducts?'<div class="detail-row"><span class="detail-key">主营产品</span><span class="detail-val">'+s.mainProducts+'</span></div>':'')
+    +(s.currency?'<div class="detail-row"><span class="detail-key">常用货币</span><span class="detail-val">'+s.currency+'</span></div>':'')
+    +(s.paymentTerms?'<div class="detail-row"><span class="detail-key">付款条件</span><span class="detail-val">'+s.paymentTerms+'</span></div>':'')
+    +(s.note?'<div class="detail-row"><span class="detail-key">备注</span><span class="detail-val">'+s.note+'</span></div>':'')
+    +'</div>';
+  var supPos=(d.pos||[]).filter(function(p){return p.supplierId===s.id;})
+    .sort(function(a,b){return(b.createDate||'').localeCompare(a.createDate||'');});
+  var tab2='<div class="detail-section">'
+    +'<div class="detail-section-title">采购历史（'+supPos.length+'单）</div>';
+  if(!supPos.length){
+    tab2+='<div style="font-size:12px;color:var(--muted);padding:8px 0">暂无采购记录</div>';
+  } else {
+    supPos.forEach(function(p){
+      var totalStr='';
+      if(p.totalCNY)totalStr+='¥'+p.totalCNY.toFixed(2);
+      if(p.totalUSD)totalStr+=(totalStr?' ':'')+'$'+p.totalUSD.toFixed(2);
+      var itemStr=(p.items&&p.items.length)?p.items.map(function(it){
+        return it.nameCN+(it.qty?' x'+it.qty+it.unit:'')+(it.unitCost?' @'+(it.currency==='USD'?'$':'¥')+it.unitCost:'');
+      }).join('、'):'—';
+      tab2+='<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="openProcDetail(\''+p.id+'\')">'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">'
+        +'<span style="font-family:monospace;font-size:12px;color:var(--accent)">'+p.poNumber+'</span>'
+        +'<span style="'+getProcStageStyle(p.stage)+';font-size:10px">'+p.stage+'</span>'
+        +'</div>'
+        +'<div style="font-size:11px;color:var(--muted2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+itemStr+'</div>'
+        +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+p.createDate+(p.person?' · '+p.person:'')+'</div>'
+        +'</div>'
+        +'<div style="text-align:right;flex-shrink:0;margin-left:10px">'
+        +'<div style="font-weight:600;color:var(--yellow);font-size:13px">'+(totalStr||'—')+'</div>'
+        +'</div>'
+        +'</div>';
+    });
+  }
+  tab2+='</div>';
+  var detailBody=document.getElementById('detail-body');
+  if(detailBody){
+    detailBody.innerHTML=
+      '<div class="dp-tab-content active" id="dp-content-profile">'+tab1+'</div>'
+      +'<div class="dp-tab-content" id="dp-content-followup">'+tab2+'</div>';
+  }
+  var bar=document.getElementById('dp-followup-bar');if(bar)bar.style.display='none';
+  switchDpTab('profile');
+  var panel=document.getElementById('detail-panel');if(panel)panel.classList.add('open');
+}
 function renderProcSuppliers(){
   var d=getProcData();
   var search=(document.getElementById('search-proc-supplier')||{}).value||'';
@@ -8334,6 +8478,11 @@ function renderProcSuppliers(){
   body.innerHTML=html;
 }
 function openProcDetail(id){
+  if(currentDetailType==='supplier'){
+    _prevDetailContext={type:'supplier',id:currentDetailId,tab:'followup'};
+  } else if(currentDetailType!=='proc'){
+    _prevDetailContext=null;
+  }
   var d=getProcData();
   var p=d.pos.find(function(x){return x.id===id;});
   if(!p)return;
