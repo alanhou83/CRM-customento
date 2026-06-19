@@ -10077,12 +10077,57 @@ var DEF_INV={movements:[
   {id:'inv_d19',date:'2026-01-01',skuCode:'BRD-001-A',nameCN:'MDF圆形徽章空白',unit:'个',movementType:'手工入库',qty:1000,sourceType:'manual',sourceId:'',person:'Penny',note:'期初盘点'},
   {id:'inv_d20',date:'2026-01-01',skuCode:'MBX-001-A',nameCN:'空白木质音乐盒',unit:'个',movementType:'手工入库',qty:24,sourceType:'manual',sourceId:'',person:'Penny',note:'期初盘点'}
 ]};
+var DEF_INV_DOCS=[
+  {id:'invdoc_d01',docNo:'IN-2026-001',direction:'in',type:'采购入库',date:'2026-03-01',status:'已确认',sourceType:'manual',sourceId:'',sourceName:'PO-2026-001',supplierName:'深圳博盈礼品厂',customerAlias:'',person:'Penny',note:'第一批马克杯入库',confirmedDate:'2026-03-01',confirmedBy:'Penny',movementIds:[],
+   items:[{skuCode:'MUG-001-A',nameCN:'11oz白色升华马克杯',variantCN:'裸装',unit:'个',planQty:144,actualQty:144},{skuCode:'PKG-001-A',nameCN:'马克杯单独礼盒',variantCN:'',unit:'个',planQty:144,actualQty:144}]},
+  {id:'invdoc_d02',docNo:'IN-2026-002',direction:'in',type:'采购入库',date:'2026-03-15',status:'已确认',sourceType:'manual',sourceId:'',sourceName:'PO-2026-002',supplierName:'广州印材科技',customerAlias:'',person:'Penny',note:'热转印纸耗材补货',confirmedDate:'2026-03-15',confirmedBy:'Penny',movementIds:[],
+   items:[{skuCode:'PAP-001-A',nameCN:'热转印纸A4',variantCN:'118g',unit:'包',planQty:30,actualQty:30},{skuCode:'PAP-002-A',nameCN:'热转印纸A3',variantCN:'118g',unit:'包',planQty:10,actualQty:10}]},
+  {id:'invdoc_d03',docNo:'IN-2026-003',direction:'in',type:'采购入库',date:'2026-04-01',status:'已确认',sourceType:'manual',sourceId:'',sourceName:'PO-2026-003',supplierName:'深圳博盈礼品厂',customerAlias:'',person:'Penny',note:'杯垫批量入库',confirmedDate:'2026-04-01',confirmedBy:'Penny',movementIds:[],
+   items:[{skuCode:'CTR-001-A',nameCN:'软木方形杯垫',variantCN:'9.5cm',unit:'个',planQty:200,actualQty:200},{skuCode:'CTR-002-A',nameCN:'软木圆形杯垫',variantCN:'9cm',unit:'个',planQty:100,actualQty:100}]},
+  {id:'invdoc_d04',docNo:'IN-2026-004',direction:'in',type:'采购入库',date:'2026-04-20',status:'已确认',sourceType:'manual',sourceId:'',sourceName:'PO-2026-004',supplierName:'义乌帆布工坊',customerAlias:'',person:'Penny',note:'帆布袋入库',confirmedDate:'2026-04-20',confirmedBy:'Penny',movementIds:[],
+   items:[{skuCode:'BAG-001-A',nameCN:'帆布环保手提袋',variantCN:'',unit:'个',planQty:100,actualQty:100}]},
+  {id:'invdoc_d05',docNo:'IN-2026-005',direction:'in',type:'采购入库',date:'2026-05-10',status:'已确认',sourceType:'manual',sourceId:'',sourceName:'PO-2026-005',supplierName:'东莞激光材料',customerAlias:'',person:'Alan',note:'MDF冰箱贴空白件入库',confirmedDate:'2026-05-10',confirmedBy:'Alan',movementIds:[],
+   items:[{skuCode:'MGN-001-A',nameCN:'MDF空白冰箱贴',variantCN:'圆形',unit:'个',planQty:100,actualQty:100},{skuCode:'MGN-001-B',nameCN:'MDF空白冰箱贴',variantCN:'方形',unit:'个',planQty:50,actualQty:50}]},
+  {id:'invdoc_d06',docNo:'IN-2026-006',direction:'in',type:'手工入库',date:'2026-05-05',status:'已确认',sourceType:'manual',sourceId:'',sourceName:'',supplierName:'',customerAlias:'',person:'Penny',note:'墨水补货手工录入',confirmedDate:'2026-05-05',confirmedBy:'Penny',movementIds:[],
+   items:[{skuCode:'INK-001-A',nameCN:'热升华墨水 黑色',variantCN:'',unit:'瓶',planQty:10,actualQty:10},{skuCode:'INK-002-A',nameCN:'热升华墨水 彩色套装',variantCN:'',unit:'套',planQty:6,actualQty:6}]},
+  {id:'invdoc_d07',docNo:'IN-2026-007',direction:'in',type:'采购入库',date:'2026-06-10',status:'草稿',sourceType:'manual',sourceId:'',sourceName:'PO-2026-007',supplierName:'深圳博盈礼品厂',customerAlias:'',person:'Penny',note:'大批马克杯补货，到货待验收',confirmedDate:'',confirmedBy:'',movementIds:[],
+   items:[{skuCode:'MUG-001-A',nameCN:'11oz白色升华马克杯',variantCN:'裸装',unit:'个',planQty:288,actualQty:288},{skuCode:'MUG-001-B',nameCN:'11oz白色升华马克杯',variantCN:'带盒',unit:'个',planQty:72,actualQty:72}]},
+  {id:'invdoc_d08',docNo:'IN-2026-008',direction:'in',type:'采购入库',date:'2026-06-12',status:'草稿',sourceType:'manual',sourceId:'',sourceName:'PO-2026-008',supplierName:'广州印材科技',customerAlias:'',person:'Penny',note:'耗材补货待到货确认',confirmedDate:'',confirmedBy:'',movementIds:[],
+   items:[{skuCode:'PAP-001-A',nameCN:'热转印纸A4',variantCN:'118g',unit:'包',planQty:50,actualQty:50},{skuCode:'INK-001-A',nameCN:'热升华墨水 黑色',variantCN:'',unit:'瓶',planQty:10,actualQty:10}]},
+  {id:'invdoc_d09',docNo:'IN-2026-009',direction:'in',type:'采购入库',date:'2026-06-15',status:'草稿',sourceType:'manual',sourceId:'',sourceName:'PO-2026-009',supplierName:'义乌帆布工坊',customerAlias:'',person:'Penny',note:'',confirmedDate:'',confirmedBy:'',movementIds:[],
+   items:[{skuCode:'BAG-002-A',nameCN:'帆布手提袋 大号',variantCN:'',unit:'个',planQty:100,actualQty:100}]},
+  {id:'invdoc_d10',docNo:'IN-2026-010',direction:'in',type:'盘盈入库',date:'2026-06-01',status:'已确认',sourceType:'manual',sourceId:'',sourceName:'盘点2026-06-01',supplierName:'',customerAlias:'',person:'Alan',note:'6月盘库发现徽章实际多于账面',confirmedDate:'2026-06-01',confirmedBy:'Alan',movementIds:[],
+   items:[{skuCode:'BRD-001-A',nameCN:'MDF圆形徽章空白',variantCN:'',unit:'个',planQty:50,actualQty:50}]},
+  {id:'invdoc_d11',docNo:'IN-2026-011',direction:'in',type:'采购入库',date:'2026-05-20',status:'已作废',sourceType:'manual',sourceId:'',sourceName:'PO-2026-006',supplierName:'深圳博盈礼品厂',customerAlias:'',person:'Penny',note:'',confirmedDate:'2026-05-20',confirmedBy:'Penny',voidDate:'2026-05-21',voidBy:'Alan',voidReason:'重复下单，PO-2026-006已有相同采购单',movementIds:[],
+   items:[{skuCode:'MUG-002-A',nameCN:'15oz白色升华马克杯',variantCN:'',unit:'个',planQty:100,actualQty:100}]},
+  {id:'invdoc_d12',docNo:'IN-2026-012',direction:'in',type:'采购入库',date:'2026-06-18',status:'草稿',sourceType:'manual',sourceId:'',sourceName:'PO-2026-010',supplierName:'深圳博盈礼品厂',customerAlias:'',person:'Penny',note:'瓷砖及音乐盒备货',confirmedDate:'',confirmedBy:'',movementIds:[],
+   items:[{skuCode:'TIL-001-A',nameCN:'升华陶瓷方形瓷砖',variantCN:'',unit:'个',planQty:50,actualQty:50},{skuCode:'MBX-001-A',nameCN:'空白木质音乐盒',variantCN:'',unit:'个',planQty:24,actualQty:24}]},
+  {id:'invdoc_d13',docNo:'OUT-2026-001',direction:'out',type:'领料出库',date:'2026-03-10',status:'已确认',sourceType:'order',sourceId:'',sourceName:'订单-TechStart Ltd',supplierName:'',customerAlias:'TechStart Ltd',person:'Penny',note:'马克杯印图订单领料',confirmedDate:'2026-03-10',confirmedBy:'Penny',movementIds:[],
+   items:[{skuCode:'MUG-001-A',nameCN:'11oz白色升华马克杯',variantCN:'裸装',unit:'个',planQty:100,actualQty:100},{skuCode:'PAP-001-A',nameCN:'热转印纸A4',variantCN:'118g',unit:'包',planQty:2,actualQty:2}]},
+  {id:'invdoc_d14',docNo:'OUT-2026-002',direction:'out',type:'领料出库',date:'2026-04-05',status:'已确认',sourceType:'order',sourceId:'',sourceName:'订单-Boutique Kids',supplierName:'',customerAlias:'Boutique Kids',person:'Penny',note:'杯垫订单领料',confirmedDate:'2026-04-05',confirmedBy:'Penny',movementIds:[],
+   items:[{skuCode:'CTR-001-A',nameCN:'软木方形杯垫',variantCN:'9.5cm',unit:'个',planQty:150,actualQty:150},{skuCode:'PAP-001-A',nameCN:'热转印纸A4',variantCN:'118g',unit:'包',planQty:2,actualQty:2}]},
+  {id:'invdoc_d15',docNo:'OUT-2026-003',direction:'out',type:'销售出库',date:'2026-04-15',status:'已确认',sourceType:'order',sourceId:'',sourceName:'订单-帆布袋直发',supplierName:'',customerAlias:'客户直发',person:'Mille',note:'帆布袋直接发货',confirmedDate:'2026-04-15',confirmedBy:'Penny',movementIds:[],
+   items:[{skuCode:'BAG-001-A',nameCN:'帆布环保手提袋',variantCN:'',unit:'个',planQty:30,actualQty:30}]},
+  {id:'invdoc_d16',docNo:'OUT-2026-004',direction:'out',type:'领料出库',date:'2026-05-08',status:'已确认',sourceType:'order',sourceId:'',sourceName:'订单-European Gift Co',supplierName:'',customerAlias:'European Gift Co',person:'Momi',note:'冰箱贴订单领料',confirmedDate:'2026-05-08',confirmedBy:'Penny',movementIds:[],
+   items:[{skuCode:'MGN-001-A',nameCN:'MDF空白冰箱贴',variantCN:'圆形',unit:'个',planQty:200,actualQty:200},{skuCode:'INK-001-A',nameCN:'热升华墨水 黑色',variantCN:'',unit:'瓶',planQty:2,actualQty:2}]},
+  {id:'invdoc_d17',docNo:'OUT-2026-005',direction:'out',type:'手工出库',date:'2026-05-15',status:'已确认',sourceType:'manual',sourceId:'',sourceName:'',supplierName:'',customerAlias:'样品',person:'Kelly',note:'发给美国客户展示样品',confirmedDate:'2026-05-15',confirmedBy:'Penny',movementIds:[],
+   items:[{skuCode:'MUG-001-A',nameCN:'11oz白色升华马克杯',variantCN:'裸装',unit:'个',planQty:6,actualQty:6},{skuCode:'CTR-001-A',nameCN:'软木方形杯垫',variantCN:'9.5cm',unit:'个',planQty:6,actualQty:6}]},
+  {id:'invdoc_d18',docNo:'OUT-2026-006',direction:'out',type:'领料出库',date:'2026-06-10',status:'草稿',sourceType:'order',sourceId:'',sourceName:'订单-周年礼品定制',supplierName:'',customerAlias:'周年礼品定制',person:'Penny',note:'BOM参考用量，等仓库确认实际领料',confirmedDate:'',confirmedBy:'',movementIds:[],
+   items:[{skuCode:'BRD-001-A',nameCN:'MDF圆形徽章空白',variantCN:'',unit:'个',planQty:300,actualQty:300},{skuCode:'INK-001-A',nameCN:'热升华墨水 黑色',variantCN:'',unit:'瓶',planQty:3,actualQty:3}]},
+  {id:'invdoc_d19',docNo:'OUT-2026-007',direction:'out',type:'盘亏出库',date:'2026-06-01',status:'已确认',sourceType:'manual',sourceId:'',sourceName:'盘点2026-06-01',supplierName:'',customerAlias:'',person:'Alan',note:'6月盘库杯垫损耗',confirmedDate:'2026-06-01',confirmedBy:'Alan',movementIds:[],
+   items:[{skuCode:'CTR-001-A',nameCN:'软木方形杯垫',variantCN:'9.5cm',unit:'个',planQty:10,actualQty:10}]},
+  {id:'invdoc_d20',docNo:'OUT-2026-008',direction:'out',type:'销售出库',date:'2026-06-12',status:'已作废',sourceType:'order',sourceId:'',sourceName:'订单-误操作',supplierName:'',customerAlias:'',person:'Mille',note:'',confirmedDate:'2026-06-12',confirmedBy:'Penny',voidDate:'2026-06-12',voidBy:'Alan',voidReason:'订单数量填错，已作废重开',movementIds:[],
+   items:[{skuCode:'BAG-002-A',nameCN:'帆布手提袋 大号',variantCN:'',unit:'个',planQty:20,actualQty:20}]}
+];
 function getInvData(){
   var s=localStorage.getItem(SK.inv);
   var d=s?JSON.parse(s):{movements:[],documents:[]};
   if(!d.movements)d.movements=[];
   if(!d.documents)d.documents=[];
-  if(!d.movements.length){d.movements=DEF_INV.movements.slice();saveInvData(d);}
+  var needSave=false;
+  if(!d.movements.length){d.movements=DEF_INV.movements.slice();needSave=true;}
+  if(!d.documents.length){d.documents=DEF_INV_DOCS.slice();needSave=true;}
+  if(needSave)saveInvData(d);
   return d;
 }
 function saveInvData(d){localStorage.setItem(SK.inv,JSON.stringify(d));}
