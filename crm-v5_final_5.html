@@ -1612,7 +1612,7 @@ a{color:var(--accent);text-decoration:none;}
             <thead><tr style="color:var(--muted);border-bottom:1px solid var(--border)">
               <td style="padding:5px 4px;min-width:110px">SKU编码</td>
               <td style="padding:5px 4px;min-width:110px">品名/规格</td>
-              <td style="padding:5px 4px;width:80px;text-align:right">参考数量</td>
+              <td style="padding:5px 4px;width:80px;text-align:right" id="fdoc-planqty-header">参考数量</td>
               <td style="padding:5px 4px;width:90px;text-align:right">实际数量</td>
               <td style="padding:5px 4px;width:50px">单位</td>
               <td style="padding:5px 4px;width:70px;text-align:right">现有库存</td>
@@ -10884,6 +10884,8 @@ function openInvDocModal(direction,sourceType,sourceId){
   }
   var voidArea=document.getElementById('inv-doc-void-area');
   if(voidArea)voidArea.innerHTML='';
+  var phEl=document.getElementById('fdoc-planqty-header');
+  if(phEl)phEl.textContent=sourceType==='po'?'剩余可入':'参考数量';
   renderInvDocLines();
   openModal('inv-doc-modal');
 }
@@ -10928,24 +10930,49 @@ function editInvDoc(docId){
     if(partyDisp)partyDisp.textContent=_invDocSupplierName||_invDocCustomerAlias;
   }else{if(partyRow)partyRow.style.display='none';}
   var voidArea=document.getElementById('inv-doc-void-area');if(voidArea)voidArea.innerHTML='';
+  var phEl2=document.getElementById('fdoc-planqty-header');
+  if(phEl2)phEl2.textContent=doc.sourceType==='po'?'剩余可入':'参考数量';
   renderInvDocLines();
   openModal('inv-doc-modal');
+}
+
+function _onInvDocQtyChange(el,idx){
+  var val=parseFloat(el.value)||0;
+  if(_invDocLines[idx])_invDocLines[idx].actualQty=val;
+  if(_invDocSourceType==='po'){
+    var maxQ=(_invDocLines[idx]&&_invDocLines[idx].planQty)||0;
+    if(val>maxQ&&maxQ>0){
+      el.style.border='2px solid var(--red)';
+      el.style.color='var(--red)';
+      el.title='超过剩余待入数量（'+maxQ+'），请修正';
+    }else{
+      el.style.border='1px solid var(--border)';
+      el.style.color='var(--text)';
+      el.title='';
+    }
+  }
 }
 
 function renderInvDocLines(){
   var tbody=document.getElementById('inv-doc-lines-body');
   if(!tbody)return;
+  var isPo=_invDocSourceType==='po';
   var html='';
   _invDocLines.forEach(function(line,idx){
     var stockColor=line.currentStock<=0?'var(--red)':line.currentStock<(line.actualQty||0)?'var(--yellow)':'var(--muted)';
+    var planQtyStr=isPo?('<span style="color:var(--accent);font-weight:600">'+(line.planQty||0)+'</span>'):('<span style="color:var(--muted)">'+(line.planQty||0)+'</span>');
+    var over=isPo&&(line.actualQty||0)>(line.planQty||0)&&(line.planQty||0)>0;
+    var qtyBorder=over?'2px solid var(--red)':'1px solid var(--border)';
+    var qtyColor=over?'var(--red)':'var(--text)';
+    var maxAttr=isPo?' max="'+(line.planQty||999999)+'"':'';
     html+='<tr style="border-bottom:1px solid var(--border)">';
     html+='<td style="padding:4px"><div style="position:relative">';
     html+='<input type="text" value="'+line.skuCode+'" placeholder="SKU编码" oninput="onInvDocSkuInput(this,'+idx+')" onblur="onInvDocSkuBlur(this,'+idx+')" style="width:100%;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:12px;font-family:monospace;box-sizing:border-box">';
     html+='<div class="autocomplete-dd" id="invdoc-sku-dd-'+idx+'" style="display:none"></div>';
     html+='</div></td>';
     html+='<td style="padding:4px"><div style="font-size:12px">'+line.nameCN+(line.variantCN?'<br><span style="color:var(--muted);font-size:11px">'+line.variantCN+'</span>':'')+'</div></td>';
-    html+='<td style="padding:4px;text-align:right;color:var(--muted);font-size:12px">'+(line.planQty||0)+'</td>';
-    html+='<td style="padding:4px"><input type="number" value="'+(line.actualQty||0)+'" min="0" oninput="_invDocLines['+idx+'].actualQty=parseFloat(this.value)||0" style="width:70px;text-align:right;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:12px"></td>';
+    html+='<td style="padding:4px;text-align:right;font-size:12px">'+planQtyStr+'</td>';
+    html+='<td style="padding:4px"><input type="number" value="'+(line.actualQty||0)+'" min="0"'+maxAttr+' oninput="_onInvDocQtyChange(this,'+idx+')" style="width:70px;text-align:right;padding:3px 6px;border:'+qtyBorder+';border-radius:4px;background:var(--surface2);color:'+qtyColor+';font-size:12px"></td>';
     html+='<td style="padding:4px;font-size:12px;color:var(--muted)">'+line.unit+'</td>';
     html+='<td style="padding:4px;text-align:right;font-size:12px;color:'+stockColor+'">'+line.currentStock+'</td>';
     html+='<td style="padding:4px"><button onclick="removeInvDocLine('+idx+')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0 4px">x</button></td>';
@@ -11013,6 +11040,15 @@ function saveInvDoc(action){
   var docNo=noEl?noEl.textContent:'';
   if(!docType){toast('请选择类型');return;}
   if(!_invDocLines.length){toast('请至少添加一行明细');return;}
+  if(action==='confirm'&&_invDocSourceType==='po'){
+    var qtyErrors=[];
+    _invDocLines.forEach(function(l){
+      if((l.actualQty||0)>(l.planQty||0)&&(l.planQty||0)>0){
+        qtyErrors.push((l.nameCN||l.skuCode)+': 本次 '+(l.actualQty||0)+' 超过剩余待入 '+(l.planQty||0));
+      }
+    });
+    if(qtyErrors.length){toast('超过剩余数量，无法确认：'+qtyErrors.join('；'),5000);return;}
+  }
   if(action==='confirm'){var hasAny=false;_invDocLines.forEach(function(l){if((l.actualQty||0)>0)hasAny=true;});if(!hasAny){toast('实际数量不能全为0');return;}}
   var d=getInvData();
   var doc;
