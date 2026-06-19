@@ -321,6 +321,10 @@ a{color:var(--accent);text-decoration:none;}
 .prod-img-slot img{width:100%;height:100%;object-fit:cover;}
 .prod-img-del{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;color:#fff;line-height:1;}
 @media print {.app,header,nav,.detail-panel,#quote-preview-overlay>div>div:first-child{display:none !important;}#quote-preview-overlay{position:static !important;background:white !important;}#quote-preview-content{box-shadow:none !important;}}
+.cols-inv{display:grid;grid-template-columns:100px 1fr 120px 60px 80px 80px 70px 120px;gap:0;align-items:center;}
+.inv-status-ok{color:var(--green);font-size:11px;font-weight:600;}
+.inv-status-low{color:var(--yellow);font-size:11px;font-weight:600;}
+.inv-status-out{color:var(--red);font-size:11px;font-weight:600;}
 .autocomplete-dd{position:absolute;z-index:9999;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);max-height:200px;overflow-y:auto;width:100%;top:calc(100% + 2px);left:0;}
 .autocomplete-item{padding:8px 12px;font-size:13px;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);}
 .autocomplete-item:last-child{border-bottom:none;}
@@ -547,6 +551,7 @@ a{color:var(--accent);text-decoration:none;}
     <div class="nav-item" id="nav-prodcat" onclick="showPage('prodcat')"><span class="nav-icon">🗂️</span>产品库</div>
     <div class="nav-item" id="nav-procurement" onclick="showPage('procurement')"><span class="nav-icon">🛒</span>采购跟单</div>
     <div class="nav-item" id="nav-suppliers" onclick="showPage('suppliers')"><span class="nav-icon">🏭</span>供应商管理</div>
+    <div class="nav-item" id="nav-inventory" onclick="showPage('inventory')"><span class="nav-icon">📋</span>库存管理</div>
     <div class="nav-item" id="nav-finance" onclick="showPage('finance')"><span class="nav-icon">💰</span>财务</div>
   </div>
   <!-- 销售快捷筛选（Penny隐藏） -->
@@ -1162,6 +1167,50 @@ a{color:var(--accent);text-decoration:none;}
   </div>
 </div>
 
+<!-- 库存管理 页面 -->
+<div class="page" id="page-inventory">
+  <div class="page-head">
+    <h1 class="page-title">📋 库存管理</h1>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-outline" onclick="openStocktakeModal()">📊 盘库对账</button>
+      <button class="btn btn-primary" onclick="openInvAdjModal('','')">+ 手工录入</button>
+    </div>
+  </div>
+  <!-- 手机端 header -->
+  <div id="mh-inv" style="display:none">
+    <div style="padding:10px 15px 0">
+      <div class="mobile-chips" style="padding-bottom:6px">
+        <span class="chip active" onclick="invChipFilter(this,'')">全部</span>
+        <span class="chip" onclick="invChipFilter(this,'缺货')">缺货</span>
+        <span class="chip" onclick="invChipFilter(this,'预警')">预警</span>
+        <span class="chip" onclick="invChipFilter(this,'充足')">充足</span>
+      </div>
+      <div style="display:flex;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
+        <input class="search-box" id="search-inv-m" placeholder="搜索SKU/品名..." oninput="renderInventoryPage()" style="flex:1;border:none;background:transparent;outline:none;font-size:13px">
+      </div>
+    </div>
+  </div>
+  <div class="page-content">
+    <div class="filters">
+      <input class="search-box" id="search-inv" placeholder="搜索SKU编码/品名..." oninput="renderInventoryPage()">
+      <select class="filter-select" id="fi-inv-status" onchange="renderInventoryPage()">
+        <option value="">全部状态</option>
+        <option value="充足">充足</option>
+        <option value="预警">预警</option>
+        <option value="缺货">缺货</option>
+      </select>
+      <button class="btn btn-outline btn-sm" onclick="clearFilters('inv')">清除</button>
+    </div>
+    <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
+      <div class="table-header cols-inv">
+        <div>SKU编码</div><div>品名</div><div>规格</div><div>单位</div><div>现有库存</div><div>安全库存</div><div>状态</div><div>最近变动</div>
+      </div>
+      <div id="inv-list-body"></div>
+    </div></div></div>
+  </div>
+  <div id="mobile-inv-cards" class="mobile-cards"></div>
+</div>
+
 <!-- 财务 页面 -->
 <div class="page" id="page-finance">
   <div class="page-header"><h2>💰 财务</h2></div>
@@ -1202,6 +1251,7 @@ a{color:var(--accent);text-decoration:none;}
       <div onclick="closeAllModules();mobileNav('prodcat')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">📦</span><span style="font-size:12px;color:var(--text)">产品库</span></div>
       <div onclick="closeAllModules();mobileNav('procurement')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">🛒</span><span style="font-size:12px;color:var(--text)">采购跟单</span></div>
       <div onclick="closeAllModules();mobileNav('suppliers')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">🏭</span><span style="font-size:12px;color:var(--text)">供应商</span></div>
+      <div onclick="closeAllModules();mobileNav('inventory')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">📋</span><span style="font-size:12px;color:var(--text)">库存管理</span></div>
       <div onclick="closeAllModules();mobileNav('finance')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">💰</span><span style="font-size:12px;color:var(--text)">财务</span></div>
       <div onclick="closeAllModules();showPage('quote')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">📋</span><span style="font-size:12px;color:var(--text)">报价单</span></div>
       <div onclick="closeAllModules();showPage('settings')" style="display:flex;flex-direction:column;align-items:center;padding:16px 8px;background:var(--surface2);border-radius:12px;cursor:pointer;border:1px solid var(--border)"><span style="font-size:28px;margin-bottom:6px">⚙️</span><span style="font-size:12px;color:var(--text)">设置</span></div>
@@ -1392,6 +1442,78 @@ a{color:var(--accent);text-decoration:none;}
     </div>
   </div>
 </div>
+</div>
+
+<!-- 库存手工录入 Modal -->
+<div class="modal-overlay" id="inv-adj-modal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-head"><span id="inv-adj-modal-title">手工库存录入</span><button onclick="closeModal('inv-adj-modal')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)">x</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">变动类型</label>
+          <select class="form-input" id="fadj-type">
+            <option value="手工入库">手工入库</option>
+            <option value="样品出库">样品出库</option>
+            <option value="生产领料出库">生产领料出库</option>
+            <option value="损坏报废">损坏报废</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">日期</label><input class="form-input" type="date" id="fadj-date"></div>
+        <div class="form-group full"><label class="form-label">SKU</label>
+          <div style="position:relative"><input class="form-input" type="text" id="fadj-sku" placeholder="输入SKU编码或品名搜索..." oninput="onInvSkuInput(this)" onblur="onInvSkuBlur(this)"><div id="fadj-sku-dd" class="autocomplete-dd" style="display:none"></div></div>
+          <div id="fadj-sku-info" style="font-size:11px;color:var(--muted);margin-top:3px"></div>
+        </div>
+        <div class="form-group"><label class="form-label">数量（正数）</label><input class="form-input" type="number" id="fadj-qty" min="0.01" step="0.01" placeholder="请输入正数"></div>
+        <div class="form-group"><label class="form-label">单位</label><input class="form-input" type="text" id="fadj-unit" placeholder="个/箱/包..."></div>
+        <div class="form-group full"><label class="form-label">备注</label><input class="form-input" type="text" id="fadj-note" placeholder="可选"></div>
+      </div>
+    </div>
+    <div class="modal-foot"><div></div><div style="display:flex;gap:8px"><button class="btn btn-outline" onclick="closeModal('inv-adj-modal')">取消</button><button class="btn btn-primary" onclick="saveInvAdj()">确认录入</button></div></div>
+  </div>
+</div>
+
+<!-- 采购入库单 Modal -->
+<div class="modal-overlay" id="inv-inbound-modal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-head"><span>入库单确认</span><button onclick="closeModal('inv-inbound-modal')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)">x</button></div>
+    <div class="modal-body">
+      <div id="inv-inbound-content"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="printInvDoc('inbound')">打印入库单</button>
+      <div style="display:flex;gap:8px"><button class="btn btn-outline" onclick="closeModal('inv-inbound-modal')">取消</button><button class="btn btn-primary" onclick="confirmInvInbound()">确认入库</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- 销售出库单 Modal -->
+<div class="modal-overlay" id="inv-outbound-modal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-head"><span>出库单确认</span><button onclick="closeModal('inv-outbound-modal')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)">x</button></div>
+    <div class="modal-body">
+      <div id="inv-outbound-content"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="printInvDoc('outbound')">打印出库单</button>
+      <div style="display:flex;gap:8px"><button class="btn btn-outline" onclick="closeModal('inv-outbound-modal')">取消</button><button class="btn btn-primary" onclick="confirmInvOutbound()">确认出库</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- 盘库对账 Modal -->
+<div class="modal-overlay" id="stocktake-modal">
+  <div class="modal" style="max-width:660px">
+    <div class="modal-head"><span>盘库对账</span><button onclick="closeModal('stocktake-modal')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)">x</button></div>
+    <div class="modal-body">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <label class="form-label" style="white-space:nowrap">盘库日期</label>
+        <input class="form-input" type="date" id="stocktake-date" style="max-width:160px">
+        <span style="font-size:12px;color:var(--muted)">填入各SKU实际盘点数量，差异将自动生成调整流水</span>
+      </div>
+      <div id="stocktake-body"></div>
+    </div>
+    <div class="modal-foot"><div></div><div style="display:flex;gap:8px"><button class="btn btn-outline" onclick="closeModal('stocktake-modal')">取消</button><button class="btn btn-primary" onclick="submitStocktake()">提交盘库</button></div></div>
+  </div>
 </div>
 
 <!-- 询盘 Modal -->
@@ -1873,7 +1995,7 @@ a{color:var(--accent);text-decoration:none;}
 <div class="toast" id="toast"></div>
 
 <script>
-const SK={inq:'crm_inq_v5',cust:'crm_cust_v5',ord:'crm_ord_v5',sale:'crm_sale_v5',user:'crm_user_v5',settings:'crm_settings_v5',prod:'crm_prod_v5',prodcat:'crm_prodcat_v5',proc:'crm_proc_v5',quote:'crm_quote_v5'};
+const SK={inq:'crm_inq_v5',cust:'crm_cust_v5',ord:'crm_ord_v5',sale:'crm_sale_v5',user:'crm_user_v5',settings:'crm_settings_v5',prod:'crm_prod_v5',prodcat:'crm_prodcat_v5',proc:'crm_proc_v5',quote:'crm_quote_v5',inv:'crm_inv_v5'};
 const DEF_PRODUCTS=['MDF杯垫','MDF冰箱贴','马克杯','帆布袋','T恤','Shot Glass','软木杯垫','其他'];
 const DEF_INQ=[
   /* ── 活跃询盘（各状态全覆盖）── */
@@ -2078,7 +2200,7 @@ var NAV_CONFIG={
   'Kelly':[{p:'dashboard',icon:'📊',label:'看板'},{p:'inquiries',icon:'📋',label:'询盘'},{p:'customers',icon:'👥',label:'客户'},{p:'orders',icon:'📦',label:'订单'},{p:'quote',icon:'📋',label:'报价'}],
   'Momi': [{p:'dashboard',icon:'📊',label:'看板'},{p:'inquiries',icon:'📋',label:'询盘'},{p:'customers',icon:'👥',label:'客户'},{p:'orders',icon:'📦',label:'订单'},{p:'quote',icon:'📋',label:'报价'}],
   'Mille':[{p:'dashboard',icon:'📊',label:'看板'},{p:'inquiries',icon:'📋',label:'询盘'},{p:'customers',icon:'👥',label:'客户'},{p:'orders',icon:'📦',label:'订单'},{p:'quote',icon:'📋',label:'报价'}],
-  'Penny':[{p:'dashboard',icon:'📊',label:'看板'},{p:'orders',icon:'📦',label:'订单'},{p:'proddev',icon:'🔧',label:'产品'},{p:'procurement',icon:'🛒',label:'采购'},{p:'suppliers',icon:'🏭',label:'供应商'}]
+  'Penny':[{p:'dashboard',icon:'📊',label:'看板'},{p:'orders',icon:'📦',label:'订单'},{p:'inventory',icon:'📋',label:'库存'},{p:'procurement',icon:'🛒',label:'采购'},{p:'suppliers',icon:'🏭',label:'供应商'}]
 };
 
 function renderMobileNav(){
@@ -2113,7 +2235,7 @@ function switchUser(u){
 function showPage(p){
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
   var pg=document.getElementById('page-'+p);if(pg)pg.classList.add('active');
-  ['dashboard','hot','inquiries','customers','oldstats','orders','settings','proddev','prodcat','procurement','finance','suppliers'].forEach(id=>{const el=document.getElementById('nav-'+id);if(el)el.classList.toggle('active',id===p);});
+  ['dashboard','hot','inquiries','customers','oldstats','orders','settings','proddev','prodcat','procurement','finance','suppliers','inventory'].forEach(id=>{const el=document.getElementById('nav-'+id);if(el)el.classList.toggle('active',id===p);});
   closeDetail();
   if(window.innerWidth<=768)setMobileHeader(p);
   if(p==='dashboard')renderDashboard();
@@ -2127,6 +2249,7 @@ function showPage(p){
   else if(p==='procurement'){switchProcTab(procCurrentTab);}
   else if(p==='quote'){renderQuotePage();renderMobileCards('quote');}
   else if(p==='suppliers'){renderSuppliersPage();renderMobileCards('suppliers');setMobileHeader('suppliers');}
+  else if(p==='inventory'){renderInventoryPage();renderMobileCards('inv');setMobileHeader('inventory');}
   else if(p==='settings'){renderSettingsPage();}
 }
 
@@ -2152,6 +2275,7 @@ function clearFilters(type){
   else if(type==='proc'){var el;el=document.getElementById('search-proc');if(el)el.value='';el=document.getElementById('fp-proc-supplier');if(el)el.value='';el=document.getElementById('fp-proc-stage');if(el)el.value='';el=document.getElementById('fp-proc-payment');if(el)el.value='';el=document.getElementById('fp-proc-person');if(el)el.value='';renderProcurement();}
   else if(type==='quote'){var sqe=document.getElementById('search-quote');if(sqe)sqe.value='';var fqs=document.getElementById('fq-status');if(fqs)fqs.value='';var fqp=document.getElementById('fq-person');if(fqp)fqp.value='';renderQuotePage();}
   else if(type==='suppliers'){var sse=document.getElementById('search-suppliers');if(sse)sse.value='';renderSuppliersPage();}
+  else if(type==='inv'){var s=document.getElementById('search-inv');if(s)s.value='';var sm=document.getElementById('search-inv-m');if(sm)sm.value='';var st=document.getElementById('fi-inv-status');if(st)st.value='';_invChipStatus='';renderInventoryPage();renderMobileCards_inv();}
 }
 
 function renderDashboard(){
@@ -3774,7 +3898,8 @@ function openOrderDetail(id){
     +(o.notes?'<div class="detail-row"><span class="detail-key">备注</span><span class="detail-val">'+o.notes+'</span></div>':'')
     +(o.followupDate&&o.followupNote?'<div class="detail-row"><span class="detail-key">待办</span><span class="detail-val" style="color:'+(o.followupDate<today()?'var(--red)':'var(--green)')+'">'+((o.followupDate<today())?'🔔 ':'📅 ')+o.followupDate+' 📌 '+o.followupNote+'</span></div>':'')
     +'</div>'
-    +'<div style="display:flex;gap:8px;margin-top:8px">'
+    +'<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">'
+    +(canInvControl()&&(o.stage==='待发货'||o.stage==='已发货')?'<button class="btn btn-outline btn-sm" onclick="openInvOutboundModal('+o.id+')">生成出库单</button>':'')
     +'<button class="btn btn-outline btn-sm" onclick="editOrder('+o.id+');closeDetail()">编辑</button>'
     +'<button class="btn btn-danger btn-sm" onclick="completeOrder('+o.id+');closeDetail()">✓ 标记完成</button>'
     +'</div>';
@@ -5378,15 +5503,15 @@ let mobileCustShown={core:10,focus:10,nurture:10,sleeping:10,dead:10};
 const MOBILE_BATCH=10;
 
 function setMobileHeader(type){
-  ['mh-inq','mh-hot','mh-cust','mh-ord','mh-stats','mh-prod','mh-prodcat','mh-procurement','mh-quote','mh-suppliers'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
-  const titles={dashboard:'数据看板',inquiries:'询盘列表',hot:'🔥 热点商机',customers:'客户管理',oldstats:'📈 销售统计',orders:'📦 执行中订单',settings:'⚙️ 管理员设置',proddev:'🔧 产品开发',prodcat:'🗂️ 产品库',procurement:'🛒 采购跟单',finance:'💰 财务',quote:'📋 报价单',suppliers:'🏭 供应商管理'};
+  ['mh-inq','mh-hot','mh-cust','mh-ord','mh-stats','mh-prod','mh-prodcat','mh-procurement','mh-quote','mh-suppliers','mh-inv'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  const titles={dashboard:'数据看板',inquiries:'询盘列表',hot:'🔥 热点商机',customers:'客户管理',oldstats:'📈 销售统计',orders:'📦 执行中订单',settings:'⚙️ 管理员设置',proddev:'🔧 产品开发',prodcat:'🗂️ 产品库',procurement:'🛒 采购跟单',finance:'💰 财务',quote:'📋 报价单',suppliers:'🏭 供应商管理',inventory:'📋 库存管理'};
   document.getElementById('mobile-page-title').textContent=titles[type]||type;
-  const map={inquiries:'mh-inq',hot:'mh-hot',customers:'mh-cust',orders:'mh-ord',oldstats:'mh-stats',proddev:'mh-prod',prodcat:'mh-prodcat',procurement:'mh-procurement',quote:'mh-quote',suppliers:'mh-suppliers'};
+  const map={inquiries:'mh-inq',hot:'mh-hot',customers:'mh-cust',orders:'mh-ord',oldstats:'mh-stats',proddev:'mh-prod',prodcat:'mh-prodcat',procurement:'mh-procurement',quote:'mh-quote',suppliers:'mh-suppliers',inventory:'mh-inv'};
   if(map[type]){const el=document.getElementById(map[type]);if(el)el.style.display='';}
   var addBtn=document.getElementById('mobile-add-btn');
   var backBtn=document.getElementById('mobile-back-btn');
   var settingsBtn=document.getElementById('mobile-settings-btn');
-  var noAddBtn=['settings','prodcat','procurement','finance','suppliers'];
+  var noAddBtn=['settings','prodcat','procurement','finance','suppliers','inventory'];
   if(type==='settings'){
     if(addBtn)addBtn.style.display='none';
     if(settingsBtn)settingsBtn.style.display='none';
@@ -5731,6 +5856,8 @@ function renderMobileCards(page){
     renderMobileCards_suppliers();
   } else if(page==='quote'){
     renderMobileCards_quote();
+  } else if(page==='inv'){
+    renderMobileCards_inv();
   }
 }
 
@@ -5945,7 +6072,7 @@ function refreshAll(){
   updateInqTabCounts();
   const active=document.querySelector('.page.active');if(!active)return;
   const id=active.id.replace('page-','');
-  if(id==='dashboard')renderDashboard();else if(id==='hot')renderHot();else if(id==='inquiries')renderInquiries();else if(id==='customers')renderCustomers();else if(id==='oldstats')renderOldStats();else if(id==='orders')renderOrders();else if(id==='proddev'){if(prodView==='card')renderProdCardView();else renderProdDev();}else if(id==='prodcat'){if(pcatView==='card')renderPcatCardView();else renderProdCat();}else if(id==='procurement')switchProcTab(procCurrentTab);else if(id==='quote')renderQuotePage();else if(id==='suppliers')renderSuppliersPage();
+  if(id==='dashboard')renderDashboard();else if(id==='hot')renderHot();else if(id==='inquiries')renderInquiries();else if(id==='customers')renderCustomers();else if(id==='oldstats')renderOldStats();else if(id==='orders')renderOrders();else if(id==='proddev'){if(prodView==='card')renderProdCardView();else renderProdDev();}else if(id==='prodcat'){if(pcatView==='card')renderPcatCardView();else renderProdCat();}else if(id==='procurement')switchProcTab(procCurrentTab);else if(id==='quote')renderQuotePage();else if(id==='suppliers')renderSuppliersPage();else if(id==='inventory')renderInventoryPage();
 }
 
 /* ===== IndexedDB 图片存储 ===== */
@@ -8519,7 +8646,7 @@ function openProcDetail(id){
   stageHtml+='</div>';
   var receiptBtn='';
   if(p.stage==='已到货'){
-    receiptBtn='<div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:13px;color:var(--yellow)">货已到仓，等待入库确认</span><button class="btn btn-primary btn-sm" onclick="openReceiptModal(\''+id+'\')">确认入库</button></div>';
+    receiptBtn='<div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:13px;color:var(--yellow)">货已到仓，等待入库确认</span>'+(canInvControl()?'<button class="btn btn-primary btn-sm" onclick="openInvInboundModal(\''+id+'\')">生成入库单</button>':'<span style="font-size:12px;color:var(--muted)">请联系 Penny/Alan 确认入库</span>')+'</div>';
   }
   var itemsHtml='<div class="detail-section"><div class="detail-section-title">采购明细</div>';
   (p.items||[]).forEach(function(item,idx){
@@ -9728,6 +9855,454 @@ function renderInqQuoteListInline(inqId){
       +'</div></div>';
   });
   return html;
+}
+
+/* ===== 库存管理模块 ===== */
+var _invCurrentSkuCode='';
+var _invInboundPoId='';
+var _invOutboundOrdId=0;
+var _invChipStatus='';
+
+function getInvData(){
+  var s=localStorage.getItem(SK.inv);
+  var d=s?JSON.parse(s):{movements:[]};
+  if(!d.movements)d.movements=[];
+  return d;
+}
+function saveInvData(d){localStorage.setItem(SK.inv,JSON.stringify(d));}
+
+function canInvControl(){return currentUser==='Penny'||currentUser==='Alan';}
+
+function getPcatForInv(){
+  var s=localStorage.getItem(SK.prodcat);
+  if(s){try{return JSON.parse(s);}catch(e){}}
+  return null;
+}
+
+function getStockedSkus(){
+  var pc=getPcatForInv();
+  var result=[];
+  if(!pc||!pc.products)return result;
+  pc.products.forEach(function(p){
+    (p.skus||[]).forEach(function(sk){
+      if(sk.hasStock){result.push({product:p,sku:sk});}
+    });
+  });
+  return result;
+}
+
+function getCurrentStock(skuCode){
+  var d=getInvData();
+  return d.movements.filter(function(m){return m.skuCode===skuCode;}).reduce(function(sum,m){return sum+(m.qty||0);},0);
+}
+
+function getLastInvMovement(skuCode){
+  var d=getInvData();
+  var list=d.movements.filter(function(m){return m.skuCode===skuCode;}).sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
+  return list.length?list[0]:null;
+}
+
+function getInvStatus(currentQty,safetyStock){
+  if(currentQty<=0)return '缺货';
+  if(safetyStock&&currentQty<=safetyStock)return '预警';
+  return '充足';
+}
+
+function getInvStatusClass(status){
+  if(status==='缺货')return 'inv-status-out';
+  if(status==='预警')return 'inv-status-low';
+  return 'inv-status-ok';
+}
+
+function renderInventoryPage(){
+  var body=document.getElementById('inv-list-body');
+  if(!body)return;
+  var searchD=document.getElementById('search-inv');
+  var searchM=document.getElementById('search-inv-m');
+  var q=((searchD&&searchD.value)||(searchM&&searchM.value)||'').toLowerCase().trim();
+  var statusF=document.getElementById('fi-inv-status');
+  var filterSt=_invChipStatus||(statusF?statusF.value:'');
+  var list=getStockedSkus();
+  if(q){list=list.filter(function(x){return (x.sku.skuCode||'').toLowerCase().indexOf(q)>=0||(x.product.nameCN||'').toLowerCase().indexOf(q)>=0||(x.sku.variantCN||'').toLowerCase().indexOf(q)>=0;});}
+  if(filterSt){list=list.filter(function(x){var qty=getCurrentStock(x.sku.skuCode);var st=getInvStatus(qty,x.sku.safetyStock);return st===filterSt;});}
+  if(!list.length){body.innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)">'+(q||filterSt?'没有符合条件的库存记录':'暂无库存产品，请先在产品库中设置 hasStock=true 的 SKU')+'</div>';return;}
+  var html='';
+  list.forEach(function(x){
+    var qty=getCurrentStock(x.sku.skuCode);
+    var st=getInvStatus(qty,x.sku.safetyStock);
+    var cls=getInvStatusClass(st);
+    var last=getLastInvMovement(x.sku.skuCode);
+    var lastStr=last?(last.date+' '+last.movementType+(last.qty>0?'+':'')+last.qty):'—';
+    html+='<div class="table-row cols-inv" onclick="openInvDetail(\''+x.sku.skuCode+'\')" style="cursor:pointer">'
+      +'<div style="font-family:monospace;font-size:12px;color:var(--accent)">'+x.sku.skuCode+'</div>'
+      +'<div style="font-size:13px;font-weight:500">'+x.product.nameCN+'</div>'
+      +'<div style="font-size:12px;color:var(--muted)">'+(x.sku.variantCN||'—')+'</div>'
+      +'<div style="font-size:12px;color:var(--muted)">'+(x.sku.stockUnit||'个')+'</div>'
+      +'<div style="font-size:14px;font-weight:600;color:'+(qty<=0?'var(--red)':qty<=(x.sku.safetyStock||0)?'var(--yellow)':'var(--text)')+'">'+qty+'</div>'
+      +'<div style="font-size:12px;color:var(--muted2)">'+(x.sku.safetyStock||0)+'</div>'
+      +'<div class="'+cls+'">'+st+'</div>'
+      +'<div style="font-size:11px;color:var(--muted2)">'+lastStr+'</div>'
+      +'</div>';
+  });
+  body.innerHTML=html;
+}
+
+function renderMobileCards_inv(){
+  var con=document.getElementById('mobile-inv-cards');
+  if(!con)return;
+  var searchM=document.getElementById('search-inv-m');
+  var q=(searchM?searchM.value:'').toLowerCase().trim();
+  var chipSt=_invChipStatus||'';
+  var list=getStockedSkus();
+  if(q){list=list.filter(function(x){return (x.sku.skuCode||'').toLowerCase().indexOf(q)>=0||(x.product.nameCN||'').toLowerCase().indexOf(q)>=0;});}
+  if(chipSt){list=list.filter(function(x){var qty=getCurrentStock(x.sku.skuCode);var st=getInvStatus(qty,x.sku.safetyStock);return st===chipSt;});}
+  if(!list.length){con.innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)">暂无记录</div>';return;}
+  var html='';
+  list.forEach(function(x){
+    var qty=getCurrentStock(x.sku.skuCode);
+    var st=getInvStatus(qty,x.sku.safetyStock);
+    var cls=getInvStatusClass(st);
+    var last=getLastInvMovement(x.sku.skuCode);
+    var border=st==='缺货'?'border-left:3px solid var(--red)':st==='预警'?'border-left:3px solid var(--yellow)':'border-left:3px solid var(--green)';
+    html+='<div class="mobile-card" style="'+border+'" onclick="openInvDetail(\''+x.sku.skuCode+'\')">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center">'
+      +'<div><div style="font-weight:600;font-size:14px">'+x.product.nameCN+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+x.sku.skuCode+' · '+(x.sku.variantCN||'')+'</div></div>'
+      +'<div style="text-align:right"><div style="font-size:20px;font-weight:700;color:'+(qty<=0?'var(--red)':qty<=(x.sku.safetyStock||0)?'var(--yellow)':'var(--text)')+'">'+qty+'</div><div style="font-size:11px;color:var(--muted)">'+(x.sku.stockUnit||'个')+'</div></div>'
+      +'</div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">'
+      +'<span class="'+cls+'">'+st+'</span>'
+      +'<span style="font-size:11px;color:var(--muted2)">'+(last?last.date+' '+last.movementType:'暂无流水')+'</span>'
+      +'</div>'
+      +'</div>';
+  });
+  con.innerHTML=html;
+}
+
+function invChipFilter(el,status){
+  var chips=document.querySelectorAll('#mh-inv .chip');
+  chips.forEach(function(c){c.classList.remove('active');});
+  if(el)el.classList.add('active');
+  _invChipStatus=status;
+  renderInventoryPage();
+  renderMobileCards_inv();
+}
+
+function openInvDetail(skuCode){
+  _invCurrentSkuCode=skuCode;
+  currentDetailId=skuCode;
+  currentDetailType='inv';
+  var all=getStockedSkus();
+  var found=null;
+  all.forEach(function(x){if(x.sku.skuCode===skuCode)found=x;});
+  var qty=getCurrentStock(skuCode);
+  var panel=document.getElementById('detail-panel');
+  if(!panel)return;
+  var tabProfile=document.getElementById('dp-tab-profile');
+  var tabFollowup=document.getElementById('dp-tab-followup');
+  var tabSales=document.getElementById('dp-tab-sales');
+  var tabQuote=document.getElementById('dp-tab-quote');
+  if(tabProfile){tabProfile.textContent='库存详情';tabProfile.style.display='';}
+  if(tabFollowup){tabFollowup.textContent='流水记录';tabFollowup.style.display='';}
+  if(tabSales)tabSales.style.display='none';
+  if(tabQuote)tabQuote.style.display='none';
+  var headTitle=document.getElementById('detail-head-title');
+  if(headTitle)headTitle.textContent=found?(found.product.nameCN||skuCode):skuCode;
+  var editBtn=document.getElementById('detail-edit-btn');
+  if(editBtn)editBtn.style.display='none';
+  var d=getInvData();
+  var movements=d.movements.filter(function(m){return m.skuCode===skuCode;}).sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
+  var statusHtml='';
+  if(found){
+    var st=getInvStatus(qty,found.sku.safetyStock);
+    var cls=getInvStatusClass(st);
+    statusHtml='<div style="display:flex;gap:16px;align-items:center;padding:12px 0">'
+      +'<div><div style="font-size:11px;color:var(--muted)">现有库存</div><div style="font-size:28px;font-weight:700;color:'+(qty<=0?'var(--red)':qty<=(found.sku.safetyStock||0)?'var(--yellow)':'var(--text)')+'">'+qty+' <span style="font-size:14px;font-weight:400">'+(found.sku.stockUnit||'个')+'</span></div></div>'
+      +'<div><div style="font-size:11px;color:var(--muted)">安全库存</div><div style="font-size:18px;font-weight:600;color:var(--muted)">'+(found.sku.safetyStock||0)+'</div></div>'
+      +'<div><div style="font-size:11px;color:var(--muted)">状态</div><div class="'+cls+'" style="font-size:14px">'+st+'</div></div>'
+      +'</div>'
+      +'<div style="font-size:12px;color:var(--muted);margin-bottom:12px">SKU：'+skuCode+'  规格：'+(found.sku.variantCN||'—')+'</div>';
+    if(canInvControl()){
+      statusHtml+='<div style="display:flex;gap:8px;margin-bottom:14px">'
+        +'<button class="btn btn-outline btn-sm" onclick="openInvAdjModal(\'手工入库\',\''+skuCode+'\')">手工入库</button>'
+        +'<button class="btn btn-outline btn-sm" onclick="openInvAdjModal(\'样品出库\',\''+skuCode+'\')">样品出库</button>'
+        +'<button class="btn btn-outline btn-sm" onclick="openInvAdjModal(\'损坏报废\',\''+skuCode+'\')">损坏报废</button>'
+        +'</div>';
+    }
+  }
+  var mvHtml='';
+  if(!movements.length){mvHtml='<div style="padding:20px;text-align:center;color:var(--muted)">暂无流水记录</div>';}
+  else{
+    movements.forEach(function(m){
+      var isIn=m.qty>0;
+      mvHtml+='<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">'
+        +'<div><div style="font-size:13px;font-weight:500">'+m.movementType+'</div>'
+        +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+m.date+'  '+m.person+(m.sourceId?' · '+m.sourceId:'')+(m.note?' · '+m.note:'')+'</div></div>'
+        +'<div style="font-size:16px;font-weight:700;color:'+(isIn?'var(--green)':'var(--red)')+'">'+(isIn?'+':'')+m.qty+' '+(m.unit||'')+'</div>'
+        +'</div>';
+    });
+  }
+  var tab1='<div style="padding:20px">'+statusHtml+'</div>';
+  var tab2='<div style="padding:20px">'+(canInvControl()?'<div style="margin-bottom:12px"><button class="btn btn-primary btn-sm" onclick="openInvAdjModal(\'\',\''+skuCode+'\')">+ 手工录入</button></div>':'')+'<div>'+mvHtml+'</div></div>';
+  var db=document.getElementById('detail-body');
+  if(db)db.innerHTML='<div class="dp-tab-content active" id="dp-content-profile">'+tab1+'</div>'+'<div class="dp-tab-content" id="dp-content-followup">'+tab2+'</div>';
+  panel.classList.add('open');
+  switchDpTab('profile');
+}
+
+/* 手工录入 */
+var _invAdjSelectedSku=null;
+function openInvAdjModal(type,skuCode){
+  _invAdjSelectedSku=null;
+  var typeEl=document.getElementById('fadj-type');if(typeEl&&type)typeEl.value=type;
+  var dateEl=document.getElementById('fadj-date');if(dateEl)dateEl.value=today();
+  var skuEl=document.getElementById('fadj-sku');if(skuEl)skuEl.value='';
+  var qtyEl=document.getElementById('fadj-qty');if(qtyEl)qtyEl.value='';
+  var unitEl=document.getElementById('fadj-unit');if(unitEl)unitEl.value='';
+  var noteEl=document.getElementById('fadj-note');if(noteEl)noteEl.value='';
+  var infoEl=document.getElementById('fadj-sku-info');if(infoEl)infoEl.textContent='';
+  if(skuCode){
+    var all=getStockedSkus();
+    all.forEach(function(x){
+      if(x.sku.skuCode===skuCode){
+        _invAdjSelectedSku=x;
+        if(skuEl)skuEl.value=x.sku.skuCode+' - '+x.product.nameCN;
+        if(unitEl)unitEl.value=x.sku.stockUnit||'个';
+        if(infoEl)infoEl.textContent='当前库存：'+getCurrentStock(skuCode)+' '+(x.sku.stockUnit||'个');
+      }
+    });
+  }
+  openModal('inv-adj-modal');
+}
+function onInvSkuInput(el){
+  var q=(el.value||'').toLowerCase().trim();
+  var dd=document.getElementById('fadj-sku-dd');
+  if(!dd)return;
+  dd.innerHTML='';
+  if(!q){dd.style.display='none';_invAdjSelectedSku=null;return;}
+  var list=getStockedSkus().filter(function(x){return (x.sku.skuCode||'').toLowerCase().indexOf(q)>=0||(x.product.nameCN||'').toLowerCase().indexOf(q)>=0;}).slice(0,6);
+  if(!list.length){dd.style.display='none';return;}
+  list.forEach(function(x){
+    var div=document.createElement('div');
+    div.className='autocomplete-item';
+    div.textContent=x.sku.skuCode+' — '+x.product.nameCN+' ('+getCurrentStock(x.sku.skuCode)+' '+(x.sku.stockUnit||'个')+')';
+    (function(item){div.onmousedown=function(e){e.preventDefault();selectInvSku(item);};})(x);
+    dd.appendChild(div);
+  });
+  dd.style.display='block';
+}
+function onInvSkuBlur(el){var dd=document.getElementById('fadj-sku-dd');setTimeout(function(){if(dd)dd.style.display='none';},200);}
+function selectInvSku(x){
+  _invAdjSelectedSku=x;
+  var skuEl=document.getElementById('fadj-sku');if(skuEl)skuEl.value=x.sku.skuCode+' - '+x.product.nameCN;
+  var unitEl=document.getElementById('fadj-unit');if(unitEl)unitEl.value=x.sku.stockUnit||'个';
+  var infoEl=document.getElementById('fadj-sku-info');if(infoEl)infoEl.textContent='当前库存：'+getCurrentStock(x.sku.skuCode)+' '+(x.sku.stockUnit||'个');
+  var dd=document.getElementById('fadj-sku-dd');if(dd)dd.style.display='none';
+}
+function saveInvAdj(){
+  if(!_invAdjSelectedSku){toast('请选择SKU');return;}
+  var typeEl=document.getElementById('fadj-type');
+  var dateEl=document.getElementById('fadj-date');
+  var qtyEl=document.getElementById('fadj-qty');
+  var unitEl=document.getElementById('fadj-unit');
+  var noteEl=document.getElementById('fadj-note');
+  var movType=(typeEl?typeEl.value:'')||'手工入库';
+  var dateV=dateEl?dateEl.value:today();
+  var qtyV=parseFloat(qtyEl?qtyEl.value:0)||0;
+  if(!qtyV||qtyV<=0){toast('请填写有效数量（正数）');return;}
+  var isOut=movType==='样品出库'||movType==='生产领料出库'||movType==='损坏报废';
+  var finalQty=isOut?-Math.abs(qtyV):Math.abs(qtyV);
+  var d=getInvData();
+  d.movements.push({id:'inv'+Date.now(),date:dateV,skuCode:_invAdjSelectedSku.sku.skuCode,nameCN:_invAdjSelectedSku.product.nameCN,unit:unitEl?unitEl.value:(_invAdjSelectedSku.sku.stockUnit||'个'),movementType:movType,qty:finalQty,sourceType:'manual',sourceId:'',person:currentUser,note:noteEl?noteEl.value:''});
+  saveInvData(d);
+  closeModal('inv-adj-modal');
+  renderInventoryPage();
+  renderMobileCards_inv();
+  if(currentDetailType==='inv'&&currentDetailId===_invAdjSelectedSku.sku.skuCode)openInvDetail(currentDetailId);
+  toast('已录入：'+movType+' '+Math.abs(qtyV)+' '+(unitEl?unitEl.value:''));
+}
+
+/* 采购入库单 */
+var _invInboundItems=[];
+function openInvInboundModal(poId){
+  _invInboundPoId=poId;
+  _invInboundItems=[];
+  var d=getProcData();
+  var p=null;
+  d.pos.forEach(function(x){if(x.id===poId)p=x;});
+  if(!p)return;
+  var html='<div style="margin-bottom:12px"><div style="font-size:13px;font-weight:600">'+p.poNumber+'</div><div style="font-size:12px;color:var(--muted)">供应商：'+p.supplierName+'  到货日期：'+today()+'</div></div>';
+  html+='<table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="color:var(--muted);border-bottom:1px solid var(--border)"><td style="padding:6px 4px">SKU编码</td><td style="padding:6px 4px">品名</td><td style="padding:6px 4px;text-align:right">PO数量</td><td style="padding:6px 4px;text-align:right">实际到货</td></tr>';
+  (p.items||[]).forEach(function(item,idx){
+    _invInboundItems.push({skuCode:item.skuCode,nameCN:item.nameCN,unit:item.unit,poQty:item.qty});
+    html+='<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 4px;font-family:monospace;font-size:11px;color:var(--accent)">'+(item.skuCode||'—')+'</td><td style="padding:6px 4px">'+item.nameCN+'</td><td style="padding:6px 4px;text-align:right;color:var(--muted)">'+item.qty+' '+item.unit+'</td><td style="padding:6px 4px;text-align:right"><input type="number" id="inbound-qty-'+idx+'" value="'+item.qty+'" min="0" style="width:80px;text-align:right;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:12px"></td></tr>';
+  });
+  html+='</table><div style="margin-top:12px"><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase">备注</label><input class="form-input" type="text" id="inbound-note" placeholder="可选" style="margin-top:4px"></div>';
+  var con=document.getElementById('inv-inbound-content');if(con)con.innerHTML=html;
+  openModal('inv-inbound-modal');
+}
+function confirmInvInbound(){
+  var d=getInvData();
+  var pd=getProcData();
+  var p=null;
+  pd.pos.forEach(function(x){if(x.id===_invInboundPoId)p=x;});
+  if(!p)return;
+  var note=(document.getElementById('inbound-note')||{}).value||'';
+  _invInboundItems.forEach(function(item,idx){
+    var qtyEl=document.getElementById('inbound-qty-'+idx);
+    var qty=qtyEl?parseFloat(qtyEl.value)||0:0;
+    if(qty>0&&item.skuCode){
+      d.movements.push({id:'inv'+Date.now()+'_'+idx,date:today(),skuCode:item.skuCode,nameCN:item.nameCN,unit:item.unit,movementType:'采购入库',qty:qty,sourceType:'po',sourceId:p.poNumber,person:currentUser,note:note});
+    }
+  });
+  saveInvData(d);
+  p.stage='已入库';p.receivedDate=today();
+  saveProcData(pd);
+  closeModal('inv-inbound-modal');
+  refreshAll();
+  toast('入库完成，采购单已标记为已入库',3000);
+}
+
+/* 销售出库单 */
+var _invOutboundItems=[];
+function openInvOutboundModal(ordId){
+  _invOutboundOrdId=ordId;
+  _invOutboundItems=[];
+  var ord=null;
+  orders.forEach(function(o){if(o.id===ordId)ord=o;});
+  if(!ord)return;
+  var html='<div style="margin-bottom:12px"><div style="font-size:13px;font-weight:600">出库单 — '+ord.alias+'</div><div style="font-size:12px;color:var(--muted)">订单日期：'+ord.date+'  出库日期：'+today()+'</div></div>';
+  var hasItems=ord.items&&ord.items.length;
+  html+='<table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="color:var(--muted);border-bottom:1px solid var(--border)"><td style="padding:6px 4px">SKU编码</td><td style="padding:6px 4px">品名</td><td style="padding:6px 4px;text-align:right">订单数量</td><td style="padding:6px 4px;text-align:right">实际出库</td></tr>';
+  if(hasItems){
+    ord.items.forEach(function(item,idx){
+      _invOutboundItems.push({skuCode:item.skuCode,nameCN:item.nameCN||ord.product,unit:item.unit||'个',ordQty:item.qty});
+      html+='<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 4px;font-family:monospace;font-size:11px;color:var(--accent)">'+(item.skuCode||'—')+'</td><td style="padding:6px 4px">'+(item.nameCN||ord.product)+'</td><td style="padding:6px 4px;text-align:right;color:var(--muted)">'+item.qty+' '+(item.unit||'个')+'</td><td style="padding:6px 4px;text-align:right"><input type="number" id="outbound-qty-'+idx+'" value="'+item.qty+'" min="0" style="width:80px;text-align:right;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:12px"></td></tr>';
+    });
+  } else {
+    _invOutboundItems.push({skuCode:'',nameCN:ord.product,unit:'个',ordQty:ord.qty||1});
+    html+='<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 4px;color:var(--muted)">—</td><td style="padding:6px 4px">'+ord.product+'</td><td style="padding:6px 4px;text-align:right;color:var(--muted)">'+(ord.qty||'')+'</td><td style="padding:6px 4px;text-align:right"><input type="number" id="outbound-qty-0" value="'+(ord.qty||'')+'" min="0" style="width:80px;text-align:right;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:12px"></td></tr>';
+  }
+  html+='</table><div style="margin-top:12px;font-size:11px;color:var(--muted)">仅有 SKU 编码的明细会自动扣减库存台账</div><div style="margin-top:8px"><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase">备注</label><input class="form-input" type="text" id="outbound-note" placeholder="可选" style="margin-top:4px"></div>';
+  var con=document.getElementById('inv-outbound-content');if(con)con.innerHTML=html;
+  openModal('inv-outbound-modal');
+}
+function confirmInvOutbound(){
+  var d=getInvData();
+  var ord=null;
+  orders.forEach(function(o){if(o.id===_invOutboundOrdId)ord=o;});
+  if(!ord)return;
+  var note=(document.getElementById('outbound-note')||{}).value||'';
+  var recorded=0;
+  _invOutboundItems.forEach(function(item,idx){
+    var qtyEl=document.getElementById('outbound-qty-'+idx);
+    var qty=qtyEl?parseFloat(qtyEl.value)||0:0;
+    if(qty>0&&item.skuCode){
+      d.movements.push({id:'inv'+Date.now()+'_'+idx,date:today(),skuCode:item.skuCode,nameCN:item.nameCN,unit:item.unit,movementType:'销售出库',qty:-qty,sourceType:'order',sourceId:String(ord.id),person:currentUser,note:note});
+      recorded++;
+    }
+  });
+  saveInvData(d);
+  closeModal('inv-outbound-modal');
+  renderInventoryPage();
+  renderMobileCards_inv();
+  toast('出库完成'+(recorded?'，已扣减'+recorded+'条SKU库存':'（无SKU编码，台账未变动）'),3000);
+}
+
+/* 打印单据 */
+function printInvDoc(type){
+  var content='';
+  if(type==='inbound'){
+    var pd=getProcData();
+    var p=null;
+    pd.pos.forEach(function(x){if(x.id===_invInboundPoId)p=x;});
+    if(!p)return;
+    content='<h2 style="text-align:center;margin:0 0 8px">入 库 单</h2>'
+      +'<p style="text-align:center;color:#666;margin:0 0 16px">'+p.poNumber+' | '+p.supplierName+'</p>'
+      +'<table style="width:100%;border-collapse:collapse;font-size:13px">'
+      +'<tr style="background:#f0f0f0"><th style="padding:6px;border:1px solid #ccc;text-align:left">SKU</th><th style="padding:6px;border:1px solid #ccc">品名</th><th style="padding:6px;border:1px solid #ccc;text-align:right">PO数量</th><th style="padding:6px;border:1px solid #ccc;text-align:right">实收数量</th><th style="padding:6px;border:1px solid #ccc">单位</th></tr>';
+    _invInboundItems.forEach(function(item,idx){
+      var qtyEl=document.getElementById('inbound-qty-'+idx);
+      var qty=qtyEl?qtyEl.value:'';
+      content+='<tr><td style="padding:6px;border:1px solid #ccc">'+(item.skuCode||'—')+'</td><td style="padding:6px;border:1px solid #ccc">'+item.nameCN+'</td><td style="padding:6px;border:1px solid #ccc;text-align:right">'+item.poQty+'</td><td style="padding:6px;border:1px solid #ccc;text-align:right">'+qty+'</td><td style="padding:6px;border:1px solid #ccc">'+item.unit+'</td></tr>';
+    });
+    content+='</table><div style="margin-top:40px;display:flex;justify-content:space-between"><div>收货人签字：___________</div><div>日期：'+today()+'</div></div>';
+  } else {
+    var ord=null;
+    orders.forEach(function(o){if(o.id===_invOutboundOrdId)ord=o;});
+    if(!ord)return;
+    content='<h2 style="text-align:center;margin:0 0 8px">出 库 单</h2>'
+      +'<p style="text-align:center;color:#666;margin:0 0 16px">客户：'+ord.alias+' | 日期：'+today()+'</p>'
+      +'<table style="width:100%;border-collapse:collapse;font-size:13px">'
+      +'<tr style="background:#f0f0f0"><th style="padding:6px;border:1px solid #ccc;text-align:left">SKU</th><th style="padding:6px;border:1px solid #ccc">品名</th><th style="padding:6px;border:1px solid #ccc;text-align:right">订单数量</th><th style="padding:6px;border:1px solid #ccc;text-align:right">出库数量</th><th style="padding:6px;border:1px solid #ccc">单位</th></tr>';
+    _invOutboundItems.forEach(function(item,idx){
+      var qtyEl=document.getElementById('outbound-qty-'+idx);
+      var qty=qtyEl?qtyEl.value:'';
+      content+='<tr><td style="padding:6px;border:1px solid #ccc">'+(item.skuCode||'—')+'</td><td style="padding:6px;border:1px solid #ccc">'+item.nameCN+'</td><td style="padding:6px;border:1px solid #ccc;text-align:right">'+item.ordQty+'</td><td style="padding:6px;border:1px solid #ccc;text-align:right">'+qty+'</td><td style="padding:6px;border:1px solid #ccc">'+item.unit+'</td></tr>';
+    });
+    content+='</table><div style="margin-top:40px;display:flex;justify-content:space-between"><div>发货人签字：___________</div><div>日期：'+today()+'</div></div>';
+  }
+  var w=window.open('','_blank','width=700,height=600');
+  if(!w)return;
+  w.document.write('<html><head><title>单据打印</title><style>body{font-family:sans-serif;padding:30px;}</style></head><body>'+content+'<scr'+'ipt>window.onload=function(){window.print();}<\/scr'+'ipt></body></html>');
+  w.document.close();
+}
+
+/* 盘库对账 */
+function openStocktakeModal(){
+  var dateEl=document.getElementById('stocktake-date');if(dateEl)dateEl.value=today();
+  var list=getStockedSkus();
+  var html='';
+  if(!list.length){html='<div style="padding:20px;text-align:center;color:var(--muted)">暂无需盘点的库存SKU</div>';}
+  else{
+    html='<table style="width:100%;border-collapse:collapse;font-size:13px">'
+      +'<tr style="color:var(--muted);border-bottom:1px solid var(--border)"><td style="padding:6px 4px">SKU</td><td style="padding:6px 4px">品名</td><td style="padding:6px 4px;text-align:right">系统库存</td><td style="padding:6px 4px;text-align:right">实盘数量</td><td style="padding:6px 4px">差异</td></tr>';
+    list.forEach(function(x){
+      var sysQty=getCurrentStock(x.sku.skuCode);
+      var safeId=x.sku.skuCode.replace(/-/g,'_');
+      html+='<tr style="border-bottom:1px solid var(--border)">'
+        +'<td style="padding:6px 4px;font-family:monospace;font-size:11px;color:var(--accent)">'+x.sku.skuCode+'</td>'
+        +'<td style="padding:6px 4px;font-size:12px">'+x.product.nameCN+'</td>'
+        +'<td style="padding:6px 4px;text-align:right;color:var(--muted)">'+sysQty+'</td>'
+        +'<td style="padding:6px 4px;text-align:right"><input type="number" id="st-qty-'+safeId+'" value="'+sysQty+'" min="0" step="0.01" style="width:80px;text-align:right;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:12px" oninput="updateStDiff(this,'+sysQty+')"></td>'
+        +'<td style="padding:6px 4px" id="st-diff-'+safeId+'"><span style="color:var(--muted)">0</span></td>'
+        +'</tr>';
+    });
+    html+='</table>';
+  }
+  var body=document.getElementById('stocktake-body');if(body)body.innerHTML=html;
+  openModal('stocktake-modal');
+}
+function updateStDiff(el,sysQty){
+  var actual=parseFloat(el.value)||0;
+  var diff=actual-sysQty;
+  var id=el.id.replace('st-qty-','st-diff-');
+  var diffEl=document.getElementById(id);
+  if(diffEl)diffEl.innerHTML='<span style="color:'+(diff>0?'var(--green)':diff<0?'var(--red)':'var(--muted)')+';">'+(diff>0?'+':'')+diff+'</span>';
+}
+function submitStocktake(){
+  var dateEl=document.getElementById('stocktake-date');
+  var dateV=dateEl?dateEl.value:today();
+  if(!dateV){toast('请选择盘库日期');return;}
+  var list=getStockedSkus();
+  var d=getInvData();
+  var count=0;
+  list.forEach(function(x){
+    var sysQty=getCurrentStock(x.sku.skuCode);
+    var safeId=x.sku.skuCode.replace(/-/g,'_');
+    var qtyEl=document.getElementById('st-qty-'+safeId);
+    if(!qtyEl)return;
+    var actual=parseFloat(qtyEl.value)||0;
+    var diff=actual-sysQty;
+    if(Math.abs(diff)>0.001){
+      d.movements.push({id:'inv'+Date.now()+'_st'+count,date:dateV,skuCode:x.sku.skuCode,nameCN:x.product.nameCN,unit:x.sku.stockUnit||'个',movementType:'盘点调整',qty:diff,sourceType:'manual',sourceId:'',person:currentUser,note:'盘库对账'});
+      count++;
+    }
+  });
+  saveInvData(d);
+  closeModal('stocktake-modal');
+  renderInventoryPage();
+  renderMobileCards_inv();
+  toast(count?'盘库完成，共生成 '+count+' 条调整记录':'盘库完成，账实相符，无需调整',3000);
 }
 </script>
 <script>
