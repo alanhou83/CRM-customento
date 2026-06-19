@@ -8799,6 +8799,34 @@ function renderMobileCards_proc(){
   var d=getProcData();
   var search=(document.getElementById('search-proc-m')||{}).value||'';
   search=search.toLowerCase();
+
+  /* 供应商 Tab */
+  if(procMobileCurrentTab==='suppliers'){
+    var sups=d.suppliers.filter(function(s){
+      if(!search)return true;
+      return (s.name||'').toLowerCase().indexOf(search)>=0||(s.mainProducts||'').toLowerCase().indexOf(search)>=0;
+    });
+    if(!sups.length){container.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted)">暂无供应商</div>';return;}
+    var html='';
+    sups.forEach(function(s){
+      var activePo=d.pos.filter(function(p){return p.supplierId===s.id&&p.stage!=='已入库';}).length;
+      html+='<div class="mobile-card" onclick="openSupplierModal(\''+s.id+'\')" style="cursor:pointer">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
+        +'<span style="font-size:14px;font-weight:600">'+s.name+'</span>'
+        +(activePo?'<span style="font-size:11px;background:rgba(79,142,247,.2);color:var(--accent);padding:2px 8px;border-radius:10px">进行中 '+activePo+'</span>':'')
+        +'</div>'
+        +(s.mainProducts?'<div style="font-size:12px;color:var(--muted2);margin-bottom:3px">'+s.mainProducts+'</div>':'')
+        +'<div style="display:flex;gap:12px;font-size:11px;color:var(--muted)">'
+        +(s.contact?'<span>👤 '+s.contact+'</span>':'')
+        +(s.phone?'<span>📱 '+s.phone+'</span>':'')
+        +(s.paymentTerms?'<span>'+s.paymentTerms+'</span>':'')
+        +'</div>'
+        +'</div>';
+    });
+    container.innerHTML=html;
+    return;
+  }
+
   var pos=d.pos.filter(function(p){
     if(procMobileCurrentTab==='active')return p.stage!=='已入库';
     if(procMobileCurrentTab==='done')return p.stage==='已入库';
@@ -8818,24 +8846,24 @@ function renderMobileCards_proc(){
     var itemSummary=(p.items&&p.items.length)?(p.items[0].nameCN+(p.items.length>1?' 等'+p.items.length+'项':'')):'—';
     var lastFollowup=(p.followups&&p.followups.length)?p.followups[p.followups.length-1].content:'';
     var payColor=p.paymentStatus==='已付全款'?'var(--green)':(p.paymentStatus==='已付定金'?'var(--yellow)':'var(--muted)');
-    html+='<div class="mobile-card'+(ovd?' is-overdue':'')+'" onclick="openProcDetail(\''+p.id+'\')" style="border-left:3px solid '+getProcStageColor(p.stage)+'">'+
-      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'+
-        '<div style="display:flex;align-items:center;gap:6px">'+
-          '<span style="font-family:monospace;font-size:12px;color:var(--accent)">'+p.poNumber+'</span>'+
-          '<span style="'+getProcStageStyle(p.stage)+'">'+p.stage+'</span>'+
-          (ovd?'<span style="font-size:11px;color:var(--red)"> 超期</span>':'')+
-        '</div>'+
-        '<span style="font-size:12px;color:var(--green);font-weight:500">'+(totalStr||'')+'</span>'+
-      '</div>'+
-      '<div style="font-size:13px;font-weight:500;margin-bottom:2px">'+p.supplierName+'</div>'+
-      '<div style="font-size:12px;color:var(--muted2);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+itemSummary+'</div>'+
-      (lastFollowup?'<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+lastFollowup+'</div>':'')+
-      '<div style="display:flex;justify-content:space-between;margin-top:5px;font-size:11px">'+
-        '<span style="color:'+payColor+'">'+p.paymentStatus+'</span>'+
-        '<span style="color:'+(ovd?'var(--red)':'var(--muted)')+'">'+(p.expectedDate?'交期 '+p.expectedDate:'')+'</span>'+
-        '<span style="color:var(--muted)">'+p.person+'</span>'+
-      '</div>'+
-      '</div>';
+    html+='<div class="mobile-card'+(ovd?' is-overdue':'')+'" onclick="openProcDetail(\''+p.id+'\')" style="border-left:3px solid '+getProcStageColor(p.stage)+'">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
+        +'<div style="display:flex;align-items:center;gap:6px">'
+          +'<span style="font-family:monospace;font-size:12px;color:var(--accent)">'+p.poNumber+'</span>'
+          +'<span style="'+getProcStageStyle(p.stage)+'">'+p.stage+'</span>'
+          +(ovd?'<span style="font-size:11px;color:var(--red)"> 超期</span>':'')
+        +'</div>'
+        +'<span style="font-size:12px;color:var(--green);font-weight:500">'+(totalStr||'')+'</span>'
+      +'</div>'
+      +'<div style="font-size:13px;font-weight:500;margin-bottom:2px">'+p.supplierName+'</div>'
+      +'<div style="font-size:12px;color:var(--muted2);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+itemSummary+'</div>'
+      +(lastFollowup?'<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+lastFollowup+'</div>':'')
+      +'<div style="display:flex;justify-content:space-between;margin-top:5px;font-size:11px">'
+        +'<span style="color:'+payColor+'">'+p.paymentStatus+'</span>'
+        +'<span style="color:'+(ovd?'var(--red)':'var(--muted)')+'">'+(p.expectedDate?'交期 '+p.expectedDate:'')+'</span>'
+        +'<span style="color:var(--muted)">'+p.person+'</span>'
+      +'</div>'
+      +'</div>';
   });
   container.innerHTML=html;
 }
