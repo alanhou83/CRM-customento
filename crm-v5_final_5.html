@@ -334,6 +334,12 @@ a{color:var(--accent);text-decoration:none;}
 .inv-tab-btn{padding:8px 18px;border:none;border-bottom:3px solid transparent;background:transparent;cursor:pointer;font-size:13px;color:var(--muted);font-weight:500;margin-bottom:-2px;}
 .inv-tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
 @media(max-width:768px){.inv-tab-row{display:none;}}
+.cols-fin{display:grid;grid-template-columns:88px 80px 110px 1fr 100px 110px 65px;gap:0;align-items:center;}
+.fin-tab-row{display:flex;border-bottom:2px solid var(--border);background:var(--surface);padding:0 28px;}
+.fin-tab-btn{padding:8px 18px;border:none;border-bottom:3px solid transparent;background:transparent;cursor:pointer;font-size:13px;color:var(--muted);font-weight:500;margin-bottom:-2px;}
+.fin-tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+.fin-acct-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;}
+@media(max-width:768px){.fin-tab-row{display:none;}}
 .autocomplete-dd{position:absolute;z-index:9999;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);max-height:200px;overflow-y:auto;width:100%;top:calc(100% + 2px);left:0;}
 .autocomplete-item{padding:8px 12px;font-size:13px;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);}
 .autocomplete-item:last-child{border-bottom:none;}
@@ -537,6 +543,22 @@ a{color:var(--accent);text-decoration:none;}
   <div id="mh-suppliers" style="display:none;margin-bottom:-6px">
     <div style="display:flex;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
       <input type="text" class="search-box" id="search-suppliers-m" placeholder="搜索供应商..." oninput="renderMobileCards('suppliers')" style="flex:1">
+    </div>
+  </div>
+  <div id="mh-fin" style="display:none;margin-bottom:-6px">
+    <div style="padding:8px 0 0">
+      <div class="mobile-chips" style="padding-bottom:6px">
+        <span class="chip active" id="mb-fin-chip-txn" onclick="finMobileTab(this,'txn')">流水</span>
+        <span class="chip" id="mb-fin-chip-accounts" onclick="finMobileTab(this,'accounts')">账户</span>
+        <span class="chip" id="mb-fin-chip-report" onclick="finMobileTab(this,'report')">报表</span>
+        <span class="chip" id="mb-fin-type-in" onclick="finTypeChip(this,'收款')">收款</span>
+        <span class="chip" id="mb-fin-type-out" onclick="finTypeChip(this,'付款')">付款</span>
+        <span class="chip" id="mb-fin-type-exp" onclick="finTypeChip(this,'运营支出')">运营支出</span>
+      </div>
+    </div>
+    <div style="display:flex;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box;align-items:center;gap:8px">
+      <input class="search-box" id="search-fin-m" placeholder="搜索往来方/备注..." oninput="renderFinTransactions()" style="flex:1;border:none;background:transparent;outline:none;font-size:13px">
+      <button class="btn btn-primary btn-sm" onclick="openFinModal('')">+新建</button>
     </div>
   </div>
 </div>
@@ -1290,13 +1312,41 @@ a{color:var(--accent);text-decoration:none;}
 
 <!-- 财务 页面 -->
 <div class="page" id="page-finance">
-  <div class="page-header"><h2>💰 财务</h2></div>
-  <div class="page-content" style="display:flex;align-items:center;justify-content:center;min-height:50vh">
-    <div style="text-align:center;color:var(--muted)">
-      <div style="font-size:52px;margin-bottom:14px">💰</div>
-      <div style="font-size:17px;font-weight:600;color:var(--text);margin-bottom:6px">财务模块</div>
-      <div style="font-size:13px">功能开发中，即将上线</div>
+  <div class="page-head" style="padding:0">
+    <div class="fin-tab-row">
+      <button class="fin-tab-btn active" id="fin-tab-btn-txn" onclick="switchFinTab('txn')">流水记录</button>
+      <button class="fin-tab-btn" id="fin-tab-btn-accounts" onclick="switchFinTab('accounts')">账户余额</button>
+      <button class="fin-tab-btn" id="fin-tab-btn-report" onclick="switchFinTab('report')">财务报表</button>
     </div>
+  </div>
+  <!-- 流水记录 section -->
+  <div id="fin-section-txn">
+    <div class="page-content" style="padding-bottom:0">
+      <div class="filters">
+        <input class="search-box" id="search-fin" placeholder="搜索往来方/备注..." oninput="renderFinTransactions()" style="min-width:160px">
+        <select class="filter-select" id="ff-type" onchange="renderFinTransactions()"><option value="">全部类型</option><option>收款</option><option>付款</option><option>内部转账</option><option>运营支出</option></select>
+        <select class="filter-select" id="ff-account" onchange="renderFinTransactions()"><option value="">全部账户</option></select>
+        <button class="btn btn-outline btn-sm" onclick="clearFilters('fin')">清除</button>
+        <button class="btn btn-primary btn-sm" onclick="openFinModal('')">+ 新建</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-scroll"><div class="table-inner">
+        <div class="table-header cols-fin">
+          <div>日期</div><div>类型</div><div>类别</div><div>往来方</div><div style="text-align:right">金额</div><div>账户</div><div>经办</div>
+        </div>
+        <div id="fin-txn-body"></div>
+      </div></div>
+    </div>
+    <div id="mobile-fin-cards" class="mobile-cards"></div>
+  </div>
+  <!-- 账户余额 section -->
+  <div id="fin-section-accounts" style="display:none">
+    <div class="page-content"><div id="fin-accounts-body"></div></div>
+  </div>
+  <!-- 财务报表 section -->
+  <div id="fin-section-report" style="display:none">
+    <div class="page-content"><div id="fin-report-body"></div></div>
   </div>
 </div>
 
@@ -2126,10 +2176,49 @@ a{color:var(--accent);text-decoration:none;}
   </div>
 </div>
 
+<!-- 财务流水 Modal -->
+<div class="modal-overlay" id="fin-modal" onclick="closeModalBg(event,'fin-modal')">
+<div class="modal" style="max-width:620px">
+  <div class="modal-head"><div class="modal-title" id="fin-modal-title">新建流水</div><button class="modal-close" onclick="closeModal('fin-modal')">x</button></div>
+  <div class="modal-body">
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">日期 *</label><input class="form-input" type="date" id="ff-date"></div>
+      <div class="form-group"><label class="form-label">类型 *</label>
+        <select class="form-input" id="ff-modal-type" onchange="_onFinTypeChange()">
+          <option value="收款">收款</option><option value="付款">付款</option><option value="内部转账">内部转账</option><option value="运营支出">运营支出</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">类别</label>
+        <select class="form-input" id="ff-category">
+          <option>客户收款</option><option>供应商付款</option><option>员工工资</option><option>房租</option><option>快递</option><option>其他支出</option><option>内部转账</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">账户 *</label><select class="form-input" id="ff-modal-account"></select></div>
+      <div class="form-group"><label class="form-label">金额 *</label><input class="form-input" type="number" id="ff-amount" placeholder="0.00" min="0" step="0.01"></div>
+      <div class="form-group"><label class="form-label">币种</label><select class="form-input" id="ff-currency"><option>USD</option><option>CNY</option></select></div>
+      <div class="form-group" style="grid-column:span 2"><label class="form-label">往来方</label><input class="form-input" type="text" id="ff-party" placeholder="客户名/供应商名/收款方"></div>
+      <div class="form-group"><label class="form-label">关联来源</label>
+        <select class="form-input" id="ff-linked-type" onchange="_onFinLinkedTypeChange()">
+          <option value="">无</option><option value="order">销售订单</option><option value="po">采购单</option><option value="expense">其他</option>
+        </select>
+      </div>
+      <div class="form-group" id="ff-linked-id-row" style="display:none"><label class="form-label">关联编号</label><input class="form-input" type="text" id="ff-linked-id" placeholder="订单别名 / PO编号"></div>
+      <div class="form-group"><label class="form-label">经办人</label><select class="form-input" id="ff-person"><option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Penny</option></select></div>
+      <div class="form-group" style="grid-column:span 2"><label class="form-label">备注</label><input class="form-input" type="text" id="ff-note" placeholder="说明..."></div>
+    </div>
+    <div style="margin-top:8px" id="fin-delete-area"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('fin-modal')">取消</button>
+      <button class="btn btn-primary" onclick="saveFinRecord()">保存</button>
+    </div>
+  </div>
+</div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-const SK={inq:'crm_inq_v5',cust:'crm_cust_v5',ord:'crm_ord_v5',sale:'crm_sale_v5',user:'crm_user_v5',settings:'crm_settings_v5',prod:'crm_prod_v5',prodcat:'crm_prodcat_v5',proc:'crm_proc_v5',quote:'crm_quote_v5',inv:'crm_inv_v5'};
+const SK={inq:'crm_inq_v5',cust:'crm_cust_v5',ord:'crm_ord_v5',sale:'crm_sale_v5',user:'crm_user_v5',settings:'crm_settings_v5',prod:'crm_prod_v5',prodcat:'crm_prodcat_v5',proc:'crm_proc_v5',quote:'crm_quote_v5',inv:'crm_inv_v5',fin:'crm_fin_v5'};
 const DEF_PRODUCTS=['MDF杯垫','MDF冰箱贴','马克杯','帆布袋','T恤','Shot Glass','软木杯垫','其他'];
 const DEF_INQ=[
   /* ── 活跃询盘（各状态全覆盖）── */
@@ -2334,7 +2423,7 @@ var NAV_CONFIG={
   'Kelly':[{p:'dashboard',icon:'📊',label:'看板'},{p:'inquiries',icon:'📋',label:'询盘'},{p:'customers',icon:'👥',label:'客户'},{p:'orders',icon:'📦',label:'订单'},{p:'quote',icon:'📋',label:'报价'}],
   'Momi': [{p:'dashboard',icon:'📊',label:'看板'},{p:'inquiries',icon:'📋',label:'询盘'},{p:'customers',icon:'👥',label:'客户'},{p:'orders',icon:'📦',label:'订单'},{p:'quote',icon:'📋',label:'报价'}],
   'Mille':[{p:'dashboard',icon:'📊',label:'看板'},{p:'inquiries',icon:'📋',label:'询盘'},{p:'customers',icon:'👥',label:'客户'},{p:'orders',icon:'📦',label:'订单'},{p:'quote',icon:'📋',label:'报价'}],
-  'Penny':[{p:'dashboard',icon:'📊',label:'看板'},{p:'orders',icon:'📦',label:'订单'},{p:'inventory',icon:'📋',label:'库存'},{p:'procurement',icon:'🛒',label:'采购'},{p:'suppliers',icon:'🏭',label:'供应商'}]
+  'Penny':[{p:'dashboard',icon:'📊',label:'看板'},{p:'orders',icon:'📦',label:'订单'},{p:'inventory',icon:'📋',label:'库存'},{p:'procurement',icon:'🛒',label:'采购'},{p:'finance',icon:'💰',label:'财务'}]
 };
 
 function renderMobileNav(){
@@ -2384,6 +2473,7 @@ function showPage(p){
   else if(p==='quote'){renderQuotePage();renderMobileCards('quote');}
   else if(p==='suppliers'){renderSuppliersPage();renderMobileCards('suppliers');setMobileHeader('suppliers');}
   else if(p==='inventory'){switchInvTab(_invDocTab);setMobileHeader('inventory');}
+  else if(p==='finance'){renderFinancePage();setMobileHeader('finance');}
   else if(p==='settings'){renderSettingsPage();}
 }
 
@@ -2410,6 +2500,8 @@ function clearFilters(type){
   else if(type==='quote'){var sqe=document.getElementById('search-quote');if(sqe)sqe.value='';var fqs=document.getElementById('fq-status');if(fqs)fqs.value='';var fqp=document.getElementById('fq-person');if(fqp)fqp.value='';renderQuotePage();}
   else if(type==='suppliers'){var sse=document.getElementById('search-suppliers');if(sse)sse.value='';renderSuppliersPage();}
   else if(type==='inv'){var s=document.getElementById('search-inv');if(s)s.value='';var sm=document.getElementById('search-inv-m');if(sm)sm.value='';var st=document.getElementById('fi-inv-status');if(st)st.value='';_invChipStatus='';renderInventoryPage();renderMobileCards_inv();}
+  else if(type==='fin'){var sf=document.getElementById('search-fin');if(sf)sf.value='';var sfm=document.getElementById('search-fin-m');if(sfm)sfm.value='';var fft=document.getElementById('ff-type');if(fft)fft.value='';var ffa=document.getElementById('ff-account');if(ffa){ffa.value='';ffa.dataset.populated='';}
+  _finTypeFilter='';['mb-fin-type-in','mb-fin-type-out','mb-fin-type-exp'].forEach(function(id){var c=document.getElementById(id);if(c)c.className='chip';});renderFinTransactions();}
 }
 
 function renderDashboard(){
@@ -4847,7 +4939,7 @@ function newInqFromCust(custId){
   openModal('inq-modal');
 }
 
-function editCurrent(){if(!currentDetailId)return;const _id=currentDetailId,_type=currentDetailType;closeDetail();if(_type==='inquiry')editInquiry(_id);else if(_type==='customer')editCustomer(_id);else if(_type==='order')editOrder(_id);else if(_type==='sale')editSaleRecord(_id);else if(_type==='prod')openProdModal(_id);else if(_type==='prodcat')openProdCatModal(_id);else if(_type==='proc')openProcModal(_id);else if(_type==='supplier')openSupplierModal(_id);else if(_type==='quote'){var qid=_id;openQuoteModal(qid);}else if(_type==='invdoc'){editInvDoc(_id);}}
+function editCurrent(){if(!currentDetailId)return;const _id=currentDetailId,_type=currentDetailType;closeDetail();if(_type==='inquiry')editInquiry(_id);else if(_type==='customer')editCustomer(_id);else if(_type==='order')editOrder(_id);else if(_type==='sale')editSaleRecord(_id);else if(_type==='prod')openProdModal(_id);else if(_type==='prodcat')openProdCatModal(_id);else if(_type==='proc')openProcModal(_id);else if(_type==='supplier')openSupplierModal(_id);else if(_type==='quote'){var qid=_id;openQuoteModal(qid);}else if(_type==='invdoc'){editInvDoc(_id);}else if(_type==='fin'){openFinModal(_id);}}
 
 function toggleStar(){
   if(!currentDetailId)return;
@@ -5637,10 +5729,10 @@ let mobileCustShown={core:10,focus:10,nurture:10,sleeping:10,dead:10};
 const MOBILE_BATCH=10;
 
 function setMobileHeader(type){
-  ['mh-inq','mh-hot','mh-cust','mh-ord','mh-stats','mh-prod','mh-prodcat','mh-procurement','mh-quote','mh-suppliers','mh-inv'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  ['mh-inq','mh-hot','mh-cust','mh-ord','mh-stats','mh-prod','mh-prodcat','mh-procurement','mh-quote','mh-suppliers','mh-inv','mh-fin'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
   const titles={dashboard:'数据看板',inquiries:'询盘列表',hot:'🔥 热点商机',customers:'客户管理',oldstats:'📈 销售统计',orders:'📦 执行中订单',settings:'⚙️ 管理员设置',proddev:'🔧 产品开发',prodcat:'🗂️ 产品库',procurement:'🛒 采购跟单',finance:'💰 财务',quote:'📋 报价单',suppliers:'🏭 供应商管理',inventory:'📋 库存管理'};
   document.getElementById('mobile-page-title').textContent=titles[type]||type;
-  const map={inquiries:'mh-inq',hot:'mh-hot',customers:'mh-cust',orders:'mh-ord',oldstats:'mh-stats',proddev:'mh-prod',prodcat:'mh-prodcat',procurement:'mh-procurement',quote:'mh-quote',suppliers:'mh-suppliers',inventory:'mh-inv'};
+  const map={inquiries:'mh-inq',hot:'mh-hot',customers:'mh-cust',orders:'mh-ord',oldstats:'mh-stats',proddev:'mh-prod',prodcat:'mh-prodcat',procurement:'mh-procurement',quote:'mh-quote',suppliers:'mh-suppliers',inventory:'mh-inv',finance:'mh-fin'};
   if(map[type]){const el=document.getElementById(map[type]);if(el)el.style.display='';}
   var addBtn=document.getElementById('mobile-add-btn');
   var backBtn=document.getElementById('mobile-back-btn');
@@ -6207,7 +6299,7 @@ function refreshAll(){
   updateInqTabCounts();
   const active=document.querySelector('.page.active');if(!active)return;
   const id=active.id.replace('page-','');
-  if(id==='dashboard')renderDashboard();else if(id==='hot')renderHot();else if(id==='inquiries')renderInquiries();else if(id==='customers')renderCustomers();else if(id==='oldstats')renderOldStats();else if(id==='orders')renderOrders();else if(id==='proddev'){if(prodView==='card')renderProdCardView();else renderProdDev();}else if(id==='prodcat'){if(pcatView==='card')renderPcatCardView();else renderProdCat();}else if(id==='procurement')switchProcTab(procCurrentTab);else if(id==='quote')renderQuotePage();else if(id==='suppliers')renderSuppliersPage();else if(id==='inventory')renderInventoryPage();
+  if(id==='dashboard')renderDashboard();else if(id==='hot')renderHot();else if(id==='inquiries')renderInquiries();else if(id==='customers')renderCustomers();else if(id==='oldstats')renderOldStats();else if(id==='orders')renderOrders();else if(id==='proddev'){if(prodView==='card')renderProdCardView();else renderProdDev();}else if(id==='prodcat'){if(pcatView==='card')renderPcatCardView();else renderProdCat();}else if(id==='procurement')switchProcTab(procCurrentTab);else if(id==='quote')renderQuotePage();else if(id==='suppliers')renderSuppliersPage();else if(id==='inventory')renderInventoryPage();else if(id==='finance')renderFinancePage();
 }
 
 /* ===== IndexedDB 图片存储 ===== */
@@ -10119,6 +10211,37 @@ var DEF_INV_DOCS=[
   {id:'invdoc_d20',docNo:'OUT-2026-008',direction:'out',type:'销售出库',date:'2026-06-12',status:'已作废',sourceType:'order',sourceId:'',sourceName:'订单-误操作',supplierName:'',customerAlias:'',person:'Mille',note:'',confirmedDate:'2026-06-12',confirmedBy:'Penny',voidDate:'2026-06-12',voidBy:'Alan',voidReason:'订单数量填错，已作废重开',movementIds:[],
    items:[{skuCode:'BAG-002-A',nameCN:'帆布手提袋 大号',variantCN:'',unit:'个',planQty:20,actualQty:20}]}
 ];
+/* ===== 财务模块数据 ===== */
+var DEF_FIN={
+  accounts:[
+    {id:'acc1',name:'汇丰USD-1',currency:'USD',openingBalance:15000,note:'主收款账户'},
+    {id:'acc2',name:'汇丰USD-2',currency:'USD',openingBalance:5000,note:'备用USD账户'},
+    {id:'acc3',name:'阿里巴巴USD',currency:'USD',openingBalance:2800,note:'阿里平台收款'},
+    {id:'acc4',name:'个人CNY-1',currency:'CNY',openingBalance:50000,note:'Alan个人微信'},
+    {id:'acc5',name:'个人CNY-2',currency:'CNY',openingBalance:20000,note:'Kelly个人支付宝'},
+    {id:'acc6',name:'公司CNY-1',currency:'CNY',openingBalance:80000,note:'公司主账户'},
+    {id:'acc7',name:'公司CNY-2',currency:'CNY',openingBalance:30000,note:'公司备用账户'},
+    {id:'acc8',name:'支付宝CNY',currency:'CNY',openingBalance:15000,note:'支付宝企业账户'}
+  ],
+  transactions:[
+    {id:'fin001',date:'2026-01-15',type:'收款',category:'客户收款',amount:8500,currency:'USD',accountId:'acc1',party:'GKK',linkedType:'order',linkedId:'',note:'GKK年度复单首批定金50%',person:'Alan'},
+    {id:'fin002',date:'2026-01-20',type:'付款',category:'供应商付款',amount:12000,currency:'CNY',accountId:'acc6',party:'义乌陶瓷厂',linkedType:'po',linkedId:'',note:'PO定金30%',person:'Penny'},
+    {id:'fin003',date:'2026-02-05',type:'收款',category:'客户收款',amount:4200,currency:'USD',accountId:'acc3',party:'Emma S.',linkedType:'order',linkedId:'',note:'阿里巴巴订单余款',person:'Momi'},
+    {id:'fin004',date:'2026-02-10',type:'运营支出',category:'快递',amount:380,currency:'CNY',accountId:'acc4',party:'顺丰快递',linkedType:'',linkedId:'',note:'样品快递费合计',person:'Alan'},
+    {id:'fin005',date:'2026-02-15',type:'付款',category:'供应商付款',amount:5500,currency:'CNY',accountId:'acc8',party:'软木供应商',linkedType:'po',linkedId:'',note:'PO-2026-001全款',person:'Penny'},
+    {id:'fin006',date:'2026-03-01',type:'收款',category:'客户收款',amount:6800,currency:'USD',accountId:'acc1',party:'Carlos R.',linkedType:'order',linkedId:'',note:'订单尾款',person:'Kelly'},
+    {id:'fin007',date:'2026-03-08',type:'内部转账',category:'内部转账',amount:10000,currency:'USD',accountId:'acc1',party:'汇丰USD-2',linkedType:'',linkedId:'',note:'USD-1转到USD-2备用',person:'Alan'},
+    {id:'fin008',date:'2026-03-12',type:'运营支出',category:'房租',amount:8000,currency:'CNY',accountId:'acc6',party:'房东',linkedType:'',linkedId:'',note:'3月办公室租金',person:'Alan'},
+    {id:'fin009',date:'2026-04-02',type:'收款',category:'客户收款',amount:15000,currency:'CNY',accountId:'acc8',party:'王芳',linkedType:'order',linkedId:'',note:'1688订单定金',person:'Mille'},
+    {id:'fin010',date:'2026-04-10',type:'付款',category:'供应商付款',amount:18000,currency:'CNY',accountId:'acc6',party:'MDF激光厂',linkedType:'po',linkedId:'',note:'PO-2026-002货款',person:'Penny'},
+    {id:'fin011',date:'2026-04-20',type:'运营支出',category:'员工工资',amount:25000,currency:'CNY',accountId:'acc6',party:'员工',linkedType:'',linkedId:'',note:'4月工资',person:'Alan'},
+    {id:'fin012',date:'2026-05-05',type:'收款',category:'客户收款',amount:9200,currency:'USD',accountId:'acc1',party:'Tom W.',linkedType:'order',linkedId:'',note:'澳大利亚客户首单全款',person:'Alan'},
+    {id:'fin013',date:'2026-05-15',type:'付款',category:'供应商付款',amount:6600,currency:'CNY',accountId:'acc4',party:'帆布袋厂',linkedType:'po',linkedId:'',note:'PO尾款',person:'Penny'},
+    {id:'fin014',date:'2026-05-22',type:'运营支出',category:'其他支出',amount:1200,currency:'CNY',accountId:'acc8',party:'设计师',linkedType:'',linkedId:'',note:'LOGO设计费',person:'Alan'},
+    {id:'fin015',date:'2026-06-01',type:'收款',category:'客户收款',amount:3500,currency:'USD',accountId:'acc3',party:'Berlin Travel Shop',linkedType:'order',linkedId:'',note:'样品订单货款',person:'Momi'}
+  ]
+};
+
 function getInvData(){
   var s=localStorage.getItem(SK.inv);
   var d=s?JSON.parse(s):{movements:[],documents:[]};
@@ -10133,6 +10256,414 @@ function getInvData(){
 function saveInvData(d){localStorage.setItem(SK.inv,JSON.stringify(d));}
 
 function canInvControl(){return currentUser==='Penny'||currentUser==='Alan';}
+
+/* ===== 财务模块 ===== */
+var _finTab='txn';
+var _editingFinId=null;
+var _finTypeFilter='';
+
+function canFinControl(){return currentUser==='Alan'||currentUser==='Penny';}
+function getFinData(){
+  var s=localStorage.getItem(SK.fin);
+  var d=s?JSON.parse(s):{accounts:[],transactions:[]};
+  if(!d.accounts)d.accounts=[];
+  if(!d.transactions)d.transactions=[];
+  var needSave=false;
+  if(!d.accounts.length){d.accounts=DEF_FIN.accounts.slice();needSave=true;}
+  if(!d.transactions.length){d.transactions=DEF_FIN.transactions.slice();needSave=true;}
+  if(needSave)saveFinData(d);
+  return d;
+}
+function saveFinData(d){localStorage.setItem(SK.fin,JSON.stringify(d));}
+
+function getAccountBalance(accountId,d){
+  var acc=null;
+  (d.accounts||[]).forEach(function(a){if(a.id===accountId)acc=a;});
+  if(!acc)return 0;
+  var bal=acc.openingBalance||0;
+  (d.transactions||[]).forEach(function(t){
+    if(t.accountId!==accountId)return;
+    if(t.type==='收款')bal+=(t.amount||0);
+    else bal-=(t.amount||0);
+  });
+  return bal;
+}
+
+function renderFinancePage(){switchFinTab(_finTab);}
+
+function switchFinTab(tab){
+  _finTab=tab;
+  ['txn','accounts','report'].forEach(function(t){
+    var btn=document.getElementById('fin-tab-btn-'+t);
+    var sec=document.getElementById('fin-section-'+t);
+    if(btn)btn.className='fin-tab-btn'+(t===tab?' active':'');
+    if(sec)sec.style.display=t===tab?'':'none';
+  });
+  ['txn','accounts','report'].forEach(function(t){
+    var chip=document.getElementById('mb-fin-chip-'+t);
+    if(chip)chip.className='chip'+(t===tab?' active':'');
+  });
+  if(tab==='txn')renderFinTransactions();
+  else if(tab==='accounts')renderFinAccounts();
+  else if(tab==='report')renderFinReports();
+}
+
+function finMobileTab(el,tab){
+  _finTypeFilter='';
+  ['mb-fin-type-in','mb-fin-type-out','mb-fin-type-exp'].forEach(function(id){var c=document.getElementById(id);if(c)c.className='chip';});
+  switchFinTab(tab);
+}
+
+function finTypeChip(el,type){
+  if(_finTypeFilter===type){_finTypeFilter='';el.className='chip';}
+  else{
+    _finTypeFilter=type;
+    ['mb-fin-type-in','mb-fin-type-out','mb-fin-type-exp'].forEach(function(id){var c=document.getElementById(id);if(c)c.className='chip';});
+    el.className='chip active';
+  }
+  renderFinTransactions();
+}
+
+function renderFinTransactions(){
+  var d=getFinData();
+  var txns=d.transactions||[];
+  var q=((document.getElementById('search-fin')||{}).value||'').trim().toLowerCase();
+  var qm=((document.getElementById('search-fin-m')||{}).value||'').trim().toLowerCase();
+  var search=q||qm;
+  var typeFilter=((document.getElementById('ff-type')||{}).value)||'';
+  var accFilter=((document.getElementById('ff-account')||{}).value)||'';
+  var accSel=document.getElementById('ff-account');
+  if(accSel&&!accSel.dataset.populated){
+    var opts='<option value="">全部账户</option>';
+    (d.accounts||[]).forEach(function(a){opts+='<option value="'+a.id+'">'+a.name+'</option>';});
+    accSel.innerHTML=opts;accSel.dataset.populated='1';
+  }
+  var filtered=txns.filter(function(t){
+    if(search&&(t.party||'').toLowerCase().indexOf(search)<0&&(t.note||'').toLowerCase().indexOf(search)<0&&(t.category||'').toLowerCase().indexOf(search)<0)return false;
+    if(typeFilter&&t.type!==typeFilter)return false;
+    if(accFilter&&t.accountId!==accFilter)return false;
+    if(_finTypeFilter&&t.type!==_finTypeFilter)return false;
+    return true;
+  });
+  filtered.sort(function(a,b){return (b.date||'')>(a.date||'')?1:-1;});
+  var body=document.getElementById('fin-txn-body');
+  if(body){
+    if(!filtered.length){body.innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)">暂无记录</div>';}
+    else{
+      var html='';
+      filtered.forEach(function(t){
+        var tc=t.type==='收款'?'var(--green)':t.type==='付款'||t.type==='运营支出'?'var(--red)':'var(--accent2)';
+        var amtStr=(t.type==='收款'?'+':'-')+(t.currency==='USD'?'$':'¥')+(t.amount||0);
+        var accName='';(d.accounts||[]).forEach(function(a){if(a.id===t.accountId)accName=a.name;});
+        html+='<div class="table-row cols-fin" onclick="openFinDetail(\''+t.id+'\')" style="cursor:pointer">';
+        html+='<div style="font-size:12px;color:var(--muted)">'+t.date+'</div>';
+        html+='<div style="font-size:12px;color:'+tc+';font-weight:600">'+t.type+'</div>';
+        html+='<div style="font-size:12px;color:var(--muted)">'+t.category+'</div>';
+        html+='<div style="font-size:13px">'+t.party+'</div>';
+        html+='<div style="text-align:right;font-size:13px;font-weight:600;color:'+tc+'">'+amtStr+'</div>';
+        html+='<div style="font-size:12px;color:var(--muted)">'+accName+'</div>';
+        html+='<div style="font-size:12px;color:var(--muted)">'+t.person+'</div>';
+        html+='</div>';
+      });
+      body.innerHTML=html;
+    }
+  }
+  var container=document.getElementById('mobile-fin-cards');
+  if(container){
+    if(_finTab!=='txn'||!filtered.length){container.innerHTML=!filtered.length?'<div style="padding:32px;text-align:center;color:var(--muted)">暂无记录</div>':'';}
+    else{
+      var mhtml='';
+      filtered.forEach(function(t){
+        var tc=t.type==='收款'?'var(--green)':t.type==='付款'||t.type==='运营支出'?'var(--red)':'var(--accent2)';
+        var amtStr=(t.type==='收款'?'+':'-')+(t.currency==='USD'?'$':'¥')+(t.amount||0);
+        var accName='';(d.accounts||[]).forEach(function(a){if(a.id===t.accountId)accName=a.name;});
+        mhtml+='<div class="mobile-card" onclick="openFinDetail(\''+t.id+'\')" style="border-left:3px solid '+tc+'">';
+        mhtml+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+        mhtml+='<div style="font-size:14px;font-weight:600">'+t.party+'</div>';
+        mhtml+='<div style="font-size:15px;font-weight:700;color:'+tc+'">'+amtStr+'</div>';
+        mhtml+='</div>';
+        mhtml+='<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)">';
+        mhtml+='<span>'+t.date+' · '+t.type+'</span><span>'+accName+'</span>';
+        mhtml+='</div>';
+        if(t.note)mhtml+='<div style="font-size:12px;color:var(--muted);margin-top:3px">'+t.note+'</div>';
+        mhtml+='</div>';
+      });
+      container.innerHTML=mhtml;
+    }
+  }
+}
+
+function renderFinAccounts(){
+  var d=getFinData();
+  var body=document.getElementById('fin-accounts-body');
+  if(!body)return;
+  var usd=(d.accounts||[]).filter(function(a){return a.currency==='USD';});
+  var cny=(d.accounts||[]).filter(function(a){return a.currency==='CNY';});
+  var html='';
+  var totalUSD=0;
+  html+='<div style="margin-bottom:24px"><div style="font-size:15px;font-weight:600;margin-bottom:12px;color:var(--muted)">USD 账户</div>';
+  html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">';
+  usd.forEach(function(a){
+    var bal=getAccountBalance(a.id,d);totalUSD+=bal;
+    html+='<div class="fin-acct-card"><div style="font-size:13px;font-weight:600;margin-bottom:8px">'+a.name+'</div>';
+    html+='<div style="font-size:22px;font-weight:700;color:'+(bal>=0?'var(--green)':'var(--red)')+'">$'+bal.toFixed(2)+'</div>';
+    html+='<div style="font-size:11px;color:var(--muted);margin-top:4px">期初 $'+a.openingBalance.toFixed(2)+'</div>';
+    if(a.note)html+='<div style="font-size:11px;color:var(--muted)">'+a.note+'</div>';
+    html+='</div>';
+  });
+  html+='</div><div style="margin-top:10px;font-size:13px;color:var(--muted)">USD 合计：<strong style="color:var(--green)">$'+totalUSD.toFixed(2)+'</strong></div></div>';
+  var totalCNY=0;
+  html+='<div><div style="font-size:15px;font-weight:600;margin-bottom:12px;color:var(--muted)">CNY 账户</div>';
+  html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">';
+  cny.forEach(function(a){
+    var bal=getAccountBalance(a.id,d);totalCNY+=bal;
+    html+='<div class="fin-acct-card"><div style="font-size:13px;font-weight:600;margin-bottom:8px">'+a.name+'</div>';
+    html+='<div style="font-size:22px;font-weight:700;color:'+(bal>=0?'var(--green)':'var(--red)')+'">¥'+Math.round(bal)+'</div>';
+    html+='<div style="font-size:11px;color:var(--muted);margin-top:4px">期初 ¥'+Math.round(a.openingBalance)+'</div>';
+    if(a.note)html+='<div style="font-size:11px;color:var(--muted)">'+a.note+'</div>';
+    html+='</div>';
+  });
+  html+='</div><div style="margin-top:10px;font-size:13px;color:var(--muted)">CNY 合计：<strong style="color:var(--green)">¥'+Math.round(totalCNY)+'</strong></div></div>';
+  body.innerHTML=html;
+}
+
+function renderFinReports(){
+  var d=getFinData();
+  var txns=d.transactions||[];
+  var html='';
+  /* 月度收支 */
+  html+='<div style="margin-bottom:28px"><div style="font-size:15px;font-weight:600;margin-bottom:12px">月度收支</div>';
+  var months={};
+  txns.forEach(function(t){
+    var m=t.date?t.date.substring(0,7):'';
+    if(!months[m])months[m]={in_usd:0,in_cny:0,out_usd:0,out_cny:0};
+    var isIn=t.type==='收款';
+    if(isIn){if(t.currency==='USD')months[m].in_usd+=(t.amount||0);else months[m].in_cny+=(t.amount||0);}
+    else if(t.type!=='内部转账'){if(t.currency==='USD')months[m].out_usd+=(t.amount||0);else months[m].out_cny+=(t.amount||0);}
+  });
+  var mKeys=Object.keys(months).sort().reverse();
+  if(!mKeys.length){html+='<div style="color:var(--muted);font-size:13px">暂无数据</div>';}
+  else{
+    html+='<div class="table-inner" style="max-width:680px">';
+    html+='<div style="display:grid;grid-template-columns:80px 1fr 1fr 1fr 1fr" class="table-header"><div>月份</div><div style="text-align:right">收款USD</div><div style="text-align:right">收款CNY</div><div style="text-align:right">支出USD</div><div style="text-align:right">支出CNY</div></div>';
+    mKeys.forEach(function(m){
+      var r=months[m];
+      html+='<div style="display:grid;grid-template-columns:80px 1fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);padding:7px 0">';
+      html+='<div style="font-size:12px;color:var(--muted)">'+m+'</div>';
+      html+='<div style="text-align:right;font-size:13px;color:var(--green)">'+(r.in_usd>0?'$'+r.in_usd:'—')+'</div>';
+      html+='<div style="text-align:right;font-size:13px;color:var(--green)">'+(r.in_cny>0?'¥'+r.in_cny:'—')+'</div>';
+      html+='<div style="text-align:right;font-size:13px;color:var(--red)">'+(r.out_usd>0?'$'+r.out_usd:'—')+'</div>';
+      html+='<div style="text-align:right;font-size:13px;color:var(--red)">'+(r.out_cny>0?'¥'+r.out_cny:'—')+'</div>';
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+  html+='</div>';
+  /* 应收账款 */
+  html+='<div style="margin-bottom:28px"><div style="font-size:15px;font-weight:600;margin-bottom:12px">应收账款</div>';
+  var custOrders={};
+  orders.forEach(function(o){
+    if(o.completed)return;
+    var alias=o.alias||'';
+    if(!custOrders[alias])custOrders[alias]={usd:0,cny:0};
+    if(o.currency==='USD')custOrders[alias].usd+=(o.amount||0);
+    else custOrders[alias].cny+=(o.amount||0);
+  });
+  var custRec={};
+  txns.forEach(function(t){
+    if(t.type!=='收款')return;
+    var p=t.party||'';
+    if(!custRec[p])custRec[p]={usd:0,cny:0};
+    if(t.currency==='USD')custRec[p].usd+=(t.amount||0);
+    else custRec[p].cny+=(t.amount||0);
+  });
+  var arKeys=Object.keys(custOrders);
+  if(!arKeys.length){html+='<div style="color:var(--muted);font-size:13px">暂无未完成订单</div>';}
+  else{
+    html+='<div class="table-inner" style="max-width:680px">';
+    html+='<div style="display:grid;grid-template-columns:1fr 100px 100px 100px 100px" class="table-header"><div>客户</div><div style="text-align:right">订单USD</div><div style="text-align:right">已收USD</div><div style="text-align:right">订单CNY</div><div style="text-align:right">已收CNY</div></div>';
+    arKeys.forEach(function(alias){
+      var ord=custOrders[alias];var rec=custRec[alias]||{usd:0,cny:0};
+      html+='<div style="display:grid;grid-template-columns:1fr 100px 100px 100px 100px;border-bottom:1px solid var(--border);padding:7px 0">';
+      html+='<div style="font-size:13px;font-weight:500">'+alias+'</div>';
+      html+='<div style="text-align:right;font-size:13px">'+(ord.usd>0?'$'+ord.usd:'—')+'</div>';
+      html+='<div style="text-align:right;font-size:13px;color:var(--green)">'+(rec.usd>0?'$'+rec.usd:'—')+'</div>';
+      html+='<div style="text-align:right;font-size:13px">'+(ord.cny>0?'¥'+ord.cny:'—')+'</div>';
+      html+='<div style="text-align:right;font-size:13px;color:var(--green)">'+(rec.cny>0?'¥'+rec.cny:'—')+'</div>';
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+  html+='</div>';
+  /* 应付账款 */
+  html+='<div><div style="font-size:15px;font-weight:600;margin-bottom:12px">应付账款</div>';
+  var suppPos={};
+  try{var ps=localStorage.getItem(SK.proc);var pd=ps?JSON.parse(ps):null;
+    if(pd&&pd.pos){pd.pos.forEach(function(po){
+      if(po.stage==='已入库'||po.stage==='草稿')return;
+      var sn=po.supplierName||'';
+      if(!suppPos[sn])suppPos[sn]={cny:0,usd:0};
+      suppPos[sn].cny+=(po.totalCNY||0);suppPos[sn].usd+=(po.totalUSD||0);
+    });}
+  }catch(e){}
+  var suppPaid={};
+  txns.forEach(function(t){
+    if(t.type!=='付款')return;
+    var p=t.party||'';
+    if(!suppPaid[p])suppPaid[p]={usd:0,cny:0};
+    if(t.currency==='USD')suppPaid[p].usd+=(t.amount||0);
+    else suppPaid[p].cny+=(t.amount||0);
+  });
+  var apKeys=Object.keys(suppPos);
+  if(!apKeys.length){html+='<div style="color:var(--muted);font-size:13px">暂无进行中采购单</div>';}
+  else{
+    html+='<div class="table-inner" style="max-width:680px">';
+    html+='<div style="display:grid;grid-template-columns:1fr 110px 110px 110px" class="table-header"><div>供应商</div><div style="text-align:right">PO总额CNY</div><div style="text-align:right">已付CNY</div><div style="text-align:right">待付CNY</div></div>';
+    apKeys.forEach(function(sn){
+      var pos=suppPos[sn];var paid=suppPaid[sn]||{cny:0};var ap=pos.cny-paid.cny;
+      html+='<div style="display:grid;grid-template-columns:1fr 110px 110px 110px;border-bottom:1px solid var(--border);padding:7px 0">';
+      html+='<div style="font-size:13px;font-weight:500">'+sn+'</div>';
+      html+='<div style="text-align:right;font-size:13px">'+(pos.cny>0?'¥'+pos.cny:'—')+'</div>';
+      html+='<div style="text-align:right;font-size:13px;color:var(--green)">'+(paid.cny>0?'¥'+paid.cny:'—')+'</div>';
+      html+='<div style="text-align:right;font-size:13px;color:'+(ap>0?'var(--red)':'var(--green)')+'">'+( ap>0?'¥'+ap:'已结清')+'</div>';
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+  html+='</div>';
+  var rb=document.getElementById('fin-report-body');if(rb)rb.innerHTML=html;
+}
+
+function openFinDetail(id){
+  var d=getFinData();var t=null;
+  (d.transactions||[]).forEach(function(x){if(x.id===id)t=x;});
+  if(!t)return;
+  currentDetailType='fin';currentDetailId=id;
+  var tProfile=document.getElementById('dp-tab-profile');
+  var tSales=document.getElementById('dp-tab-sales');
+  var tFu=document.getElementById('dp-tab-followup');
+  var tQt=document.getElementById('dp-tab-quote');
+  if(tProfile){tProfile.textContent='流水详情';tProfile.style.display='';}
+  if(tSales)tSales.style.display='none';
+  if(tFu)tFu.style.display='none';
+  if(tQt)tQt.style.display='none';
+  var tc=t.type==='收款'?'var(--green)':t.type==='付款'||t.type==='运营支出'?'var(--red)':'var(--accent2)';
+  var accName='';(d.accounts||[]).forEach(function(a){if(a.id===t.accountId)accName=a.name;});
+  var dpName=document.getElementById('dp-name');if(dpName)dpName.textContent=t.party||'—';
+  var dpRole=document.getElementById('dp-role');if(dpRole)dpRole.innerHTML='<span style="color:'+tc+';font-weight:600">'+t.type+'</span> · '+t.category;
+  var dpScore=document.getElementById('dp-score');if(dpScore)dpScore.innerHTML='<span style="color:'+tc+';font-size:18px;font-weight:700">'+(t.type==='收款'?'+':'-')+(t.currency==='USD'?'$':'¥')+(t.amount||0)+'</span>';
+  var dpActions=document.getElementById('dp-actions');
+  if(dpActions)dpActions.innerHTML=canFinControl()?'<button class="btn btn-primary btn-sm" onclick="editCurrent()">编辑</button>':'';
+  var body=document.getElementById('detail-body');if(!body)return;
+  switchDpTab('profile');
+  var html='<div style="padding:20px"><div style="display:grid;gap:10px">';
+  html+=_finRow('日期',t.date||'—');
+  html+=_finRow('账户',accName||t.accountId);
+  html+=_finRow('金额',(t.currency==='USD'?'$':'¥')+(t.amount||0)+' '+t.currency);
+  if(t.party)html+=_finRow('往来方',t.party);
+  if(t.linkedType)html+=_finRow('关联来源',(t.linkedType==='order'?'销售订单':t.linkedType==='po'?'采购单':'其他')+(t.linkedId?' · '+t.linkedId:''));
+  html+=_finRow('经办人',t.person||'—');
+  if(t.note)html+=_finRow('备注',t.note);
+  html+='</div>';
+  if(canFinControl())html+='<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)"><button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteFinRecord(\''+id+'\')">删除此记录</button></div>';
+  html+='</div>';
+  body.innerHTML=html;
+  var panel=document.getElementById('detail-panel');if(panel)panel.classList.add('open');
+  var fuBar=document.getElementById('dp-followup-bar');if(fuBar)fuBar.style.display='none';
+}
+function _finRow(label,val){return '<div style="display:flex;gap:12px;font-size:13px"><span style="color:var(--muted);min-width:58px">'+label+'</span><span>'+val+'</span></div>';}
+
+function openFinModal(id){
+  _editingFinId=id||null;
+  var d=getFinData();var t=null;
+  if(id)(d.transactions||[]).forEach(function(x){if(x.id===id)t=x;});
+  var accSel=document.getElementById('ff-modal-account');
+  if(accSel){
+    var opts='';
+    (d.accounts||[]).forEach(function(a){opts+='<option value="'+a.id+'">'+a.name+' ('+a.currency+')</option>';});
+    accSel.innerHTML=opts;
+  }
+  var titleEl=document.getElementById('fin-modal-title');if(titleEl)titleEl.textContent=t?'编辑流水':'新建流水';
+  var dateEl=document.getElementById('ff-date');if(dateEl)dateEl.value=t?t.date:today();
+  var typeEl=document.getElementById('ff-modal-type');if(typeEl)typeEl.value=t?t.type:'收款';
+  var catEl=document.getElementById('ff-category');if(catEl)catEl.value=t?t.category:'客户收款';
+  if(accSel)accSel.value=t?t.accountId:(d.accounts.length?d.accounts[0].id:'');
+  var amtEl=document.getElementById('ff-amount');if(amtEl)amtEl.value=t?(t.amount||''):'';
+  var curEl=document.getElementById('ff-currency');if(curEl)curEl.value=t?t.currency:'USD';
+  var partyEl=document.getElementById('ff-party');if(partyEl)partyEl.value=t?t.party||'':'';
+  var lTypeEl=document.getElementById('ff-linked-type');if(lTypeEl)lTypeEl.value=t?t.linkedType||'':'';
+  var lIdEl=document.getElementById('ff-linked-id');if(lIdEl)lIdEl.value=t?t.linkedId||'':'';
+  var lIdRow=document.getElementById('ff-linked-id-row');
+  if(lIdRow)lIdRow.style.display=(t&&t.linkedType)?'':'none';
+  var personEl=document.getElementById('ff-person');if(personEl)personEl.value=t?t.person||currentUser:currentUser;
+  var noteEl=document.getElementById('ff-note');if(noteEl)noteEl.value=t?t.note||'':'';
+  var delArea=document.getElementById('fin-delete-area');
+  if(delArea)delArea.innerHTML=(t&&canFinControl())?'<button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteFinRecord(\''+t.id+'\');closeModal(\'fin-modal\')">删除</button>':'';
+  openModal('fin-modal');
+}
+
+function _onFinTypeChange(){
+  var typeEl=document.getElementById('ff-modal-type');
+  var catEl=document.getElementById('ff-category');
+  if(!typeEl||!catEl)return;
+  var map={'收款':'客户收款','付款':'供应商付款','内部转账':'内部转账','运营支出':'其他支出'};
+  catEl.value=map[typeEl.value]||'客户收款';
+}
+
+function _onFinLinkedTypeChange(){
+  var lTypeEl=document.getElementById('ff-linked-type');
+  var lIdRow=document.getElementById('ff-linked-id-row');
+  if(!lTypeEl||!lIdRow)return;
+  lIdRow.style.display=lTypeEl.value?'':'none';
+}
+
+function saveFinRecord(){
+  var dateEl=document.getElementById('ff-date');
+  var typeEl=document.getElementById('ff-modal-type');
+  var catEl=document.getElementById('ff-category');
+  var accEl=document.getElementById('ff-modal-account');
+  var amtEl=document.getElementById('ff-amount');
+  var curEl=document.getElementById('ff-currency');
+  var partyEl=document.getElementById('ff-party');
+  var lTypeEl=document.getElementById('ff-linked-type');
+  var lIdEl=document.getElementById('ff-linked-id');
+  var personEl=document.getElementById('ff-person');
+  var noteEl=document.getElementById('ff-note');
+  var date=dateEl?dateEl.value:'';
+  var type=typeEl?typeEl.value:'';
+  var amount=parseFloat(amtEl?amtEl.value:0)||0;
+  var accountId=accEl?accEl.value:'';
+  if(!date){toast('请填写日期');return;}
+  if(!type){toast('请选择类型');return;}
+  if(!amount||amount<=0){toast('请填写金额');return;}
+  if(!accountId){toast('请选择账户');return;}
+  var entry={date:date,type:type,category:catEl?catEl.value:'',amount:amount,currency:curEl?curEl.value:'USD',accountId:accountId,party:partyEl?partyEl.value.trim():'',linkedType:lTypeEl?lTypeEl.value:'',linkedId:lIdEl?lIdEl.value.trim():'',person:personEl?personEl.value:currentUser,note:noteEl?noteEl.value.trim():''};
+  var d=getFinData();
+  if(_editingFinId){
+    var idx=-1;(d.transactions||[]).forEach(function(t,i){if(t.id===_editingFinId)idx=i;});
+    if(idx>=0){entry.id=_editingFinId;d.transactions[idx]=entry;}
+  }else{
+    entry.id='fin_'+Date.now();
+    if(!d.transactions)d.transactions=[];
+    d.transactions.push(entry);
+  }
+  saveFinData(d);
+  closeModal('fin-modal');
+  renderFinancePage();
+  if(_editingFinId)openFinDetail(_editingFinId);
+  toast('已保存 ✓');
+}
+
+function deleteFinRecord(id){
+  if(!canFinControl())return;
+  if(!confirm('确定删除此流水记录？此操作不可撤销。'))return;
+  var d=getFinData();
+  d.transactions=(d.transactions||[]).filter(function(t){return t.id!==id;});
+  saveFinData(d);
+  closeDetail();
+  renderFinTransactions();
+  toast('已删除');
+}
 
 function getPcatForInv(){
   var s=localStorage.getItem(SK.prodcat);
