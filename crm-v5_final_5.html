@@ -2196,13 +2196,23 @@ a{color:var(--accent);text-decoration:none;}
       <div class="form-group"><label class="form-label">账户 *</label><select class="form-input" id="ff-modal-account"></select></div>
       <div class="form-group"><label class="form-label">金额 *</label><input class="form-input" type="number" id="ff-amount" placeholder="0.00" min="0" step="0.01"></div>
       <div class="form-group"><label class="form-label">币种</label><select class="form-input" id="ff-currency"><option>USD</option><option>CNY</option></select></div>
-      <div class="form-group" style="grid-column:span 2"><label class="form-label">往来方</label><input class="form-input" type="text" id="ff-party" placeholder="客户名/供应商名/收款方"></div>
+      <div class="form-group" style="grid-column:span 2"><label class="form-label">往来方</label>
+        <div style="position:relative">
+          <input class="form-input" type="text" id="ff-party" placeholder="搜索客户..." oninput="onFinPartyInput(this)" onblur="onFinPartyBlur(this)" autocomplete="off">
+          <div class="autocomplete-dd" id="ff-party-dd" style="display:none"></div>
+        </div>
+      </div>
       <div class="form-group"><label class="form-label">关联来源</label>
         <select class="form-input" id="ff-linked-type" onchange="_onFinLinkedTypeChange()">
           <option value="">无</option><option value="order">销售订单</option><option value="po">采购单</option><option value="expense">其他</option>
         </select>
       </div>
-      <div class="form-group" id="ff-linked-id-row" style="display:none"><label class="form-label">关联编号</label><input class="form-input" type="text" id="ff-linked-id" placeholder="订单别名 / PO编号"></div>
+      <div class="form-group" id="ff-linked-id-row" style="display:none"><label class="form-label">关联编号</label>
+        <div style="position:relative">
+          <input class="form-input" type="text" id="ff-linked-id" placeholder="搜索订单/采购单..." oninput="onFinLinkedIdInput(this)" onblur="onFinLinkedIdBlur(this)" autocomplete="off">
+          <div class="autocomplete-dd" id="ff-linked-id-dd" style="display:none"></div>
+        </div>
+      </div>
       <div class="form-group"><label class="form-label">经办人</label><select class="form-input" id="ff-person"><option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Penny</option></select></div>
       <div class="form-group" style="grid-column:span 2"><label class="form-label">备注</label><input class="form-input" type="text" id="ff-note" placeholder="说明..."></div>
     </div>
@@ -10715,6 +10725,14 @@ function _onFinTypeChange(){
   if(!typeEl||!catEl)return;
   var map={'收款':'客户收款','付款':'供应商付款','内部转账':'内部转账','运营支出':'其他支出'};
   catEl.value=map[typeEl.value]||'客户收款';
+  var partyEl=document.getElementById('ff-party');
+  var dd=document.getElementById('ff-party-dd');
+  if(partyEl){
+    partyEl.value='';
+    var phMap={'收款':'搜索客户...','付款':'搜索供应商...','内部转账':'搜索账户...','运营支出':'填写收款方...'};
+    partyEl.placeholder=phMap[typeEl.value]||'往来方';
+  }
+  if(dd)dd.style.display='none';
 }
 
 function _onFinLinkedTypeChange(){
@@ -10722,6 +10740,110 @@ function _onFinLinkedTypeChange(){
   var lIdRow=document.getElementById('ff-linked-id-row');
   if(!lTypeEl||!lIdRow)return;
   lIdRow.style.display=lTypeEl.value?'':'none';
+  var lIdEl=document.getElementById('ff-linked-id');
+  var dd=document.getElementById('ff-linked-id-dd');
+  if(lIdEl){
+    lIdEl.value='';
+    var ph={order:'搜索销售订单...',po:'搜索采购单...'};
+    lIdEl.placeholder=ph[lTypeEl.value]||'填写编号';
+  }
+  if(dd)dd.style.display='none';
+}
+
+function onFinPartyInput(el){
+  var q=(el.value||'').trim().toLowerCase();
+  var dd=document.getElementById('ff-party-dd');
+  if(!dd)return;
+  if(!q){dd.style.display='none';return;}
+  var typeEl=document.getElementById('ff-modal-type');
+  var type=typeEl?typeEl.value:'';
+  var candidates=[];
+  if(type==='收款'){
+    (customers||[]).forEach(function(c){
+      var nm=c.alias||'';var co=c.company||'';
+      if(nm.toLowerCase().indexOf(q)>=0||co.toLowerCase().indexOf(q)>=0){
+        candidates.push({label:nm+(co?' · '+co:''),val:nm});
+      }
+    });
+  } else if(type==='付款'){
+    try{
+      var ps=localStorage.getItem(SK.proc);var pd=ps?JSON.parse(ps):null;
+      if(pd&&pd.suppliers){pd.suppliers.forEach(function(s){
+        var nm=s.name||'';
+        if(nm.toLowerCase().indexOf(q)>=0){candidates.push({label:nm+(s.contact?' · '+s.contact:''),val:nm});}
+      });}
+      if(pd&&pd.pos){var seen={};pd.pos.forEach(function(p){var sn=p.supplierName||'';
+        if(!seen[sn]&&sn.toLowerCase().indexOf(q)>=0){seen[sn]=1;candidates.push({label:sn,val:sn});}
+      });}
+    }catch(e){}
+  } else if(type==='内部转账'){
+    var d=getFinData();
+    (d.accounts||[]).forEach(function(a){
+      if(a.name.toLowerCase().indexOf(q)>=0){candidates.push({label:a.name+' ('+a.currency+')',val:a.name});}
+    });
+  } else {
+    var d2=getFinData();var seen2={};
+    (d2.transactions||[]).forEach(function(t){
+      if(t.type==='运营支出'&&t.party&&!seen2[t.party]&&t.party.toLowerCase().indexOf(q)>=0){
+        seen2[t.party]=1;candidates.push({label:t.party,val:t.party});
+      }
+    });
+  }
+  var unique=[];var umap={};
+  candidates.forEach(function(c){if(!umap[c.val]){umap[c.val]=1;unique.push(c);}});
+  candidates=unique.slice(0,8);
+  if(!candidates.length){dd.style.display='none';return;}
+  var html='';
+  candidates.forEach(function(c){
+    html+='<div class="autocomplete-item" onmousedown="event.preventDefault()" onclick="selectFinParty(\''+c.val.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">' +c.label+'</div>';
+  });
+  dd.innerHTML=html;dd.style.display='block';
+}
+function onFinPartyBlur(el){setTimeout(function(){var dd=document.getElementById('ff-party-dd');if(dd)dd.style.display='none';},200);}
+function selectFinParty(val){
+  var el=document.getElementById('ff-party');if(el)el.value=val;
+  var dd=document.getElementById('ff-party-dd');if(dd)dd.style.display='none';
+}
+
+function onFinLinkedIdInput(el){
+  var q=(el.value||'').trim().toLowerCase();
+  var dd=document.getElementById('ff-linked-id-dd');
+  if(!dd)return;
+  if(!q){dd.style.display='none';return;}
+  var ltEl=document.getElementById('ff-linked-type');
+  var lt=ltEl?ltEl.value:'';
+  var candidates=[];
+  if(lt==='order'){
+    (orders||[]).forEach(function(o){
+      if(o.completed)return;
+      var nm=(o.alias||'')+(o.product?' · '+o.product:'');
+      if((o.alias||'').toLowerCase().indexOf(q)>=0||(o.product||'').toLowerCase().indexOf(q)>=0){
+        candidates.push({label:nm,val:o.alias||''});
+      }
+    });
+  } else if(lt==='po'){
+    try{
+      var ps=localStorage.getItem(SK.proc);var pd=ps?JSON.parse(ps):null;
+      if(pd&&pd.pos){pd.pos.forEach(function(p){
+        var nm=(p.poNumber||'')+(p.supplierName?' · '+p.supplierName:'');
+        if((p.poNumber||'').toLowerCase().indexOf(q)>=0||(p.supplierName||'').toLowerCase().indexOf(q)>=0){
+          candidates.push({label:nm,val:p.poNumber||''});
+        }
+      });}
+    }catch(e){}
+  }
+  candidates=candidates.slice(0,8);
+  if(!candidates.length){dd.style.display='none';return;}
+  var html='';
+  candidates.forEach(function(c){
+    html+='<div class="autocomplete-item" onmousedown="event.preventDefault()" onclick="selectFinLinkedId(\''+c.val.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">' +c.label+'</div>';
+  });
+  dd.innerHTML=html;dd.style.display='block';
+}
+function onFinLinkedIdBlur(el){setTimeout(function(){var dd=document.getElementById('ff-linked-id-dd');if(dd)dd.style.display='none';},200);}
+function selectFinLinkedId(val){
+  var el=document.getElementById('ff-linked-id');if(el)el.value=val;
+  var dd=document.getElementById('ff-linked-id-dd');if(dd)dd.style.display='none';
 }
 
 function saveFinRecord(){
