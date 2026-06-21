@@ -10315,6 +10315,7 @@ function finMobileTab(el,tab){
 }
 
 function finTypeChip(el,type){
+  if(_finTab!=='txn')switchFinTab('txn');
   if(_finTypeFilter===type){_finTypeFilter='';el.className='chip';}
   else{
     _finTypeFilter=type;
@@ -10405,10 +10406,12 @@ function renderFinAccounts(){
   html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">';
   usd.forEach(function(a){
     var bal=getAccountBalance(a.id,d);totalUSD+=bal;
-    html+='<div class="fin-acct-card"><div style="font-size:13px;font-weight:600;margin-bottom:8px">'+a.name+'</div>';
+    html+='<div class="fin-acct-card" style="cursor:pointer" onclick="openFinAccountDetail(\''+a.id+'\')">';
+    html+='<div style="font-size:13px;font-weight:600;margin-bottom:8px">'+a.name+'</div>';
     html+='<div style="font-size:22px;font-weight:700;color:'+(bal>=0?'var(--green)':'var(--red)')+'">$'+bal.toFixed(2)+'</div>';
     html+='<div style="font-size:11px;color:var(--muted);margin-top:4px">期初 $'+a.openingBalance.toFixed(2)+'</div>';
     if(a.note)html+='<div style="font-size:11px;color:var(--muted)">'+a.note+'</div>';
+    html+='<div style="font-size:11px;color:var(--accent);margin-top:6px">点击查看明细 ›</div>';
     html+='</div>';
   });
   html+='</div><div style="margin-top:10px;font-size:13px;color:var(--muted)">USD 合计：<strong style="color:var(--green)">$'+totalUSD.toFixed(2)+'</strong></div></div>';
@@ -10417,14 +10420,86 @@ function renderFinAccounts(){
   html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">';
   cny.forEach(function(a){
     var bal=getAccountBalance(a.id,d);totalCNY+=bal;
-    html+='<div class="fin-acct-card"><div style="font-size:13px;font-weight:600;margin-bottom:8px">'+a.name+'</div>';
+    html+='<div class="fin-acct-card" style="cursor:pointer" onclick="openFinAccountDetail(\''+a.id+'\')">';
+    html+='<div style="font-size:13px;font-weight:600;margin-bottom:8px">'+a.name+'</div>';
     html+='<div style="font-size:22px;font-weight:700;color:'+(bal>=0?'var(--green)':'var(--red)')+'">¥'+Math.round(bal)+'</div>';
     html+='<div style="font-size:11px;color:var(--muted);margin-top:4px">期初 ¥'+Math.round(a.openingBalance)+'</div>';
     if(a.note)html+='<div style="font-size:11px;color:var(--muted)">'+a.note+'</div>';
+    html+='<div style="font-size:11px;color:var(--accent);margin-top:6px">点击查看明细 ›</div>';
     html+='</div>';
   });
   html+='</div><div style="margin-top:10px;font-size:13px;color:var(--muted)">CNY 合计：<strong style="color:var(--green)">¥'+Math.round(totalCNY)+'</strong></div></div>';
   body.innerHTML=html;
+}
+
+function openFinAccountDetail(accountId){
+  var d=getFinData();var acc=null;
+  (d.accounts||[]).forEach(function(a){if(a.id===accountId)acc=a;});
+  if(!acc)return;
+  currentDetailType='fin-acct';currentDetailId=accountId;
+  var tProfile=document.getElementById('dp-tab-profile');
+  var tSales=document.getElementById('dp-tab-sales');
+  var tFu=document.getElementById('dp-tab-followup');
+  var tQt=document.getElementById('dp-tab-quote');
+  if(tProfile){tProfile.textContent='账户明细';tProfile.style.display='';}
+  if(tSales)tSales.style.display='none';
+  if(tFu)tFu.style.display='none';
+  if(tQt)tQt.style.display='none';
+  var isCNY=acc.currency==='CNY';
+  var bal=getAccountBalance(accountId,d);
+  var balStr=isCNY?('¥'+Math.round(bal)):('$'+bal.toFixed(2));
+  var dpName=document.getElementById('dp-name');if(dpName)dpName.textContent=acc.name;
+  var dpRole=document.getElementById('dp-role');if(dpRole)dpRole.textContent=(acc.note||'')+' · '+acc.currency;
+  var dpScore=document.getElementById('dp-score');
+  if(dpScore)dpScore.innerHTML='<span style="color:'+(bal>=0?'var(--green)':'var(--red)')+';font-size:18px;font-weight:700">'+balStr+'</span>';
+  var dpActions=document.getElementById('dp-actions');
+  if(dpActions)dpActions.innerHTML=canFinControl()?'<button class="btn btn-primary btn-sm" onclick="openFinModalForAccount(\''+accountId+'\')">+ 新增流水</button>':'';
+  var acctTxns=(d.transactions||[]).filter(function(t){return t.accountId===accountId;});
+  acctTxns.sort(function(a,b){return (a.date||'')>(b.date||'')?1:-1;});
+  var running=acc.openingBalance||0;
+  var rows=acctTxns.map(function(t){
+    if(t.type==='收款')running+=(t.amount||0);
+    else running-=(t.amount||0);
+    return {t:t,balance:running};
+  });
+  rows.reverse();
+  var body=document.getElementById('detail-body');if(!body)return;
+  switchDpTab('profile');
+  var html='<div style="padding:0 20px 20px">';
+  if(!rows.length){
+    html+='<div style="color:var(--muted);font-size:13px;text-align:center;padding:32px 0">暂无流水记录</div>';
+  } else {
+    rows.forEach(function(row){
+      var t=row.t;
+      var isIn=t.type==='收款';
+      var tc=isIn?'var(--green)':'var(--red)';
+      var amtStr=(isIn?'+':'-')+(isCNY?'¥':'$')+(t.amount||0);
+      var balDisplay=isCNY?'¥'+Math.round(row.balance):'$'+row.balance.toFixed(2);
+      html+='<div onclick="openFinDetail(\''+t.id+'\')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border)">';
+      html+='<div style="flex:1;min-width:0">';
+      html+='<div style="font-size:13px;font-weight:500">'+t.category+(t.party?' · '+t.party:'')+'</div>';
+      html+='<div style="font-size:11px;color:var(--muted);margin-top:2px">'+t.date+(t.person?' · '+t.person:'')+'</div>';
+      if(t.note)html+='<div style="font-size:11px;color:var(--muted);margin-top:1px">'+t.note+'</div>';
+      html+='</div>';
+      html+='<div style="text-align:right;flex-shrink:0;margin-left:12px">';
+      html+='<div style="font-size:14px;font-weight:700;color:'+tc+'">'+amtStr+'</div>';
+      html+='<div style="font-size:11px;color:var(--muted);margin-top:2px">余额 '+balDisplay+'</div>';
+      html+='</div></div>';
+    });
+    html+='<div style="padding:10px 0;font-size:12px;color:var(--muted)">期初余额：'+(isCNY?'¥'+Math.round(acc.openingBalance):'$'+acc.openingBalance.toFixed(2))+'</div>';
+  }
+  html+='</div>';
+  body.innerHTML=html;
+  var panel=document.getElementById('detail-panel');if(panel)panel.classList.add('open');
+  var fuBar=document.getElementById('dp-followup-bar');if(fuBar)fuBar.style.display='none';
+}
+
+function openFinModalForAccount(accountId){
+  openFinModal('');
+  var d=getFinData();var acc=null;
+  (d.accounts||[]).forEach(function(a){if(a.id===accountId)acc=a;});
+  var accSel=document.getElementById('ff-modal-account');if(accSel)accSel.value=accountId;
+  var curEl=document.getElementById('ff-currency');if(curEl&&acc)curEl.value=acc.currency;
 }
 
 function renderFinReports(){
@@ -10444,11 +10519,11 @@ function renderFinReports(){
   var mKeys=Object.keys(months).sort().reverse();
   if(!mKeys.length){html+='<div style="color:var(--muted);font-size:13px">暂无数据</div>';}
   else{
-    html+='<div class="table-inner" style="max-width:680px">';
-    html+='<div style="display:grid;grid-template-columns:80px 1fr 1fr 1fr 1fr" class="table-header"><div>月份</div><div style="text-align:right">收款USD</div><div style="text-align:right">收款CNY</div><div style="text-align:right">支出USD</div><div style="text-align:right">支出CNY</div></div>';
+    html+='<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><div style="min-width:460px" class="table-inner">';
+    html+='<div style="display:grid;grid-template-columns:80px 90px 90px 90px 90px" class="table-header"><div>月份</div><div style="text-align:right">收款USD</div><div style="text-align:right">收款CNY</div><div style="text-align:right">支出USD</div><div style="text-align:right">支出CNY</div></div>';
     mKeys.forEach(function(m){
       var r=months[m];
-      html+='<div style="display:grid;grid-template-columns:80px 1fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);padding:7px 0">';
+      html+='<div style="display:grid;grid-template-columns:80px 90px 90px 90px 90px;border-bottom:1px solid var(--border);padding:7px 0">';
       html+='<div style="font-size:12px;color:var(--muted)">'+m+'</div>';
       html+='<div style="text-align:right;font-size:13px;color:var(--green)">'+(r.in_usd>0?'$'+r.in_usd:'—')+'</div>';
       html+='<div style="text-align:right;font-size:13px;color:var(--green)">'+(r.in_cny>0?'¥'+r.in_cny:'—')+'</div>';
@@ -10456,7 +10531,7 @@ function renderFinReports(){
       html+='<div style="text-align:right;font-size:13px;color:var(--red)">'+(r.out_cny>0?'¥'+r.out_cny:'—')+'</div>';
       html+='</div>';
     });
-    html+='</div>';
+    html+='</div></div>';
   }
   html+='</div>';
   /* 应收账款 */
@@ -10480,11 +10555,11 @@ function renderFinReports(){
   var arKeys=Object.keys(custOrders);
   if(!arKeys.length){html+='<div style="color:var(--muted);font-size:13px">暂无未完成订单</div>';}
   else{
-    html+='<div class="table-inner" style="max-width:680px">';
-    html+='<div style="display:grid;grid-template-columns:1fr 100px 100px 100px 100px" class="table-header"><div>客户</div><div style="text-align:right">订单USD</div><div style="text-align:right">已收USD</div><div style="text-align:right">订单CNY</div><div style="text-align:right">已收CNY</div></div>';
+    html+='<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><div style="min-width:440px" class="table-inner">';
+    html+='<div style="display:grid;grid-template-columns:1fr 85px 85px 85px 85px" class="table-header"><div>客户</div><div style="text-align:right">订单USD</div><div style="text-align:right">已收USD</div><div style="text-align:right">订单CNY</div><div style="text-align:right">已收CNY</div></div>';
     arKeys.forEach(function(alias){
       var ord=custOrders[alias];var rec=custRec[alias]||{usd:0,cny:0};
-      html+='<div style="display:grid;grid-template-columns:1fr 100px 100px 100px 100px;border-bottom:1px solid var(--border);padding:7px 0">';
+      html+='<div style="display:grid;grid-template-columns:1fr 85px 85px 85px 85px;border-bottom:1px solid var(--border);padding:7px 0">';
       html+='<div style="font-size:13px;font-weight:500">'+alias+'</div>';
       html+='<div style="text-align:right;font-size:13px">'+(ord.usd>0?'$'+ord.usd:'—')+'</div>';
       html+='<div style="text-align:right;font-size:13px;color:var(--green)">'+(rec.usd>0?'$'+rec.usd:'—')+'</div>';
@@ -10492,7 +10567,7 @@ function renderFinReports(){
       html+='<div style="text-align:right;font-size:13px;color:var(--green)">'+(rec.cny>0?'¥'+rec.cny:'—')+'</div>';
       html+='</div>';
     });
-    html+='</div>';
+    html+='</div></div>';
   }
   html+='</div>';
   /* 应付账款 */
@@ -10517,18 +10592,18 @@ function renderFinReports(){
   var apKeys=Object.keys(suppPos);
   if(!apKeys.length){html+='<div style="color:var(--muted);font-size:13px">暂无进行中采购单</div>';}
   else{
-    html+='<div class="table-inner" style="max-width:680px">';
-    html+='<div style="display:grid;grid-template-columns:1fr 110px 110px 110px" class="table-header"><div>供应商</div><div style="text-align:right">PO总额CNY</div><div style="text-align:right">已付CNY</div><div style="text-align:right">待付CNY</div></div>';
+    html+='<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><div style="min-width:380px" class="table-inner">';
+    html+='<div style="display:grid;grid-template-columns:1fr 100px 100px 100px" class="table-header"><div>供应商</div><div style="text-align:right">PO总额CNY</div><div style="text-align:right">已付CNY</div><div style="text-align:right">待付CNY</div></div>';
     apKeys.forEach(function(sn){
       var pos=suppPos[sn];var paid=suppPaid[sn]||{cny:0};var ap=pos.cny-paid.cny;
-      html+='<div style="display:grid;grid-template-columns:1fr 110px 110px 110px;border-bottom:1px solid var(--border);padding:7px 0">';
+      html+='<div style="display:grid;grid-template-columns:1fr 100px 100px 100px;border-bottom:1px solid var(--border);padding:7px 0">';
       html+='<div style="font-size:13px;font-weight:500">'+sn+'</div>';
       html+='<div style="text-align:right;font-size:13px">'+(pos.cny>0?'¥'+pos.cny:'—')+'</div>';
       html+='<div style="text-align:right;font-size:13px;color:var(--green)">'+(paid.cny>0?'¥'+paid.cny:'—')+'</div>';
       html+='<div style="text-align:right;font-size:13px;color:'+(ap>0?'var(--red)':'var(--green)')+'">'+( ap>0?'¥'+ap:'已结清')+'</div>';
       html+='</div>';
     });
-    html+='</div>';
+    html+='</div></div>';
   }
   html+='</div>';
   var rb=document.getElementById('fin-report-body');if(rb)rb.innerHTML=html;
