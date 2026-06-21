@@ -2218,7 +2218,7 @@ a{color:var(--accent);text-decoration:none;}
 <div class="toast" id="toast"></div>
 
 <script>
-const SK={inq:'crm_inq_v5',cust:'crm_cust_v5',ord:'crm_ord_v5',sale:'crm_sale_v5',user:'crm_user_v5',settings:'crm_settings_v5',prod:'crm_prod_v5',prodcat:'crm_prodcat_v5',proc:'crm_proc_v5',quote:'crm_quote_v5',inv:'crm_inv_v5',fin:'crm_fin_v5'};
+const SK={inq:'crm_inq_v5',cust:'crm_cust_v5',ord:'crm_ord_v5',sale:'crm_sale_v5',user:'crm_user_v5',settings:'crm_settings_v5',prod:'crm_prod_v5',prodcat:'crm_prodcat_v5',proc:'crm_proc_v5',quote:'crm_quote_v5',inv:'crm_inv_v5',fin:'crm_fin_v6'};
 const DEF_PRODUCTS=['MDF杯垫','MDF冰箱贴','马克杯','帆布袋','T恤','Shot Glass','软木杯垫','其他'];
 const DEF_INQ=[
   /* ── 活跃询盘（各状态全覆盖）── */
@@ -10527,8 +10527,8 @@ function renderFinReports(){
   var mKeys=Object.keys(months).sort().reverse();
   if(!mKeys.length){html+='<div style="color:var(--muted);font-size:13px">暂无数据</div>';}
   else{
-    html+='<div class="table-inner">';
-    html+='<div style="display:grid;grid-template-columns:80px 1fr 1fr" class="table-header"><div>月份</div><div style="text-align:right">收款</div><div style="text-align:right">支出</div></div>';
+    html+='<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden">';
+    html+='<div style="display:grid;grid-template-columns:80px 1fr 1fr;padding:8px 12px;background:var(--surface2);font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)"><div>月份</div><div style="text-align:right">收款</div><div style="text-align:right">支出</div></div>';
     mKeys.forEach(function(m){
       var r=months[m];
       var inHtml='';
@@ -10539,7 +10539,7 @@ function renderFinReports(){
       if(r.out_usd>0)outHtml+='<div style="color:var(--red);font-size:13px">$'+r.out_usd+'</div>';
       if(r.out_cny>0)outHtml+='<div style="color:var(--red);font-size:12px">¥'+r.out_cny+'</div>';
       if(!outHtml)outHtml='<div style="color:var(--muted);font-size:13px">—</div>';
-      html+='<div style="display:grid;grid-template-columns:80px 1fr 1fr;border-bottom:1px solid var(--border);padding:8px 0;align-items:start">';
+      html+='<div style="display:grid;grid-template-columns:80px 1fr 1fr;border-bottom:1px solid var(--border);padding:8px 12px;align-items:start">';
       html+='<div style="font-size:12px;color:var(--muted);padding-top:2px">'+m+'</div>';
       html+='<div style="text-align:right">'+inHtml+'</div>';
       html+='<div style="text-align:right">'+outHtml+'</div>';
@@ -10570,8 +10570,8 @@ function renderFinReports(){
   var arKeys=Object.keys(custOrders);
   if(!arKeys.length){html+='<div style="color:var(--muted);font-size:13px">暂无未完成订单</div>';}
   else{
-    html+='<div class="table-inner">';
-    html+='<div style="display:grid;grid-template-columns:1fr 100px 100px" class="table-header"><div>客户</div><div style="text-align:right">订单</div><div style="text-align:right">已收</div></div>';
+    html+='<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden">';
+    html+='<div style="display:grid;grid-template-columns:1fr 100px 100px;padding:8px 12px;background:var(--surface2);font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)"><div>客户</div><div style="text-align:right">订单</div><div style="text-align:right">已收</div></div>';
     arKeys.forEach(function(alias){
       var ord=custOrders[alias];var rec=custRec[alias]||{usd:0,cny:0};
       var arUsd=ord.usd-rec.usd;var arCny=ord.cny-rec.cny;
@@ -10584,7 +10584,7 @@ function renderFinReports(){
       if(rec.cny>0)recHtml+='<div style="font-size:12px;color:var(--green)">¥'+rec.cny+'</div>';
       if(!recHtml)recHtml='<div style="color:var(--muted);font-size:13px">—</div>';
       var arColor=(arUsd>0||arCny>0)?'var(--red)':'var(--green)';
-      html+='<div style="display:grid;grid-template-columns:1fr 100px 100px;border-bottom:1px solid var(--border);padding:8px 0;align-items:start">';
+      html+='<div style="display:grid;grid-template-columns:1fr 100px 100px;border-bottom:1px solid var(--border);padding:8px 12px;align-items:start">';
       html+='<div><div style="font-size:13px;font-weight:500">'+alias+'</div>';
       if(arUsd>0||arCny>0){
         html+='<div style="font-size:11px;color:'+arColor+'">欠：';
@@ -10623,11 +10623,11 @@ function renderFinReports(){
   var apKeys=Object.keys(suppPos);
   if(!apKeys.length){html+='<div style="color:var(--muted);font-size:13px">暂无进行中采购单</div>';}
   else{
-    html+='<div class="table-inner">';
-    html+='<div style="display:grid;grid-template-columns:1fr 90px 90px 90px" class="table-header"><div>供应商</div><div style="text-align:right">PO总额</div><div style="text-align:right">已付</div><div style="text-align:right">待付</div></div>';
+    html+='<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden">';
+    html+='<div style="display:grid;grid-template-columns:1fr 90px 90px 90px;padding:8px 12px;background:var(--surface2);font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)"><div>供应商</div><div style="text-align:right">PO总额</div><div style="text-align:right">已付</div><div style="text-align:right">待付</div></div>';
     apKeys.forEach(function(sn){
       var pos=suppPos[sn];var paid=suppPaid[sn]||{cny:0};var ap=pos.cny-paid.cny;
-      html+='<div style="display:grid;grid-template-columns:1fr 90px 90px 90px;border-bottom:1px solid var(--border);padding:8px 0;align-items:center">';
+      html+='<div style="display:grid;grid-template-columns:1fr 90px 90px 90px;border-bottom:1px solid var(--border);padding:8px 12px;align-items:center">';
       html+='<div style="font-size:13px;font-weight:500">'+sn+'</div>';
       html+='<div style="text-align:right;font-size:13px">'+(pos.cny>0?'¥'+pos.cny:'—')+'</div>';
       html+='<div style="text-align:right;font-size:13px;color:var(--green)">'+(paid.cny>0?'¥'+paid.cny:'—')+'</div>';
