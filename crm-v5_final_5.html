@@ -10513,7 +10513,8 @@ function renderFinReports(){
   var d=getFinData();
   var txns=d.transactions||[];
   var html='';
-  /* 月度收支 */
+
+  /* ── 月度收支（3列：月份 / 收款 / 支出） ── */
   html+='<div style="margin-bottom:28px"><div style="font-size:15px;font-weight:600;margin-bottom:12px">月度收支</div>';
   var months={};
   txns.forEach(function(t){
@@ -10526,22 +10527,29 @@ function renderFinReports(){
   var mKeys=Object.keys(months).sort().reverse();
   if(!mKeys.length){html+='<div style="color:var(--muted);font-size:13px">暂无数据</div>';}
   else{
-    html+='<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><div style="min-width:460px" class="table-inner">';
-    html+='<div style="display:grid;grid-template-columns:80px 90px 90px 90px 90px" class="table-header"><div>月份</div><div style="text-align:right">收款USD</div><div style="text-align:right">收款CNY</div><div style="text-align:right">支出USD</div><div style="text-align:right">支出CNY</div></div>';
+    html+='<div class="table-inner">';
+    html+='<div style="display:grid;grid-template-columns:80px 1fr 1fr" class="table-header"><div>月份</div><div style="text-align:right">收款</div><div style="text-align:right">支出</div></div>';
     mKeys.forEach(function(m){
       var r=months[m];
-      html+='<div style="display:grid;grid-template-columns:80px 90px 90px 90px 90px;border-bottom:1px solid var(--border);padding:7px 0">';
-      html+='<div style="font-size:12px;color:var(--muted)">'+m+'</div>';
-      html+='<div style="text-align:right;font-size:13px;color:var(--green)">'+(r.in_usd>0?'$'+r.in_usd:'—')+'</div>';
-      html+='<div style="text-align:right;font-size:13px;color:var(--green)">'+(r.in_cny>0?'¥'+r.in_cny:'—')+'</div>';
-      html+='<div style="text-align:right;font-size:13px;color:var(--red)">'+(r.out_usd>0?'$'+r.out_usd:'—')+'</div>';
-      html+='<div style="text-align:right;font-size:13px;color:var(--red)">'+(r.out_cny>0?'¥'+r.out_cny:'—')+'</div>';
+      var inHtml='';
+      if(r.in_usd>0)inHtml+='<div style="color:var(--green);font-size:13px">$'+r.in_usd+'</div>';
+      if(r.in_cny>0)inHtml+='<div style="color:var(--green);font-size:12px">¥'+r.in_cny+'</div>';
+      if(!inHtml)inHtml='<div style="color:var(--muted);font-size:13px">—</div>';
+      var outHtml='';
+      if(r.out_usd>0)outHtml+='<div style="color:var(--red);font-size:13px">$'+r.out_usd+'</div>';
+      if(r.out_cny>0)outHtml+='<div style="color:var(--red);font-size:12px">¥'+r.out_cny+'</div>';
+      if(!outHtml)outHtml='<div style="color:var(--muted);font-size:13px">—</div>';
+      html+='<div style="display:grid;grid-template-columns:80px 1fr 1fr;border-bottom:1px solid var(--border);padding:8px 0;align-items:start">';
+      html+='<div style="font-size:12px;color:var(--muted);padding-top:2px">'+m+'</div>';
+      html+='<div style="text-align:right">'+inHtml+'</div>';
+      html+='<div style="text-align:right">'+outHtml+'</div>';
       html+='</div>';
     });
-    html+='</div></div>';
+    html+='</div>';
   }
   html+='</div>';
-  /* 应收账款 */
+
+  /* ── 应收账款（3列：客户 / 订单 / 已收） ── */
   html+='<div style="margin-bottom:28px"><div style="font-size:15px;font-weight:600;margin-bottom:12px">应收账款</div>';
   var custOrders={};
   orders.forEach(function(o){
@@ -10562,22 +10570,38 @@ function renderFinReports(){
   var arKeys=Object.keys(custOrders);
   if(!arKeys.length){html+='<div style="color:var(--muted);font-size:13px">暂无未完成订单</div>';}
   else{
-    html+='<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><div style="min-width:440px" class="table-inner">';
-    html+='<div style="display:grid;grid-template-columns:1fr 85px 85px 85px 85px" class="table-header"><div>客户</div><div style="text-align:right">订单USD</div><div style="text-align:right">已收USD</div><div style="text-align:right">订单CNY</div><div style="text-align:right">已收CNY</div></div>';
+    html+='<div class="table-inner">';
+    html+='<div style="display:grid;grid-template-columns:1fr 100px 100px" class="table-header"><div>客户</div><div style="text-align:right">订单</div><div style="text-align:right">已收</div></div>';
     arKeys.forEach(function(alias){
       var ord=custOrders[alias];var rec=custRec[alias]||{usd:0,cny:0};
-      html+='<div style="display:grid;grid-template-columns:1fr 85px 85px 85px 85px;border-bottom:1px solid var(--border);padding:7px 0">';
-      html+='<div style="font-size:13px;font-weight:500">'+alias+'</div>';
-      html+='<div style="text-align:right;font-size:13px">'+(ord.usd>0?'$'+ord.usd:'—')+'</div>';
-      html+='<div style="text-align:right;font-size:13px;color:var(--green)">'+(rec.usd>0?'$'+rec.usd:'—')+'</div>';
-      html+='<div style="text-align:right;font-size:13px">'+(ord.cny>0?'¥'+ord.cny:'—')+'</div>';
-      html+='<div style="text-align:right;font-size:13px;color:var(--green)">'+(rec.cny>0?'¥'+rec.cny:'—')+'</div>';
+      var arUsd=ord.usd-rec.usd;var arCny=ord.cny-rec.cny;
+      var ordHtml='';
+      if(ord.usd>0)ordHtml+='<div style="font-size:13px">$'+ord.usd+'</div>';
+      if(ord.cny>0)ordHtml+='<div style="font-size:12px">¥'+ord.cny+'</div>';
+      if(!ordHtml)ordHtml='<div style="color:var(--muted);font-size:13px">—</div>';
+      var recHtml='';
+      if(rec.usd>0)recHtml+='<div style="font-size:13px;color:var(--green)">$'+rec.usd+'</div>';
+      if(rec.cny>0)recHtml+='<div style="font-size:12px;color:var(--green)">¥'+rec.cny+'</div>';
+      if(!recHtml)recHtml='<div style="color:var(--muted);font-size:13px">—</div>';
+      var arColor=(arUsd>0||arCny>0)?'var(--red)':'var(--green)';
+      html+='<div style="display:grid;grid-template-columns:1fr 100px 100px;border-bottom:1px solid var(--border);padding:8px 0;align-items:start">';
+      html+='<div><div style="font-size:13px;font-weight:500">'+alias+'</div>';
+      if(arUsd>0||arCny>0){
+        html+='<div style="font-size:11px;color:'+arColor+'">欠：';
+        if(arUsd>0)html+='$'+arUsd+' ';
+        if(arCny>0)html+='¥'+arCny;
+        html+='</div>';
+      }else{html+='<div style="font-size:11px;color:var(--green)">已结清</div>';}
+      html+='</div>';
+      html+='<div style="text-align:right">'+ordHtml+'</div>';
+      html+='<div style="text-align:right">'+recHtml+'</div>';
       html+='</div>';
     });
-    html+='</div></div>';
+    html+='</div>';
   }
   html+='</div>';
-  /* 应付账款 */
+
+  /* ── 应付账款（3列：供应商 / PO / 已付 / 待付） ── */
   html+='<div><div style="font-size:15px;font-weight:600;margin-bottom:12px">应付账款</div>';
   var suppPos={};
   try{var ps=localStorage.getItem(SK.proc);var pd=ps?JSON.parse(ps):null;
@@ -10599,20 +10623,21 @@ function renderFinReports(){
   var apKeys=Object.keys(suppPos);
   if(!apKeys.length){html+='<div style="color:var(--muted);font-size:13px">暂无进行中采购单</div>';}
   else{
-    html+='<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><div style="min-width:380px" class="table-inner">';
-    html+='<div style="display:grid;grid-template-columns:1fr 100px 100px 100px" class="table-header"><div>供应商</div><div style="text-align:right">PO总额CNY</div><div style="text-align:right">已付CNY</div><div style="text-align:right">待付CNY</div></div>';
+    html+='<div class="table-inner">';
+    html+='<div style="display:grid;grid-template-columns:1fr 90px 90px 90px" class="table-header"><div>供应商</div><div style="text-align:right">PO总额</div><div style="text-align:right">已付</div><div style="text-align:right">待付</div></div>';
     apKeys.forEach(function(sn){
       var pos=suppPos[sn];var paid=suppPaid[sn]||{cny:0};var ap=pos.cny-paid.cny;
-      html+='<div style="display:grid;grid-template-columns:1fr 100px 100px 100px;border-bottom:1px solid var(--border);padding:7px 0">';
+      html+='<div style="display:grid;grid-template-columns:1fr 90px 90px 90px;border-bottom:1px solid var(--border);padding:8px 0;align-items:center">';
       html+='<div style="font-size:13px;font-weight:500">'+sn+'</div>';
       html+='<div style="text-align:right;font-size:13px">'+(pos.cny>0?'¥'+pos.cny:'—')+'</div>';
       html+='<div style="text-align:right;font-size:13px;color:var(--green)">'+(paid.cny>0?'¥'+paid.cny:'—')+'</div>';
       html+='<div style="text-align:right;font-size:13px;color:'+(ap>0?'var(--red)':'var(--green)')+'">'+( ap>0?'¥'+ap:'已结清')+'</div>';
       html+='</div>';
     });
-    html+='</div></div>';
+    html+='</div>';
   }
   html+='</div>';
+
   var rb=document.getElementById('fin-report-body');if(rb)rb.innerHTML=html;
 }
 
