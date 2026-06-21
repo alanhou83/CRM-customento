@@ -10303,6 +10303,13 @@ function switchFinTab(tab){
     var chip=document.getElementById('mb-fin-chip-'+t);
     if(chip)chip.className='chip'+(t===tab?' active':'');
   });
+  /* 搜索栏和类型芯片只在流水Tab显示 */
+  var srchRow=document.getElementById('mh-fin-search');
+  if(srchRow)srchRow.style.display=tab==='txn'?'flex':'none';
+  ['mb-fin-type-in','mb-fin-type-out','mb-fin-type-exp'].forEach(function(id){
+    var c=document.getElementById(id);
+    if(c)c.style.display=tab==='txn'?'':'none';
+  });
   if(tab==='txn')renderFinTransactions();
   else if(tab==='accounts')renderFinAccounts();
   else if(tab==='report')renderFinReports();
