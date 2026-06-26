@@ -39,9 +39,10 @@
 - 6个核心模块：数据看板 / 热点商机 / 询盘列表 / 客户管理 / 销售统计 / 执行中订单
 - **产品开发模块**（crm_prod_v5）：项目跟踪 / 款式管理 / BOM成本（Alan+Penny可见）
 - **产品库模块**（crm_prodcat_v5）：4种类型/SKU/多维标签/双语/定价权限/BOM引用行
-- **报价单模块**（crm_quote_v5）：新建/编辑/详情/预览/打印/询盘客户Tab集成
+- **报价单模块**（crm_quote_v5）：新建/编辑/详情/预览/打印/询盘客户Tab集成/**三公司切换**
 - **采购跟单模块**（crm_proc_v5）：采购单/阶段跟踪/入库确认
 - **供应商管理模块**（crm_proc_v5 suppliers数组）：独立页面，详情面板含2Tab（供应商档案/采购历史）
+- **财务模块**（crm_fin_v6）：账户管理/收付款流水/应收应付/月度P&L报表/自动补全模糊搜索
 - 角色导航：NAV_CONFIG 定义各角色底部导航，手机端动态渲染
 - 询盘列表：标记列（VIP绿/热点橙/超时红/🎯冲单）独立一列
 - 客户管理：5层分层（核心/重点培养/普通跟踪/沉睡/流失）+ 卡片/列表双视图 + 分批展开
@@ -483,6 +484,9 @@
 
 ## 当前进度（最近完成）
 - **库存管理模块**（crm_inv_v5）：完整实现，含台账/流水/入库单/出库单/盘库对账/打印
+- **财务模块**（crm_fin_v6）：完整实现，含收付款流水/账户管理/应收应付/月度P&L报表/往来方+关联单号模糊搜索
+- **报价单三公司模板**：Customento/MUGSTech./SUBLANK，`QUOTE_COMPANIES`对象+`switchQtCompany()`，中英文切换独立工作
+- **报价单打印优化**：去除浏览器URL/日期页眉页脚（Chrome/Edge），手机端黑导航栏问题解决
 - **角色导航**：NAV_CONFIG 定义各角色底部导航，renderMobileNav() 动态渲染，Alan 有"全部"overlay
 - **产品开发模块**（crm_prod_v5）：完整实现，含项目列表/详情面板/SKU/BOM/3张图片/跟进记录/示例数据
 - **产品库模块**（crm_prodcat_v5）：完整实现，4种类型/SKU/多维标签/BOM/图片
@@ -537,19 +541,74 @@
 - **iOS PWA overlay 被面板遮挡**：position:fixed 全屏面板（overflow-y:auto）会拦截更高 z-index 元素的 touch 事件 → 解决方案：在触发 overlay 的同一 onclick 里先/后调 `closeDetail()`
 - **待办保存不刷新详情面板**：saveTodo/saveInqTodo/saveOrdTodo 只调 refreshAll() 不够，必须同时调对应的 openXxxDetail(id)+switchDpTab('followup') 才能刷新面板内容
 - **feature branch 与 main 分歧**：改动在 feature branch 上时用 cherry-pick 合到 main，不能直接 push 到 feature branch
+- **打印CSS三个坑**（已踩过，不要重复）：
+  1. `display:none .app` 隐藏不到 mh-* 手机header（它们在 .app 之前，line ~1-565）
+  2. `visibility:hidden` 全页：隐藏元素仍占布局空间，把 overlay 挤到页面下方；且 iOS 链路失效
+  3. `position:fixed` 在打印模式下坐标系出错，内容偏移或空白
+  - **正确方案**：`body>*:not(#quote-preview-overlay){display:none!important}` + overlay 设 `position:static;padding:15mm`
+- **iOS Safari打印URL/日期**：CSS `@page{margin:0}` 在 Chrome/Edge 有效，iOS Safari 无效（系统级限制，用户需手动关闭打印选项中的页眉页脚）
 
 ## 待做功能（优先级顺序）
 1. **【已完成】产品库模块**（prodcat）：基础完成，报价单已集成
-2. **【已完成】报价单模块**（quote）：新建/编辑/详情/预览/打印/询盘客户Tab集成
+2. **【已完成】报价单模块**（quote）：新建/编辑/详情/预览/打印/询盘客户Tab集成/三公司模板
 3. **【已完成】采购跟单模块**（procurement）：供应商管理/采购单/阶段跟踪/入库确认
-4. **【待资料】打印模板**：订单 + 采购单各需支持3个公司抬头，等待公司资料（名称/地址/税号/Logo等）
-5. **【已完成】库存管理模块**（inventory）：台账/流水/入库单/出库单/盘库对账/打印
-6. **【之后】财务模块**（finance）：账户流水/应收应付/P&L报表
+4. **【已完成】库存管理模块**（inventory）：台账/流水/入库单/出库单/盘库对账/打印
+5. **【已完成】财务模块**（finance）：账户管理/收付款流水/应收应付/P&L报表
+6. **【待补充】公司Logo**：Customento PNG logo 尚未提供（当前文字占位），SUBLANK已嵌入S图标PNG
 7. 数据看板优化（待讨论）
 8. **【待设计】邮件集成**：CRM内直接发邮件给客户，发送记录自动同步跟进记录
 9. **【后期】订单反查报价单**：订单详情加关联报价单入口
 10. Supabase 迁移（后期）
 11. 钉钉 H5 嵌入（后期）
+
+## 报价单多公司模板设计
+
+### 三个公司配置（QUOTE_COMPANIES 对象）
+- `customento`：Customento / 广州趣印社礼品有限公司，color=#2D3172，logo 暂无（文字占位）
+- `mugstech`：MUGSTech. / 广州迈格斯科技有限公司，color=#22A822，logo 已嵌入 PNG base64
+- `sublank`：SUBLANK / 广州世邦转印科技有限公司，color=#017417，logo 已嵌入 S 图标 PNG base64
+
+### 全局变量
+- `COMPANY_LOGOS`：{customento:'', mugstech:'data:image/png;base64,...', sublank:'data:image/png;base64,...'}
+- `QUOTE_COMPANIES`：{customento:{key,nameEN,nameCN,website,email,phone,color,logo}, mugstech:{...}, sublank:{...}}
+- `_qtCurrentCompany`：当前选中公司 key（默认 'customento'）
+- `_qtPreviewLang`：'cn' 或 'en'（中英文切换，与公司选择独立）
+
+### 切换函数
+- `switchQtCompany(key)`：更新 `_qtCurrentCompany`，刷新3个按钮高亮，调 `renderQuotePreviewContent()`
+- `toggleQtLang()`：切换 `_qtPreviewLang`，刷新预览
+
+### 报价单头部布局规范（renderQuotePreviewContent 内）
+- **结构**：两列 flex，`[左:logo+公司信息 flex:1] [右:单号日期 flex-shrink:0]`
+- **左块-有logo**：`display:flex;gap:8px` → img(48×48px, border-radius:3px) + 文字div
+- **左块-无logo**：纯文字 div，flex:1
+- **文字div内容**（始终用英文品牌名做主标题，不随 CN/EN 切换）：
+  - 主标题：`co.nameEN`（14px或17px bold，品牌色）— 短，不换行
+  - 副标题：`co.nameCN`（9-10px，灰色）— 仅 `isCN` 时显示
+  - 网站：`co.website`（9px）
+  - 邮箱：`co.email`（9px）
+  - 电话：`co.phone`（9px）
+- ⚠️ 绝对不能用 `isCN?co.nameCN:co.nameEN` 作主标题，中文法定名太长会换行破坏布局
+- **右列**（text-align:right, flex-shrink:0）：报价单/QUOTATION → 单号(monospace) → 日期 → 有效期
+
+### 打印CSS（@media print，line ~323）
+```css
+@page{size:A4;margin:0;}  /* margin:0 去除Chrome/Edge页眉页脚 */
+html,body{margin:0;padding:0;background:white;}
+body>*:not(#quote-preview-overlay){display:none!important;}  /* 隐藏所有非overlay内容 */
+#quote-preview-overlay{display:block!important;position:static!important;background:white!important;padding:15mm!important;box-sizing:border-box!important;overflow:visible!important;}
+#quote-preview-overlay>div{max-width:none!important;padding:0!important;margin:0!important;}
+#quote-preview-overlay>div>div:first-child{display:none!important;}  /* 隐藏工具栏 */
+#quote-preview-content{box-shadow:none!important;border-radius:0!important;padding:0!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+#quote-preview-content *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+```
+
+### Logo 嵌入方法（Python 脚本）
+```python
+import base64
+b64 = base64.b64encode(open('logo.png','rb').read()).decode()
+# 然后替换 HTML 中 COMPANY_LOGOS.xxx:'' 为 COMPANY_LOGOS.xxx:'data:image/png;base64,'+b64
+```
 
 ## 采购跟单模块设计规划（procurement）
 
