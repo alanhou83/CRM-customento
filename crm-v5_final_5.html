@@ -9936,29 +9936,31 @@ function renderQuotePreviewContent(){
   var co=QUOTE_COMPANIES[_qtCurrentCompany]||QUOTE_COMPANIES.customento;
   var coColor=co.color||'#2D3172';
   var html='';
-  /* 头部：三栏布局 logo | 公司名+联系方式(flex:1) | 单号日期 */
-  var coImgCol='';
-  var coInfoCol='';
+  /* 头部：两列 [左:logo+公司信息 flex:1] [右:单号日期 shrink:0] */
+  var coLeftHtml='';
   if(co.logo){
-    coImgCol='<div style="flex-shrink:0"><img src="'+co.logo+'" style="height:56px;width:56px;object-fit:contain;display:block;border-radius:4px"></div>';
-    coInfoCol='<div style="flex:1;min-width:0">'
-      +'<div style="font-size:15px;font-weight:700;color:'+coColor+';letter-spacing:.5px">'+(isCN?co.nameCN:co.nameEN)+'</div>'
+    /* 有logo：img和文字横排，整体作为一个flex:1左块 */
+    coLeftHtml='<div style="display:flex;align-items:flex-start;gap:8px;flex:1;min-width:0">'
+      +'<img src="'+co.logo+'" style="height:48px;width:48px;object-fit:contain;flex-shrink:0;border-radius:3px">'
+      +'<div style="min-width:0">'
+      +'<div style="font-size:14px;font-weight:700;color:'+coColor+';letter-spacing:.5px">'+(isCN?co.nameCN:co.nameEN)+'</div>'
       +(isCN?'<div style="font-size:9px;color:#aaa;margin-top:1px">'+co.nameEN+'</div>':'<div style="font-size:9px;color:#aaa;margin-top:1px">'+co.nameCN+'</div>')
-      +'<div style="font-size:9px;color:#888;margin-top:5px">'+co.website+' · '+co.email+'</div>'
+      +'<div style="font-size:9px;color:#888;margin-top:4px">'+co.website+'</div>'
+      +'<div style="font-size:9px;color:#888">'+co.email+'</div>'
       +'<div style="font-size:9px;color:#888">'+co.phone+'</div>'
+      +'</div>'
       +'</div>';
   } else {
-    coImgCol='';
-    coInfoCol='<div style="flex:1;min-width:0">'
+    /* 无logo：纯文字左块，与Customento一致 */
+    coLeftHtml='<div style="flex:1;min-width:0">'
       +'<div style="font-size:17px;font-weight:700;color:'+coColor+';letter-spacing:1px">'+(isCN?co.nameCN:co.nameEN)+'</div>'
       +(isCN?'<div style="font-size:10px;color:#aaa;margin-top:1px">'+co.nameEN+'</div>':'<div style="font-size:10px;color:#aaa;margin-top:1px">'+co.nameCN+'</div>')
       +'<div style="font-size:9px;color:#888;margin-top:5px">'+co.website+' · '+co.email+'</div>'
       +'<div style="font-size:9px;color:#888">'+co.phone+'</div>'
       +'</div>';
   }
-  html+='<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;border-bottom:2px solid '+coColor+';padding-bottom:10px">'
-    +coImgCol
-    +coInfoCol
+  html+='<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;border-bottom:2px solid '+coColor+';padding-bottom:10px">'
+    +coLeftHtml
     +'<div style="text-align:right;flex-shrink:0">'
     +'<div style="font-size:14px;font-weight:700;color:#333">'+(isCN?'报价单':'QUOTATION')+'</div>'
     +'<div style="font-size:11px;color:#666;margin-top:2px;font-family:monospace">'+q.qtNum+'</div>'
