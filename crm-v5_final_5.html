@@ -1389,12 +1389,19 @@ a{color:var(--accent);text-decoration:none;}
 <!-- 报价单预览 Overlay -->
 <div id="quote-preview-overlay" style="display:none;position:fixed;inset:0;z-index:3000;background:#f5f5f5;overflow-y:auto">
   <div style="max-width:800px;margin:0 auto;padding:20px">
-    <div style="display:flex;justify-content:space-between;margin-bottom:16px;background:#fff;padding:12px 16px;border-radius:8px">
-      <div style="display:flex;gap:8px">
-        <button onclick="toggleQtLang()" id="qt-lang-btn" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">切换 English</button>
-        <button onclick="window.print()" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">打印</button>
+    <div style="background:#fff;padding:12px 16px;border-radius:8px;margin-bottom:16px">
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+        <button onclick="switchQtCompany('customento')" id="qt-co-btn-customento" style="padding:5px 12px;border:2px solid #2D3172;border-radius:6px;background:#f0f2f8;cursor:pointer;font-size:12px;font-weight:700;color:#2D3172">Customento</button>
+        <button onclick="switchQtCompany('mugstech')"   id="qt-co-btn-mugstech"   style="padding:5px 12px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;font-weight:400;color:#666">MUGSTech.</button>
+        <button onclick="switchQtCompany('sublank')"    id="qt-co-btn-sublank"    style="padding:5px 12px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;font-weight:400;color:#666">SUBLANK</button>
       </div>
-      <button onclick="closeQuotePreview()" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">x 关闭</button>
+      <div style="display:flex;justify-content:space-between">
+        <div style="display:flex;gap:8px">
+          <button onclick="toggleQtLang()" id="qt-lang-btn" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">切换 English</button>
+          <button onclick="window.print()" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">打印</button>
+        </div>
+        <button onclick="closeQuotePreview()" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">x 关闭</button>
+      </div>
     </div>
     <div id="quote-preview-content" style="background:#fff;padding:40px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.08)">
     </div>
@@ -9509,9 +9516,15 @@ function createProcFromOrder(orderId){
 }
 
 /* ===== 报价单模块 ===== */
+var QUOTE_COMPANIES={
+  customento:{key:'customento',nameEN:'Customento',nameCN:'广州趣印社礼品有限公司',website:'www.customento.com',email:'info@customento.com',phone:'+86 135 0002 2336',color:'#2D3172'},
+  mugstech:  {key:'mugstech', nameEN:'MUGSTech.',  nameCN:'广州迈格斯科技有限公司',  website:'www.mugstech.com',  email:'info@mugstech.com',  phone:'+86 135 0002 2336',color:'#2D3172'},
+  sublank:   {key:'sublank',  nameEN:'SUBLANK',    nameCN:'广州世邦转印科技有限公司', website:'www.mugstech.com',  email:'info@mugstech.com',  phone:'+86 135 0002 2336',color:'#2D3172'}
+};
 var _editingQuoteId=null;
 var _qtPreviewLang='cn';
 var _qtCurrentPreviewId=null;
+var _qtCurrentCompany='customento';
 
 function getQuoteStatusLabel(s){
   if(s==='draft')return '草稿';
@@ -9869,9 +9882,20 @@ function deleteQuote(id){
 function openQuotePreview(id,lang){
   _qtCurrentPreviewId=id;
   _qtPreviewLang=lang||'cn';
-  renderQuotePreviewContent();
+  _qtCurrentCompany='customento';
   var ov=document.getElementById('quote-preview-overlay');
   if(ov)ov.style.display='';
+  /* 初始化公司按钮高亮 */
+  ['customento','mugstech','sublank'].forEach(function(k){
+    var btn=document.getElementById('qt-co-btn-'+k);
+    if(!btn)return;
+    var isActive=(k==='customento');
+    btn.style.fontWeight=isActive?'700':'400';
+    btn.style.border=isActive?'2px solid #2D3172':'1px solid #ccc';
+    btn.style.color=isActive?'#2D3172':'#666';
+    btn.style.background=isActive?'#f0f2f8':'#fff';
+  });
+  renderQuotePreviewContent();
 }
 function closeQuotePreview(){
   var ov=document.getElementById('quote-preview-overlay');
@@ -9883,16 +9907,38 @@ function toggleQtLang(){
   if(btn)btn.textContent=_qtPreviewLang==='cn'?'切换 English':'切换 中文';
   renderQuotePreviewContent();
 }
+function switchQtCompany(key){
+  _qtCurrentCompany=key;
+  var co=QUOTE_COMPANIES[key]||QUOTE_COMPANIES.customento;
+  var coColor=co.color||'#2D3172';
+  ['customento','mugstech','sublank'].forEach(function(k){
+    var btn=document.getElementById('qt-co-btn-'+k);
+    if(!btn)return;
+    var isActive=(k===key);
+    var kColor=(QUOTE_COMPANIES[k]&&QUOTE_COMPANIES[k].color)||'#2D3172';
+    btn.style.fontWeight=isActive?'700':'400';
+    btn.style.border=isActive?('2px solid '+kColor):'1px solid #ccc';
+    btn.style.color=isActive?kColor:'#666';
+    btn.style.background=isActive?'#f0f2f8':'#fff';
+  });
+  renderQuotePreviewContent();
+}
 function renderQuotePreviewContent(){
   var q=quoteRecords.find(function(x){return x.id===_qtCurrentPreviewId;});
   if(!q)return;
   var isCN=_qtPreviewLang==='cn';
   var cur=q.currency==='USD'?'$':'¥';
+  var co=QUOTE_COMPANIES[_qtCurrentCompany]||QUOTE_COMPANIES.customento;
+  var coColor=co.color||'#2D3172';
   var html='';
-  /* 头部：紧凑 */
-  html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;border-bottom:2px solid #2D3172;padding-bottom:10px">'
-    +'<div><div style="font-size:17px;font-weight:700;color:#2D3172;letter-spacing:1px">CUSTOMENTO</div>'
-    +'<div style="font-size:9px;color:#888;margin-top:1px">crm.customento.com</div></div>'
+  /* 头部：动态公司 */
+  html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;border-bottom:2px solid '+coColor+';padding-bottom:10px">'
+    +'<div>'
+    +'<div style="font-size:17px;font-weight:700;color:'+coColor+';letter-spacing:1px">'+(isCN?co.nameCN:co.nameEN)+'</div>'
+    +(isCN?'<div style="font-size:10px;color:#888;margin-top:1px">'+co.nameEN+'</div>':'<div style="font-size:10px;color:#888;margin-top:1px">'+co.nameCN+'</div>')
+    +'<div style="font-size:9px;color:#888;margin-top:3px">'+co.website+' · '+co.email+'</div>'
+    +'<div style="font-size:9px;color:#888">'+co.phone+'</div>'
+    +'</div>'
     +'<div style="text-align:right">'
     +'<div style="font-size:14px;font-weight:700;color:#333">'+(isCN?'报价单':'QUOTATION')+'</div>'
     +'<div style="font-size:11px;color:#666;margin-top:2px;font-family:monospace">'+q.qtNum+'</div>'
@@ -9909,7 +9955,7 @@ function renderQuotePreviewContent(){
     +'<div style="font-size:12px;font-weight:600;color:#333">'+q.currency+'</div></div>'
     +'</div>';
   /* 产品明细：卡片布局 */
-  html+='<div style="font-size:9px;font-weight:700;color:#2D3172;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;padding-bottom:4px;border-bottom:1.5px solid #2D3172">'
+  html+='<div style="font-size:9px;font-weight:700;color:'+coColor+';text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;padding-bottom:4px;border-bottom:1.5px solid '+coColor+'">'
     +(isCN?'报价明细':'Quotation Details')+'</div>';
   var totalAmt=0;
   (q.items||[]).forEach(function(item,idx){
@@ -9938,13 +9984,13 @@ function renderQuotePreviewContent(){
       +'</div>';
   });
   /* 合计行 */
-  html+='<div style="text-align:right;padding:9px 14px;background:#2D3172;border-radius:6px;color:#fff;font-size:15px;font-weight:700;margin-bottom:14px">'
+  html+='<div style="text-align:right;padding:9px 14px;background:'+coColor+';border-radius:6px;color:#fff;font-size:15px;font-weight:700;margin-bottom:14px">'
     +(isCN?'合计 ':'Total ')+cur+totalAmt.toFixed(2)+'</div>';
   /* 条款 */
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;font-size:11px">';
-  html+='<div><div style="font-weight:700;color:#2D3172;margin-bottom:3px;font-size:10px">'+(isCN?'付款方式':'PAYMENT TERMS')+'</div>'
+  html+='<div><div style="font-weight:700;color:'+coColor+';margin-bottom:3px;font-size:10px">'+(isCN?'付款方式':'PAYMENT TERMS')+'</div>'
     +'<div style="color:#444;line-height:1.4">'+(isCN?(q.paymentTermsCN||'—'):(q.paymentTermsEN||'—'))+'</div></div>';
-  html+='<div><div style="font-weight:700;color:#2D3172;margin-bottom:3px;font-size:10px">'+(isCN?'装运条款':'SHIPPING TERMS')+'</div>'
+  html+='<div><div style="font-weight:700;color:'+coColor+';margin-bottom:3px;font-size:10px">'+(isCN?'装运条款':'SHIPPING TERMS')+'</div>'
     +'<div style="color:#444;line-height:1.4">'+(isCN?(q.shippingTermsCN||'—'):(q.shippingTermsEN||'—'))+'</div></div>';
   html+='</div>';
   var notesCurrent=isCN?q.notesCN:q.notesEN;
@@ -9953,7 +9999,8 @@ function renderQuotePreviewContent(){
       +'<div style="font-weight:600;color:#444;margin-bottom:2px;font-size:10px">'+(isCN?'备注':'NOTES')+'</div>'
       +notesCurrent+'</div>';
   }
-  html+='<div style="margin-top:12px;border-top:1px solid #eee;padding-top:8px;font-size:9px;color:#aaa;text-align:center">CUSTOMENTO · '
+  html+='<div style="margin-top:12px;border-top:1px solid #eee;padding-top:8px;font-size:9px;color:#aaa;text-align:center">'
+    +(isCN?co.nameCN:co.nameEN)+' · '
     +(isCN?'本报价单有效期至 ':'Valid until ')+(q.validUntil||'—')+'</div>';
   var cont=document.getElementById('quote-preview-content');
   if(cont)cont.innerHTML=html;
