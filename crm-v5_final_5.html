@@ -9943,8 +9943,8 @@ function renderQuotePreviewContent(){
     coLeftHtml='<div style="display:flex;align-items:flex-start;gap:8px;flex:1;min-width:0">'
       +'<img src="'+co.logo+'" style="height:48px;width:48px;object-fit:contain;flex-shrink:0;border-radius:3px">'
       +'<div style="min-width:0">'
-      +'<div style="font-size:14px;font-weight:700;color:'+coColor+';letter-spacing:.5px">'+(isCN?co.nameCN:co.nameEN)+'</div>'
-      +(isCN?'<div style="font-size:9px;color:#aaa;margin-top:1px">'+co.nameEN+'</div>':'<div style="font-size:9px;color:#aaa;margin-top:1px">'+co.nameCN+'</div>')
+      +'<div style="font-size:14px;font-weight:700;color:'+coColor+';letter-spacing:.5px">'+co.nameEN+'</div>'
+      +(isCN?'<div style="font-size:9px;color:#aaa;margin-top:1px">'+co.nameCN+'</div>':'')
       +'<div style="font-size:9px;color:#888;margin-top:4px">'+co.website+'</div>'
       +'<div style="font-size:9px;color:#888">'+co.email+'</div>'
       +'<div style="font-size:9px;color:#888">'+co.phone+'</div>'
@@ -9953,8 +9953,8 @@ function renderQuotePreviewContent(){
   } else {
     /* 无logo：纯文字左块，与Customento一致 */
     coLeftHtml='<div style="flex:1;min-width:0">'
-      +'<div style="font-size:17px;font-weight:700;color:'+coColor+';letter-spacing:1px">'+(isCN?co.nameCN:co.nameEN)+'</div>'
-      +(isCN?'<div style="font-size:10px;color:#aaa;margin-top:1px">'+co.nameEN+'</div>':'<div style="font-size:10px;color:#aaa;margin-top:1px">'+co.nameCN+'</div>')
+      +'<div style="font-size:17px;font-weight:700;color:'+coColor+';letter-spacing:1px">'+co.nameEN+'</div>'
+      +(isCN?'<div style="font-size:10px;color:#aaa;margin-top:2px">'+co.nameCN+'</div>':'')
       +'<div style="font-size:9px;color:#888;margin-top:5px">'+co.website+' · '+co.email+'</div>'
       +'<div style="font-size:9px;color:#888">'+co.phone+'</div>'
       +'</div>';
