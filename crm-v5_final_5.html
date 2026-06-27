@@ -1398,7 +1398,7 @@ a{color:var(--accent);text-decoration:none;}
       <div style="display:flex;justify-content:space-between">
         <div style="display:flex;gap:8px">
           <button onclick="toggleQtLang()" id="qt-lang-btn" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">切换 English</button>
-          <button onclick="window.print()" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">打印</button>
+          <button onclick="printQtDoc()" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">打印</button>
         </div>
         <button onclick="closeQuotePreview()" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">x 关闭</button>
       </div>
@@ -1425,7 +1425,7 @@ a{color:var(--accent);text-decoration:none;}
       <div style="display:flex;justify-content:space-between">
         <div style="display:flex;gap:8px">
           <button onclick="toggleTdLang()" id="td-lang-btn" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">切换 English</button>
-          <button onclick="window.print()" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">打印</button>
+          <button onclick="printTdDoc()" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">打印</button>
         </div>
         <button onclick="closeTradeDocOverlay()" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">x 关闭</button>
       </div>
@@ -10002,6 +10002,11 @@ function closeQuotePreview(){
   if(ov)ov.style.display='none';
   _tdBlockDetailPanel(false);
 }
+function printQtDoc(){
+  var ov=document.getElementById('quote-preview-overlay');
+  if(ov){ov.scrollLeft=0;ov.scrollTop=0;}
+  window.print();
+}
 function toggleQtLang(){
   _qtPreviewLang=(_qtPreviewLang==='cn')?'en':'cn';
   var btn=document.getElementById('qt-lang-btn');
@@ -12164,6 +12169,11 @@ function closeTradeDocOverlay(){
   if(ov)ov.style.display='none';
   _tdBlockDetailPanel(false);
 }
+function printTdDoc(){
+  var ov=document.getElementById('trade-doc-overlay');
+  if(ov){ov.scrollLeft=0;ov.scrollTop=0;}
+  window.print();
+}
 function switchTdDocType(t){
   _tdDocType=t;
   updateTdToolbar();
@@ -12575,6 +12585,12 @@ if('serviceWorker' in navigator){
     navigator.serviceWorker.register('/CRM-customento/service-worker.js');
   });
 }
+window.addEventListener('beforeprint', function(){
+  var ov=document.getElementById('trade-doc-overlay');
+  if(ov){ov.scrollLeft=0;ov.scrollTop=0;}
+  var qov=document.getElementById('quote-preview-overlay');
+  if(qov){qov.scrollLeft=0;qov.scrollTop=0;}
+});
 </script>
 </body>
 </html>
