@@ -11,7 +11,7 @@
 - GitHub Pages：https://alanhou83.github.io/CRM-customento/crm-v5_final_5.html
 - 仓库：https://github.com/alanhou83/CRM-customento
 - PWA 已配置：manifest.json / service-worker.js / icon-192.png / icon-512.png
-- 当前 SW 版本：customento-crm-v30
+- 当前 SW 版本：customento-crm-v32
 
 ## 团队成员与权限
 - Alan：管理员，可见所有，可删除/导出/VIP+冲单标记，专属设置页
@@ -339,7 +339,9 @@
 
 ## 必须遵守的规避规则（部署）
 - 当前行为：浏览器普通刷新即可看到更新；PWA 关闭重开即可，无需删除重装
-- 若看不到更新：bump CACHE_NAME 强制清缓存（已到 v30）
+- 若看不到更新：bump CACHE_NAME 强制清缓存（已到 v32）
+- ⚠️ **绝对禁止让用户重装PWA**：PWA 重装会清除 IndexedDB（询盘图片存在 `crm_inq_images` 库），数据永久丢失，无法恢复！
+- 遇到 PWA 问题时的处理顺序：① 先让用户用 Chrome 浏览器备份导出 JSON ② 检查是否需要 bump SW 版本 ③ 让 SW 自然更新（关闭重开），绝不建议重装
 
 ## 工作规范
 - 所有改动代码必须先说方案，等确认后再执行
@@ -547,6 +549,14 @@
   - `onOrdLinkedProcInput(el)` / `onOrdLinkedProcBlur(el)` / `selectOrdLinkedProc(poNumber)`
 - 使用 `onmousedown + e.preventDefault()` 防止 blur 在点击前触发导致下拉消失
 
+## iOS PWA 特有行为（必读）
+- **IndexedDB 数据**：询盘图片存在 IndexedDB（`crm_inq_images` 库），不在 localStorage，JSON 导出不含图片。重装 PWA 会永久丢失图片数据。
+- **afterprint 时机**：iOS Safari/PWA 的 `afterprint` 事件在分享弹出时即触发（不等用户选保存），在此还原 `document.title` 会导致 PDF 文件名仍显示为旧标题。正确做法：`afterprint` 只清 `.printing` class，`document.title` 在关闭 overlay（closeQuotePreview/closeTradeDocOverlay）时恢复。
+- **history.replaceState() 禁止**：iOS PWA 记住最后导航 URL，若改成不存在路径（如 PI-xxx），下次打开会加载失败显示黑屏。绝对不能在 PWA 里调 `history.replaceState()` 到不存在的路径。
+- **window.open() 禁止**：iOS PWA 的 `window.open()` 不新开标签，而是在当前视图导航，用户会卡在打印页无法返回。所有打印用行内 overlay + `window.print()` 实现。
+- **flex:1 折叠问题**：iOS PWA standalone 模式下，flex 容器高度不确定时 `flex:1`（flex-basis:0）子元素会折叠到 0 高度导致内容不可见。Chrome 浏览器因 URL 栏收缩触发重新布局规避了此问题。修复：移动端将 `.app/.main/.page.active/.page-content` 全改为 `display:block`。
+- **PWA 黑屏修复流程**：Chrome 正常但 PWA 黑 → 先排查 CSS flex 折叠（不是缓存问题），不要建议重装。
+
 ## 调试经验
 - 遇到"点按钮就退出"类问题，先在浏览器 Console 直接调用函数排查（不要改代码）
 - `editSaleRecord(saleRecords[0].id)` 可直接测 modal 是否正常开
@@ -558,6 +568,7 @@
 - **待办保存不刷新详情面板**：saveTodo/saveInqTodo/saveOrdTodo 只调 refreshAll() 不够，必须同时调对应的 openXxxDetail(id)+switchDpTab('followup') 才能刷新面板内容
 - **feature branch 与 main 分歧**：改动在 feature branch 上时用 cherry-pick 合到 main，不能直接 push 到 feature branch
 - **编辑 modal X/取消也要回详情页**：不能直接 `onclick="closeModal('xxx-modal')"` — 需封装 `closeXxxModal()` 函数，内部检查 `_editingXxxId`，若有则关闭后调 `openXxxDetail(id)`；背景遮罩 `onclick` 也要改为 `if(event.target===this)closeXxxModal()`（当前 proc-modal 已实现此模式）
+- **打印文件名**：用 `document.title=docNum` 在 `window.print()` 前设置，iOS 用此作 PDF 文件名。不能在 afterprint 里恢复（iOS afterprint 立即触发，PDF 还没保存）。在关闭 overlay 函数里恢复 `document.title='Customento CRM'`。
 - **打印CSS三个坑**（已踩过，不要重复）：
   1. `display:none .app` 隐藏不到 mh-* 手机header（它们在 .app 之前，line ~1-565）
   2. `visibility:hidden` 全页：隐藏元素仍占布局空间，把 overlay 挤到页面下方；且 iOS 链路失效
