@@ -9420,11 +9420,13 @@ function saveProcRecord(){
     procData.followups=[];
     d.pos.push(procData);
   }
+  var savedId=_editingProcId||(d.pos[d.pos.length-1]&&d.pos[d.pos.length-1].id)||null;
   saveProcData(d);
   closeModal('proc-modal');
   renderProcurement();
   renderMobileCards('proc');
   updateProcTabCounts();
+  if(savedId)openProcDetail(savedId);
   toast('采购单已保存');
 }
 function deleteProcRecord(id){
