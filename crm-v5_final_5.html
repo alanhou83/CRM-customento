@@ -1387,8 +1387,8 @@ a{color:var(--accent);text-decoration:none;}
 </div>
 
 <!-- 报价单预览 Overlay -->
-<div id="quote-preview-overlay" style="display:none;position:fixed;inset:0;z-index:3000;background:#f5f5f5;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch">
-  <div style="max-width:800px;margin:0 auto;padding:20px">
+<div id="quote-preview-overlay" style="display:none;position:fixed;inset:0;z-index:3000;background:#f5f5f5;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch">
+  <div style="max-width:800px;margin:0 auto;padding:20px;min-width:580px">
     <div style="background:#fff;padding:12px 16px;border-radius:8px;margin-bottom:16px">
       <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
         <button onclick="switchQtCompany('customento')" id="qt-co-btn-customento" style="padding:5px 12px;border:2px solid #2D3172;border-radius:6px;background:#f0f2f8;cursor:pointer;font-size:12px;font-weight:700;color:#2D3172">Customento</button>
@@ -1409,8 +1409,8 @@ a{color:var(--accent);text-decoration:none;}
 </div>
 
 <!-- 贸易文件预览 Overlay (PI/CI/PL) -->
-<div id="trade-doc-overlay" style="display:none;position:fixed;inset:0;z-index:3000;background:#f5f5f5;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch">
-  <div style="max-width:800px;margin:0 auto;padding:20px">
+<div id="trade-doc-overlay" style="display:none;position:fixed;inset:0;z-index:3000;background:#f5f5f5;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch">
+  <div style="max-width:800px;margin:0 auto;padding:20px;min-width:580px">
     <div style="background:#fff;padding:12px 16px;border-radius:8px;margin-bottom:16px">
       <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
         <button onclick="switchTdDocType('pi')" id="td-type-pi" style="padding:5px 14px;border:2px solid #2D3172;border-radius:6px;background:#2D3172;cursor:pointer;font-size:12px;font-weight:700;color:#fff">PI</button>
