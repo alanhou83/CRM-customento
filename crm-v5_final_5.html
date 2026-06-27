@@ -10007,9 +10007,13 @@ function printQtDoc(){
   var ov=document.getElementById('quote-preview-overlay');
   if(ov){ov.scrollLeft=0;ov.scrollTop=0;ov.classList.add('printing');}
   var origTitle=document.title;
-  document.title=_qtCurrentDocNumber||'报价单';
+  var origUrl=location.href;
+  var basePath=location.pathname.replace(/[^\/]*$/,'');
+  var docId=_qtCurrentDocNumber||'quotation';
+  document.title=docId;
+  try{history.replaceState(null,'',basePath+docId);}catch(e){}
   var _c=false;
-  function _qtClean(){if(_c)return;_c=true;document.title=origTitle;var o=document.getElementById('quote-preview-overlay');if(o)o.classList.remove('printing');}
+  function _qtClean(){if(_c)return;_c=true;document.title=origTitle;try{history.replaceState(null,'',origUrl);}catch(e){}var o=document.getElementById('quote-preview-overlay');if(o)o.classList.remove('printing');}
   window.addEventListener('afterprint',_qtClean,{once:true});
   setTimeout(_qtClean,30000);
   window.print();
@@ -12182,9 +12186,13 @@ function printTdDoc(){
   var ov=document.getElementById('trade-doc-overlay');
   if(ov){ov.scrollLeft=0;ov.scrollTop=0;ov.classList.add('printing');}
   var origTitle=document.title;
-  document.title=_tdCurrentDocNumber||'贸易文件';
+  var origUrl=location.href;
+  var basePath=location.pathname.replace(/[^\/]*$/,'');
+  var docId=_tdCurrentDocNumber||'document';
+  document.title=docId;
+  try{history.replaceState(null,'',basePath+docId);}catch(e){}
   var _c=false;
-  function _tdClean(){if(_c)return;_c=true;document.title=origTitle;var o=document.getElementById('trade-doc-overlay');if(o)o.classList.remove('printing');}
+  function _tdClean(){if(_c)return;_c=true;document.title=origTitle;try{history.replaceState(null,'',origUrl);}catch(e){}var o=document.getElementById('trade-doc-overlay');if(o)o.classList.remove('printing');}
   window.addEventListener('afterprint',_tdClean,{once:true});
   setTimeout(_tdClean,30000);
   window.print();
