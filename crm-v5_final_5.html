@@ -12423,27 +12423,15 @@ function renderPoDoc(){
     +(p.expectedDate?'<div style="font-size:10px;color:#888">'+(isCN?'预计交期：':'Required By: ')+p.expectedDate+'</div>':'')
     +'</div></div>';
 
-  /* ---- 买方 + 供应商 两列 ---- */
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #eee">';
-  /* 买方（我们） */
-  html+='<div>';
-  html+='<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">'+(isCN?'采购方（买方）':'BUYER')+'</div>';
-  html+='<div style="font-size:12px;font-weight:600;color:'+coColor+'">'+co.nameEN+'</div>';
-  if(isCN&&co.nameCN)html+='<div style="font-size:11px;color:#555">'+co.nameCN+'</div>';
-  html+='<div style="font-size:11px;color:#888">'+co.email+'</div>';
-  html+='<div style="font-size:11px;color:#888">'+co.phone+'</div>';
-  html+='</div>';
-  /* 供应商 */
-  html+='<div>';
-  html+='<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">'+(isCN?'供应商（卖方）':'SUPPLIER')+'</div>';
-  html+='<div style="font-size:12px;font-weight:600;color:#333">'+(p.supplierName||'—')+'</div>';
-  if(sup.alias&&sup.alias!==p.supplierName)html+='<div style="font-size:11px;color:#888">'+sup.alias+'</div>';
-  if(sup.contact)html+='<div style="font-size:11px;color:#555">'+(isCN?'联系人: ':'Attn: ')+sup.contact+'</div>';
-  if(sup.phone)html+='<div style="font-size:11px;color:#888">'+sup.phone+'</div>';
-  if(sup.wechat)html+='<div style="font-size:11px;color:#888">WeChat: '+sup.wechat+'</div>';
-  if(sup.email)html+='<div style="font-size:11px;color:#888">'+sup.email+'</div>';
-  if(sup.address)html+='<div style="font-size:11px;color:#999">'+sup.address+'</div>';
-  html+='</div>';
+  /* ---- 供应商信息（单行紧凑） ---- */
+  html+='<div style="margin-bottom:12px;padding:10px 14px;background:#f8f9fc;border-radius:6px;display:flex;flex-wrap:wrap;gap:6px 20px;align-items:baseline">';
+  html+='<span style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;flex-shrink:0">'+(isCN?'供应商:':'SUPPLIER:')+'</span>';
+  html+='<span style="font-size:12px;font-weight:600;color:#333">'+(p.supplierName||'—')+'</span>';
+  if(sup.contact)html+='<span style="font-size:11px;color:#555">'+(isCN?'联系人: ':'Attn: ')+sup.contact+'</span>';
+  if(sup.phone)html+='<span style="font-size:11px;color:#888">'+sup.phone+'</span>';
+  if(sup.wechat)html+='<span style="font-size:11px;color:#888">WeChat: '+sup.wechat+'</span>';
+  if(sup.email)html+='<span style="font-size:11px;color:#888">'+sup.email+'</span>';
+  if(sup.address)html+='<span style="font-size:11px;color:#999">'+sup.address+'</span>';
   html+='</div>';
 
   /* 采购条款 */
