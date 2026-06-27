@@ -1496,9 +1496,9 @@ a{color:var(--accent);text-decoration:none;}
 </div>
 
 <!-- 采购单 Modal -->
-<div class="modal-overlay" id="proc-modal" onclick="closeModalBg(event,'proc-modal')">
+<div class="modal-overlay" id="proc-modal" onclick="if(event.target===this)closeProcModal()">
 <div class="modal" style="max-width:720px">
-  <div class="modal-head"><div class="modal-title" id="proc-modal-title">新建采购单</div><button class="modal-close" onclick="closeModal('proc-modal')">x</button></div>
+  <div class="modal-head"><div class="modal-title" id="proc-modal-title">新建采购单</div><button class="modal-close" onclick="closeProcModal()">x</button></div>
   <div class="modal-body">
     <div class="form-grid">
       <div class="form-group"><label class="form-label">PO编号</label><input class="form-input" type="text" id="fproc-po-number" placeholder="系统自动生成" readonly style="background:var(--surface2);color:var(--muted)"></div>
@@ -1569,7 +1569,7 @@ a{color:var(--accent);text-decoration:none;}
   <div class="modal-foot">
     <div id="proc-delete-area"></div>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-outline" onclick="closeModal('proc-modal')">取消</button>
+      <button class="btn btn-outline" onclick="closeProcModal()">取消</button>
       <button class="btn btn-primary" onclick="saveProcRecord()">保存</button>
     </div>
   </div>
@@ -9135,6 +9135,11 @@ function submitReceipt(){
 var _editingProcId=null;
 var _procLinkedOrderId='';
 var _procLinkedOrderAlias='';
+function closeProcModal(){
+  var prevId=_editingProcId;
+  closeModal('proc-modal');
+  if(prevId)openProcDetail(prevId);
+}
 function openProcModal(id,linkedOrderId,linkedOrderAlias){
   _editingProcId=id||null;
   _procLinkedOrderId=linkedOrderId||'';
