@@ -40,9 +40,10 @@
 - **产品开发模块**（crm_prod_v5）：项目跟踪 / 款式管理 / BOM成本（Alan+Penny可见）
 - **产品库模块**（crm_prodcat_v5）：4种类型/SKU/多维标签/双语/定价权限/BOM引用行
 - **报价单模块**（crm_quote_v5）：新建/编辑/详情/预览/打印/询盘客户Tab集成/**三公司切换**
-- **采购跟单模块**（crm_proc_v5）：采购单/阶段跟踪/入库确认
-- **供应商管理模块**（crm_proc_v5 suppliers数组）：独立页面，详情面板含2Tab（供应商档案/采购历史）
+- **采购跟单模块**（crm_proc_v5）：采购单/阶段跟踪/入库确认/付款条款/交货方式
+- **供应商管理模块**（crm_proc_v5 suppliers数组）：独立页面，详情面板含2Tab（供应商档案/采购历史），含简称字段
 - **财务模块**（crm_fin_v6）：账户管理/收付款流水/应收应付/月度P&L报表/自动补全模糊搜索
+- **贸易文件模板**（`#trade-doc-overlay`）：PI/CI/PL/PO 四种文件，三公司切换，中英双语，从订单/采购单详情触发打印
 - 角色导航：NAV_CONFIG 定义各角色底部导航，手机端动态渲染
 - 询盘列表：标记列（VIP绿/热点橙/超时红/🎯冲单）独立一列
 - 客户管理：5层分层（核心/重点培养/普通跟踪/沉睡/流失）+ 卡片/列表双视图 + 分批展开
@@ -213,6 +214,10 @@
 - 筛选栏芯片：⭐VIP / 🎯冲单 / 🔴超时（`btn-cust-vip/chong/ov`）
 
 ## 执行中订单模块关键设计
+- 订单备注拆分：`notes`（内部备注，不打印）/ `externalNotes`（给客户的备注，显示在 PI/CI 上）
+  - 新建/编辑 modal：`id="fo-notes"` 内部备注 / `id="fo-ext-notes"` 给客户备注
+  - `renderTradeDoc()` 中备注行取 `o.externalNotes`，不用 `o.notes`
+- 订单详情按钮：`openTradeDocOverlay(ordId)` → 打开贸易文件打印 overlay（PI/CI/PL）
 - 电脑端表头排序：日期/客户/金额/交期（`setOrdSort`，3态）
 - 手机端排序：日期/客户/产品/金额/交期（`setOrdMobileSort`，3态）
 - 阶段颜色：等待打样=灰 / 打样中=紫(#b36bfa) / 客户确认样品=黄 / 生产中=蓝 / 待发货=橙 / 已发货=绿
@@ -416,6 +421,11 @@
 - 数据存储：`crm_proc_v5` 的 `suppliers` 数组（与采购单共用同一存储 key）
 - Penny 手机底部导航第3项为库存，第5项为供应商
 
+### 供应商字段（含简称）
+- `s.alias`：供应商简称（如"星辉纸业"），用于 PO 打印中的供应商栏简洁显示
+- 供应商 modal 中「简称」字段 id=`fsup-alias`，必填，新建/编辑均需填写
+- 示例数据已含 alias 字段
+
 ### 供应商列表（cols-suppliers）
 - 6列：供应商名(1fr) / 联系人(80px) / 主营产品(1fr) / 货币(60px) / 付款条件(120px) / 进行中PO(80px)
 - CSS：`.cols-suppliers{display:grid;grid-template-columns:1fr 80px 1fr 60px 120px 80px;}`
@@ -483,6 +493,12 @@
 - `updateStDiff(el,sysQty)`：盘库对账实时显示差异
 
 ## 当前进度（最近完成）
+- **贸易文件模板**：PI/CI/PL/PO 四种文件，`#trade-doc-overlay` 复用报价单 overlay 模式，三公司切换+中英双语
+- **供应商简称**：`s.alias` 字段，PO 打印时显示在供应商栏
+- **采购单付款/交货条款**：`paymentTerms`/`deliveryTerms` 各5选项下拉
+- **备注拆分**：订单 `notes`（内部）+`externalNotes`（PI/CI显示）；采购单 `note`（内部）+`externalNote`（PO显示）
+- **采购单额外费用**：`fees[]` 数组支持添加打样费/运费等，合计含 fees
+- **PO Modal X/取消回详情**：新增 `closeProcModal()` 函数，编辑模式关闭时自动 `openProcDetail(savedId)`
 - **库存管理模块**（crm_inv_v5）：完整实现，含台账/流水/入库单/出库单/盘库对账/打印
 - **财务模块**（crm_fin_v6）：完整实现，含收付款流水/账户管理/应收应付/月度P&L报表/往来方+关联单号模糊搜索
 - **报价单三公司模板**：Customento/MUGSTech./SUBLANK，`QUOTE_COMPANIES`对象+`switchQtCompany()`，中英文切换独立工作
@@ -541,6 +557,7 @@
 - **iOS PWA overlay 被面板遮挡**：position:fixed 全屏面板（overflow-y:auto）会拦截更高 z-index 元素的 touch 事件 → 解决方案：在触发 overlay 的同一 onclick 里先/后调 `closeDetail()`
 - **待办保存不刷新详情面板**：saveTodo/saveInqTodo/saveOrdTodo 只调 refreshAll() 不够，必须同时调对应的 openXxxDetail(id)+switchDpTab('followup') 才能刷新面板内容
 - **feature branch 与 main 分歧**：改动在 feature branch 上时用 cherry-pick 合到 main，不能直接 push 到 feature branch
+- **编辑 modal X/取消也要回详情页**：不能直接 `onclick="closeModal('xxx-modal')"` — 需封装 `closeXxxModal()` 函数，内部检查 `_editingXxxId`，若有则关闭后调 `openXxxDetail(id)`；背景遮罩 `onclick` 也要改为 `if(event.target===this)closeXxxModal()`（当前 proc-modal 已实现此模式）
 - **打印CSS三个坑**（已踩过，不要重复）：
   1. `display:none .app` 隐藏不到 mh-* 手机header（它们在 .app 之前，line ~1-565）
   2. `visibility:hidden` 全页：隐藏元素仍占布局空间，把 overlay 挤到页面下方；且 iOS 链路失效
@@ -560,6 +577,50 @@
 9. **【后期】订单反查报价单**：订单详情加关联报价单入口
 10. Supabase 迁移（后期）
 11. 钉钉 H5 嵌入（后期）
+
+## 贸易文件模板设计（#trade-doc-overlay）
+
+### 整体结构
+- 复用 `#quote-preview-overlay` 同款 overlay 模式（`position:fixed;inset:0;z-index:3000`）
+- 工具栏：PI/CI/PL/PO 四个文件类型按钮 + 三公司按钮 + 中英切换 + 打印 + 关闭
+- 内容区：`id="trade-doc-content"`（同款打印 CSS 适用）
+
+### 全局变量
+- `_tdCurrentCompany`：当前公司 key（默认 'customento'）
+- `_tdDocType`：'pi' / 'ci' / 'pl' / 'po'
+- `_tdPreviewLang`：'cn' / 'en'
+- `_tdCurrentOrderId`：当前订单 id（PI/CI/PL 来源）
+- `_tdCurrentPoId`：当前采购单 id（PO 来源）
+
+### 触发入口
+- `openTradeDocOverlay(ordId)`：从订单详情「📄 贸易文件」按钮触发，默认 PI
+- `openPoDocOverlay(poId)`：从采购单详情「📄 打印采购单」按钮触发，默认 PO 类型
+- 两者互斥：进入订单文件时清空 `_tdCurrentPoId`，进入 PO 文件时清空 `_tdCurrentOrderId`
+
+### 四种文件渲染（renderTradeDoc / renderPoDoc）
+- `renderTradeDoc()`：根据 `_tdDocType` 分发到 PI/CI/PL 渲染；若 `_tdDocType==='po'` 则调 `renderPoDoc()`
+- **PI**（Proforma Invoice）：买卖双方信息 / 明细表（产品/数量/单价/金额）/ 银行信息 / 外部备注 / 签名栏
+- **CI**（Commercial Invoice）：同 PI 结构，单号前缀 CI-
+- **PL**（Packing List）：买卖双方 / 箱规明细（SKU/数量/箱数/毛重/净重/尺寸）/ 汇总行，`_tdGetSkuFromPcat(skuCode)` 从 prodcat 取箱规
+- **PO**（Purchase Order）：紧凑供应商信息栏（alias/联系人/微信/电话）/ 明细表 / 额外费用 / 合计 / 外部备注 / 签名
+- 备注取值：PI/CI/PL 用 `o.externalNotes`；PO 用 `p.externalNote`（均为「给对方的备注」字段）
+
+### 银行信息对象
+- `COMPANY_BANK_EN`：{customento/mugstech/sublank} 各含 beneficiary/account/bank/address/swift（英文，用于英文文件）
+- `COMPANY_BANK_CN`：{customento/mugstech/sublank} 各含 name/account/bank（中文，用于中文文件）
+
+### 单号格式
+- PI/CI：`PI-YYYYMMDD-{4位id}`（如 PI-20260620-0001）
+- PL：`PL-YYYYMMDD-{4位id}`
+- PO：直接使用 `p.poNumber`（如 PO-2026-001）
+
+### 关键函数
+- `switchTdDocType(type)`：切换文件类型，刷新工具栏高亮+重渲染
+- `switchTdCompany(key)`：切换公司，刷新高亮+重渲染
+- `toggleTdLang()`：切换中英文，刷新按钮文字+重渲染
+- `updateTdToolbar()`：同步所有工具栏按钮高亮状态
+- `closeTradeDocOverlay()`：隐藏 overlay
+- `_tdGetSkuFromPcat(skuCode)`：从 prodcat localStorage 取 SKU 箱规数据（供 PL 使用）
 
 ## 报价单多公司模板设计
 
@@ -594,13 +655,18 @@
 ### 打印CSS（@media print，line ~323）
 ```css
 @page{size:A4;margin:0;}  /* margin:0 去除Chrome/Edge页眉页脚 */
-html,body{margin:0;padding:0;background:white;}
-body>*:not(#quote-preview-overlay){display:none!important;}  /* 隐藏所有非overlay内容 */
-#quote-preview-overlay{display:block!important;position:static!important;background:white!important;padding:15mm!important;box-sizing:border-box!important;overflow:visible!important;}
-#quote-preview-overlay>div{max-width:none!important;padding:0!important;margin:0!important;}
-#quote-preview-overlay>div>div:first-child{display:none!important;}  /* 隐藏工具栏 */
-#quote-preview-content{box-shadow:none!important;border-radius:0!important;padding:0!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
-#quote-preview-content *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+html,body{margin:0 !important;padding:0 !important;background:white !important;}
+/* 两个 overlay 都要排除，否则打印贸易文件时报价overlay被隐藏或反之 */
+body>*:not(#quote-preview-overlay):not(#trade-doc-overlay){display:none !important;}
+#quote-preview-overlay{display:block !important;position:static !important;background:white !important;padding:15mm !important;box-sizing:border-box !important;overflow:visible !important;}
+#quote-preview-overlay>div{max-width:none !important;padding:0 !important;margin:0 !important;}
+#quote-preview-overlay>div>div:first-child{display:none !important;}  /* 隐藏工具栏 */
+#quote-preview-content{box-shadow:none !important;border-radius:0 !important;padding:0 !important;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
+/* trade-doc-overlay 同款规则 */
+#trade-doc-overlay{display:block !important;position:static !important;background:white !important;padding:15mm !important;box-sizing:border-box !important;overflow:visible !important;}
+#trade-doc-overlay>div{max-width:none !important;padding:0 !important;margin:0 !important;}
+#trade-doc-overlay>div>div:first-child{display:none !important;}  /* 隐藏工具栏 */
+#trade-doc-content{box-shadow:none !important;border-radius:0 !important;padding:0 !important;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
 ```
 
 ### Logo 嵌入方法（Python 脚本）
@@ -627,10 +693,14 @@ b64 = base64.b64encode(open('logo.png','rb').read()).decode()
 - stage：草稿→已发PO→生产中→已发货→已到货→已入库
 - createDate / expectedDate / receivedDate
 - items[]：skuCode / nameCN / qty / unit / unitCost / currency / receivedQty（支持部分到货）
-- totalCNY / totalUSD（自动计算）
+- fees[]：额外费用（id/name/amount/currency），如打样费/运费/快递费
+- totalCNY / totalUSD（自动计算，含 fees）
 - paymentStatus：未付款 / 已付定金 / 已付全款（手工标记）
+- paymentTerms：付款条款（5选项：预付订金货好付尾款 / 无订金货好付全款 / 全额预付 / 验货后付全款 / 月结）
+- deliveryTerms：交货方式（5选项：包运费送货上门 / 包运费到货场自提 / 买方自提 / 买方自付运费 / 供应商代发货）
+- note：内部备注（不打印）
+- externalNote：给供应商的备注（打印在 PO 上）
 - paymentIds[]：关联财务流水记录（财务模块做好后联动）
-- note
 
 ### 采购单阶段（stage）
 - 草稿：已建未发
