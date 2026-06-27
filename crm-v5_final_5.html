@@ -9955,11 +9955,33 @@ function deleteQuote(id){
   saveQuoteData();closeModal('quote-modal');refreshAll();toast('已删除');
 }
 
+var _qtOrientHandler=null;
+var _qtOrientTimer=null;
+function _qtSetupOrientHandler(){
+  if(_qtOrientHandler)return;
+  _qtOrientHandler=function(){
+    var ov=document.getElementById('quote-preview-overlay');
+    if(!ov||ov.style.display==='none')return;
+    var ct=document.getElementById('quote-preview-content');
+    if(ct)ct.innerHTML='<div style="padding:60px;text-align:center;color:#999;font-size:13px">调整方向中...</div>';
+    clearTimeout(_qtOrientTimer);
+    _qtOrientTimer=setTimeout(function(){renderQuotePreviewContent();},450);
+  };
+  window.addEventListener('orientationchange',_qtOrientHandler);
+}
+function _qtTeardownOrientHandler(){
+  if(_qtOrientHandler){
+    window.removeEventListener('orientationchange',_qtOrientHandler);
+    _qtOrientHandler=null;
+  }
+  clearTimeout(_qtOrientTimer);
+}
 function openQuotePreview(id,lang){
   _qtCurrentPreviewId=id;
   _qtPreviewLang=lang||'cn';
   _qtCurrentCompany='customento';
   _tdBlockDetailPanel(true);
+  _qtSetupOrientHandler();
   var ov=document.getElementById('quote-preview-overlay');
   if(ov)ov.style.display='';
   /* 初始化公司按钮高亮 */
@@ -9975,6 +9997,7 @@ function openQuotePreview(id,lang){
   renderQuotePreviewContent();
 }
 function closeQuotePreview(){
+  _qtTeardownOrientHandler();
   var ov=document.getElementById('quote-preview-overlay');
   if(ov)ov.style.display='none';
   _tdBlockDetailPanel(false);
@@ -12083,9 +12106,31 @@ var _tdPreviewLang='cn';
 var _tdCurrentOrderId=null;
 var _tdCurrentPoId=null;
 
+var _tdOrientHandler=null;
 function _tdBlockDetailPanel(block){
   var dp=document.getElementById('detail-panel');
   if(dp)dp.style.pointerEvents=block?'none':'';
+}
+function _tdSetupOrientHandler(){
+  if(_tdOrientHandler)return;
+  _tdOrientHandler=function(){
+    var ov=document.getElementById('trade-doc-overlay');
+    if(!ov||ov.style.display==='none')return;
+    /* 旋转时立即清空内容，释放 DOM 节点避免内存峰值导致 iOS WebView 被回收 */
+    var ct=document.getElementById('trade-doc-content');
+    if(ct)ct.innerHTML='<div style="padding:60px;text-align:center;color:#999;font-size:13px">调整方向中...</div>';
+    clearTimeout(_tdOrientTimer);
+    _tdOrientTimer=setTimeout(function(){renderTradeDoc();},450);
+  };
+  window.addEventListener('orientationchange',_tdOrientHandler);
+}
+var _tdOrientTimer=null;
+function _tdTeardownOrientHandler(){
+  if(_tdOrientHandler){
+    window.removeEventListener('orientationchange',_tdOrientHandler);
+    _tdOrientHandler=null;
+  }
+  clearTimeout(_tdOrientTimer);
 }
 function openTradeDocOverlay(ordId){
   _tdCurrentOrderId=ordId;
@@ -12094,6 +12139,7 @@ function openTradeDocOverlay(ordId){
   _tdPreviewLang='cn';
   _tdCurrentCompany='customento';
   _tdBlockDetailPanel(true);
+  _tdSetupOrientHandler();
   var ov=document.getElementById('trade-doc-overlay');
   if(ov)ov.style.display='';
   updateTdToolbar();
@@ -12106,12 +12152,14 @@ function openPoDocOverlay(poId){
   _tdPreviewLang='cn';
   _tdCurrentCompany='customento';
   _tdBlockDetailPanel(true);
+  _tdSetupOrientHandler();
   var ov=document.getElementById('trade-doc-overlay');
   if(ov)ov.style.display='';
   updateTdToolbar();
   renderTradeDoc();
 }
 function closeTradeDocOverlay(){
+  _tdTeardownOrientHandler();
   var ov=document.getElementById('trade-doc-overlay');
   if(ov)ov.style.display='none';
   _tdBlockDetailPanel(false);
