@@ -12351,25 +12351,22 @@ function renderTradeDoc(){
       +'<td style="padding:5px 8px;text-align:right;font-weight:700;font-size:13px;color:'+coColor+'">'+cur+' '+grandTotal.toFixed(2)+'</td></tr>';
     html+='</table></div>';
 
-    /* 银行信息 */
+    /* 银行信息：中文只显人民币账户，英文只显美金账户，max-width:50% 保持与两列版相同视觉密度 */
     html+='<div style="border:1px solid #e8e8e8;border-radius:6px;padding:12px;margin-bottom:14px;background:#fafafa">';
     html+='<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">'+(isCN?'银行信息 BANK INFORMATION':'BANK INFORMATION')+'</div>';
-    html+='<div style="display:grid;grid-template-columns:'+(isCN?'1fr 1fr':'1fr')+';gap:16px;font-size:11px">';
-    html+='<div>';
-    html+='<div style="color:#888;font-size:10px;margin-bottom:3px">USD Account</div>';
-    html+='<div><span style="color:#aaa">Beneficiary: </span><strong>'+bankEN.beneficiary+'</strong></div>';
-    html+='<div><span style="color:#aaa">Account No.: </span>'+bankEN.account+'</div>';
-    html+='<div><span style="color:#aaa">Bank: </span>'+bankEN.bank+'</div>';
-    html+='<div><span style="color:#aaa">Address: </span>'+bankEN.address+'</div>';
-    html+='<div><span style="color:#aaa">Swift Code: </span><strong>'+bankEN.swift+'</strong></div>';
-    html+='</div>';
+    html+='<div style="font-size:11px;max-width:50%">';
     if(isCN){
-      html+='<div>';
       html+='<div style="color:#888;font-size:10px;margin-bottom:3px">人民币账户</div>';
       html+='<div><span style="color:#aaa">账户名: </span><strong>'+bankCN.name+'</strong></div>';
       html+='<div><span style="color:#aaa">账号: </span>'+bankCN.account+'</div>';
       html+='<div><span style="color:#aaa">开户行: </span>'+bankCN.bank+'</div>';
-      html+='</div>';
+    }else{
+      html+='<div style="color:#888;font-size:10px;margin-bottom:3px">USD Account</div>';
+      html+='<div><span style="color:#aaa">Beneficiary: </span><strong>'+bankEN.beneficiary+'</strong></div>';
+      html+='<div><span style="color:#aaa">Account No.: </span>'+bankEN.account+'</div>';
+      html+='<div><span style="color:#aaa">Bank: </span>'+bankEN.bank+'</div>';
+      html+='<div><span style="color:#aaa">Address: </span>'+bankEN.address+'</div>';
+      html+='<div><span style="color:#aaa">Swift Code: </span><strong>'+bankEN.swift+'</strong></div>';
     }
     html+='</div></div>';
   }
