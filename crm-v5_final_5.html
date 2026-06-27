@@ -1416,6 +1416,7 @@ a{color:var(--accent);text-decoration:none;}
         <button onclick="switchTdDocType('pi')" id="td-type-pi" style="padding:5px 14px;border:2px solid #2D3172;border-radius:6px;background:#2D3172;cursor:pointer;font-size:12px;font-weight:700;color:#fff">PI</button>
         <button onclick="switchTdDocType('ci')" id="td-type-ci" style="padding:5px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;font-weight:400;color:#666">CI</button>
         <button onclick="switchTdDocType('pl')" id="td-type-pl" style="padding:5px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;font-weight:400;color:#666">PL</button>
+        <button onclick="switchTdDocType('po')" id="td-type-po" style="padding:5px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;font-weight:400;color:#666">PO</button>
         <span style="color:#ccc;padding:0 2px">|</span>
         <button onclick="switchTdCompany('customento')" id="td-co-btn-customento" style="padding:5px 12px;border:2px solid #2D3172;border-radius:6px;background:#f0f2f8;cursor:pointer;font-size:12px;font-weight:700;color:#2D3172">Customento</button>
         <button onclick="switchTdCompany('mugstech')"   id="td-co-btn-mugstech"   style="padding:5px 12px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;font-weight:400;color:#666">MUGSTech.</button>
@@ -1522,6 +1523,26 @@ a{color:var(--accent);text-decoration:none;}
           <option value="已付全款">已付全款</option>
         </select>
       </div>
+      <div class="form-group"><label class="form-label">付款条款</label>
+        <select class="form-input" id="fproc-payment-terms">
+          <option value="">不指定</option>
+          <option value="预付订金，货好付尾款，发货">预付订金，货好付尾款，发货</option>
+          <option value="无订金，货好付全款，发货">无订金，货好付全款，发货</option>
+          <option value="全额预付，货好发货">全额预付，货好发货</option>
+          <option value="验货合格后付全款">验货合格后付全款</option>
+          <option value="月结">月结</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">交货方式</label>
+        <select class="form-input" id="fproc-delivery-terms">
+          <option value="">不指定</option>
+          <option value="包运费送货上门">包运费送货上门</option>
+          <option value="包运费到货场自提">包运费到货场自提</option>
+          <option value="买方自提">买方自提</option>
+          <option value="买方自付运费">买方自付运费</option>
+          <option value="供应商代发货">供应商代发货</option>
+        </select>
+      </div>
     </div>
     <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -1540,7 +1561,10 @@ a{color:var(--accent);text-decoration:none;}
       </div>
       <div id="fproc-fees-area"><div style="font-size:12px;color:var(--muted);padding:4px 0">如打样费、运费、快递费等</div></div>
     </div>
-    <div class="form-group" style="margin-top:14px"><label class="form-label">备注</label><input class="form-input" type="text" id="fproc-note" placeholder="其他说明..."></div>
+    <div class="form-grid" style="margin-top:14px">
+      <div class="form-group"><label class="form-label">内部备注</label><input class="form-input" type="text" id="fproc-note" placeholder="内部使用，不显示在采购单打印上..."></div>
+      <div class="form-group"><label class="form-label">给供应商的备注</label><input class="form-input" type="text" id="fproc-ext-note" placeholder="会显示在打印的采购单上..."></div>
+    </div>
   </div>
   <div class="modal-foot">
     <div id="proc-delete-area"></div>
@@ -1559,6 +1583,7 @@ a{color:var(--accent);text-decoration:none;}
   <div class="modal-body">
     <div class="form-grid">
       <div class="form-group"><label class="form-label">供应商名称 *</label><input class="form-input" type="text" id="fsup-name" placeholder="公司/工厂名称"></div>
+      <div class="form-group"><label class="form-label">简称 *</label><input class="form-input" type="text" id="fsup-alias" placeholder="如：星辉纸业、佛山陶瓷"></div>
       <div class="form-group"><label class="form-label">英文名</label><input class="form-input" type="text" id="fsup-name-en" placeholder="English name"></div>
       <div class="form-group"><label class="form-label">联系人</label><input class="form-input" type="text" id="fsup-contact" placeholder="负责人姓名"></div>
       <div class="form-group"><label class="form-label">电话</label><input class="form-input" type="text" id="fsup-phone" placeholder="手机号"></div>
@@ -1873,7 +1898,8 @@ a{color:var(--accent);text-decoration:none;}
       <div class="form-group"><label class="form-label">当前阶段</label><select class="form-input" id="fo-stage"><option>等待打样</option><option>打样中</option><option>客户确认样品</option><option>生产中</option><option>待发货</option><option>已发货</option></select></div>
       <div class="form-group"><label class="form-label">预计交期</label><input class="form-input" type="date" id="fo-delivery"></div>
       <div class="form-group"><label class="form-label">负责人</label><select class="form-input" id="fo-person"><option>Kelly</option><option>Momi</option><option>Mille</option><option>Alan</option></select></div>
-      <div class="form-group full"><label class="form-label">备注</label><textarea class="form-input form-textarea" id="fo-notes" placeholder="订单特殊要求、注意事项..."></textarea></div>
+      <div class="form-group"><label class="form-label">内部备注</label><textarea class="form-input form-textarea" id="fo-notes" placeholder="内部使用，不显示在贸易文件上..."></textarea></div>
+      <div class="form-group"><label class="form-label">给客户的备注（PI/CI 上显示）</label><textarea class="form-input form-textarea" id="fo-ext-notes" placeholder="发给客户时显示在单据上..."></textarea></div>
     </div>
     <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -4940,7 +4966,7 @@ function newOrdFromCust(custId){
   document.getElementById('fo-stage').value='生产中';
   document.getElementById('fo-alias').value=c.alias||'';
   document.getElementById('fo-person').value=c.person||'Kelly';
-  ['fo-amount','fo-delivery','fo-notes','fo-linkedprocid'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  ['fo-amount','fo-delivery','fo-notes','fo-ext-notes','fo-linkedprocid'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   renderOrdItems([]);renderOrdFees([]);populateOrdSkuDatalist();
   openModal('order-modal');
 }
@@ -5147,7 +5173,7 @@ function editOrder(id){
   editingOrdId=id;document.getElementById('order-modal-title').textContent='编辑订单';
   document.getElementById('order-delete-area').innerHTML=canDelete()?'<button class="btn btn-danger btn-sm" onclick="confirmDelete(\'ord\','+id+')">🗑 删除</button>':'';
   var setV=function(fid,val){var el=document.getElementById(fid);if(el)el.value=val||'';};
-  setV('fo-date',o.date);setV('fo-alias',o.alias);setV('fo-currency',o.currency||'USD');setV('fo-stage',o.stage);setV('fo-delivery',o.delivery);setV('fo-person',o.person);setV('fo-notes',o.notes);
+  setV('fo-date',o.date);setV('fo-alias',o.alias);setV('fo-currency',o.currency||'USD');setV('fo-stage',o.stage);setV('fo-delivery',o.delivery);setV('fo-person',o.person);setV('fo-notes',o.notes);setV('fo-ext-notes',o.externalNotes||'');
   setV('fo-amount',o.amount||'');setV('fo-linkedprocid',o.linkedProcId||'');
   renderOrdItems(o.items||[],o.currency);
   renderOrdFees(o.fees||[]);
@@ -5444,9 +5470,9 @@ function saveOrder(){
     derivedAmount=manualAmt?Number(manualAmt.value)||0:0;
   }
   var linkedProcId=(document.getElementById('fo-linkedprocid')||{}).value||'';
-  var data={date:document.getElementById('fo-date').value,alias:alias,product:derivedProduct,qty:derivedQty,amount:derivedAmount,currency:currency,items:ordItems,linkedProcId:linkedProcId,stage:document.getElementById('fo-stage').value,delivery:document.getElementById('fo-delivery').value,person:document.getElementById('fo-person').value,notes:document.getElementById('fo-notes').value,completed:false,fees:ordFees};
+  var data={date:document.getElementById('fo-date').value,alias:alias,product:derivedProduct,qty:derivedQty,amount:derivedAmount,currency:currency,items:ordItems,linkedProcId:linkedProcId,stage:document.getElementById('fo-stage').value,delivery:document.getElementById('fo-delivery').value,person:document.getElementById('fo-person').value,notes:document.getElementById('fo-notes').value,externalNotes:(document.getElementById('fo-ext-notes')||{}).value||'',completed:false,fees:ordFees};
   if(editingOrdId){var eo=orders.find(function(x){return x.id===editingOrdId;});if(eo){data.completed=eo.completed;data.followups=eo.followups;Object.assign(eo,data);}}
-  else{orders.push({id:nextOrdId++,followups:[],completed:false,fees:ordFees,items:ordItems,linkedProcId:linkedProcId,product:derivedProduct,qty:derivedQty,amount:derivedAmount,currency:currency,stage:document.getElementById('fo-stage').value,date:document.getElementById('fo-date').value,alias:alias,delivery:document.getElementById('fo-delivery').value,person:document.getElementById('fo-person').value,notes:document.getElementById('fo-notes').value});}
+  else{orders.push({id:nextOrdId++,followups:[],completed:false,fees:ordFees,items:ordItems,linkedProcId:linkedProcId,product:derivedProduct,qty:derivedQty,amount:derivedAmount,currency:currency,stage:document.getElementById('fo-stage').value,date:document.getElementById('fo-date').value,alias:alias,delivery:document.getElementById('fo-delivery').value,person:document.getElementById('fo-person').value,notes:document.getElementById('fo-notes').value,externalNotes:(document.getElementById('fo-ext-notes')||{}).value||''});}
   saveAll();closeModal('order-modal');refreshAll();toast('订单已保存 ✓');
 }
 
@@ -6917,17 +6943,17 @@ var DEF_PRODCAT=[
 
 /* ===== 采购跟单示例数据 ===== */
 var DEF_PROC_SUPPLIERS=[
-  {id:'sup001',name:'广州星辉纸业',nameEN:'Guangzhou Xinghui Paper',contact:'陈老板',phone:'13800000001',wechat:'xinghui_paper',email:'chen@xinghui.com',address:'广州市番禺区',mainProducts:'热转印纸、打印耗材',currency:'CNY',paymentTerms:'月结30天',note:'主要热转印纸供应商',active:true},
-  {id:'sup002',name:'佛山陶瓷工厂',nameEN:'Foshan Ceramic Factory',contact:'李厂长',phone:'13800000002',wechat:'foshan_ceramic',email:'li@foshan-ceramic.com',address:'佛山市禅城区',mainProducts:'陶瓷马克杯、瓷砖',currency:'CNY',paymentTerms:'30%预付，70%到货',note:'主力马克杯供应商',active:true},
-  {id:'sup003',name:'东莞软木制品厂',nameEN:'Dongguan Cork Factory',contact:'王经理',phone:'13800000003',wechat:'dk_cork',email:'wang@dkcork.com',address:'东莞市长安镇',mainProducts:'软木杯垫、软木板',currency:'CNY',paymentTerms:'全款预付',note:'',active:true},
-  {id:'sup004',name:'广州包装盒厂',nameEN:'Guangzhou Packaging Factory',contact:'赵老板',phone:'13800000004',wechat:'gz_pkg',email:'',address:'广州市白云区',mainProducts:'马克杯礼盒、外箱',currency:'CNY',paymentTerms:'货到付款',note:'包装材料供应商',active:true}
+  {id:'sup001',name:'广州星辉纸业',alias:'星辉纸业',nameEN:'Guangzhou Xinghui Paper',contact:'陈老板',phone:'13800000001',wechat:'xinghui_paper',email:'chen@xinghui.com',address:'广州市番禺区',mainProducts:'热转印纸、打印耗材',currency:'CNY',paymentTerms:'月结30天',note:'主要热转印纸供应商',active:true},
+  {id:'sup002',name:'佛山陶瓷工厂',alias:'佛山陶瓷',nameEN:'Foshan Ceramic Factory',contact:'李厂长',phone:'13800000002',wechat:'foshan_ceramic',email:'li@foshan-ceramic.com',address:'佛山市禅城区',mainProducts:'陶瓷马克杯、瓷砖',currency:'CNY',paymentTerms:'30%预付，70%到货',note:'主力马克杯供应商',active:true},
+  {id:'sup003',name:'东莞软木制品厂',alias:'东莞软木',nameEN:'Dongguan Cork Factory',contact:'王经理',phone:'13800000003',wechat:'dk_cork',email:'wang@dkcork.com',address:'东莞市长安镇',mainProducts:'软木杯垫、软木板',currency:'CNY',paymentTerms:'全款预付',note:'',active:true},
+  {id:'sup004',name:'广州包装盒厂',alias:'广州包装',nameEN:'Guangzhou Packaging Factory',contact:'赵老板',phone:'13800000004',wechat:'gz_pkg',email:'',address:'广州市白云区',mainProducts:'马克杯礼盒、外箱',currency:'CNY',paymentTerms:'货到付款',note:'包装材料供应商',active:true}
 ];
 var DEF_PROC_POS=[
-  {id:'po001',poNumber:'PO-2026-001',supplierId:'sup002',supplierName:'佛山陶瓷工厂',linkedOrderId:'',linkedOrderAlias:'',person:'Penny',stage:'已入库',createDate:'2026-05-10',expectedDate:'2026-05-25',receivedDate:'2026-05-24',items:[{id:'poi001',skuCode:'MUG-001-A',nameCN:'11oz白色升华马克杯 裸装36个/箱',qty:10,unit:'箱',unitCost:100.8,currency:'CNY',receivedQty:10}],totalCNY:1008,totalUSD:0,paymentStatus:'已付全款',paymentIds:[],note:'备货用',followups:[]},
-  {id:'po002',poNumber:'PO-2026-002',supplierId:'sup001',supplierName:'广州星辉纸业',linkedOrderId:'',linkedOrderAlias:'',person:'Penny',stage:'生产中',createDate:'2026-06-01',expectedDate:'2026-06-20',receivedDate:'',items:[{id:'poi002',skuCode:'PAP-001-A',nameCN:'A4热转印纸 118g 100张/包',qty:20,unit:'包',unitCost:18,currency:'CNY',receivedQty:0}],totalCNY:360,totalUSD:0,paymentStatus:'未付款',paymentIds:[],note:'',followups:[{id:'pf001',date:'2026-06-05',content:'已确认下单，工厂说20号前发货',person:'Penny'}]},
-  {id:'po003',poNumber:'PO-2026-003',supplierId:'sup003',supplierName:'东莞软木制品厂',linkedOrderId:'',linkedOrderAlias:'',person:'Alan',stage:'已发货',createDate:'2026-06-05',expectedDate:'2026-06-18',receivedDate:'',items:[{id:'poi003',skuCode:'CTR-001-A',nameCN:'软木方形杯垫9.5cm 裸装100个/箱',qty:5,unit:'箱',unitCost:60,currency:'CNY',receivedQty:0}],totalCNY:300,totalUSD:0,paymentStatus:'已付定金',paymentIds:[],note:'客户有急单',followups:[{id:'pf002',date:'2026-06-10',content:'工厂已发顺丰，单号SF1234567890',person:'Alan'}]},
-  {id:'po004',poNumber:'PO-2026-004',supplierId:'sup004',supplierName:'广州包装盒厂',linkedOrderId:'',linkedOrderAlias:'',person:'Penny',stage:'已到货',createDate:'2026-06-08',expectedDate:'2026-06-15',receivedDate:'2026-06-14',items:[{id:'poi004',skuCode:'PKG-001-A',nameCN:'马克杯单独礼盒 标准款',qty:200,unit:'个',unitCost:0.8,currency:'CNY',receivedQty:200}],totalCNY:160,totalUSD:0,paymentStatus:'未付款',paymentIds:[],note:'',followups:[]},
-  {id:'po005',poNumber:'PO-2026-005',supplierId:'sup002',supplierName:'佛山陶瓷工厂',linkedOrderId:'',linkedOrderAlias:'',person:'Momi',stage:'草稿',createDate:'2026-06-15',expectedDate:'2026-07-10',receivedDate:'',items:[{id:'poi005',skuCode:'MUG-001-B',nameCN:'11oz白色升华马克杯 带盒36个/箱',qty:5,unit:'箱',unitCost:129.6,currency:'CNY',receivedQty:0},{id:'poi006',skuCode:'MUG-001-A',nameCN:'11oz白色升华马克杯 裸装36个/箱',qty:3,unit:'箱',unitCost:100.8,currency:'CNY',receivedQty:0}],totalCNY:950.4,totalUSD:0,paymentStatus:'未付款',paymentIds:[],note:'补货',followups:[]}
+  {id:'po001',poNumber:'PO-2026-001',supplierId:'sup002',supplierName:'佛山陶瓷工厂',linkedOrderId:'',linkedOrderAlias:'',person:'Penny',stage:'已入库',createDate:'2026-05-10',expectedDate:'2026-05-25',receivedDate:'2026-05-24',items:[{id:'poi001',skuCode:'MUG-001-A',nameCN:'11oz白色升华马克杯 裸装36个/箱',qty:10,unit:'箱',unitCost:100.8,currency:'CNY',receivedQty:10}],fees:[],totalCNY:1008,totalUSD:0,paymentStatus:'已付全款',paymentTerms:'全额预付，货好发货',deliveryTerms:'买方自提',note:'备货用',externalNote:'',paymentIds:[],followups:[]},
+  {id:'po002',poNumber:'PO-2026-002',supplierId:'sup001',supplierName:'广州星辉纸业',linkedOrderId:'',linkedOrderAlias:'',person:'Penny',stage:'生产中',createDate:'2026-06-01',expectedDate:'2026-06-20',receivedDate:'',items:[{id:'poi002',skuCode:'PAP-001-A',nameCN:'A4热转印纸 118g 100张/包',qty:20,unit:'包',unitCost:18,currency:'CNY',receivedQty:0}],fees:[],totalCNY:360,totalUSD:0,paymentStatus:'未付款',paymentTerms:'月结',deliveryTerms:'包运费送货上门',note:'',externalNote:'',paymentIds:[],followups:[{id:'pf001',date:'2026-06-05',content:'已确认下单，工厂说20号前发货',person:'Penny'}]},
+  {id:'po003',poNumber:'PO-2026-003',supplierId:'sup003',supplierName:'东莞软木制品厂',linkedOrderId:'',linkedOrderAlias:'',person:'Alan',stage:'已发货',createDate:'2026-06-05',expectedDate:'2026-06-18',receivedDate:'',items:[{id:'poi003',skuCode:'CTR-001-A',nameCN:'软木方形杯垫9.5cm 裸装100个/箱',qty:5,unit:'箱',unitCost:60,currency:'CNY',receivedQty:0}],fees:[{id:'pf-001',name:'快递费',amount:30,currency:'CNY'}],totalCNY:330,totalUSD:0,paymentStatus:'已付定金',paymentTerms:'预付订金，货好付尾款，发货',deliveryTerms:'买方自付运费',note:'客户有急单',externalNote:'请按要求包装，每箱不超过10kg',paymentIds:[],followups:[{id:'pf002',date:'2026-06-10',content:'工厂已发顺丰，单号SF1234567890',person:'Alan'}]},
+  {id:'po004',poNumber:'PO-2026-004',supplierId:'sup004',supplierName:'广州包装盒厂',linkedOrderId:'',linkedOrderAlias:'',person:'Penny',stage:'已到货',createDate:'2026-06-08',expectedDate:'2026-06-15',receivedDate:'2026-06-14',items:[{id:'poi004',skuCode:'PKG-001-A',nameCN:'马克杯单独礼盒 标准款',qty:200,unit:'个',unitCost:0.8,currency:'CNY',receivedQty:200}],fees:[],totalCNY:160,totalUSD:0,paymentStatus:'未付款',paymentTerms:'验货合格后付全款',deliveryTerms:'包运费送货上门',note:'',externalNote:'',paymentIds:[],followups:[]},
+  {id:'po005',poNumber:'PO-2026-005',supplierId:'sup002',supplierName:'佛山陶瓷工厂',linkedOrderId:'',linkedOrderAlias:'',person:'Momi',stage:'草稿',createDate:'2026-06-15',expectedDate:'2026-07-10',receivedDate:'',items:[{id:'poi005',skuCode:'MUG-001-B',nameCN:'11oz白色升华马克杯 带盒36个/箱',qty:5,unit:'箱',unitCost:129.6,currency:'CNY',receivedQty:0},{id:'poi006',skuCode:'MUG-001-A',nameCN:'11oz白色升华马克杯 裸装36个/箱',qty:3,unit:'箱',unitCost:100.8,currency:'CNY',receivedQty:0}],fees:[],totalCNY:950.4,totalUSD:0,paymentStatus:'未付款',paymentTerms:'无订金，货好付全款，发货',deliveryTerms:'买方自提',note:'补货',externalNote:'',paymentIds:[],followups:[]}
 ];
 var DEF_PROC={suppliers:DEF_PROC_SUPPLIERS,pos:DEF_PROC_POS};
 
@@ -9000,9 +9026,14 @@ function openProcDetail(id){
     '<div><span style="color:var(--muted)">预计交期：</span><span style="color:'+ovdColor+'">'+ovdPrefix+(p.expectedDate||'—')+'</span></div>'+
     (p.linkedOrderAlias?'<div><span style="color:var(--muted)">关联订单：</span><span style="color:var(--accent)">'+p.linkedOrderAlias+'</span></div>':'')+
     '<div><span style="color:var(--muted)">付款状态：</span><span style="'+getProcPaymentStyle(p.paymentStatus)+'">'+p.paymentStatus+'</span></div>'+
+    (p.paymentTerms?'<div><span style="color:var(--muted)">付款条款：</span>'+p.paymentTerms+'</div>':'')+
+    (p.deliveryTerms?'<div><span style="color:var(--muted)">交货方式：</span>'+p.deliveryTerms+'</div>':'')+
     '<div style="grid-column:1/-1"><span style="color:var(--muted)">总金额：</span><span style="color:var(--green);font-weight:600">'+(totalStr||'—')+'</span></div>'+
-    (p.note?'<div style="grid-column:1/-1"><span style="color:var(--muted)">备注：</span>'+p.note+'</div>':'')+
-    '</div></div>';
+    (p.note?'<div style="grid-column:1/-1"><span style="color:var(--muted)">内部备注：</span>'+p.note+'</div>':'')+
+    (p.externalNote?'<div style="grid-column:1/-1"><span style="color:var(--muted)">供应商备注：</span><span style="color:var(--accent2)">'+p.externalNote+'</span></div>':'')+
+    '</div>'
+    +'<div style="margin-top:10px"><button class="btn btn-outline btn-sm" onclick="openPoDocOverlay(\''+id+'\')">📄 打印采购单</button></div>'
+    +'</div>';
   var tab1Html=stageHtml+receiptBtn+infoHtml+itemsHtml;
   var tab2Html=renderProcFollowupTab(p);
   body.innerHTML='<div class="dp-tab-content active" id="dp-content-profile" style="padding:20px">'+tab1Html+'</div>'+
@@ -9129,7 +9160,10 @@ function openProcModal(id,linkedOrderId,linkedOrderAlias){
     set('fproc-linked-order',p.linkedOrderAlias||p.linkedOrderId||'');
     set('fproc-expected-date',p.expectedDate||'');
     set('fproc-payment-status',p.paymentStatus||'未付款');
+    set('fproc-payment-terms',p.paymentTerms||'');
+    set('fproc-delivery-terms',p.deliveryTerms||'');
     set('fproc-note',p.note||'');
+    set('fproc-ext-note',p.externalNote||'');
     renderProcItems(p.items||[]);
     renderProcFees(p.fees||[]);
     if(canDelete())delArea.innerHTML='<button class="btn btn-danger btn-sm" onclick="deleteProcRecord(\''+id+'\')">删除采购单</button>';
@@ -9141,7 +9175,10 @@ function openProcModal(id,linkedOrderId,linkedOrderAlias){
     set('fproc-linked-order',_procLinkedOrderAlias||_procLinkedOrderId||'');
     set('fproc-expected-date','');
     set('fproc-payment-status','未付款');
+    set('fproc-payment-terms','');
+    set('fproc-delivery-terms','');
     set('fproc-note','');
+    set('fproc-ext-note','');
     renderProcItems([]);
     renderProcFees([]);
   }
@@ -9370,7 +9407,7 @@ function saveProcRecord(){
   var fees=collectProcFeesFromDOM();
   items.forEach(function(item){var sub=item.qty*item.unitCost;if(item.currency==='USD')totalUSD+=sub;else totalCNY+=sub;});
   fees.forEach(function(fee){if(fee.currency==='USD')totalUSD+=fee.amount;else totalCNY+=fee.amount;});
-  var procData={supplierId:supplierId,supplierName:sup?sup.name:'',linkedOrderId:_procLinkedOrderId||'',linkedOrderAlias:_procLinkedOrderAlias||'',person:get('fproc-person'),expectedDate:get('fproc-expected-date'),paymentStatus:get('fproc-payment-status'),note:get('fproc-note'),items:items,fees:fees,totalCNY:totalCNY,totalUSD:totalUSD,paymentIds:[]};
+  var procData={supplierId:supplierId,supplierName:sup?sup.name:'',linkedOrderId:_procLinkedOrderId||'',linkedOrderAlias:_procLinkedOrderAlias||'',person:get('fproc-person'),expectedDate:get('fproc-expected-date'),paymentStatus:get('fproc-payment-status'),paymentTerms:get('fproc-payment-terms'),deliveryTerms:get('fproc-delivery-terms'),note:get('fproc-note'),externalNote:get('fproc-ext-note'),items:items,fees:fees,totalCNY:totalCNY,totalUSD:totalUSD,paymentIds:[]};
   if(_editingProcId){
     var p=d.pos.find(function(x){return x.id===_editingProcId;});
     if(p){Object.keys(procData).forEach(function(k){p[k]=procData[k];});}
@@ -9412,14 +9449,14 @@ function openSupplierModal(id){
     var s=d.suppliers.find(function(x){return x.id===id;});
     if(!s)return;
     if(mt)mt.textContent='编辑供应商';
-    set('fsup-name',s.name);set('fsup-name-en',s.nameEN);set('fsup-contact',s.contact);
+    set('fsup-name',s.name);set('fsup-alias',s.alias||'');set('fsup-name-en',s.nameEN);set('fsup-contact',s.contact);
     set('fsup-phone',s.phone);set('fsup-wechat',s.wechat);set('fsup-email',s.email);
     set('fsup-address',s.address);set('fsup-main-products',s.mainProducts);
     set('fsup-currency',s.currency||'CNY');set('fsup-payment-terms',s.paymentTerms);set('fsup-note',s.note);
     if(canDelete())delArea.innerHTML='<button class="btn btn-danger btn-sm" onclick="deleteSupplier(\''+id+'\')">删除供应商</button>';
   } else {
     if(mt)mt.textContent='新增供应商';
-    ['fsup-name','fsup-name-en','fsup-contact','fsup-phone','fsup-wechat','fsup-email','fsup-address','fsup-main-products','fsup-payment-terms','fsup-note'].forEach(function(fid){set(fid,'');});
+    ['fsup-name','fsup-alias','fsup-name-en','fsup-contact','fsup-phone','fsup-wechat','fsup-email','fsup-address','fsup-main-products','fsup-payment-terms','fsup-note'].forEach(function(fid){set(fid,'');});
     set('fsup-currency','CNY');
   }
   openModal('supplier-modal');
@@ -9429,7 +9466,7 @@ function saveSupplierRecord(){
   var name=get('fsup-name');
   if(!name){alert('请填写供应商名称');return;}
   var d=getProcData();
-  var supData={name:name,nameEN:get('fsup-name-en'),contact:get('fsup-contact'),phone:get('fsup-phone'),wechat:get('fsup-wechat'),email:get('fsup-email'),address:get('fsup-address'),mainProducts:get('fsup-main-products'),currency:get('fsup-currency')||'CNY',paymentTerms:get('fsup-payment-terms'),note:get('fsup-note'),active:true};
+  var supData={name:name,alias:get('fsup-alias'),nameEN:get('fsup-name-en'),contact:get('fsup-contact'),phone:get('fsup-phone'),wechat:get('fsup-wechat'),email:get('fsup-email'),address:get('fsup-address'),mainProducts:get('fsup-main-products'),currency:get('fsup-currency')||'CNY',paymentTerms:get('fsup-payment-terms'),note:get('fsup-note'),active:true};
   if(_editingSupId){
     var s=d.suppliers.find(function(x){return x.id===_editingSupId;});
     if(s){Object.keys(supData).forEach(function(k){s[k]=supData[k];});}
@@ -12035,10 +12072,23 @@ var _tdCurrentCompany='customento';
 var _tdDocType='pi';
 var _tdPreviewLang='cn';
 var _tdCurrentOrderId=null;
+var _tdCurrentPoId=null;
 
 function openTradeDocOverlay(ordId){
   _tdCurrentOrderId=ordId;
+  _tdCurrentPoId=null;
   _tdDocType='pi';
+  _tdPreviewLang='cn';
+  _tdCurrentCompany='customento';
+  var ov=document.getElementById('trade-doc-overlay');
+  if(ov)ov.style.display='';
+  updateTdToolbar();
+  renderTradeDoc();
+}
+function openPoDocOverlay(poId){
+  _tdCurrentPoId=poId;
+  _tdCurrentOrderId=null;
+  _tdDocType='po';
   _tdPreviewLang='cn';
   _tdCurrentCompany='customento';
   var ov=document.getElementById('trade-doc-overlay');
@@ -12066,7 +12116,7 @@ function toggleTdLang(){
   renderTradeDoc();
 }
 function updateTdToolbar(){
-  ['pi','ci','pl'].forEach(function(t){
+  ['pi','ci','pl','po'].forEach(function(t){
     var btn=document.getElementById('td-type-'+t);
     if(!btn)return;
     var isActive=(t===_tdDocType);
@@ -12116,6 +12166,7 @@ function _tdGetSkuFromPcat(skuCode){
   }catch(e){return null;}
 }
 function renderTradeDoc(){
+  if(_tdDocType==='po'){renderPoDoc();return;}
   var o=orders.find(function(x){return x.id===_tdCurrentOrderId;});
   if(!o)return;
   var co=QUOTE_COMPANIES[_tdCurrentCompany]||QUOTE_COMPANIES.customento;
@@ -12307,10 +12358,11 @@ function renderTradeDoc(){
     html+='</div></div>';
   }
 
-  /* 备注 */
-  if(o.notes){
+  /* 备注（仅显示给客户备注，非内部备注） */
+  var printNotes=o.externalNotes||'';
+  if(printNotes){
     html+='<div style="font-size:11px;color:#666;margin-bottom:12px;padding:8px 12px;background:#fffbeb;border-radius:4px;border-left:3px solid #f59e0b">'
-      +'<span style="font-weight:600">'+(isCN?'备注: ':'Notes: ')+'</span>'+o.notes+'</div>';
+      +'<span style="font-weight:600">'+(isCN?'备注: ':'Notes: ')+'</span>'+printNotes+'</div>';
   }
 
   /* 签字栏 */
@@ -12325,6 +12377,143 @@ function renderTradeDoc(){
   html+='</div>';
   var content=document.getElementById('trade-doc-content');
   if(content)content.innerHTML=html;
+}
+
+function renderPoDoc(){
+  var d=getProcData();
+  var p=d.pos.find(function(x){return x.id===_tdCurrentPoId;});
+  if(!p){var ct=document.getElementById('trade-doc-content');if(ct)ct.innerHTML='<div style="padding:40px;text-align:center;color:#999">未找到采购单数据</div>';return;}
+  var sup=(d.suppliers||[]).find(function(s){return s.id===p.supplierId;})||{};
+  var co=QUOTE_COMPANIES[_tdCurrentCompany]||QUOTE_COMPANIES.customento;
+  var bankEN=COMPANY_BANK_EN[_tdCurrentCompany]||COMPANY_BANK_EN.customento;
+  var bankCN=COMPANY_BANK_CN[_tdCurrentCompany]||COMPANY_BANK_CN.customento;
+  var isCN=_tdPreviewLang==='cn';
+  var coColor=co.color||'#2D3172';
+  var items=p.items||[];
+  var fees=p.fees||[];
+
+  var html='<div style="font-size:13px;color:#222;line-height:1.6">';
+
+  /* ---- 页眉 ---- */
+  var coLeftHtml='';
+  if(co.logo){
+    coLeftHtml='<div style="display:flex;align-items:flex-start;gap:8px;flex:1;min-width:0">'
+      +'<img src="'+co.logo+'" style="height:48px;width:48px;object-fit:contain;flex-shrink:0;border-radius:3px">'
+      +'<div style="min-width:0">'
+      +'<div style="font-size:14px;font-weight:700;color:'+coColor+';letter-spacing:.5px">'+co.nameEN+'</div>'
+      +(isCN?'<div style="font-size:9px;color:#aaa;margin-top:1px">'+co.nameCN+'</div>':'')
+      +'<div style="font-size:9px;color:#888;margin-top:4px">'+co.website+'</div>'
+      +'<div style="font-size:9px;color:#888">'+co.email+'</div>'
+      +'<div style="font-size:9px;color:#888">'+co.phone+'</div>'
+      +'</div></div>';
+  }else{
+    coLeftHtml='<div style="flex:1;min-width:0">'
+      +'<div style="font-size:17px;font-weight:700;color:'+coColor+';letter-spacing:1px">'+co.nameEN+'</div>'
+      +(isCN?'<div style="font-size:10px;color:#aaa;margin-top:2px">'+co.nameCN+'</div>':'')
+      +'<div style="font-size:9px;color:#888;margin-top:5px">'+co.website+' · '+co.email+'</div>'
+      +'<div style="font-size:9px;color:#888">'+co.phone+'</div>'
+      +'</div>';
+  }
+  html+='<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;border-bottom:2px solid '+coColor+';padding-bottom:10px">'
+    +coLeftHtml
+    +'<div style="text-align:right;flex-shrink:0">'
+    +'<div style="font-size:13px;font-weight:700;color:#333">'+(isCN?'采购订单 PURCHASE ORDER':'PURCHASE ORDER')+'</div>'
+    +'<div style="font-size:11px;color:#666;margin-top:2px;font-family:monospace">'+p.poNumber+'</div>'
+    +'<div style="font-size:10px;color:#888">'+(isCN?'日期：':'Date: ')+(p.createDate||today())+'</div>'
+    +(p.expectedDate?'<div style="font-size:10px;color:#888">'+(isCN?'预计交期：':'Required By: ')+p.expectedDate+'</div>':'')
+    +'</div></div>';
+
+  /* ---- 买方 + 供应商 两列 ---- */
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #eee">';
+  /* 买方（我们） */
+  html+='<div>';
+  html+='<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">'+(isCN?'采购方（买方）':'BUYER')+'</div>';
+  html+='<div style="font-size:12px;font-weight:600;color:'+coColor+'">'+co.nameEN+'</div>';
+  if(isCN&&co.nameCN)html+='<div style="font-size:11px;color:#555">'+co.nameCN+'</div>';
+  html+='<div style="font-size:11px;color:#888">'+co.email+'</div>';
+  html+='<div style="font-size:11px;color:#888">'+co.phone+'</div>';
+  html+='</div>';
+  /* 供应商 */
+  html+='<div>';
+  html+='<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">'+(isCN?'供应商（卖方）':'SUPPLIER')+'</div>';
+  html+='<div style="font-size:12px;font-weight:600;color:#333">'+(p.supplierName||'—')+'</div>';
+  if(sup.alias&&sup.alias!==p.supplierName)html+='<div style="font-size:11px;color:#888">'+sup.alias+'</div>';
+  if(sup.contact)html+='<div style="font-size:11px;color:#555">'+(isCN?'联系人: ':'Attn: ')+sup.contact+'</div>';
+  if(sup.phone)html+='<div style="font-size:11px;color:#888">'+sup.phone+'</div>';
+  if(sup.wechat)html+='<div style="font-size:11px;color:#888">WeChat: '+sup.wechat+'</div>';
+  if(sup.email)html+='<div style="font-size:11px;color:#888">'+sup.email+'</div>';
+  if(sup.address)html+='<div style="font-size:11px;color:#999">'+sup.address+'</div>';
+  html+='</div>';
+  html+='</div>';
+
+  /* 采购条款 */
+  if(p.paymentTerms||p.deliveryTerms){
+    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;padding:10px 14px;background:#f8f9fc;border-radius:6px;font-size:11px">';
+    if(p.paymentTerms)html+='<div><span style="color:#888;font-size:10px;">'+(isCN?'付款条款: ':'Payment Terms: ')+'</span><strong>'+p.paymentTerms+'</strong></div>';
+    if(p.deliveryTerms)html+='<div><span style="color:#888;font-size:10px;">'+(isCN?'交货方式: ':'Delivery: ')+'</span><strong>'+p.deliveryTerms+'</strong></div>';
+    html+='</div>';
+  }
+
+  /* ---- 明细表 ---- */
+  html+='<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:4px">';
+  html+='<thead><tr style="background:'+coColor+';color:#fff">';
+  ['#',isCN?'商品名称':'Description',isCN?'SKU':'SKU',isCN?'数量':'Qty',
+   isCN?'单位':'Unit',isCN?'单价':'Unit Cost',isCN?'小计':'Subtotal'].forEach(function(h,i){
+    var al=i===0?'center':(i>=5?'right':(i===1?'left':'center'));
+    html+='<th style="padding:6px '+(i===1||i>=5?'8px':'4px')+';text-align:'+al+'">'+h+'</th>';
+  });
+  html+='</tr></thead><tbody>';
+  var totalCNY=0,totalUSD=0;
+  items.forEach(function(item,idx){
+    var sub=(item.qty||0)*(item.unitCost||0);
+    if(item.currency==='USD')totalUSD+=sub;else totalCNY+=sub;
+    var bg=idx%2===0?'#fff':'#f9f9f9';
+    var cur2=item.currency==='USD'?'$':'¥';
+    html+='<tr style="background:'+bg+'">';
+    html+='<td style="padding:5px 4px;text-align:center;border-bottom:1px solid #f0f0f0">'+(idx+1)+'</td>';
+    html+='<td style="padding:5px 8px;border-bottom:1px solid #f0f0f0">'+item.nameCN+'</td>';
+    html+='<td style="padding:5px 4px;text-align:center;border-bottom:1px solid #f0f0f0;font-family:monospace;font-size:10px;color:#888">'+(item.skuCode||'')+'</td>';
+    html+='<td style="padding:5px 4px;text-align:right;border-bottom:1px solid #f0f0f0">'+item.qty+'</td>';
+    html+='<td style="padding:5px 4px;text-align:center;border-bottom:1px solid #f0f0f0">'+(item.unit||'个')+'</td>';
+    html+='<td style="padding:5px 8px;text-align:right;border-bottom:1px solid #f0f0f0">'+cur2+' '+Number(item.unitCost||0).toFixed(2)+'</td>';
+    html+='<td style="padding:5px 8px;text-align:right;border-bottom:1px solid #f0f0f0">'+cur2+' '+sub.toFixed(2)+'</td>';
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+
+  /* 额外费用 + 合计 */
+  fees.forEach(function(f){
+    var fc=f.currency==='USD'?'$':'¥';
+    if(f.currency==='USD')totalUSD+=f.amount;else totalCNY+=f.amount;
+  });
+  html+='<div style="display:flex;justify-content:flex-end;margin-bottom:16px">';
+  html+='<table style="font-size:11px">';
+  fees.forEach(function(f){
+    var fc=f.currency==='USD'?'$':'¥';
+    html+='<tr><td style="padding:2px 8px;text-align:right;color:#888">'+f.name+': </td><td style="padding:2px 8px;text-align:right">'+fc+' '+Number(f.amount||0).toFixed(2)+'</td></tr>';
+  });
+  if(totalCNY>0)html+='<tr style="border-top:1px solid #ddd"><td style="padding:4px 8px;text-align:right;font-weight:600">'+(isCN?'合计(CNY): ':'Total (CNY): ')+'</td><td style="padding:4px 8px;text-align:right;font-weight:700;color:'+coColor+'">¥ '+totalCNY.toFixed(2)+'</td></tr>';
+  if(totalUSD>0)html+='<tr style="border-top:'+(totalCNY>0?'none':'1px solid #ddd')+'"><td style="padding:4px 8px;text-align:right;font-weight:600">'+(isCN?'合计(USD): ':'Total (USD): ')+'</td><td style="padding:4px 8px;text-align:right;font-weight:700;color:'+coColor+'">$ '+totalUSD.toFixed(2)+'</td></tr>';
+  html+='</table></div>';
+
+  /* 给供应商的备注 */
+  if(p.externalNote){
+    html+='<div style="font-size:11px;color:#666;margin-bottom:16px;padding:8px 12px;background:#fffbeb;border-radius:4px;border-left:3px solid #f59e0b">'
+      +'<span style="font-weight:600">'+(isCN?'备注: ':'Notes: ')+'</span>'+p.externalNote+'</div>';
+  }
+
+  /* 签字栏 */
+  html+='<div style="margin-top:24px;padding-top:14px;border-top:1px solid #eee;display:flex;justify-content:space-between;align-items:flex-end;font-size:11px">';
+  html+='<div style="color:#888">'+(isCN?'此致敬礼，代表 ':'For and on behalf of ')+co.nameEN+'</div>';
+  html+='<div style="text-align:right">';
+  html+='<div style="color:#888;margin-bottom:24px">'+(isCN?'授权签字:':'Authorized Signature:')+'</div>';
+  html+='<div style="border-bottom:1px solid #999;width:180px;margin-left:auto;margin-bottom:8px"></div>';
+  html+='<div style="color:#888">'+(isCN?'日期:':'Date:')+'____________________</div>';
+  html+='</div></div>';
+
+  html+='</div>';
+  var ct=document.getElementById('trade-doc-content');
+  if(ct)ct.innerHTML=html;
 }
 </script>
 <script>
