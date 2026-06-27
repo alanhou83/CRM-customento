@@ -1387,7 +1387,7 @@ a{color:var(--accent);text-decoration:none;}
 </div>
 
 <!-- 报价单预览 Overlay -->
-<div id="quote-preview-overlay" style="display:none;position:fixed;inset:0;z-index:3000;background:#f5f5f5;overflow-y:auto">
+<div id="quote-preview-overlay" style="display:none;position:fixed;inset:0;z-index:3000;background:#f5f5f5;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch">
   <div style="max-width:800px;margin:0 auto;padding:20px">
     <div style="background:#fff;padding:12px 16px;border-radius:8px;margin-bottom:16px">
       <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
@@ -1409,7 +1409,7 @@ a{color:var(--accent);text-decoration:none;}
 </div>
 
 <!-- 贸易文件预览 Overlay (PI/CI/PL) -->
-<div id="trade-doc-overlay" style="display:none;position:fixed;inset:0;z-index:3000;background:#f5f5f5;overflow-y:auto">
+<div id="trade-doc-overlay" style="display:none;position:fixed;inset:0;z-index:3000;background:#f5f5f5;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch">
   <div style="max-width:800px;margin:0 auto;padding:20px">
     <div style="background:#fff;padding:12px 16px;border-radius:8px;margin-bottom:16px">
       <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
@@ -9959,6 +9959,7 @@ function openQuotePreview(id,lang){
   _qtCurrentPreviewId=id;
   _qtPreviewLang=lang||'cn';
   _qtCurrentCompany='customento';
+  _tdBlockDetailPanel(true);
   var ov=document.getElementById('quote-preview-overlay');
   if(ov)ov.style.display='';
   /* 初始化公司按钮高亮 */
@@ -9976,6 +9977,7 @@ function openQuotePreview(id,lang){
 function closeQuotePreview(){
   var ov=document.getElementById('quote-preview-overlay');
   if(ov)ov.style.display='none';
+  _tdBlockDetailPanel(false);
 }
 function toggleQtLang(){
   _qtPreviewLang=(_qtPreviewLang==='cn')?'en':'cn';
@@ -12081,12 +12083,17 @@ var _tdPreviewLang='cn';
 var _tdCurrentOrderId=null;
 var _tdCurrentPoId=null;
 
+function _tdBlockDetailPanel(block){
+  var dp=document.getElementById('detail-panel');
+  if(dp)dp.style.pointerEvents=block?'none':'';
+}
 function openTradeDocOverlay(ordId){
   _tdCurrentOrderId=ordId;
   _tdCurrentPoId=null;
   _tdDocType='pi';
   _tdPreviewLang='cn';
   _tdCurrentCompany='customento';
+  _tdBlockDetailPanel(true);
   var ov=document.getElementById('trade-doc-overlay');
   if(ov)ov.style.display='';
   updateTdToolbar();
@@ -12098,6 +12105,7 @@ function openPoDocOverlay(poId){
   _tdDocType='po';
   _tdPreviewLang='cn';
   _tdCurrentCompany='customento';
+  _tdBlockDetailPanel(true);
   var ov=document.getElementById('trade-doc-overlay');
   if(ov)ov.style.display='';
   updateTdToolbar();
@@ -12106,6 +12114,7 @@ function openPoDocOverlay(poId){
 function closeTradeDocOverlay(){
   var ov=document.getElementById('trade-doc-overlay');
   if(ov)ov.style.display='none';
+  _tdBlockDetailPanel(false);
 }
 function switchTdDocType(t){
   _tdDocType=t;
