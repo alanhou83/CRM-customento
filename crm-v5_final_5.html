@@ -320,7 +320,7 @@ a{color:var(--accent);text-decoration:none;}
 .prod-img-slot:hover{border-color:var(--accent);}
 .prod-img-slot img{width:100%;height:100%;object-fit:cover;}
 .prod-img-del{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;color:#fff;line-height:1;}
-@media print {@page{size:A4;margin:0;}html,body{margin:0 !important;padding:0 !important;background:white !important;}body>*:not(#quote-preview-overlay){display:none !important;}#quote-preview-overlay{display:block !important;position:static !important;background:white !important;padding:15mm !important;box-sizing:border-box !important;overflow:visible !important;}#quote-preview-overlay>div{max-width:none !important;padding:0 !important;margin:0 !important;}#quote-preview-overlay>div>div:first-child{display:none !important;}#quote-preview-content{box-shadow:none !important;border-radius:0 !important;padding:0 !important;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}#quote-preview-content *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}}
+@media print {@page{size:A4;margin:0;}html,body{margin:0 !important;padding:0 !important;background:white !important;}body>*:not(#quote-preview-overlay):not(#trade-doc-overlay){display:none !important;}#quote-preview-overlay{display:block !important;position:static !important;background:white !important;padding:15mm !important;box-sizing:border-box !important;overflow:visible !important;}#quote-preview-overlay>div{max-width:none !important;padding:0 !important;margin:0 !important;}#quote-preview-overlay>div>div:first-child{display:none !important;}#quote-preview-content{box-shadow:none !important;border-radius:0 !important;padding:0 !important;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}#quote-preview-content *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}#trade-doc-overlay{display:block !important;position:static !important;background:white !important;padding:15mm !important;box-sizing:border-box !important;overflow:visible !important;}#trade-doc-overlay>div{max-width:none !important;padding:0 !important;margin:0 !important;}#trade-doc-overlay>div>div:first-child{display:none !important;}#trade-doc-content{box-shadow:none !important;border-radius:0 !important;padding:0 !important;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}#trade-doc-content *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}}
 .cols-inv{display:grid;grid-template-columns:100px 1fr 120px 60px 80px 80px 70px 120px;gap:0;align-items:center;}
 .inv-status-ok{color:var(--green);font-size:11px;font-weight:600;}
 .inv-status-low{color:var(--yellow);font-size:11px;font-weight:600;}
@@ -1404,6 +1404,32 @@ a{color:var(--accent);text-decoration:none;}
       </div>
     </div>
     <div id="quote-preview-content" style="background:#fff;padding:40px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.08)">
+    </div>
+  </div>
+</div>
+
+<!-- 贸易文件预览 Overlay (PI/CI/PL) -->
+<div id="trade-doc-overlay" style="display:none;position:fixed;inset:0;z-index:3000;background:#f5f5f5;overflow-y:auto">
+  <div style="max-width:800px;margin:0 auto;padding:20px">
+    <div style="background:#fff;padding:12px 16px;border-radius:8px;margin-bottom:16px">
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+        <button onclick="switchTdDocType('pi')" id="td-type-pi" style="padding:5px 14px;border:2px solid #2D3172;border-radius:6px;background:#2D3172;cursor:pointer;font-size:12px;font-weight:700;color:#fff">PI</button>
+        <button onclick="switchTdDocType('ci')" id="td-type-ci" style="padding:5px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;font-weight:400;color:#666">CI</button>
+        <button onclick="switchTdDocType('pl')" id="td-type-pl" style="padding:5px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;font-weight:400;color:#666">PL</button>
+        <span style="color:#ccc;padding:0 2px">|</span>
+        <button onclick="switchTdCompany('customento')" id="td-co-btn-customento" style="padding:5px 12px;border:2px solid #2D3172;border-radius:6px;background:#f0f2f8;cursor:pointer;font-size:12px;font-weight:700;color:#2D3172">Customento</button>
+        <button onclick="switchTdCompany('mugstech')"   id="td-co-btn-mugstech"   style="padding:5px 12px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;font-weight:400;color:#666">MUGSTech.</button>
+        <button onclick="switchTdCompany('sublank')"    id="td-co-btn-sublank"    style="padding:5px 12px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;font-weight:400;color:#666">SUBLANK</button>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <div style="display:flex;gap:8px">
+          <button onclick="toggleTdLang()" id="td-lang-btn" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">切换 English</button>
+          <button onclick="window.print()" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">打印</button>
+        </div>
+        <button onclick="closeTradeDocOverlay()" style="padding:6px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">x 关闭</button>
+      </div>
+    </div>
+    <div id="trade-doc-content" style="background:#fff;padding:40px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.08)">
     </div>
   </div>
 </div>
@@ -4143,6 +4169,7 @@ function openOrderDetail(id){
     +'</div>'
     +'<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">'
     +(canInvControl()&&(o.stage==='待发货'||o.stage==='已发货')?'<button class="btn btn-outline btn-sm" onclick="openInvDocModal(\'out\',\'order\','+o.id+')">📤 生成出库单</button>':'')
+    +'<button class="btn btn-outline btn-sm" onclick="openTradeDocOverlay('+o.id+')">📄 贸易文件</button>'
     +'<button class="btn btn-outline btn-sm" onclick="editOrder('+o.id+');closeDetail()">编辑</button>'
     +'<button class="btn btn-danger btn-sm" onclick="completeOrder('+o.id+');closeDetail()">✓ 标记完成</button>'
     +'</div>';
@@ -11988,6 +12015,316 @@ function voidInvDoc(docId){
   if(_invDocTab==='in'||_invDocTab==='out'){renderInvDocList(_invDocTab);renderMobileCards_invdoc(_invDocTab);}
   openInvDocDetail(docId);
   toast('单据已作废，库存流水已反向冲销',3000);
+}
+
+/* ============================================================
+   贸易文件模块 (PI / CI / PL)
+   ============================================================ */
+var COMPANY_BANK_EN={
+  customento:{beneficiary:'MUGS TECHNOLOGY LIMITED',account:'817-822893-838',bank:'HSBC Hong Kong',address:"1 Queen's Road Central, Hong Kong",swift:'HSBCHKHHHKH'},
+  mugstech:  {beneficiary:'MUGS TECHNOLOGY LIMITED',account:'817-822893-838',bank:'HSBC Hong Kong',address:"1 Queen's Road Central, Hong Kong",swift:'HSBCHKHHHKH'},
+  sublank:   {beneficiary:'SUBLANK COMPANY LIMITED', account:'817-722978-838',bank:'HSBC Hong Kong',address:"1 Queen's Road Central, Hong Kong",swift:'HSBCHKHHHKH'}
+};
+var COMPANY_BANK_CN={
+  customento:{name:'广州趣印社礼品有限公司',account:'3602015509200633339',bank:'中国工商银行广州新塘支行'},
+  mugstech:  {name:'广州趣印社礼品有限公司',account:'3602015509200633339',bank:'中国工商银行广州新塘支行'},
+  sublank:   {name:'广州世邦转印科技有限公司',account:'44059101040007300',bank:'中国农业银行广州林和西路支行'}
+};
+
+var _tdCurrentCompany='customento';
+var _tdDocType='pi';
+var _tdPreviewLang='cn';
+var _tdCurrentOrderId=null;
+
+function openTradeDocOverlay(ordId){
+  _tdCurrentOrderId=ordId;
+  _tdDocType='pi';
+  _tdPreviewLang='cn';
+  _tdCurrentCompany='customento';
+  var ov=document.getElementById('trade-doc-overlay');
+  if(ov)ov.style.display='';
+  updateTdToolbar();
+  renderTradeDoc();
+}
+function closeTradeDocOverlay(){
+  var ov=document.getElementById('trade-doc-overlay');
+  if(ov)ov.style.display='none';
+}
+function switchTdDocType(t){
+  _tdDocType=t;
+  updateTdToolbar();
+  renderTradeDoc();
+}
+function switchTdCompany(key){
+  _tdCurrentCompany=key;
+  updateTdToolbar();
+  renderTradeDoc();
+}
+function toggleTdLang(){
+  _tdPreviewLang=(_tdPreviewLang==='cn')?'en':'cn';
+  updateTdToolbar();
+  renderTradeDoc();
+}
+function updateTdToolbar(){
+  ['pi','ci','pl'].forEach(function(t){
+    var btn=document.getElementById('td-type-'+t);
+    if(!btn)return;
+    var isActive=(t===_tdDocType);
+    btn.style.fontWeight=isActive?'700':'400';
+    btn.style.background=isActive?'#2D3172':'#fff';
+    btn.style.color=isActive?'#fff':'#666';
+    btn.style.border=isActive?'2px solid #2D3172':'1px solid #ccc';
+  });
+  ['customento','mugstech','sublank'].forEach(function(k){
+    var btn=document.getElementById('td-co-btn-'+k);
+    if(!btn)return;
+    var co=QUOTE_COMPANIES[k]||QUOTE_COMPANIES.customento;
+    var isActive=(k===_tdCurrentCompany);
+    btn.style.fontWeight=isActive?'700':'400';
+    btn.style.border=isActive?('2px solid '+co.color):'1px solid #ccc';
+    btn.style.color=isActive?co.color:'#666';
+    btn.style.background=isActive?'#f0f2f8':'#fff';
+  });
+  var langBtn=document.getElementById('td-lang-btn');
+  if(langBtn)langBtn.textContent=_tdPreviewLang==='cn'?'切换 English':'切换 中文';
+}
+function getTdDocTitle(type,isCN){
+  if(type==='pi')return isCN?'形式发票 PROFORMA INVOICE':'PROFORMA INVOICE';
+  if(type==='ci')return isCN?'商业发票 COMMERCIAL INVOICE':'COMMERCIAL INVOICE';
+  if(type==='pl')return isCN?'箱单 PACKING LIST':'PACKING LIST';
+  return '';
+}
+function getTdDocNum(o,type){
+  var prefix=type.toUpperCase();
+  var dateStr=(o.date||today()).replace(/-/g,'');
+  var ordNum=('0000'+o.id).slice(-4);
+  return prefix+'-'+dateStr+'-'+ordNum;
+}
+function _tdGetSkuFromPcat(skuCode){
+  if(!skuCode)return null;
+  try{
+    var raw=localStorage.getItem('crm_prodcat_v5');
+    if(!raw)return null;
+    var pd=JSON.parse(raw);
+    var found=null;
+    (pd.products||[]).forEach(function(p){
+      (p.skus||[]).forEach(function(sk){
+        if(sk.skuCode===skuCode)found=sk;
+      });
+    });
+    return found;
+  }catch(e){return null;}
+}
+function renderTradeDoc(){
+  var o=orders.find(function(x){return x.id===_tdCurrentOrderId;});
+  if(!o)return;
+  var co=QUOTE_COMPANIES[_tdCurrentCompany]||QUOTE_COMPANIES.customento;
+  var bankEN=COMPANY_BANK_EN[_tdCurrentCompany]||COMPANY_BANK_EN.customento;
+  var bankCN=COMPANY_BANK_CN[_tdCurrentCompany]||COMPANY_BANK_CN.customento;
+  var isCN=_tdPreviewLang==='cn';
+  var isPL=_tdDocType==='pl';
+  var docNum=getTdDocNum(o,_tdDocType);
+  var docTitle=getTdDocTitle(_tdDocType,isCN);
+  var coColor=co.color||'#2D3172';
+  var cur=o.currency||'USD';
+  var items=o.items||[];
+
+  /* 查询客户信息 */
+  var cust=customers.find(function(c){return c.alias===o.alias;});
+  var custCompany=cust?(cust.company||''):'';
+  var custCountry=cust?(cust.country||''):'';
+  var custEmail=cust?(cust.email||''):'';
+  var custPhone=cust?(cust.phone||''):'';
+
+  var html='<div style="font-size:13px;color:#222;line-height:1.6">';
+
+  /* ---- 页眉 ---- */
+  var coLeftHtml='';
+  if(co.logo){
+    coLeftHtml='<div style="display:flex;align-items:flex-start;gap:8px;flex:1;min-width:0">'
+      +'<img src="'+co.logo+'" style="height:48px;width:48px;object-fit:contain;flex-shrink:0;border-radius:3px">'
+      +'<div style="min-width:0">'
+      +'<div style="font-size:14px;font-weight:700;color:'+coColor+';letter-spacing:.5px">'+co.nameEN+'</div>'
+      +(isCN?'<div style="font-size:9px;color:#aaa;margin-top:1px">'+co.nameCN+'</div>':'')
+      +'<div style="font-size:9px;color:#888;margin-top:4px">'+co.website+'</div>'
+      +'<div style="font-size:9px;color:#888">'+co.email+'</div>'
+      +'<div style="font-size:9px;color:#888">'+co.phone+'</div>'
+      +'</div></div>';
+  }else{
+    coLeftHtml='<div style="flex:1;min-width:0">'
+      +'<div style="font-size:17px;font-weight:700;color:'+coColor+';letter-spacing:1px">'+co.nameEN+'</div>'
+      +(isCN?'<div style="font-size:10px;color:#aaa;margin-top:2px">'+co.nameCN+'</div>':'')
+      +'<div style="font-size:9px;color:#888;margin-top:5px">'+co.website+' · '+co.email+'</div>'
+      +'<div style="font-size:9px;color:#888">'+co.phone+'</div>'
+      +'</div>';
+  }
+  html+='<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;border-bottom:2px solid '+coColor+';padding-bottom:10px">'
+    +coLeftHtml
+    +'<div style="text-align:right;flex-shrink:0">'
+    +'<div style="font-size:13px;font-weight:700;color:#333">'+docTitle+'</div>'
+    +'<div style="font-size:11px;color:#666;margin-top:2px;font-family:monospace">'+docNum+'</div>'
+    +'<div style="font-size:10px;color:#888">'+(isCN?'日期：':'Date: ')+(o.date||today())+'</div>'
+    +(_tdDocType==='pi'&&o.delivery?'<div style="font-size:10px;color:#888">'+(isCN?'有效期至：':'Valid Until: ')+o.delivery+'</div>':'')
+    +'</div></div>';
+
+  /* ---- 买方 + 装运 两列 ---- */
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #eee">';
+  html+='<div>';
+  html+='<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">'+(isCN?'买方':'BUYER')+'</div>';
+  html+='<div style="font-size:12px;font-weight:600;color:#333">'+o.alias+'</div>';
+  if(custCompany)html+='<div style="font-size:11px;color:#555">'+custCompany+'</div>';
+  if(custCountry)html+='<div style="font-size:11px;color:#999">'+(isCN?'国家: ':'Country: ')+custCountry+'</div>';
+  if(custEmail)html+='<div style="font-size:11px;color:#999">'+custEmail+'</div>';
+  if(custPhone)html+='<div style="font-size:11px;color:#999">'+custPhone+'</div>';
+  html+='</div>';
+  html+='<div>';
+  html+='<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">'+(isCN?'装运信息':'SHIPMENT')+'</div>';
+  html+='<div style="font-size:11px;color:#555"><span style="color:#888">'+(isCN?'装运港: ':'Port of Loading: ')+'</span>GUANGZHOU, CHINA</div>';
+  html+='<div style="font-size:11px;color:#555"><span style="color:#888">'+(isCN?'目的港: ':'Port of Discharge: ')+'</span></div>';
+  if(!isPL)html+='<div style="font-size:11px;color:#555"><span style="color:#888">'+(isCN?'付款方式: ':'Payment Terms: ')+'</span>T/T</div>';
+  html+='<div style="font-size:11px;color:#555"><span style="color:#888">'+(isCN?'贸易条款: ':'Trade Terms: ')+'</span>FOB</div>';
+  if(o.delivery)html+='<div style="font-size:11px;color:#555"><span style="color:#888">'+(isCN?'交期: ':'Delivery: ')+'</span>'+o.delivery+'</div>';
+  html+='</div>';
+  html+='</div>';
+
+  /* ---- 明细表 ---- */
+  if(isPL){
+    /* PL: 无单价，有箱规 */
+    html+='<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px">';
+    html+='<thead><tr style="background:'+coColor+';color:#fff">';
+    ['#',isCN?'商品描述':'Description',isCN?'数量':'Qty',isCN?'单位':'Unit',
+     isCN?'箱数':'Ctns',isCN?'净重(kg)':'N.W.(kg)',isCN?'毛重(kg)':'G.W.(kg)',isCN?'尺寸(cm)':'Meas.(cm)'].forEach(function(h,i){
+      var al=i===0?'center':(i===1?'left':'right');
+      var w=i===0?'24px':(i===7?'auto':'');
+      if(i===7)al='left';
+      html+='<th style="padding:6px '+(i===1?'8px':'4px')+';text-align:'+al+';'+(w?'width:'+w:'')+'">'+h+'</th>';
+    });
+    html+='</tr></thead><tbody>';
+    var totCtns=0,totNW=0,totGW=0;
+    var useItems=items.length>0?items:[{nameCN:o.product,nameEN:o.product,qty:o.qty,unit:'PCS',skuCode:''}];
+    useItems.forEach(function(item,idx){
+      var sku=_tdGetSkuFromPcat(item.skuCode);
+      var qtyNum=Number(item.qty)||0;
+      var qtyPer=sku&&sku.qtyPerCarton?Number(sku.qtyPerCarton):0;
+      var ctns=qtyPer>0?Math.ceil(qtyNum/qtyPer):0;
+      var nw=sku&&sku.unitWeight?Math.round(qtyNum*Number(sku.unitWeight)*100)/100:0;
+      var gw=sku&&sku.ctnWeight&&qtyPer>0?Math.round(ctns*Number(sku.ctnWeight)*100)/100:0;
+      var dims=sku&&sku.ctnL?(sku.ctnL+'×'+sku.ctnW+'×'+sku.ctnH):'';
+      totCtns+=ctns;totNW+=nw;totGW+=gw;
+      var desc=isCN?(item.nameCN||item.nameEN||''):(item.nameEN||item.nameCN||'');
+      var bg=idx%2===0?'#fff':'#f9f9f9';
+      html+='<tr style="background:'+bg+'">';
+      html+='<td style="padding:5px 4px;text-align:center;border-bottom:1px solid #f0f0f0">'+(idx+1)+'</td>';
+      html+='<td style="padding:5px 8px;border-bottom:1px solid #f0f0f0">'+desc+(item.skuCode?'<br><span style="color:#bbb;font-size:10px">'+item.skuCode+'</span>':'')+'</td>';
+      html+='<td style="padding:5px 4px;text-align:right;border-bottom:1px solid #f0f0f0">'+(item.qty||'')+'</td>';
+      html+='<td style="padding:5px 4px;text-align:right;border-bottom:1px solid #f0f0f0">'+(item.unit||'PCS')+'</td>';
+      html+='<td style="padding:5px 4px;text-align:right;border-bottom:1px solid #f0f0f0">'+(ctns||'—')+'</td>';
+      html+='<td style="padding:5px 4px;text-align:right;border-bottom:1px solid #f0f0f0">'+(nw||'—')+'</td>';
+      html+='<td style="padding:5px 4px;text-align:right;border-bottom:1px solid #f0f0f0">'+(gw||'—')+'</td>';
+      html+='<td style="padding:5px 4px;border-bottom:1px solid #f0f0f0">'+(dims||'—')+'</td>';
+      html+='</tr>';
+    });
+    html+='<tr style="background:#f5f5f5;font-weight:600">';
+    html+='<td colspan="4" style="padding:6px 8px;text-align:right">'+(isCN?'合计:':'TOTAL:')+'</td>';
+    html+='<td style="padding:6px 4px;text-align:right">'+totCtns+'</td>';
+    html+='<td style="padding:6px 4px;text-align:right">'+(totNW?totNW.toFixed(2):'—')+'</td>';
+    html+='<td style="padding:6px 4px;text-align:right">'+(totGW?totGW.toFixed(2):'—')+'</td>';
+    html+='<td></td></tr>';
+    html+='</tbody></table>';
+
+  }else{
+    /* PI / CI: 有单价 */
+    html+='<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:4px">';
+    html+='<thead><tr style="background:'+coColor+';color:#fff">';
+    ['#',isCN?'商品描述':'Description',isCN?'规格':'Spec',isCN?'数量':'Qty',
+     isCN?'单位':'Unit',isCN?'单价':'Unit Price',isCN?'金额':'Amount'].forEach(function(h,i){
+      var al=i===0?'center':(i>=5?'right':(i===1?'left':'center'));
+      html+='<th style="padding:6px '+(i===1||i>=5?'8px':'4px')+';text-align:'+al+'">'+h+'</th>';
+    });
+    html+='</tr></thead><tbody>';
+
+    var subtotalAll=0;
+    var useItems2=items.length>0?items:[{nameCN:o.product,nameEN:o.product,qty:o.qty,unit:'PCS',skuCode:'',unitPrice:0,subtotal:o.amount||0}];
+    useItems2.forEach(function(item,idx){
+      var desc=isCN?(item.nameCN||item.nameEN||''):(item.nameEN||item.nameCN||'');
+      var bg=idx%2===0?'#fff':'#f9f9f9';
+      var subAmt=Number(item.subtotal)||0;
+      subtotalAll+=subAmt;
+      html+='<tr style="background:'+bg+'">';
+      html+='<td style="padding:5px 4px;text-align:center;border-bottom:1px solid #f0f0f0">'+(idx+1)+'</td>';
+      html+='<td style="padding:5px 8px;border-bottom:1px solid #f0f0f0">'+desc+(item.skuCode?'<br><span style="color:#bbb;font-size:10px">'+item.skuCode+'</span>':'')+'</td>';
+      html+='<td style="padding:5px 4px;text-align:center;border-bottom:1px solid #f0f0f0"></td>';
+      html+='<td style="padding:5px 4px;text-align:right;border-bottom:1px solid #f0f0f0">'+(item.qty||'')+'</td>';
+      html+='<td style="padding:5px 4px;text-align:center;border-bottom:1px solid #f0f0f0">'+(item.unit||'PCS')+'</td>';
+      html+='<td style="padding:5px 8px;text-align:right;border-bottom:1px solid #f0f0f0">'+(item.unitPrice?cur+' '+Number(item.unitPrice).toFixed(2):'')+'</td>';
+      html+='<td style="padding:5px 8px;text-align:right;border-bottom:1px solid #f0f0f0">'+(subAmt?cur+' '+subAmt.toFixed(2):'')+'</td>';
+      html+='</tr>';
+    });
+    html+='</tbody></table>';
+
+    /* 合计区域 */
+    var fees=o.fees||[];
+    var grandTotal=subtotalAll;
+    var feeRows='';
+    fees.forEach(function(f){
+      var fa=Number(f.amount)||0;
+      var fc=f.currency||cur;
+      feeRows+='<tr><td style="padding:3px 8px;text-align:right;color:#888">'+(f.name||'额外费用')+': </td>'
+        +'<td style="padding:3px 8px;text-align:right">'+fc+' '+fa.toFixed(2)+'</td></tr>';
+      if(fc===cur)grandTotal+=fa;
+    });
+    html+='<div style="display:flex;justify-content:flex-end;margin-bottom:16px">';
+    html+='<table style="font-size:11px">';
+    if(fees.length>0){
+      html+='<tr><td style="padding:3px 8px;text-align:right;color:#888">'+(isCN?'小计: ':'Sub Total: ')+'</td><td style="padding:3px 8px;text-align:right">'+cur+' '+subtotalAll.toFixed(2)+'</td></tr>';
+      html+=feeRows;
+    }
+    html+='<tr style="border-top:1px solid #ddd">'
+      +'<td style="padding:5px 8px;text-align:right;font-weight:600">'+(isCN?'合计: ':'Total: ')+'</td>'
+      +'<td style="padding:5px 8px;text-align:right;font-weight:700;font-size:13px;color:'+coColor+'">'+cur+' '+grandTotal.toFixed(2)+'</td></tr>';
+    html+='</table></div>';
+
+    /* 银行信息 */
+    html+='<div style="border:1px solid #e8e8e8;border-radius:6px;padding:12px;margin-bottom:14px;background:#fafafa">';
+    html+='<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">'+(isCN?'银行信息 BANK INFORMATION':'BANK INFORMATION')+'</div>';
+    html+='<div style="display:grid;grid-template-columns:'+(isCN?'1fr 1fr':'1fr')+';gap:16px;font-size:11px">';
+    html+='<div>';
+    html+='<div style="color:#888;font-size:10px;margin-bottom:3px">USD Account</div>';
+    html+='<div><span style="color:#aaa">Beneficiary: </span><strong>'+bankEN.beneficiary+'</strong></div>';
+    html+='<div><span style="color:#aaa">Account No.: </span>'+bankEN.account+'</div>';
+    html+='<div><span style="color:#aaa">Bank: </span>'+bankEN.bank+'</div>';
+    html+='<div><span style="color:#aaa">Address: </span>'+bankEN.address+'</div>';
+    html+='<div><span style="color:#aaa">Swift Code: </span><strong>'+bankEN.swift+'</strong></div>';
+    html+='</div>';
+    if(isCN){
+      html+='<div>';
+      html+='<div style="color:#888;font-size:10px;margin-bottom:3px">人民币账户</div>';
+      html+='<div><span style="color:#aaa">账户名: </span><strong>'+bankCN.name+'</strong></div>';
+      html+='<div><span style="color:#aaa">账号: </span>'+bankCN.account+'</div>';
+      html+='<div><span style="color:#aaa">开户行: </span>'+bankCN.bank+'</div>';
+      html+='</div>';
+    }
+    html+='</div></div>';
+  }
+
+  /* 备注 */
+  if(o.notes){
+    html+='<div style="font-size:11px;color:#666;margin-bottom:12px;padding:8px 12px;background:#fffbeb;border-radius:4px;border-left:3px solid #f59e0b">'
+      +'<span style="font-weight:600">'+(isCN?'备注: ':'Notes: ')+'</span>'+o.notes+'</div>';
+  }
+
+  /* 签字栏 */
+  html+='<div style="margin-top:24px;padding-top:14px;border-top:1px solid #eee;display:flex;justify-content:space-between;align-items:flex-end;font-size:11px">';
+  html+='<div style="color:#888">'+(isCN?'此致敬礼，代表 ':'For and on behalf of ')+co.nameEN+'</div>';
+  html+='<div style="text-align:right">';
+  html+='<div style="color:#888;margin-bottom:24px">'+(isCN?'授权签字:':'Authorized Signature:')+'</div>';
+  html+='<div style="border-bottom:1px solid #999;width:180px;margin-left:auto;margin-bottom:8px"></div>';
+  html+='<div style="color:#888">'+(isCN?'日期:':'Date:')+'____________________</div>';
+  html+='</div></div>';
+
+  html+='</div>';
+  var content=document.getElementById('trade-doc-content');
+  if(content)content.innerHTML=html;
 }
 </script>
 <script>
