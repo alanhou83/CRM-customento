@@ -10341,6 +10341,8 @@ function renderInqQuoteListInline(inqId){
 var _invCurrentSkuCode='';
 var _invInboundPoId='';
 var _invOutboundOrdId=0;
+var _invCurrentDocNumber='';
+var _invOrigHref='';
 var _invChipStatus='';
 var _invDocTab='stock';
 var _invDocDirection='in';
@@ -11450,6 +11452,7 @@ function printInvDoc(type){
       content+='<tr><td style="padding:6px;border:1px solid #ccc">'+(item.skuCode||'—')+'</td><td style="padding:6px;border:1px solid #ccc">'+item.nameCN+'</td><td style="padding:6px;border:1px solid #ccc;text-align:right">'+item.poQty+'</td><td style="padding:6px;border:1px solid #ccc;text-align:right">'+qty+'</td><td style="padding:6px;border:1px solid #ccc">'+item.unit+'</td></tr>';
     });
     content+='</table><div style="margin-top:40px;display:flex;justify-content:space-between"><div>收货人签字：___________</div><div>日期：'+today()+'</div></div>';
+    _invCurrentDocNumber=(p.poNumber||'入库单')+'-INB';
   } else {
     var ord=null;
     orders.forEach(function(o){if(o.id===_invOutboundOrdId)ord=o;});
@@ -11464,6 +11467,7 @@ function printInvDoc(type){
       content+='<tr><td style="padding:6px;border:1px solid #ccc">'+(item.skuCode||'—')+'</td><td style="padding:6px;border:1px solid #ccc">'+item.nameCN+'</td><td style="padding:6px;border:1px solid #ccc;text-align:right">'+item.ordQty+'</td><td style="padding:6px;border:1px solid #ccc;text-align:right">'+qty+'</td><td style="padding:6px;border:1px solid #ccc">'+item.unit+'</td></tr>';
     });
     content+='</table><div style="margin-top:40px;display:flex;justify-content:space-between"><div>发货人签字：___________</div><div>日期：'+today()+'</div></div>';
+    _invCurrentDocNumber=(ord.alias||'出库单')+'-OUT';
   }
   var ov=document.getElementById('inv-print-overlay');
   var bc=document.getElementById('inv-print-content');
@@ -11474,10 +11478,16 @@ function printInvDoc(type){
 function closeInvPrintOverlay(){
   var ov=document.getElementById('inv-print-overlay');
   if(ov)ov.style.display='none';
+  if(_invOrigHref){try{history.replaceState({},'Customento CRM',_invOrigHref);}catch(e){}  _invOrigHref='';}
+  document.title='Customento CRM';
 }
 function printInvOverlay(){
   var ov=document.getElementById('inv-print-overlay');
   if(ov){ov.scrollLeft=0;ov.scrollTop=0;ov.classList.add('printing');}
+  var docNum=_invCurrentDocNumber||'库存单据';
+  document.title=docNum;
+  _invOrigHref=location.href;
+  try{history.replaceState({},docNum,location.href.split('#')[0]+'#'+docNum);}catch(e){}
   var _c=false;
   function _clean(){if(_c)return;_c=true;var o=document.getElementById('inv-print-overlay');if(o)o.classList.remove('printing');}
   window.addEventListener('afterprint',_clean,{once:true});
