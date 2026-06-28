@@ -9615,6 +9615,7 @@ var _qtPreviewLang='cn';
 var _qtCurrentPreviewId=null;
 var _qtCurrentCompany='customento';
 var _qtCurrentDocNumber='';
+var _qtOrigHref='';
 
 function getQuoteStatusLabel(s){
   if(s==='draft')return '草稿';
@@ -10015,12 +10016,16 @@ function closeQuotePreview(){
   var ov=document.getElementById('quote-preview-overlay');
   if(ov)ov.style.display='none';
   _tdBlockDetailPanel(false);
+  if(_qtOrigHref){try{history.replaceState({},'Customento CRM',_qtOrigHref);}catch(e){}  _qtOrigHref='';}
   document.title='Customento CRM';
 }
 function printQtDoc(){
   var ov=document.getElementById('quote-preview-overlay');
   if(ov){ov.scrollLeft=0;ov.scrollTop=0;ov.classList.add('printing');}
-  document.title=_qtCurrentDocNumber||'报价单';
+  var docNum=_qtCurrentDocNumber||'报价单';
+  document.title=docNum;
+  _qtOrigHref=location.href;
+  try{history.replaceState({},docNum,location.href.split('#')[0]+'#'+docNum);}catch(e){}
   var _c=false;
   function _qtCleanCss(){if(_c)return;_c=true;var o=document.getElementById('quote-preview-overlay');if(o)o.classList.remove('printing');}
   window.addEventListener('afterprint',_qtCleanCss,{once:true});
@@ -12146,6 +12151,7 @@ var _tdPreviewLang='cn';
 var _tdCurrentOrderId=null;
 var _tdCurrentPoId=null;
 var _tdCurrentDocNumber='';
+var _tdOrigHref='';
 
 var _tdOrientHandler=null;
 function _tdBlockDetailPanel(block){
@@ -12204,12 +12210,16 @@ function closeTradeDocOverlay(){
   var ov=document.getElementById('trade-doc-overlay');
   if(ov)ov.style.display='none';
   _tdBlockDetailPanel(false);
+  if(_tdOrigHref){try{history.replaceState({},'Customento CRM',_tdOrigHref);}catch(e){}  _tdOrigHref='';}
   document.title='Customento CRM';
 }
 function printTdDoc(){
   var ov=document.getElementById('trade-doc-overlay');
   if(ov){ov.scrollLeft=0;ov.scrollTop=0;ov.classList.add('printing');}
-  document.title=_tdCurrentDocNumber||'贸易文件';
+  var docNum=_tdCurrentDocNumber||'贸易文件';
+  document.title=docNum;
+  _tdOrigHref=location.href;
+  try{history.replaceState({},docNum,location.href.split('#')[0]+'#'+docNum);}catch(e){}
   var _c=false;
   function _tdCleanCss(){if(_c)return;_c=true;var o=document.getElementById('trade-doc-overlay');if(o)o.classList.remove('printing');}
   window.addEventListener('afterprint',_tdCleanCss,{once:true});
