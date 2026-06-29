@@ -11,7 +11,7 @@
 - GitHub Pages：https://alanhou83.github.io/CRM-customento/crm-v5_final_5.html
 - 仓库：https://github.com/alanhou83/CRM-customento
 - PWA 已配置：manifest.json / service-worker.js / icon-192.png / icon-512.png
-- 当前 SW 版本：customento-crm-v32
+- 当前 SW 版本：customento-crm-v42
 
 ## 团队成员与权限
 - Alan：管理员，可见所有，可删除/导出/VIP+冲单标记，专属设置页
@@ -336,10 +336,16 @@
 14. 手机端卡片名字行有大小不一的 span 时必须用 flex + align-items:center，不能用 vertical-align（会导致行高撑大、文字错位）
 15. toggleInqFilter 类芯片（独立切换）不能放进 mobileChip 同一个 .mobile-chips 容器，否则 querySelectorAll 会误清除高亮；或用不同 class 区分
 16. openProdModal 等 modal 函数中，if/else 两个分支共用同一 DOM 变量时，var 声明必须提到 if 之前（否则重复 var 声明可能导致逻辑错误），如 `var pmTitle=document.getElementById('prod-modal-title')` 提到 if 判断前
+17. **手机端媒体查询中 `.filters` 和 `.table-wrap` 的 `display:none` 必须加 `!important`**
+    - 原因：JS 函数（如 `switchProcTab`）调 `el.style.display=''` 清除 inline 样式后，CSS 类选择器无 `!important` 在 iOS Safari/PWA 上无法胜过 JS 赋过的任何样式残留，导致元素仍可见，把 mobile-cards 挤掉不显示
+    - 正确写法（`@media(max-width:768px)` 内）：
+      `.filters{display:none !important;}` `.table-wrap{display:none !important;}`
+    - 同时 `#settings-prod-wrap{display:block !important;}` —— ID 选择器比类选择器优先级高，设置页里的 table-wrap 例外显示
+    - 受影响的8个页面：热点/订单/统计/产品开发/产品库/采购/供应商/报价单（客户/库存/财务不受影响，因其 mobile-cards 在 page-content 外层）
 
 ## 必须遵守的规避规则（部署）
 - 当前行为：浏览器普通刷新即可看到更新；PWA 关闭重开即可，无需删除重装
-- 若看不到更新：bump CACHE_NAME 强制清缓存（已到 v32）
+- 若看不到更新：bump CACHE_NAME 强制清缓存（已到 v42）
 - ⚠️ **绝对禁止让用户重装PWA**：PWA 重装会清除 IndexedDB（询盘图片存在 `crm_inq_images` 库），数据永久丢失，无法恢复！
 - 遇到 PWA 问题时的处理顺序：① 先让用户用 Chrome 浏览器备份导出 JSON ② 检查是否需要 bump SW 版本 ③ 让 SW 自然更新（关闭重开），绝不建议重装
 
@@ -514,7 +520,7 @@
 - **询盘报价单Tab**：询盘详情新增第3个Tab显示关联报价单列表（含数量角标）
 - **_prevDetailContext**：报价单/采购单详情X退出后回到父面板对应Tab
 - **关联字段模糊搜索**：采购单「关联销售订单」/订单「关联采购单」均支持实时下拉搜索
-- SW 升至 v30（强制清缓存）
+- SW 升至 v42（强制清缓存，历经多次 iOS 修复）
 - 询盘 targetStar 字段（Alan专属冲单标记），canInqVip() 含 Kelly
 - `toast(msg, dur)` 新增可选时长参数（默认 2500ms）
 
@@ -575,6 +581,7 @@
   3. `position:fixed` 在打印模式下坐标系出错，内容偏移或空白
   - **正确方案**：`body>*:not(#quote-preview-overlay){display:none!important}` + overlay 设 `position:static;padding:15mm`
 - **iOS Safari打印URL/日期**：CSS `@page{margin:0}` 在 Chrome/Edge 有效，iOS Safari 无效（系统级限制，用户需手动关闭打印选项中的页眉页脚）
+- **iOS 手机页面整片空白（8个模块）**：症状=Chrome/桌面正常、iOS Safari/PWA 某些页面空白看不到卡片。根因=`@media(max-width:768px)` 里 `.filters{display:none}` / `.table-wrap{display:none}` 缺 `!important`，JS `el.style.display=''` 清除 inline 样式后 iOS 上类选择器规则未能生效，桌面元素仍占位把 mobile-cards 挤到视口外。排查顺序：① 查该页面 page-content 内是否有 .filters/.table-wrap → ② 确认媒体查询规则有无 !important → ③ 加 !important 修复。设置页 `#settings-prod-wrap` 需同时写 `display:block !important` 保持例外可见（ID优先级 > 类）
 
 ## 待做功能（优先级顺序）
 1. **【已完成】产品库模块**（prodcat）：基础完成，报价单已集成
