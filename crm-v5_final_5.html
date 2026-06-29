@@ -547,6 +547,33 @@ a{color:var(--accent);text-decoration:none;}
       <input type="text" class="search-box" id="search-suppliers-m" placeholder="搜索供应商..." oninput="renderMobileCards('suppliers')" style="flex:1">
     </div>
   </div>
+  <div id="mh-inv" style="display:none;margin-bottom:-6px">
+    <div style="padding:8px 15px 0">
+      <div class="mobile-chips" style="padding-bottom:6px">
+        <span class="mobile-chip on" id="mh-inv-tab-stock" onclick="switchInvTab('stock')">商品库存</span>
+        <span class="mobile-chip" id="mh-inv-tab-in" onclick="switchInvTab('in')">入库单</span>
+        <span class="mobile-chip" id="mh-inv-tab-out" onclick="switchInvTab('out')">出库单</span>
+      </div>
+      <div id="mh-inv-stock-sub" class="mobile-chips" style="padding-bottom:6px">
+        <span class="mobile-chip on" onclick="invChipFilter(this,'')">全部</span>
+        <span class="mobile-chip" onclick="invChipFilter(this,'缺货')">缺货</span>
+        <span class="mobile-chip" onclick="invChipFilter(this,'预警')">预警</span>
+        <span class="mobile-chip" onclick="invChipFilter(this,'充足')">充足</span>
+      </div>
+      <div id="mh-inv-stock-search" style="display:flex;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
+        <input class="search-box" id="search-inv-m" placeholder="搜索SKU/品名..." oninput="renderInventoryPage()" style="flex:1;border:none;background:transparent;outline:none;font-size:13px">
+      </div>
+      <div id="mh-inv-doc-sub" style="display:none" class="mobile-chips">
+        <span class="mobile-chip on" onclick="invDocChipFilter(this,'')">全部</span>
+        <span class="mobile-chip" onclick="invDocChipFilter(this,'草稿')">草稿</span>
+        <span class="mobile-chip" onclick="invDocChipFilter(this,'已确认')">已确认</span>
+      </div>
+      <div id="mh-inv-doc-search" style="display:none;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box;align-items:center;gap:8px">
+        <input class="search-box" id="search-invdoc-m" placeholder="搜索单号/来源..." oninput="renderInvDocList(_invDocDirection)" style="flex:1;border:none;background:transparent;outline:none;font-size:13px">
+        <button class="btn btn-primary btn-sm" onclick="invHeadNewAction()">+新建</button>
+      </div>
+    </div>
+  </div>
   <div id="mh-fin" style="display:none;margin-bottom:-6px">
     <div style="padding:8px 0 0">
       <div class="mobile-chips" style="padding-bottom:6px">
@@ -1213,34 +1240,6 @@ a{color:var(--accent);text-decoration:none;}
     <button class="inv-tab-btn active" id="inv-tab-stock" onclick="switchInvTab('stock')">商品库存</button>
     <button class="inv-tab-btn" id="inv-tab-in" onclick="switchInvTab('in')">入库单</button>
     <button class="inv-tab-btn" id="inv-tab-out" onclick="switchInvTab('out')">出库单</button>
-  </div>
-  <!-- 手机端 header -->
-  <div id="mh-inv" style="display:none">
-    <div style="padding:10px 15px 0">
-      <div class="mobile-chips" style="padding-bottom:6px">
-        <span class="mobile-chip on" id="mh-inv-tab-stock" onclick="switchInvTab('stock')">商品库存</span>
-        <span class="mobile-chip" id="mh-inv-tab-in" onclick="switchInvTab('in')">入库单</span>
-        <span class="mobile-chip" id="mh-inv-tab-out" onclick="switchInvTab('out')">出库单</span>
-      </div>
-      <div id="mh-inv-stock-sub" class="mobile-chips" style="padding-bottom:6px">
-        <span class="mobile-chip on" onclick="invChipFilter(this,'')">全部</span>
-        <span class="mobile-chip" onclick="invChipFilter(this,'缺货')">缺货</span>
-        <span class="mobile-chip" onclick="invChipFilter(this,'预警')">预警</span>
-        <span class="mobile-chip" onclick="invChipFilter(this,'充足')">充足</span>
-      </div>
-      <div id="mh-inv-stock-search" style="display:flex;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
-        <input class="search-box" id="search-inv-m" placeholder="搜索SKU/品名..." oninput="renderInventoryPage()" style="flex:1;border:none;background:transparent;outline:none;font-size:13px">
-      </div>
-      <div id="mh-inv-doc-sub" style="display:none" class="mobile-chips">
-        <span class="mobile-chip on" onclick="invDocChipFilter(this,'')">全部</span>
-        <span class="mobile-chip" onclick="invDocChipFilter(this,'草稿')">草稿</span>
-        <span class="mobile-chip" onclick="invDocChipFilter(this,'已确认')">已确认</span>
-      </div>
-      <div id="mh-inv-doc-search" style="display:none;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box;align-items:center;gap:8px">
-        <input class="search-box" id="search-invdoc-m" placeholder="搜索单号/来源..." oninput="renderInvDocList(_invDocDirection)" style="flex:1;border:none;background:transparent;outline:none;font-size:13px">
-        <button class="btn btn-primary btn-sm" onclick="invHeadNewAction()">+新建</button>
-      </div>
-    </div>
   </div>
   <!-- 商品库存 section -->
   <div id="inv-section-stock">
