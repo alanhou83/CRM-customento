@@ -550,12 +550,12 @@ a{color:var(--accent);text-decoration:none;}
   <div id="mh-fin" style="display:none;margin-bottom:-6px">
     <div style="padding:8px 0 0">
       <div class="mobile-chips" style="padding-bottom:6px">
-        <span class="chip active" id="mb-fin-chip-txn" onclick="finMobileTab(this,'txn')">流水</span>
-        <span class="chip" id="mb-fin-chip-accounts" onclick="finMobileTab(this,'accounts')">账户</span>
-        <span class="chip" id="mb-fin-chip-report" onclick="finMobileTab(this,'report')">报表</span>
-        <span class="chip" id="mb-fin-type-in" onclick="finTypeChip(this,'收款')">收款</span>
-        <span class="chip" id="mb-fin-type-out" onclick="finTypeChip(this,'付款')">付款</span>
-        <span class="chip" id="mb-fin-type-exp" onclick="finTypeChip(this,'运营支出')">运营支出</span>
+        <span class="mobile-chip on" id="mb-fin-chip-txn" onclick="finMobileTab(this,'txn')">流水</span>
+        <span class="mobile-chip" id="mb-fin-chip-accounts" onclick="finMobileTab(this,'accounts')">账户</span>
+        <span class="mobile-chip" id="mb-fin-chip-report" onclick="finMobileTab(this,'report')">报表</span>
+        <span class="mobile-chip" id="mb-fin-type-in" onclick="finTypeChip(this,'收款')">收款</span>
+        <span class="mobile-chip" id="mb-fin-type-out" onclick="finTypeChip(this,'付款')">付款</span>
+        <span class="mobile-chip" id="mb-fin-type-exp" onclick="finTypeChip(this,'运营支出')">运营支出</span>
       </div>
     </div>
     <div style="display:flex;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box;align-items:center;gap:8px">
@@ -1218,23 +1218,23 @@ a{color:var(--accent);text-decoration:none;}
   <div id="mh-inv" style="display:none">
     <div style="padding:10px 15px 0">
       <div class="mobile-chips" style="padding-bottom:6px">
-        <span class="chip active" id="mh-inv-tab-stock" onclick="switchInvTab('stock')">商品库存</span>
-        <span class="chip" id="mh-inv-tab-in" onclick="switchInvTab('in')">入库单</span>
-        <span class="chip" id="mh-inv-tab-out" onclick="switchInvTab('out')">出库单</span>
+        <span class="mobile-chip on" id="mh-inv-tab-stock" onclick="switchInvTab('stock')">商品库存</span>
+        <span class="mobile-chip" id="mh-inv-tab-in" onclick="switchInvTab('in')">入库单</span>
+        <span class="mobile-chip" id="mh-inv-tab-out" onclick="switchInvTab('out')">出库单</span>
       </div>
       <div id="mh-inv-stock-sub" class="mobile-chips" style="padding-bottom:6px">
-        <span class="chip active" onclick="invChipFilter(this,'')">全部</span>
-        <span class="chip" onclick="invChipFilter(this,'缺货')">缺货</span>
-        <span class="chip" onclick="invChipFilter(this,'预警')">预警</span>
-        <span class="chip" onclick="invChipFilter(this,'充足')">充足</span>
+        <span class="mobile-chip on" onclick="invChipFilter(this,'')">全部</span>
+        <span class="mobile-chip" onclick="invChipFilter(this,'缺货')">缺货</span>
+        <span class="mobile-chip" onclick="invChipFilter(this,'预警')">预警</span>
+        <span class="mobile-chip" onclick="invChipFilter(this,'充足')">充足</span>
       </div>
       <div id="mh-inv-stock-search" style="display:flex;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
         <input class="search-box" id="search-inv-m" placeholder="搜索SKU/品名..." oninput="renderInventoryPage()" style="flex:1;border:none;background:transparent;outline:none;font-size:13px">
       </div>
       <div id="mh-inv-doc-sub" style="display:none" class="mobile-chips">
-        <span class="chip active" onclick="invDocChipFilter(this,'')">全部</span>
-        <span class="chip" onclick="invDocChipFilter(this,'草稿')">草稿</span>
-        <span class="chip" onclick="invDocChipFilter(this,'已确认')">已确认</span>
+        <span class="mobile-chip on" onclick="invDocChipFilter(this,'')">全部</span>
+        <span class="mobile-chip" onclick="invDocChipFilter(this,'草稿')">草稿</span>
+        <span class="mobile-chip" onclick="invDocChipFilter(this,'已确认')">已确认</span>
       </div>
       <div id="mh-inv-doc-search" style="display:none;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box;align-items:center;gap:8px">
         <input class="search-box" id="search-invdoc-m" placeholder="搜索单号/来源..." oninput="renderInvDocList(_invDocDirection)" style="flex:1;border:none;background:transparent;outline:none;font-size:13px">
@@ -2583,7 +2583,7 @@ function clearFilters(type){
   else if(type==='suppliers'){var sse=document.getElementById('search-suppliers');if(sse)sse.value='';renderSuppliersPage();}
   else if(type==='inv'){var s=document.getElementById('search-inv');if(s)s.value='';var sm=document.getElementById('search-inv-m');if(sm)sm.value='';var st=document.getElementById('fi-inv-status');if(st)st.value='';_invChipStatus='';renderInventoryPage();renderMobileCards_inv();}
   else if(type==='fin'){var sf=document.getElementById('search-fin');if(sf)sf.value='';var sfm=document.getElementById('search-fin-m');if(sfm)sfm.value='';var fft=document.getElementById('ff-type');if(fft)fft.value='';var ffa=document.getElementById('ff-account');if(ffa){ffa.value='';ffa.dataset.populated='';}
-  _finTypeFilter='';['mb-fin-type-in','mb-fin-type-out','mb-fin-type-exp'].forEach(function(id){var c=document.getElementById(id);if(c)c.className='chip';});renderFinTransactions();}
+  _finTypeFilter='';['mb-fin-type-in','mb-fin-type-out','mb-fin-type-exp'].forEach(function(id){var c=document.getElementById(id);if(c)c.className='mobile-chip';});renderFinTransactions();}
 }
 
 function renderDashboard(){
@@ -10509,7 +10509,7 @@ function switchFinTab(tab){
   });
   ['txn','accounts','report'].forEach(function(t){
     var chip=document.getElementById('mb-fin-chip-'+t);
-    if(chip)chip.className='chip'+(t===tab?' active':'');
+    if(chip)chip.className='mobile-chip'+(t===tab?' on':'');
   });
   /* 搜索栏和类型芯片只在流水Tab显示 */
   var srchRow=document.getElementById('mh-fin-search');
@@ -10525,17 +10525,17 @@ function switchFinTab(tab){
 
 function finMobileTab(el,tab){
   _finTypeFilter='';
-  ['mb-fin-type-in','mb-fin-type-out','mb-fin-type-exp'].forEach(function(id){var c=document.getElementById(id);if(c)c.className='chip';});
+  ['mb-fin-type-in','mb-fin-type-out','mb-fin-type-exp'].forEach(function(id){var c=document.getElementById(id);if(c)c.className='mobile-chip';});
   switchFinTab(tab);
 }
 
 function finTypeChip(el,type){
   if(_finTab!=='txn')switchFinTab('txn');
-  if(_finTypeFilter===type){_finTypeFilter='';el.className='chip';}
+  if(_finTypeFilter===type){_finTypeFilter='';el.className='mobile-chip';}
   else{
     _finTypeFilter=type;
-    ['mb-fin-type-in','mb-fin-type-out','mb-fin-type-exp'].forEach(function(id){var c=document.getElementById(id);if(c)c.className='chip';});
-    el.className='chip active';
+    ['mb-fin-type-in','mb-fin-type-out','mb-fin-type-exp'].forEach(function(id){var c=document.getElementById(id);if(c)c.className='mobile-chip';});
+    el.className='mobile-chip on';
   }
   renderFinTransactions();
 }
@@ -10663,10 +10663,8 @@ function openFinAccountDetail(accountId){
   var isCNY=acc.currency==='CNY';
   var bal=getAccountBalance(accountId,d);
   var balStr=isCNY?('¥'+Math.round(bal)):('$'+bal.toFixed(2));
-  var dpName=document.getElementById('dp-name');if(dpName)dpName.textContent=acc.name;
-  var dpRole=document.getElementById('dp-role');if(dpRole)dpRole.textContent=(acc.note||'')+' · '+acc.currency;
-  var dpScore=document.getElementById('dp-score');
-  if(dpScore)dpScore.innerHTML='<span style="color:'+(bal>=0?'var(--green)':'var(--red)')+';font-size:18px;font-weight:700">'+balStr+'</span>';
+  var dpTitle=document.getElementById('dp-title');if(dpTitle)dpTitle.textContent=acc.name;
+  var dpSub=document.getElementById('dp-sub');if(dpSub)dpSub.textContent=acc.currency+(acc.note?' · '+acc.note:'');
   var dpActions=document.getElementById('dp-actions');
   if(dpActions)dpActions.innerHTML=canFinControl()?'<button class="btn btn-primary btn-sm" onclick="openFinModalForAccount(\''+accountId+'\')">+ 新增流水</button>':'';
   var acctTxns=(d.transactions||[]).filter(function(t){return t.accountId===accountId;});
@@ -10864,9 +10862,8 @@ function openFinDetail(id){
   if(tQt)tQt.style.display='none';
   var tc=t.type==='收款'?'var(--green)':t.type==='付款'||t.type==='运营支出'?'var(--red)':'var(--accent2)';
   var accName='';(d.accounts||[]).forEach(function(a){if(a.id===t.accountId)accName=a.name;});
-  var dpName=document.getElementById('dp-name');if(dpName)dpName.textContent=t.party||'—';
-  var dpRole=document.getElementById('dp-role');if(dpRole)dpRole.innerHTML='<span style="color:'+tc+';font-weight:600">'+t.type+'</span> · '+t.category;
-  var dpScore=document.getElementById('dp-score');if(dpScore)dpScore.innerHTML='<span style="color:'+tc+';font-size:18px;font-weight:700">'+(t.type==='收款'?'+':'-')+(t.currency==='USD'?'$':'¥')+(t.amount||0)+'</span>';
+  var dpTitle=document.getElementById('dp-title');if(dpTitle)dpTitle.textContent=t.party||t.type||'流水记录';
+  var dpSub=document.getElementById('dp-sub');if(dpSub)dpSub.textContent=(t.date||'')+(t.category?' · '+t.category:'');
   var dpActions=document.getElementById('dp-actions');
   if(dpActions)dpActions.innerHTML=canFinControl()?'<button class="btn btn-primary btn-sm" onclick="editCurrent()">编辑</button>':'';
   var body=document.getElementById('detail-body');if(!body)return;
@@ -11199,9 +11196,9 @@ function renderMobileCards_inv(){
 }
 
 function invChipFilter(el,status){
-  var chips=document.querySelectorAll('#mh-inv .chip');
-  chips.forEach(function(c){c.classList.remove('active');});
-  if(el)el.classList.add('active');
+  var chips=document.querySelectorAll('#mh-inv-stock-sub .mobile-chip');
+  chips.forEach(function(c){c.classList.remove('on');});
+  if(el)el.classList.add('on');
   _invChipStatus=status;
   renderInventoryPage();
   renderMobileCards_inv();
@@ -11225,10 +11222,8 @@ function openInvDetail(skuCode){
   if(tabFollowup)tabFollowup.style.display='none';
   if(tabSales)tabSales.style.display='none';
   if(tabQuote)tabQuote.style.display='none';
-  var headTitle=document.getElementById('detail-head-title');
-  if(headTitle)headTitle.textContent=found?(found.product.nameCN||skuCode):skuCode;
-  var editBtn=document.getElementById('detail-edit-btn');
-  if(editBtn)editBtn.style.display='none';
+  var dpTitle=document.getElementById('dp-title');if(dpTitle)dpTitle.textContent=found?(found.product.nameCN||skuCode):skuCode;
+  var dpSub=document.getElementById('dp-sub');if(dpSub)dpSub.textContent='SKU: '+skuCode;
   var d=getInvData();
   var movements=d.movements.filter(function(m){return m.skuCode===skuCode;}).sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
   var statusHtml='';
@@ -11575,7 +11570,7 @@ function switchInvTab(tab){
     var btn=document.getElementById('inv-tab-'+t);
     if(btn)btn.className='inv-tab-btn'+(t===tab?' active':'');
     var mChip=document.getElementById('mh-inv-tab-'+t);
-    if(mChip)mChip.className='chip'+(t===tab?' active':'');
+    if(mChip)mChip.className='mobile-chip'+(t===tab?' on':'');
   });
   var sStock=document.getElementById('inv-section-stock');
   var sIn=document.getElementById('inv-section-in');
@@ -11695,9 +11690,9 @@ function renderMobileCards_invdoc(direction){
 }
 
 function invDocChipFilter(el,status){
-  var chips=document.querySelectorAll('#mh-inv-doc-sub .chip');
-  chips.forEach(function(c){c.classList.remove('active');});
-  if(el)el.classList.add('active');
+  var chips=document.querySelectorAll('#mh-inv-doc-sub .mobile-chip');
+  chips.forEach(function(c){c.classList.remove('on');});
+  if(el)el.classList.add('on');
   _invDocChipStatus=status;
   renderInvDocList(_invDocDirection);
   renderMobileCards_invdoc(_invDocDirection);
@@ -11727,10 +11722,8 @@ function openInvDocDetail(docId){
   if(tabFollowup)tabFollowup.style.display='none';
   if(tabSales)tabSales.style.display='none';
   if(tabQuote)tabQuote.style.display='none';
-  var headTitle=document.getElementById('detail-head-title');
-  if(headTitle)headTitle.textContent=doc.docNo;
-  var editBtn=document.getElementById('detail-edit-btn');
-  if(editBtn)editBtn.style.display=doc.status==='草稿'?'':'none';
+  var dpTitle2=document.getElementById('dp-title');if(dpTitle2)dpTitle2.textContent=doc.docNo;
+  var dpSub2=document.getElementById('dp-sub');if(dpSub2)dpSub2.textContent=doc.type+' · '+doc.status;
   var badgeCls=doc.status==='已确认'?'invdoc-badge-confirmed':doc.status==='已作废'?'invdoc-badge-void':'invdoc-badge-draft';
   var qtyColor=doc.direction==='in'?'var(--green)':'var(--red)';
   var html='<div style="padding:20px">';
