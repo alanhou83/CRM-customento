@@ -572,7 +572,7 @@ a{color:var(--accent);text-decoration:none;}
         <span class="mobile-chip" onclick="invDocChipFilter(this,'已作废')">已作废</span>
       </div>
       <div id="mh-inv-doc-search" style="display:none;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box;align-items:center;gap:8px">
-        <input class="search-box" id="search-invdoc-m" placeholder="搜索单号/来源..." oninput="renderInvDocList(_invDocDirection)" style="flex:1;border:none;background:transparent;outline:none;font-size:13px">
+        <input class="search-box" id="search-invdoc-m" placeholder="搜索单号/供应商/品名..." oninput="renderInvDocList(_invDocDirection);renderMobileCards_invdoc(_invDocDirection)" style="flex:1;border:none;background:transparent;outline:none;font-size:13px">
         <button class="btn btn-primary btn-sm" onclick="invHeadNewAction()">+新建</button>
       </div>
     </div>
@@ -1269,7 +1269,7 @@ a{color:var(--accent);text-decoration:none;}
   <div id="inv-section-in" style="display:none">
     <div class="page-content">
       <div class="filters">
-        <input class="search-box" id="search-invdoc-in" placeholder="搜索单号/供应商..." oninput="renderInvDocList('in')">
+        <input class="search-box" id="search-invdoc-in" placeholder="搜索单号/供应商/品名..." oninput="renderInvDocList('in')">
         <select class="filter-select" id="fi-invdoc-in-status" onchange="renderInvDocList('in')">
           <option value="">全部状态</option>
           <option value="草稿">草稿</option>
@@ -1291,7 +1291,7 @@ a{color:var(--accent);text-decoration:none;}
   <div id="inv-section-out" style="display:none">
     <div class="page-content">
       <div class="filters">
-        <input class="search-box" id="search-invdoc-out" placeholder="搜索单号/客户/订单..." oninput="renderInvDocList('out')">
+        <input class="search-box" id="search-invdoc-out" placeholder="搜索单号/客户/品名..." oninput="renderInvDocList('out')">
         <select class="filter-select" id="fi-invdoc-out-status" onchange="renderInvDocList('out')">
           <option value="">全部状态</option>
           <option value="草稿">草稿</option>
@@ -11633,7 +11633,7 @@ function renderInvDocList(direction){
   var searchD=document.getElementById(searchDId);
   var searchM=document.getElementById('search-invdoc-m');
   var q=((searchD&&searchD.value)||(searchM&&searchM.value)||'').toLowerCase().trim();
-  if(q){docs=docs.filter(function(doc){return (doc.docNo||'').toLowerCase().indexOf(q)>=0||(doc.sourceName||'').toLowerCase().indexOf(q)>=0||(doc.supplierName||'').toLowerCase().indexOf(q)>=0||(doc.customerAlias||'').toLowerCase().indexOf(q)>=0;});}
+  if(q){docs=docs.filter(function(doc){return (doc.docNo||'').toLowerCase().indexOf(q)>=0||(doc.sourceName||'').toLowerCase().indexOf(q)>=0||(doc.supplierName||'').toLowerCase().indexOf(q)>=0||(doc.customerAlias||'').toLowerCase().indexOf(q)>=0||(doc.items||[]).some(function(it){return (it.nameCN||'').toLowerCase().indexOf(q)>=0||(it.skuCode||'').toLowerCase().indexOf(q)>=0;});});}
   var stEl=document.getElementById(direction==='in'?'fi-invdoc-in-status':'fi-invdoc-out-status');
   var filterSt=_invDocChipStatus||(stEl?stEl.value:'');
   if(filterSt){docs=docs.filter(function(doc){return doc.status===filterSt;});}
@@ -11665,7 +11665,7 @@ function renderMobileCards_invdoc(direction){
   var d=getInvData();
   var docs=(d.documents||[]).filter(function(doc){return doc.direction===direction;});
   var q=((document.getElementById('search-invdoc-m')||{}).value||'').toLowerCase().trim();
-  if(q){docs=docs.filter(function(doc){return (doc.docNo||'').toLowerCase().indexOf(q)>=0||(doc.supplierName||'').toLowerCase().indexOf(q)>=0||(doc.customerAlias||'').toLowerCase().indexOf(q)>=0;});}
+  if(q){docs=docs.filter(function(doc){return (doc.docNo||'').toLowerCase().indexOf(q)>=0||(doc.supplierName||'').toLowerCase().indexOf(q)>=0||(doc.customerAlias||'').toLowerCase().indexOf(q)>=0||(doc.sourceName||'').toLowerCase().indexOf(q)>=0||(doc.items||[]).some(function(it){return (it.nameCN||'').toLowerCase().indexOf(q)>=0||(it.skuCode||'').toLowerCase().indexOf(q)>=0;});});}
   if(_invDocChipStatus){docs=docs.filter(function(doc){return doc.status===_invDocChipStatus;});}
   docs=docs.sort(function(a,b){return(b.date||'').localeCompare(a.date||'');});
   if(!docs.length){con.innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)">暂无记录</div>';return;}
