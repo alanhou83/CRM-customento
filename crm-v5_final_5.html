@@ -561,8 +561,9 @@ a{color:var(--accent);text-decoration:none;}
         <span class="mobile-chip" onclick="invChipFilter(this,'预警')">预警</span>
         <span class="mobile-chip" onclick="invChipFilter(this,'充足')">充足</span>
       </div>
-      <div id="mh-inv-stock-search" style="display:flex;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
+      <div id="mh-inv-stock-search" style="display:flex;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box;align-items:center;gap:8px">
         <input class="search-box" id="search-inv-m" placeholder="搜索SKU/品名..." oninput="renderInventoryPage()" style="flex:1;border:none;background:transparent;outline:none;font-size:13px">
+        <button class="btn btn-outline btn-sm" onclick="openStocktakeModal()">盘库对账</button>
       </div>
       <div id="mh-inv-doc-sub" style="display:none" class="mobile-chips">
         <span class="mobile-chip on" onclick="invDocChipFilter(this,'')">全部</span>
