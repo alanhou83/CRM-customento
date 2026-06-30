@@ -554,27 +554,25 @@ a{color:var(--accent);text-decoration:none;}
       <div id="mh-inv-tab-in" onclick="switchInvTab('in')" style="flex:1;text-align:center;padding:6px 4px;font-size:12px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer">入库单</div>
       <div id="mh-inv-tab-out" onclick="switchInvTab('out')" style="flex:1;text-align:center;padding:6px 4px;font-size:12px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer">出库单</div>
     </div>
-    <div style="padding:0 15px 0">
-      <div id="mh-inv-stock-sub" class="mobile-chips" style="padding-bottom:6px">
-        <span class="mobile-chip on" onclick="invChipFilter(this,'')">全部</span>
-        <span class="mobile-chip" onclick="invChipFilter(this,'缺货')">缺货</span>
-        <span class="mobile-chip" onclick="invChipFilter(this,'预警')">预警</span>
-        <span class="mobile-chip" onclick="invChipFilter(this,'充足')">充足</span>
-      </div>
-      <div id="mh-inv-stock-search" style="display:flex;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box;align-items:center;gap:8px">
-        <input class="search-box" id="search-inv-m" placeholder="搜索SKU/品名..." oninput="renderInventoryPage();renderMobileCards_inv()" style="flex:1;border:none;background:transparent;outline:none;font-size:13px">
-        <button class="btn btn-outline btn-sm" onclick="openStocktakeModal()">盘库对账</button>
-      </div>
-      <div id="mh-inv-doc-sub" style="display:none" class="mobile-chips">
-        <span class="mobile-chip on" onclick="invDocChipFilter(this,'')">全部</span>
-        <span class="mobile-chip" onclick="invDocChipFilter(this,'草稿')">草稿</span>
-        <span class="mobile-chip" onclick="invDocChipFilter(this,'已确认')">已确认</span>
-        <span class="mobile-chip" onclick="invDocChipFilter(this,'已作废')">已作废</span>
-      </div>
-      <div id="mh-inv-doc-search" style="display:none;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box;align-items:center;gap:8px">
-        <input class="search-box" id="search-invdoc-m" placeholder="搜索单号/供应商/品名..." oninput="renderInvDocList(_invDocDirection);renderMobileCards_invdoc(_invDocDirection)" style="flex:1;border:none;background:transparent;outline:none;font-size:13px">
-        <button class="btn btn-primary btn-sm" onclick="invHeadNewAction()">+新建</button>
-      </div>
+    <div id="mh-inv-stock-sub" class="mobile-chips" style="padding-bottom:6px">
+      <span class="mobile-chip on" onclick="invChipFilter(this,'')">全部</span>
+      <span class="mobile-chip" onclick="invChipFilter(this,'缺货')">缺货</span>
+      <span class="mobile-chip" onclick="invChipFilter(this,'预警')">预警</span>
+      <span class="mobile-chip" onclick="invChipFilter(this,'充足')">充足</span>
+    </div>
+    <div id="mh-inv-stock-search" style="display:flex;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box;align-items:center;gap:8px">
+      <input class="search-box" id="search-inv-m" placeholder="搜索SKU/品名..." oninput="renderInventoryPage();renderMobileCards_inv()" style="flex:1;border:none;background:transparent;outline:none;font-size:13px">
+      <button class="btn btn-outline btn-sm" onclick="openStocktakeModal()">盘库对账</button>
+    </div>
+    <div id="mh-inv-doc-sub" style="display:none" class="mobile-chips">
+      <span class="mobile-chip on" onclick="invDocChipFilter(this,'')">全部</span>
+      <span class="mobile-chip" onclick="invDocChipFilter(this,'草稿')">草稿</span>
+      <span class="mobile-chip" onclick="invDocChipFilter(this,'已确认')">已确认</span>
+      <span class="mobile-chip" onclick="invDocChipFilter(this,'已作废')">已作废</span>
+    </div>
+    <div id="mh-inv-doc-search" style="display:none;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box;align-items:center;gap:8px">
+      <input class="search-box" id="search-invdoc-m" placeholder="搜索单号/供应商/品名..." oninput="renderInvDocList(_invDocDirection);renderMobileCards_invdoc(_invDocDirection)" style="flex:1;border:none;background:transparent;outline:none;font-size:13px">
+      <button class="btn btn-primary btn-sm" onclick="invHeadNewAction()">+新建</button>
     </div>
   </div>
   <div id="mh-fin" style="display:none;margin-bottom:-6px">
