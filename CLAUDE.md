@@ -11,7 +11,7 @@
 - GitHub Pages：https://alanhou83.github.io/CRM-customento/crm-v5_final_5.html
 - 仓库：https://github.com/alanhou83/CRM-customento
 - PWA 已配置：manifest.json / service-worker.js / icon-192.png / icon-512.png
-- 当前 SW 版本：customento-crm-v42
+- 当前 SW 版本：customento-crm-v43
 
 ## 团队成员与权限
 - Alan：管理员，可见所有，可删除/导出/VIP+冲单标记，专属设置页
@@ -345,7 +345,7 @@
 
 ## 必须遵守的规避规则（部署）
 - 当前行为：浏览器普通刷新即可看到更新；PWA 关闭重开即可，无需删除重装
-- 若看不到更新：bump CACHE_NAME 强制清缓存（已到 v42）
+- 若看不到更新：bump CACHE_NAME 强制清缓存（已到 v43）
 - ⚠️ **绝对禁止让用户重装PWA**：PWA 重装会清除 IndexedDB（询盘图片存在 `crm_inq_images` 库），数据永久丢失，无法恢复！
 - 遇到 PWA 问题时的处理顺序：① 先让用户用 Chrome 浏览器备份导出 JSON ② 检查是否需要 bump SW 版本 ③ 让 SW 自然更新（关闭重开），绝不建议重装
 
@@ -571,6 +571,12 @@
 - 手机端页面不更新 → 检查是否被 `.filters{display:none}` CSS 隐藏，需在 `mh-xxx` 手机 header 里单独加筛选
 - 用户看不到更新但代码已推送 → 先让强制刷新，无效则 bump SW CACHE_NAME
 - **iOS PWA overlay 被面板遮挡**：position:fixed 全屏面板（overflow-y:auto）会拦截更高 z-index 元素的 touch 事件 → 解决方案：在触发 overlay 的同一 onclick 里先/后调 `closeDetail()`
+- **iOS PWA detail-panel 卡死 / 列表透视 bug**（已踩两次）：
+  - 症状A："点进详情再退出 → 整个界面卡死/导航失灵/列表条目点不进去"
+  - 症状B："详情面板打开但列表透视出来（背景不遮挡）"
+  - 根因：`detail-panel` 有 `overflow-y:auto` + `position:fixed`，iOS 在 scroll 时会把 touch 上下文锁定在该元素上，即使面板关闭（translateX(100%)）仍持有锁定 → 阻断整页 touch；`will-change` 缺失导致 GPU 合成层背景失效 → 透视
+  - **已修复方案**：`detail-panel` 改为 `overflow-y:hidden`（面板本身不滚，只有 `detail-body` 内部滚）+ 加 `will-change:transform`（强制 GPU 合成层，背景始终不透明）+ `detail-body` 加 `overscroll-behavior:contain`（防止滚动传播到外层）
+  - ⚠️ 绝对不能把 `detail-panel` 的 `overflow-y` 改回 `auto`，否则 iOS 卡死问题会复发
 - **待办保存不刷新详情面板**：saveTodo/saveInqTodo/saveOrdTodo 只调 refreshAll() 不够，必须同时调对应的 openXxxDetail(id)+switchDpTab('followup') 才能刷新面板内容
 - **feature branch 与 main 分歧**：改动在 feature branch 上时用 cherry-pick 合到 main，不能直接 push 到 feature branch
 - **编辑 modal X/取消也要回详情页**：不能直接 `onclick="closeModal('xxx-modal')"` — 需封装 `closeXxxModal()` 函数，内部检查 `_editingXxxId`，若有则关闭后调 `openXxxDetail(id)`；背景遮罩 `onclick` 也要改为 `if(event.target===this)closeXxxModal()`（当前 proc-modal 已实现此模式）
