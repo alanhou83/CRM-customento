@@ -549,12 +549,12 @@ a{color:var(--accent);text-decoration:none;}
     </div>
   </div>
   <div id="mh-inv" style="display:none;margin-bottom:-6px">
-    <div style="padding:8px 15px 0">
-      <div class="mobile-chips" style="padding-bottom:6px">
-        <span class="mobile-chip on" id="mh-inv-tab-stock" onclick="switchInvTab('stock')">商品库存</span>
-        <span class="mobile-chip" id="mh-inv-tab-in" onclick="switchInvTab('in')">入库单</span>
-        <span class="mobile-chip" id="mh-inv-tab-out" onclick="switchInvTab('out')">出库单</span>
-      </div>
+    <div style="display:flex;border-bottom:1px solid var(--border)">
+      <div id="mh-inv-tab-stock" onclick="switchInvTab('stock')" style="flex:1;text-align:center;padding:6px 4px;font-size:12px;font-weight:500;color:var(--accent);border-bottom:2px solid var(--accent);cursor:pointer">商品库存</div>
+      <div id="mh-inv-tab-in" onclick="switchInvTab('in')" style="flex:1;text-align:center;padding:6px 4px;font-size:12px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer">入库单</div>
+      <div id="mh-inv-tab-out" onclick="switchInvTab('out')" style="flex:1;text-align:center;padding:6px 4px;font-size:12px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer">出库单</div>
+    </div>
+    <div style="padding:0 15px 0">
       <div id="mh-inv-stock-sub" class="mobile-chips" style="padding-bottom:6px">
         <span class="mobile-chip on" onclick="invChipFilter(this,'')">全部</span>
         <span class="mobile-chip" onclick="invChipFilter(this,'缺货')">缺货</span>
@@ -11567,10 +11567,11 @@ function switchInvTab(tab){
   if(tab==='out')_invDocDirection='out';
   else if(tab==='in')_invDocDirection='in';
   ['stock','in','out'].forEach(function(t){
+    var isActive=t===tab;
     var btn=document.getElementById('inv-tab-'+t);
-    if(btn)btn.className='inv-tab-btn'+(t===tab?' active':'');
-    var mChip=document.getElementById('mh-inv-tab-'+t);
-    if(mChip)mChip.className='mobile-chip'+(t===tab?' on':'');
+    if(btn)btn.className='inv-tab-btn'+(isActive?' active':'');
+    var mTab=document.getElementById('mh-inv-tab-'+t);
+    if(mTab){mTab.style.color=isActive?'var(--accent)':'var(--muted)';mTab.style.borderBottomColor=isActive?'var(--accent)':'transparent';mTab.style.fontWeight=isActive?'500':'400';}
   });
   var sStock=document.getElementById('inv-section-stock');
   var sIn=document.getElementById('inv-section-in');
