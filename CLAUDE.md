@@ -342,6 +342,14 @@
       `.filters{display:none !important;}` `.table-wrap{display:none !important;}`
     - 同时 `#settings-prod-wrap{display:block !important;}` —— ID 选择器比类选择器优先级高，设置页里的 table-wrap 例外显示
     - 受影响的8个页面：热点/订单/统计/产品开发/产品库/采购/供应商/报价单（客户/库存/财务不受影响，因其 mobile-cards 在 page-content 外层）
+18. **iOS 手机端布局改动前必须核查"危险元素"**
+    - 改动 `mh-*` 手机 header、搜索栏、芯片行 **任何** padding/margin/calc() 前，先问自己：
+      1. 改动区域附近是否有 `position:fixed` 或 `position:sticky` 元素？（`.detail-panel` / overlay / 底部导航）
+      2. 附近固定元素是否带 `overflow-y:auto`？（如有 → iOS 可能锁定 touch 上下文）
+      3. 改动是否影响父容器的 padding，而子元素用了 `calc(100%+Npx)` 反向延伸？（如有 → 必须同步修改 N 值）
+      4. 是否新增了带 `overflow:hidden` 的包裹层？（iOS 会阻断其内所有 touch 事件）
+    - 若以上任一为"是"，改完后**必须在 iOS PWA 测试**：打开详情面板 → 在面板内滚动 → 退出 → 验证整页 touch 是否正常
+    - `detail-panel` 的 `overflow-y:hidden` + `will-change:transform` **绝对不能动**，这是 iOS 卡死/透视 bug 的唯一修复方案
 
 ## 必须遵守的规避规则（部署）
 - 当前行为：浏览器普通刷新即可看到更新；PWA 关闭重开即可，无需删除重装
