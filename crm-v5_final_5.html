@@ -1054,15 +1054,15 @@ a{color:var(--accent);text-decoration:none;}
 <!-- 产品库 页面 -->
 <div class="page" id="page-prodcat">
   <div class="page-head">
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <span class="page-title">🗂️ 产品库</span>
+    <span class="page-title">🗂️ 产品库</span>
+    <div style="display:flex;align-items:center;gap:10px">
       <div class="tab-bar">
         <button class="tab-btn active" id="pcat-tab-raw" onclick="switchPcatType('raw')">原材料<span class="tab-count" id="pcat-cnt-raw">0</span></button>
         <button class="tab-btn" id="pcat-tab-blank" onclick="switchPcatType('blank')">空白产品<span class="tab-count" id="pcat-cnt-blank">0</span></button>
         <button class="tab-btn" id="pcat-tab-custom" onclick="switchPcatType('custom')">定制品<span class="tab-count" id="pcat-cnt-custom">0</span></button>
         <button class="tab-btn" id="pcat-tab-service" onclick="switchPcatType('service')">加工服务<span class="tab-count" id="pcat-cnt-service">0</span></button>
       </div>
-      <button class="btn btn-primary" onclick="openProdCatModal('')" style="white-space:nowrap">+ 新建</button>
+      <button class="btn btn-primary" onclick="openProdCatModal('')">+ 新建</button>
     </div>
   </div>
   <div class="page-content">
@@ -1148,13 +1148,13 @@ a{color:var(--accent);text-decoration:none;}
 <!-- 采购跟单 页面 -->
 <div class="page" id="page-procurement">
   <div class="page-head">
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <span class="page-title">🛒 采购跟单</span>
+    <span class="page-title">🛒 采购跟单</span>
+    <div style="display:flex;align-items:center;gap:10px">
       <div class="tab-bar">
         <button class="tab-btn active" id="proc-tab-active" onclick="switchProcTab('active')">进行中<span class="tab-count" id="proc-cnt-active"></span></button>
         <button class="tab-btn" id="proc-tab-done" onclick="switchProcTab('done')">已入库<span class="tab-count" id="proc-cnt-done"></span></button>
       </div>
-      <button class="btn btn-primary" id="proc-add-btn" onclick="openProcModal('')" style="white-space:nowrap">+ 新建采购单</button>
+      <button class="btn btn-primary" id="proc-add-btn" onclick="openProcModal('')">+ 新建采购单</button>
     </div>
   </div>
   <div class="page-content">
@@ -1233,14 +1233,16 @@ a{color:var(--accent);text-decoration:none;}
 <div class="page" id="page-inventory">
   <div class="page-head">
     <h1 class="page-title">📋 库存管理</h1>
-    <div class="seg-tabs">
-      <button class="inv-tab-btn active" id="inv-tab-stock" onclick="switchInvTab('stock')">商品库存</button>
-      <button class="inv-tab-btn" id="inv-tab-in" onclick="switchInvTab('in')">入库单</button>
-      <button class="inv-tab-btn" id="inv-tab-out" onclick="switchInvTab('out')">出库单</button>
-    </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-outline" id="inv-btn-stocktake" onclick="openStocktakeModal()">📊 盘库对账</button>
-      <button class="btn btn-primary" id="inv-btn-new" onclick="invHeadNewAction()">+ 手工录入</button>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="seg-tabs">
+        <button class="inv-tab-btn active" id="inv-tab-stock" onclick="switchInvTab('stock')">商品库存</button>
+        <button class="inv-tab-btn" id="inv-tab-in" onclick="switchInvTab('in')">入库单</button>
+        <button class="inv-tab-btn" id="inv-tab-out" onclick="switchInvTab('out')">出库单</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline" id="inv-btn-stocktake" onclick="openStocktakeModal()">📊 盘库对账</button>
+        <button class="btn btn-primary" id="inv-btn-new" onclick="invHeadNewAction()">+ 手工录入</button>
+      </div>
     </div>
   </div>
   <!-- 商品库存 section -->
