@@ -4,8 +4,18 @@
 - 当前文件：crm-v5_final_5.html
 - 技术架构：纯 HTML + JS，localStorage 存储
 - Storage key：crm_inq_v5 / crm_cust_v5 / crm_ord_v5 / crm_sale_v5 / crm_settings_v5 / crm_prod_v5 / crm_prodcat_v5
-- 未来部署：crm.customento.com（Hostinger + Supabase）
+- 未来部署：crm.customento.com（**阿里云 RDS Supabase**，2026-07-19 确定，详见下方"部署方案"）
 - 嵌入方式：钉钉 H5 微应用
+
+## 部署方案(2026-07-19 确定，详细讨论记录同步在 CBOS 仓库 `alanhou83/customento-CBOS` 的 `12_项目库/CRM.md`)
+
+放弃原计划的 Hostinger+Supabase(海外)方案，改用**阿里云 RDS Supabase**：
+- 原因：Hostinger国内直连卡顿问题短期难查清且有风险；阿里云RDS Supabase是同一套开源Supabase方案的国内托管版，架构设计不用推翻重来（前端读写API、鉴权方式等沿用Supabase原生设计）
+- 生态一致性：域名本来就在阿里云，钉钉(计划的H5嵌入平台)也是阿里系，数据库放阿里云后整条链路都在同一生态
+- 计费：Supabase平台层免费，只需付底层RDS PostgreSQL实例+网络费用，成本对5人团队量级来说很低
+- 数据现状：测试阶段无真实数据，无需数据迁移，部署时清空localStorage测试数据，改用真实数据表格导入
+- **待办**：具体开通步骤、RDS实例规格选择、代码从localStorage改造为API调用的工作量拆解——尚未开始，下次讨论继续
+- **代码改造范围提醒**：现有9个localStorage存储(crm_inq_v5等)几乎每个模块的每处存取都要从直接读写改成异步API调用，同时需新增真正的登录鉴权(现在角色切换只是前端UI选择，无验证)和网络失败处理，是贯穿全文件的系统性改动，非小补丁
 
 ## 测试环境
 - GitHub Pages：https://alanhou83.github.io/CRM-customento/crm-v5_final_5.html
