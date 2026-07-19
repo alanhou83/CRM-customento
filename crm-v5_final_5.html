@@ -334,18 +334,14 @@ a{color:var(--accent);text-decoration:none;}
 .invdoc-badge-confirmed{background:rgba(62,207,142,.15);color:var(--green);}
 .invdoc-badge-void{background:rgba(239,68,68,.1);color:var(--red);text-decoration:line-through;}
 .inv-tab-row{display:flex;border-bottom:2px solid var(--border);background:var(--surface);padding:0 28px;}
-.inv-tab-btn{padding:8px 18px;border:none;border-bottom:3px solid transparent;background:transparent;cursor:pointer;font-size:13px;color:var(--muted);font-weight:500;margin-bottom:-2px;}
-.inv-tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
-.tab-bar{display:flex;align-items:flex-end;}
-.tab-btn{padding:6px 16px;border:none;border-bottom:3px solid transparent;background:transparent;cursor:pointer;font-size:13px;color:var(--muted);font-weight:500;}
-.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
-.tab-count{font-size:10px;padding:1px 5px;border-radius:8px;margin-left:4px;background:rgba(79,142,247,.15);color:var(--accent);}
-.tab-btn.active .tab-count{background:rgba(79,142,247,.2);}
-@media(max-width:768px){.inv-tab-row{display:none;}}
+/* 统一分段控制器 tab 样式（与询盘保持一致） */
+.seg-tabs{display:flex;border:0.5px solid var(--border);border-radius:6px;overflow:hidden;}
+.inv-tab-btn,.fin-tab-btn,.tab-btn{font-size:12px;padding:5px 12px;cursor:pointer;color:var(--muted);background:transparent;border:none;font-weight:400;white-space:nowrap;}
+.inv-tab-btn.active,.fin-tab-btn.active,.tab-btn.active{background:var(--accent);color:white;font-weight:500;}
+.tab-bar{display:flex;border:0.5px solid var(--border);border-radius:6px;overflow:hidden;}
+.tab-count{font-size:11px;margin-left:2px;}
+@media(max-width:768px){.inv-tab-row{display:none;}.fin-tab-row{display:none;}}
 .cols-fin{display:grid;grid-template-columns:88px 80px 110px 1fr 100px 110px 65px;gap:0;align-items:center;}
-.fin-tab-row{display:flex;border-bottom:2px solid var(--border);background:var(--surface);padding:0 28px;}
-.fin-tab-btn{padding:8px 18px;border:none;border-bottom:3px solid transparent;background:transparent;cursor:pointer;font-size:13px;color:var(--muted);font-weight:500;margin-bottom:-2px;}
-.fin-tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
 .fin-acct-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;}
 @media(max-width:768px){.fin-tab-row{display:none;}}
 .autocomplete-dd{position:absolute;z-index:9999;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);max-height:200px;overflow-y:auto;width:100%;top:calc(100% + 2px);left:0;}
@@ -1060,7 +1056,7 @@ a{color:var(--accent);text-decoration:none;}
   <div class="page-head">
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <span class="page-title">🗂️ 产品库</span>
-      <div class="tab-bar" style="flex:1;min-width:0">
+      <div class="tab-bar">
         <button class="tab-btn active" id="pcat-tab-raw" onclick="switchPcatType('raw')">原材料<span class="tab-count" id="pcat-cnt-raw">0</span></button>
         <button class="tab-btn" id="pcat-tab-blank" onclick="switchPcatType('blank')">空白产品<span class="tab-count" id="pcat-cnt-blank">0</span></button>
         <button class="tab-btn" id="pcat-tab-custom" onclick="switchPcatType('custom')">定制品<span class="tab-count" id="pcat-cnt-custom">0</span></button>
@@ -1154,7 +1150,7 @@ a{color:var(--accent);text-decoration:none;}
   <div class="page-head">
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <span class="page-title">🛒 采购跟单</span>
-      <div class="tab-bar" style="flex:1;min-width:0">
+      <div class="tab-bar">
         <button class="tab-btn active" id="proc-tab-active" onclick="switchProcTab('active')">进行中<span class="tab-count" id="proc-cnt-active"></span></button>
         <button class="tab-btn" id="proc-tab-done" onclick="switchProcTab('done')">已入库<span class="tab-count" id="proc-cnt-done"></span></button>
       </div>
@@ -1237,15 +1233,15 @@ a{color:var(--accent);text-decoration:none;}
 <div class="page" id="page-inventory">
   <div class="page-head">
     <h1 class="page-title">📋 库存管理</h1>
+    <div class="seg-tabs">
+      <button class="inv-tab-btn active" id="inv-tab-stock" onclick="switchInvTab('stock')">商品库存</button>
+      <button class="inv-tab-btn" id="inv-tab-in" onclick="switchInvTab('in')">入库单</button>
+      <button class="inv-tab-btn" id="inv-tab-out" onclick="switchInvTab('out')">出库单</button>
+    </div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-outline" id="inv-btn-stocktake" onclick="openStocktakeModal()">📊 盘库对账</button>
       <button class="btn btn-primary" id="inv-btn-new" onclick="invHeadNewAction()">+ 手工录入</button>
     </div>
-  </div>
-  <div class="inv-tab-row">
-    <button class="inv-tab-btn active" id="inv-tab-stock" onclick="switchInvTab('stock')">商品库存</button>
-    <button class="inv-tab-btn" id="inv-tab-in" onclick="switchInvTab('in')">入库单</button>
-    <button class="inv-tab-btn" id="inv-tab-out" onclick="switchInvTab('out')">出库单</button>
   </div>
   <!-- 商品库存 section -->
   <div id="inv-section-stock">
@@ -1319,8 +1315,9 @@ a{color:var(--accent);text-decoration:none;}
 
 <!-- 财务 页面 -->
 <div class="page" id="page-finance">
-  <div class="page-head" style="padding:0">
-    <div class="fin-tab-row">
+  <div class="page-head">
+    <h1 class="page-title">💰 财务</h1>
+    <div class="seg-tabs">
       <button class="fin-tab-btn active" id="fin-tab-btn-txn" onclick="switchFinTab('txn')">流水记录</button>
       <button class="fin-tab-btn" id="fin-tab-btn-accounts" onclick="switchFinTab('accounts')">账户余额</button>
       <button class="fin-tab-btn" id="fin-tab-btn-report" onclick="switchFinTab('report')">财务报表</button>
