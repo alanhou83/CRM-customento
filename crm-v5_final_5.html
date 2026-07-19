@@ -1319,10 +1319,13 @@ a{color:var(--accent);text-decoration:none;}
 <div class="page" id="page-finance">
   <div class="page-head">
     <h1 class="page-title">💰 财务</h1>
-    <div class="seg-tabs">
-      <button class="fin-tab-btn active" id="fin-tab-btn-txn" onclick="switchFinTab('txn')">流水记录</button>
-      <button class="fin-tab-btn" id="fin-tab-btn-accounts" onclick="switchFinTab('accounts')">账户余额</button>
-      <button class="fin-tab-btn" id="fin-tab-btn-report" onclick="switchFinTab('report')">财务报表</button>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="seg-tabs">
+        <button class="fin-tab-btn active" id="fin-tab-btn-txn" onclick="switchFinTab('txn')">流水记录</button>
+        <button class="fin-tab-btn" id="fin-tab-btn-accounts" onclick="switchFinTab('accounts')">账户余额</button>
+        <button class="fin-tab-btn" id="fin-tab-btn-report" onclick="switchFinTab('report')">财务报表</button>
+      </div>
+      <button class="btn btn-primary" onclick="openFinModal('')">+ 新建</button>
     </div>
   </div>
   <!-- 流水记录 section -->
@@ -1333,7 +1336,6 @@ a{color:var(--accent);text-decoration:none;}
         <select class="filter-select" id="ff-type" onchange="renderFinTransactions()"><option value="">全部类型</option><option>收款</option><option>付款</option><option>内部转账</option><option>运营支出</option></select>
         <select class="filter-select" id="ff-account" onchange="renderFinTransactions()"><option value="">全部账户</option></select>
         <button class="btn btn-outline btn-sm" onclick="clearFilters('fin')">清除</button>
-        <button class="btn btn-primary btn-sm" onclick="openFinModal('')">+ 新建</button>
       </div>
     </div>
     <div class="table-wrap">
