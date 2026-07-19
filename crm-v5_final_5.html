@@ -340,7 +340,7 @@ a{color:var(--accent);text-decoration:none;}
 .inv-tab-btn.active,.fin-tab-btn.active,.tab-btn.active{background:var(--accent);color:white;font-weight:500;}
 .tab-bar{display:flex;border:0.5px solid var(--border);border-radius:6px;overflow:hidden;}
 .tab-count{font-size:11px;margin-left:2px;}
-@media(max-width:768px){.inv-tab-row{display:none;}.fin-tab-row{display:none;}}
+@media(max-width:768px){.inv-tab-row{display:none;}.fin-tab-row{display:none;}#fin-section-txn>.page-content{display:none !important;}}
 .cols-fin{display:grid;grid-template-columns:88px 80px 110px 1fr 100px 110px 65px;gap:0;align-items:center;}
 .fin-acct-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;}
 @media(max-width:768px){.fin-tab-row{display:none;}}
@@ -577,17 +577,17 @@ a{color:var(--accent);text-decoration:none;}
     </div>
   </div>
   <div id="mh-fin" style="display:none;margin-bottom:-6px">
-    <div style="padding:8px 0 0">
-      <div class="mobile-chips" style="padding-bottom:6px">
-        <span class="mobile-chip on" id="mb-fin-chip-txn" onclick="finMobileTab(this,'txn')">流水</span>
-        <span class="mobile-chip" id="mb-fin-chip-accounts" onclick="finMobileTab(this,'accounts')">账户</span>
-        <span class="mobile-chip" id="mb-fin-chip-report" onclick="finMobileTab(this,'report')">报表</span>
-        <span class="mobile-chip" id="mb-fin-type-in" onclick="finTypeChip(this,'收款')">收款</span>
-        <span class="mobile-chip" id="mb-fin-type-out" onclick="finTypeChip(this,'付款')">付款</span>
-        <span class="mobile-chip" id="mb-fin-type-exp" onclick="finTypeChip(this,'运营支出')">运营支出</span>
-      </div>
+    <div style="display:flex;border-bottom:1px solid var(--border)">
+      <div id="mb-fin-chip-txn" onclick="finMobileTab(this,'txn')" style="flex:1;text-align:center;padding:6px 4px;font-size:12px;font-weight:500;color:var(--accent);border-bottom:2px solid var(--accent);cursor:pointer">流水记录</div>
+      <div id="mb-fin-chip-accounts" onclick="finMobileTab(this,'accounts')" style="flex:1;text-align:center;padding:6px 4px;font-size:12px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer">账户余额</div>
+      <div id="mb-fin-chip-report" onclick="finMobileTab(this,'report')" style="flex:1;text-align:center;padding:6px 4px;font-size:12px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer">财务报表</div>
     </div>
-    <div style="display:flex;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box;align-items:center;gap:8px">
+    <div id="mb-fin-type-chips" class="mobile-chips" style="padding-bottom:6px">
+      <span class="mobile-chip" id="mb-fin-type-in" onclick="finTypeChip(this,'收款')">收款</span>
+      <span class="mobile-chip" id="mb-fin-type-out" onclick="finTypeChip(this,'付款')">付款</span>
+      <span class="mobile-chip" id="mb-fin-type-exp" onclick="finTypeChip(this,'运营支出')">运营支出</span>
+    </div>
+    <div id="mh-fin-search" style="display:flex;width:calc(100%+30px);margin-left:-15px;margin-right:-15px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box;align-items:center;gap:8px">
       <input class="search-box" id="search-fin-m" placeholder="搜索往来方/备注..." oninput="renderFinTransactions()" style="flex:1;border:none;background:transparent;outline:none;font-size:13px">
       <button class="btn btn-primary btn-sm" onclick="openFinModal('')">+新建</button>
     </div>
@@ -10513,17 +10513,16 @@ function switchFinTab(tab){
     if(btn)btn.className='fin-tab-btn'+(t===tab?' active':'');
     if(sec)sec.style.display=t===tab?'':'none';
   });
+  /* 手机端下划线tab切换 */
   ['txn','accounts','report'].forEach(function(t){
-    var chip=document.getElementById('mb-fin-chip-'+t);
-    if(chip)chip.className='mobile-chip'+(t===tab?' on':'');
+    var mTab=document.getElementById('mb-fin-chip-'+t);
+    if(mTab){mTab.style.color=t===tab?'var(--accent)':'var(--muted)';mTab.style.borderBottomColor=t===tab?'var(--accent)':'transparent';mTab.style.fontWeight=t===tab?'500':'400';}
   });
   /* 搜索栏和类型芯片只在流水Tab显示 */
   var srchRow=document.getElementById('mh-fin-search');
   if(srchRow)srchRow.style.display=tab==='txn'?'flex':'none';
-  ['mb-fin-type-in','mb-fin-type-out','mb-fin-type-exp'].forEach(function(id){
-    var c=document.getElementById(id);
-    if(c)c.style.display=tab==='txn'?'':'none';
-  });
+  var typeChips=document.getElementById('mb-fin-type-chips');
+  if(typeChips)typeChips.style.display=tab==='txn'?'':'none';
   if(tab==='txn')renderFinTransactions();
   else if(tab==='accounts')renderFinAccounts();
   else if(tab==='report')renderFinReports();
