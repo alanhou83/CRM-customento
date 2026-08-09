@@ -4299,11 +4299,17 @@ function openSaleDetail(id){
     +'<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">'
     +'<button class="btn btn-outline btn-sm" onclick="editSaleFromDetail('+s.id+')">编辑</button>'
     +'<button class="btn btn-danger btn-sm" onclick="deleteSaleRecord('+s.id+')">删除</button>'
+    +(s.fromOrderId?'<button class="btn btn-outline btn-sm" style="color:var(--accent2);border-color:var(--accent2)" onclick="viewSaleLinkedOrder('+s.id+','+s.fromOrderId+')">📋 查看原订单</button>':'')
     +(s.fromOrderId?'<button class="btn btn-outline btn-sm" style="color:var(--yellow);border-color:var(--yellow)" onclick="confirmRevertOrder('+s.id+')">↩ 退回执行中</button>':'')
     +'</div>';
   var detailBody=document.getElementById('detail-body');if(detailBody)detailBody.innerHTML='<div class="detail-body-inner">'+html+'</div>';
   var dpTabs=document.getElementById('dp-tabs');if(dpTabs)dpTabs.style.display='none';
   var panel=document.getElementById('detail-panel');if(panel)panel.classList.add('open');
+}
+
+function viewSaleLinkedOrder(saleId,orderId){
+  _prevDetailContext={type:'sale',id:saleId};
+  openOrderDetail(orderId);
 }
 
 function renderSaleProductChips(){
@@ -4967,6 +4973,7 @@ function closeDetail(){
     if(ctx.type==='inquiry')openInqDetail(ctx.id);
     else if(ctx.type==='customer')openCustDetail(ctx.id);
     else if(ctx.type==='supplier')openSupplierDetail(ctx.id);
+    else if(ctx.type==='sale')openSaleDetail(ctx.id);
     if(ctx.tab)switchDpTab(ctx.tab);
     return;
   }
