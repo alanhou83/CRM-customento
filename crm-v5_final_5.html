@@ -4312,6 +4312,16 @@ function viewSaleLinkedOrder(saleId,orderId){
   openOrderDetail(orderId);
 }
 
+function openSaleFromCust(custId,saleId){
+  _prevDetailContext={type:'customer',id:custId,tab:'sales'};
+  openSaleDetail(saleId);
+}
+
+function openOrderFromCust(custId,orderId){
+  _prevDetailContext={type:'customer',id:custId,tab:'sales'};
+  openOrderDetail(orderId);
+}
+
 function renderSaleProductChips(){
   var container=document.getElementById('fs-product-chips');if(!container)return;
   var prods=getProducts();
@@ -4649,7 +4659,7 @@ function openCustDetail(id){
   if(custSales.length){
     tab3+='<div class="detail-section"><div class="detail-section-title">全部成交记录</div>'
       +custSales.map(function(s){
-        return '<div onclick="editSaleRecord('+s.id+')" style="cursor:pointer;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">'
+        return '<div onclick="openSaleFromCust('+c.id+','+s.id+')" style="cursor:pointer;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">'
           +'<div style="flex:1;min-width:0">'
           +'<div style="font-size:11px;color:var(--muted);margin-bottom:2px">'+s.date+(s.notes?' · <span style="color:var(--muted2)">'+s.notes+'</span>':'')+'</div>'
           +'<div style="font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.product+'</div>'
@@ -4657,6 +4667,7 @@ function openCustDetail(id){
           +'<div style="text-align:right;flex-shrink:0">'
           +'<div style="font-weight:600;color:'+(s.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(s.amount,s.currency)+'</div>'
           +'<div style="font-size:10px;color:var(--muted2)">'+s.person+'</div>'
+          +(s.fromOrderId?'<button onclick="event.stopPropagation();openOrderFromCust('+c.id+','+s.fromOrderId+')" style="margin-top:3px;font-size:10px;padding:2px 6px;border-radius:4px;border:0.5px solid var(--accent2);color:var(--accent2);background:transparent;cursor:pointer">📋 查看订单</button>':'')
           +'</div>'
           +'</div>';
       }).join('')
