@@ -668,6 +668,7 @@ a{color:var(--accent);text-decoration:none;}
     <div id="dash-action-row" class="stats-grid"></div>
     <div id="dash-action-list"></div>
     <div id="dash-perf-bar"></div>
+    <div id="dash-ar-ap-row"></div>
     <div id="dash-funnel-wrap"></div>
     <div id="dash-team-report"></div>
     <div id="alan-starred-section" style="display:none">
@@ -2692,6 +2693,45 @@ function renderDashboard(){
       +'</div></div></div>';
   }
 
+  /* AR/AP 应收应付 */
+  var arApRow=document.getElementById('dash-ar-ap-row');
+  if(arApRow){
+    var arUSD=0,arCNY=0;
+    orders.filter(function(o){return !o.completed;}).forEach(function(o){
+      var rem=(+o.amount||0)-getOrdPayTotal(o,o.currency);
+      if(rem>0){if(o.currency==='USD')arUSD+=rem;else arCNY+=rem;}
+    });
+    var d2=getProcData();
+    var apCNY=0,apUSD=0;
+    d2.pos.forEach(function(p){
+      var remC=(+p.totalCNY||0)-getProcPayTotal(p,'CNY');
+      var remU=(+p.totalUSD||0)-getProcPayTotal(p,'USD');
+      if(remC>0)apCNY+=remC;
+      if(remU>0)apUSD+=remU;
+    });
+    var arStr='';
+    if(arUSD>0)arStr+='<span style="color:var(--green);font-weight:700">$'+Math.round(arUSD).toLocaleString()+'</span>';
+    if(arCNY>0)arStr+=(arStr?'<span style="color:var(--muted)"> · </span>':'')+'<span style="color:var(--yellow);font-weight:700">¥'+Math.round(arCNY).toLocaleString()+'</span>';
+    if(!arStr)arStr='<span style="color:var(--muted)">全部已收款 ✓</span>';
+    var apStr='';
+    if(apCNY>0)apStr+='<span style="color:var(--yellow);font-weight:700">¥'+Math.round(apCNY).toLocaleString()+'</span>';
+    if(apUSD>0)apStr+=(apStr?'<span style="color:var(--muted)"> · </span>':'')+'<span style="color:var(--green);font-weight:700">$'+Math.round(apUSD).toLocaleString()+'</span>';
+    if(!apStr)apStr='<span style="color:var(--muted)">全部已付款 ✓</span>';
+    arApRow.innerHTML='<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden">'
+      +'<div style="display:flex;flex-wrap:wrap;align-items:stretch">'
+      +'<div style="flex:1;min-width:140px;padding:14px 18px;border-right:1px solid var(--border);cursor:pointer" onclick="showPage(\'orders\')">'
+      +'<div style="font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px">待收款 AR</div>'
+      +'<div style="font-size:18px;line-height:1.4">'+arStr+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:2px">执行中订单未收款合计 →</div>'
+      +'</div>'
+      +'<div style="flex:1;min-width:140px;padding:14px 18px;cursor:pointer" onclick="showPage(\'procurement\')">'
+      +'<div style="font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px">待付款 AP</div>'
+      +'<div style="font-size:18px;line-height:1.4">'+apStr+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:2px">采购单未付款合计 →</div>'
+      +'</div>'
+      +'</div></div>';
+  }
+
   /* ⑤ 转化漏斗 + 流失率 */
   var funnelSteps=[
     {label:'新询盘',status:'新询盘',color:'#4f8ef7'},
@@ -4212,6 +4252,7 @@ function openOrderDetail(id){
     +(o.notes?'<div class="detail-row"><span class="detail-key">备注</span><span class="detail-val">'+o.notes+'</span></div>':'')
     +(o.followupDate&&o.followupNote?'<div class="detail-row"><span class="detail-key">待办</span><span class="detail-val" style="color:'+(o.followupDate<today()?'var(--red)':'var(--green)')+'">'+((o.followupDate<today())?'🔔 ':'📅 ')+o.followupDate+' 📌 '+o.followupNote+'</span></div>':'')
     +'</div>'
+    +buildOrdPaySection(o)
     +'<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">'
     +(canInvControl()&&(o.stage==='待发货'||o.stage==='已发货')?'<button class="btn btn-outline btn-sm" onclick="openInvDocModal(\'out\',\'order\','+o.id+')">📤 生成出库单</button>':'')
     +'<button class="btn btn-outline btn-sm" onclick="openTradeDocOverlay('+o.id+')">📄 贸易文件</button>'
@@ -4320,6 +4361,203 @@ function openSaleFromCust(custId,saleId){
 function openOrderFromCust(custId,orderId){
   _prevDetailContext={type:'customer',id:custId,tab:'sales'};
   openOrderDetail(orderId);
+}
+
+/* ===== 收付款记录（订单侧） ===== */
+function getOrdPayTotal(o,cur){
+  if(!o.payments||!o.payments.length)return 0;
+  var c=cur||o.currency||'USD';
+  return o.payments.filter(function(p){return p.currency===c;})
+    .reduce(function(s,p){return s+(+p.amount||0);},0);
+}
+function getOrdPayStatus(o){
+  var total=+o.amount||0;
+  if(!total)return '';
+  var paid=getOrdPayTotal(o,o.currency);
+  if(paid<=0)return '未收款';
+  if(paid>=total)return '已收全款';
+  return '部分已收';
+}
+function getProcPayTotal(p,cur){
+  if(!p.payments||!p.payments.length)return 0;
+  return p.payments.filter(function(pay){return pay.currency===cur;})
+    .reduce(function(s,pay){return s+(+pay.amount||0);},0);
+}
+
+function buildOrdPaySection(o){
+  var paid=getOrdPayTotal(o,o.currency);
+  var total=+o.amount||0;
+  var remaining=total-paid;
+  var sym=o.currency==='USD'?'$':'¥';
+  var paidColor=o.currency==='USD'?'var(--green)':'var(--yellow)';
+  var html='<div class="detail-section">';
+  html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
+  html+='<div class="detail-section-title" style="margin:0">收款记录</div>';
+  html+='<button id="opf-btn-'+o.id+'" onclick="showOrdPayForm('+o.id+')" style="font-size:11px;padding:3px 9px;border-radius:5px;border:0.5px solid var(--accent);color:var(--accent);background:rgba(107,114,195,.12);cursor:pointer">+ 录入</button>';
+  html+='</div>';
+  html+='<div style="display:flex;gap:16px;padding:8px 12px;background:var(--surface2);border-radius:6px;margin-bottom:6px;flex-wrap:wrap">';
+  html+='<div style="font-size:12px"><span style="color:var(--muted)">订单金额 </span><span style="font-weight:600">'+sym+total.toLocaleString()+'</span></div>';
+  html+='<div style="font-size:12px"><span style="color:var(--muted)">已收 </span><span style="font-weight:600;color:'+(paid>0?paidColor:'var(--muted)')+'">'+sym+paid.toLocaleString()+'</span></div>';
+  html+='<div style="font-size:12px"><span style="color:var(--muted)">待收 </span><span style="font-weight:600;color:'+(remaining>0?'var(--red)':'var(--muted)')+'">'+sym+Math.max(0,remaining).toLocaleString()+'</span></div>';
+  html+='</div>';
+  if(o.payments&&o.payments.length){
+    o.payments.forEach(function(pay,idx){
+      html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">';
+      html+='<div><span style="color:var(--muted)">'+pay.date+'</span>'+(pay.note?' <span style="color:var(--muted2)">· '+pay.note+'</span>':'')+'</div>';
+      html+='<div style="display:flex;align-items:center;gap:8px">';
+      html+='<span style="font-weight:600;color:'+(pay.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(pay.amount,pay.currency)+'</span>';
+      html+='<span onclick="deleteOrdPayment('+o.id+','+idx+')" style="cursor:pointer;color:var(--muted);font-size:10px;padding:1px 5px;border:1px solid var(--border);border-radius:3px">删</span>';
+      html+='</div></div>';
+    });
+  }else{
+    html+='<div style="font-size:12px;color:var(--muted);padding:2px 0">暂无收款记录</div>';
+  }
+  html+='<div id="opf-'+o.id+'" style="display:none;margin-top:8px;padding:8px;background:var(--surface2);border-radius:6px">';
+  html+='<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px">';
+  html+='<input type="date" id="opf-dt-'+o.id+'" value="'+today()+'" style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);width:130px">';
+  html+='<input type="number" id="opf-amt-'+o.id+'" placeholder="金额" step="0.01" style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);width:90px">';
+  html+='<select id="opf-cur-'+o.id+'" style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)">';
+  html+='<option value="USD"'+(o.currency==='USD'?' selected':'')+'>USD</option>';
+  html+='<option value="CNY"'+(o.currency==='CNY'?' selected':'')+'>CNY</option>';
+  html+='</select>';
+  html+='<input type="text" id="opf-note-'+o.id+'" placeholder="备注（如50%定金）" style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);flex:1;min-width:100px">';
+  html+='</div>';
+  html+='<div style="display:flex;gap:6px">';
+  html+='<button onclick="saveOrdPayment('+o.id+')" style="font-size:12px;padding:4px 14px;border-radius:4px;background:var(--accent);color:white;border:none;cursor:pointer">保存</button>';
+  html+='<button onclick="hideOrdPayForm('+o.id+')" style="font-size:12px;padding:4px 14px;border-radius:4px;background:transparent;color:var(--muted);border:1px solid var(--border);cursor:pointer">取消</button>';
+  html+='</div></div>';
+  html+='</div>';
+  return html;
+}
+function showOrdPayForm(ordId){
+  var f=document.getElementById('opf-'+ordId);
+  var b=document.getElementById('opf-btn-'+ordId);
+  if(f)f.style.display='';
+  if(b)b.style.display='none';
+}
+function hideOrdPayForm(ordId){
+  var f=document.getElementById('opf-'+ordId);
+  var b=document.getElementById('opf-btn-'+ordId);
+  if(f)f.style.display='none';
+  if(b)b.style.display='';
+}
+function saveOrdPayment(ordId){
+  var o=orders.find(function(x){return x.id===ordId;});if(!o)return;
+  var amt=document.getElementById('opf-amt-'+ordId);
+  var dt=document.getElementById('opf-dt-'+ordId);
+  var cur=document.getElementById('opf-cur-'+ordId);
+  var note=document.getElementById('opf-note-'+ordId);
+  if(!amt)return;
+  var amount=parseFloat(amt.value);
+  if(!amount||amount<=0){toast('请输入有效金额');return;}
+  if(!o.payments)o.payments=[];
+  o.payments.push({id:Date.now(),date:(dt?dt.value:today()),amount:amount,currency:(cur?cur.value:(o.currency||'USD')),note:(note?note.value:'')});
+  saveAll();
+  openOrderDetail(ordId);
+  toast('收款已记录');
+}
+function deleteOrdPayment(ordId,idx){
+  var o=orders.find(function(x){return x.id===ordId;});if(!o||!o.payments)return;
+  if(!confirm('删除这条收款记录？'))return;
+  o.payments.splice(idx,1);
+  saveAll();
+  openOrderDetail(ordId);
+  toast('已删除');
+}
+
+/* ===== 收付款记录（采购侧） ===== */
+function buildProcPaySection(p){
+  var paidCNY=getProcPayTotal(p,'CNY');
+  var paidUSD=getProcPayTotal(p,'USD');
+  var totalCNY=+p.totalCNY||0;
+  var totalUSD=+p.totalUSD||0;
+  var remainCNY=totalCNY-paidCNY;
+  var remainUSD=totalUSD-paidUSD;
+  var html='<div class="detail-section">';
+  html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
+  html+='<div class="detail-section-title" style="margin:0">付款记录</div>';
+  html+='<button id="ppf-btn-'+p.id+'" onclick="showProcPayForm('+p.id+')" style="font-size:11px;padding:3px 9px;border-radius:5px;border:0.5px solid var(--accent);color:var(--accent);background:rgba(107,114,195,.12);cursor:pointer">+ 录入</button>';
+  html+='</div>';
+  html+='<div style="display:flex;gap:16px;padding:8px 12px;background:var(--surface2);border-radius:6px;margin-bottom:6px;flex-wrap:wrap">';
+  if(totalCNY>0||paidCNY>0){
+    html+='<div style="font-size:12px"><span style="color:var(--muted)">PO总额 </span><span style="font-weight:600">¥'+totalCNY.toLocaleString()+'</span></div>';
+    html+='<div style="font-size:12px"><span style="color:var(--muted)">已付 </span><span style="font-weight:600;color:'+(paidCNY>0?'var(--yellow)':'var(--muted)')+'">¥'+paidCNY.toLocaleString()+'</span></div>';
+    html+='<div style="font-size:12px"><span style="color:var(--muted)">待付 </span><span style="font-weight:600;color:'+(remainCNY>0?'var(--red)':'var(--muted)')+'">¥'+Math.max(0,remainCNY).toLocaleString()+'</span></div>';
+  }
+  if(totalUSD>0||paidUSD>0){
+    html+='<div style="font-size:12px"><span style="color:var(--muted)">PO总额 </span><span style="font-weight:600">$'+totalUSD.toLocaleString()+'</span></div>';
+    html+='<div style="font-size:12px"><span style="color:var(--muted)">已付 </span><span style="font-weight:600;color:'+(paidUSD>0?'var(--green)':'var(--muted)')+'">$'+paidUSD.toLocaleString()+'</span></div>';
+    html+='<div style="font-size:12px"><span style="color:var(--muted)">待付 </span><span style="font-weight:600;color:'+(remainUSD>0?'var(--red)':'var(--muted)')+'">$'+Math.max(0,remainUSD).toLocaleString()+'</span></div>';
+  }
+  if(totalCNY<=0&&paidCNY<=0&&totalUSD<=0&&paidUSD<=0){
+    html+='<div style="font-size:12px;color:var(--muted)">未设定采购金额</div>';
+  }
+  html+='</div>';
+  if(p.payments&&p.payments.length){
+    p.payments.forEach(function(pay,idx){
+      html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">';
+      html+='<div><span style="color:var(--muted)">'+pay.date+'</span>'+(pay.note?' <span style="color:var(--muted2)">· '+pay.note+'</span>':'')+'</div>';
+      html+='<div style="display:flex;align-items:center;gap:8px">';
+      html+='<span style="font-weight:600;color:'+(pay.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(pay.amount,pay.currency)+'</span>';
+      html+='<span onclick="deleteProcPayment('+p.id+','+idx+')" style="cursor:pointer;color:var(--muted);font-size:10px;padding:1px 5px;border:1px solid var(--border);border-radius:3px">删</span>';
+      html+='</div></div>';
+    });
+  }else{
+    html+='<div style="font-size:12px;color:var(--muted);padding:2px 0">暂无付款记录</div>';
+  }
+  html+='<div id="ppf-'+p.id+'" style="display:none;margin-top:8px;padding:8px;background:var(--surface2);border-radius:6px">';
+  html+='<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px">';
+  html+='<input type="date" id="ppf-dt-'+p.id+'" value="'+today()+'" style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);width:130px">';
+  html+='<input type="number" id="ppf-amt-'+p.id+'" placeholder="金额" step="0.01" style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);width:90px">';
+  html+='<select id="ppf-cur-'+p.id+'" style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)">';
+  html+='<option value="CNY">CNY</option>';
+  html+='<option value="USD">USD</option>';
+  html+='</select>';
+  html+='<input type="text" id="ppf-note-'+p.id+'" placeholder="备注（如首付定金）" style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);flex:1;min-width:100px">';
+  html+='</div>';
+  html+='<div style="display:flex;gap:6px">';
+  html+='<button onclick="saveProcPayment('+p.id+')" style="font-size:12px;padding:4px 14px;border-radius:4px;background:var(--accent);color:white;border:none;cursor:pointer">保存</button>';
+  html+='<button onclick="hideProcPayForm('+p.id+')" style="font-size:12px;padding:4px 14px;border-radius:4px;background:transparent;color:var(--muted);border:1px solid var(--border);cursor:pointer">取消</button>';
+  html+='</div></div>';
+  html+='</div>';
+  return html;
+}
+function showProcPayForm(procId){
+  var f=document.getElementById('ppf-'+procId);
+  var b=document.getElementById('ppf-btn-'+procId);
+  if(f)f.style.display='';
+  if(b)b.style.display='none';
+}
+function hideProcPayForm(procId){
+  var f=document.getElementById('ppf-'+procId);
+  var b=document.getElementById('ppf-btn-'+procId);
+  if(f)f.style.display='none';
+  if(b)b.style.display='';
+}
+function saveProcPayment(procId){
+  var d=getProcData();
+  var p=d.pos.find(function(x){return x.id===procId;});if(!p)return;
+  var amt=document.getElementById('ppf-amt-'+procId);
+  var dt=document.getElementById('ppf-dt-'+procId);
+  var cur=document.getElementById('ppf-cur-'+procId);
+  var note=document.getElementById('ppf-note-'+procId);
+  if(!amt)return;
+  var amount=parseFloat(amt.value);
+  if(!amount||amount<=0){toast('请输入有效金额');return;}
+  if(!p.payments)p.payments=[];
+  p.payments.push({id:Date.now(),date:(dt?dt.value:today()),amount:amount,currency:(cur?cur.value:'CNY'),note:(note?note.value:'')});
+  saveProcData(d);
+  openProcDetail(procId);
+  toast('付款已记录');
+}
+function deleteProcPayment(procId,idx){
+  var d=getProcData();
+  var p=d.pos.find(function(x){return x.id===procId;});if(!p||!p.payments)return;
+  if(!confirm('删除这条付款记录？'))return;
+  p.payments.splice(idx,1);
+  saveProcData(d);
+  openProcDetail(procId);
+  toast('已删除');
 }
 
 function renderSaleProductChips(){
@@ -9071,7 +9309,7 @@ function openProcDetail(id){
     '</div>'
     +'<div style="margin-top:10px"><button class="btn btn-outline btn-sm" onclick="openPoDocOverlay(\''+id+'\')">📄 打印采购单</button></div>'
     +'</div>';
-  var tab1Html=stageHtml+receiptBtn+infoHtml+itemsHtml;
+  var tab1Html=stageHtml+receiptBtn+infoHtml+itemsHtml+buildProcPaySection(p);
   var tab2Html=renderProcFollowupTab(p);
   body.innerHTML='<div class="dp-tab-content active" id="dp-content-profile" style="padding:20px">'+tab1Html+'</div>'+
     '<div class="dp-tab-content" id="dp-content-followup" style="padding:20px">'+tab2Html+'</div>';
