@@ -21,7 +21,7 @@
 - GitHub Pages：https://alanhou83.github.io/CRM-customento/crm-v5_final_5.html
 - 仓库：https://github.com/alanhou83/CRM-customento
 - PWA 已配置：manifest.json / service-worker.js / icon-192.png / icon-512.png
-- 当前 SW 版本：customento-crm-v43
+- 当前 SW 版本：customento-crm-v44
 
 ## 团队成员与权限
 - Alan：管理员，可见所有，可删除/导出/VIP+冲单标记，专属设置页
@@ -511,6 +511,10 @@
 - `updateStDiff(el,sysQty)`：盘库对账实时显示差异
 
 ## 当前进度（最近完成）
+- **收付款记录（订单侧/采购侧）**：`orders[].payments[]` 和 `pos[].payments[]`，独立于财务模块，详见下节
+- **看板 AR/AP 实时汇总**：数据看板新增 `#dash-ar-ap-row`，显示未收账款（绿）和未付账款（黄），点击跳对应模块
+- **销售统计→原订单导航**：`viewSaleLinkedOrder(saleId, orderId)` 从销售统计详情直接查原订单，X 退出回销售统计
+- **客户成交统计 Tab 改进**：行点击改为 `openSaleFromCust(custId, saleId)`（查看销售详情，X 退回客户），有 `fromOrderId` 的行新增"📋 查看订单"按钮
 - **贸易文件模板**：PI/CI/PL/PO 四种文件，`#trade-doc-overlay` 复用报价单 overlay 模式，三公司切换+中英双语
 - **供应商简称**：`s.alias` 字段，PO 打印时显示在供应商栏
 - **采购单付款/交货条款**：`paymentTerms`/`deliveryTerms` 各5选项下拉
@@ -530,9 +534,54 @@
 - **询盘报价单Tab**：询盘详情新增第3个Tab显示关联报价单列表（含数量角标）
 - **_prevDetailContext**：报价单/采购单详情X退出后回到父面板对应Tab
 - **关联字段模糊搜索**：采购单「关联销售订单」/订单「关联采购单」均支持实时下拉搜索
-- SW 升至 v42（强制清缓存，历经多次 iOS 修复）
+- SW 升至 v44（强制清缓存，历经多次 iOS 修复）
 - 询盘 targetStar 字段（Alan专属冲单标记），canInqVip() 含 Kelly
 - `toast(msg, dur)` 新增可选时长参数（默认 2500ms）
+
+## 收付款记录设计（订单侧 + 采购侧，独立于财务模块）
+
+### 设计原则（双轨并行）
+- **财务模块流水**（crm_fin_v6）：现金制，记实收/实付，独立账户，不强关联具体单据
+- **订单/采购单 payments[]**：业务侧收付记录，追踪每笔付款进度，不核销到财务账户
+- 两轨独立，互不强依赖，避免多单对多款场景数据卡死
+
+### 数据结构
+- `orders[].payments[]`：收款记录数组，每条：`{id, date, amount, currency, note}`
+- `pos[].payments[]`：付款记录数组，每条：`{id, date, amount, currency, note}`
+
+### 辅助函数
+- `getOrdPayTotal(o, cur)`：汇总订单指定货币收款合计（cur 默认取 o.currency）
+- `getOrdPayStatus(o)`：返回"未收款"/"部分已收"/"已收全款"（基于 amount vs 收款合计）
+- `getProcPayTotal(p, cur)`：汇总采购单指定货币付款合计
+
+### HTML 构建函数
+- `buildOrdPaySection(o)`：渲染订单收款区域（摘要栏 + 记录列表 + 新建按钮 + 收起/展开表单）
+- `buildProcPaySection(p)`：渲染采购单付款区域（CNY/USD 分开统计）
+
+### 表单操作函数
+- `showOrdPayForm(ordId)` / `hideOrdPayForm(ordId)`：展开/收起新增收款表单
+- `saveOrdPayment(ordId)`：从 DOM 读取 opf-dt-/opf-amt-/opf-cur-/opf-note- 字段，追加到 payments[]，saveAll()，刷新面板
+- `deleteOrdPayment(ordId, idx)`：splice payments[idx]，saveAll()，刷新面板
+- `showProcPayForm(procId)` / `hideProcPayForm(procId)`：同上，采购侧
+- `saveProcPayment(procId)`：读取 ppf-dt-/ppf-amt-/ppf-cur-/ppf-note- 字段，追加，saveProcData(d)，刷新面板
+- `deleteProcPayment(procId, idx)`：采购侧删除
+
+### 看板 AR/AP（dash-ar-ap-row）
+- `id="dash-ar-ap-row"`：在 `renderDashboard()` 中计算并注入 HTML
+- AR（应收）= 未完成订单中，(o.amount - 各货币收款合计) 之和，USD/CNY 分开
+- AP（应付）= 所有 PO 中，(p.totalCNY/p.totalUSD - 各货币付款合计) 之和
+- 点击 AR 区域 → `showPage('orders')`，点击 AP 区域 → `showPage('procurement')`
+
+## 详情面板跨模块导航函数
+- `viewSaleLinkedOrder(saleId, orderId)`：从销售统计详情查原订单；保存 `_prevDetailContext={type:'sale',id:saleId}`，调 `openOrderDetail(orderId)`
+- `openSaleFromCust(custId, saleId)`：从客户成交统计行查销售详情；保存 `_prevDetailContext={type:'customer',id:custId,tab:'sales'}`，调 `openSaleDetail(saleId)`
+- `openOrderFromCust(custId, orderId)`：从客户成交统计"📋 查看订单"按钮查订单；保存 `_prevDetailContext={type:'customer',id:custId,tab:'sales'}`，调 `openOrderDetail(orderId)`
+- `closeDetail()` 已支持 ctx.type==='sale' 分支：恢复到 `openSaleDetail(ctx.id)`
+
+### 客户成交统计 Tab（openCustDetail Tab3）设计变更
+- 行整体 onclick 改为 `openSaleFromCust(c.id, s.id)`（原为 `editSaleRecord(s.id)`）
+- 有 `s.fromOrderId` 的行右列新增"📋 查看订单"小按钮，onclick = `openOrderFromCust(c.id, s.fromOrderId)` + `event.stopPropagation()`
+- 无 `s.fromOrderId` 的记录（手工录入）无"查看订单"按钮（正常，不是 bug）
 
 ## 询盘图片上传与裁切设计
 - 图片存储：IndexedDB（`crm_inq_images` 库，key=inqId，value=base64 dataUrl），不用 localStorage
