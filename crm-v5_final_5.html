@@ -4210,15 +4210,19 @@ function openOrderDetail(id){
       var cur=o.currency==='USD'?'$':'¥';
       var subtotalColor=o.currency==='USD'?'var(--green)':'var(--yellow)';
       var subtotalStr=item.subtotal?cur+Number(item.subtotal).toFixed(2):'—';
-      var priceStr=item.unitPrice?(cur+Number(item.unitPrice).toFixed(2)+'/'+(item.unit||'个')):'—';
-      var qtyStr=(item.qty||'—')+(item.unit?' '+item.unit:'');
+      var unit=item.unit||'个';
+      var qtyStr=item.qty?(item.qty+unit):'—';
+      var priceStr=item.unitPrice?(cur+Number(item.unitPrice).toFixed(2)+'/'+unit):'';
+      var detailStr=item.skuCode?item.skuCode:'';
+      if(qtyStr!=='—'&&priceStr)detailStr+=(detailStr?' · ':'')+qtyStr+' × '+priceStr;
+      else if(qtyStr!=='—')detailStr+=(detailStr?' · ':'')+qtyStr;
       itemsHtml+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border)">'
         +'<img id="ord-ith-'+idx+'" style="width:32px;height:32px;border-radius:5px;object-fit:cover;flex-shrink:0;background:var(--surface2);display:none">'
         +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(item.nameCN||'—')+'</div>'
-        +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+(item.skuCode?item.skuCode+' · ':'')+qtyStr+' @ '+priceStr+'</div>'
+        +'<div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(item.nameCN||'—')+'</div>'
+        +(detailStr?'<div style="font-size:11px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+detailStr+'</div>':'')
         +'</div>'
-        +'<div style="text-align:right;flex-shrink:0">'
+        +'<div style="text-align:right;flex-shrink:0;min-width:60px">'
         +'<div style="font-size:14px;font-weight:600;color:'+subtotalColor+'">'+subtotalStr+'</div>'
         +'</div>'
         +'</div>';
