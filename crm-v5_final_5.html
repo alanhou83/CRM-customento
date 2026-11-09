@@ -460,40 +460,45 @@ a{color:var(--accent);text-decoration:none;}
     </div>
   </div>
   <div id="mh-ord" style="display:none;margin-bottom:-6px">
-    <div class="mobile-chips" style="padding-bottom:6px">
-      <div class="mobile-chip on" onclick="ordChipFilter(this,'all')">全部</div>
-      <div class="mobile-chip" onclick="ordChipFilter(this,'生产中')">生产中</div>
-      <div class="mobile-chip" onclick="ordChipFilter(this,'打样中')">打样中</div>
-      <div class="mobile-chip" onclick="ordChipFilter(this,'待发货')">待发货</div>
-      <div class="mobile-chip" onclick="ordChipFilter(this,'已发货')">已发货</div>
-      <div class="mobile-chip" onclick="ordChipFilter(this,'超时')">超时</div>
-      <select id="mb-ord-person" onchange="renderMobileCards('ord')" style="background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--text);padding:3px 6px;font-size:11px;outline:none;flex-shrink:0"><option value="">跟单</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Alan</option></select>
+    <div style="display:flex;border-bottom:1px solid var(--border);margin:0 -15px;padding:0 15px;background:var(--surface)">
+      <div id="mh-ord-tab-exec" onclick="switchOrdTab('exec')" style="padding:7px 14px;font-size:13px;font-weight:600;color:var(--accent);border-bottom:2px solid var(--accent);cursor:pointer;margin-bottom:-1px">执行中</div>
+      <div id="mh-ord-tab-done" onclick="switchOrdTab('done')" style="padding:7px 14px;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px">已完成</div>
     </div>
-    <div style="display:flex;align-items:center;gap:3px;width:calc(100% + 30px);margin-left:-15px;margin-right:-15px;margin-top:-0.5px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
-      <input id="mb-ord-search" placeholder="🔍 搜索客户..." oninput="renderMobileCards('ord')" style="flex:1;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;padding:3px 0;min-width:0">
-      <button class="sort-btn-s" id="ord-sort-date" onclick="setOrdMobileSort('date')">日期 ↓</button>
-      <button class="sort-btn-s" id="ord-sort-alias" onclick="setOrdMobileSort('alias')">客户 ↓</button>
-      <button class="sort-btn-s" id="ord-sort-product" onclick="setOrdMobileSort('product')">产品 ↓</button>
-      <button class="sort-btn-s" id="ord-sort-amount" onclick="setOrdMobileSort('amount')">金额 ↓</button>
-      <button class="sort-btn-s" id="ord-sort-delivery" onclick="setOrdMobileSort('delivery')">交期 ↓</button>
+    <div id="mh-ord-exec-ctrl">
+      <div class="mobile-chips" style="padding-bottom:6px">
+        <div class="mobile-chip on" onclick="ordChipFilter(this,'all')">全部</div>
+        <div class="mobile-chip" onclick="ordChipFilter(this,'生产中')">生产中</div>
+        <div class="mobile-chip" onclick="ordChipFilter(this,'打样中')">打样中</div>
+        <div class="mobile-chip" onclick="ordChipFilter(this,'待发货')">待发货</div>
+        <div class="mobile-chip" onclick="ordChipFilter(this,'已发货')">已发货</div>
+        <div class="mobile-chip" onclick="ordChipFilter(this,'超时')">超时</div>
+        <select id="mb-ord-person" onchange="renderMobileCards('ord')" style="background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--text);padding:3px 6px;font-size:11px;outline:none;flex-shrink:0"><option value="">跟单</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Alan</option></select>
+      </div>
+      <div style="display:flex;align-items:center;gap:3px;width:calc(100% + 30px);margin-left:-15px;margin-right:-15px;margin-top:-0.5px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
+        <input id="mb-ord-search" placeholder="🔍 搜索客户..." oninput="renderMobileCards('ord')" style="flex:1;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;padding:3px 0;min-width:0">
+        <button class="sort-btn-s" id="ord-sort-date" onclick="setOrdMobileSort('date')">日期 ↓</button>
+        <button class="sort-btn-s" id="ord-sort-alias" onclick="setOrdMobileSort('alias')">客户 ↓</button>
+        <button class="sort-btn-s" id="ord-sort-amount" onclick="setOrdMobileSort('amount')">金额 ↓</button>
+        <button class="sort-btn-s" id="ord-sort-delivery" onclick="setOrdMobileSort('delivery')">交期 ↓</button>
+      </div>
     </div>
-  </div>
-  <div id="mh-stats" style="display:none;margin-bottom:-6px">
-    <div class="mobile-chips" style="gap:4px;padding-bottom:6px">
-      <div class="mobile-chip on" id="stats-chip-all" onclick="statsChipCurrency(this,'')" style="padding:3px 8px">全部</div>
-      <div class="mobile-chip" id="stats-chip-usd" onclick="statsChipCurrency(this,'USD')" style="padding:3px 8px">$ 美金</div>
-      <div class="mobile-chip" id="stats-chip-cny" onclick="statsChipCurrency(this,'CNY')" style="padding:3px 8px">¥ 人民币</div>
-      <div style="width:1px;background:rgba(255,255,255,.12);margin:0 1px;align-self:stretch;flex-shrink:0"></div>
-      <select id="sf-year" onchange="renderMobileCards('stats')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:3px 4px;font-size:11px;outline:none;flex-shrink:0"><option value="">年份</option><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option></select>
-      <select id="sf-quarter" onchange="renderMobileCards('stats')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:3px 4px;font-size:11px;outline:none;flex-shrink:0"><option value="">季度</option><option value="Q1">Q1</option><option value="Q2">Q2</option><option value="Q3">Q3</option><option value="Q4">Q4</option></select>
-      <select id="sf-month" onchange="renderMobileCards('stats')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:3px 4px;font-size:11px;outline:none;flex-shrink:0"><option value="">月份</option><option value="01">1月</option><option value="02">2月</option><option value="03">3月</option><option value="04">4月</option><option value="05">5月</option><option value="06">6月</option><option value="07">7月</option><option value="08">8月</option><option value="09">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select>
-      <select id="sf-person" onchange="renderMobileCards('stats')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:3px 4px;font-size:11px;outline:none;flex-shrink:0"><option value="">跟单</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Alan</option></select>
-    </div>
-    <div style="display:flex;align-items:center;gap:4px;width:calc(100% + 30px);margin-left:-15px;margin-right:-15px;padding:6px 10px 6px 15px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
-      <input id="stats-search" placeholder="🔍 搜索客户..." oninput="renderMobileCards('stats')" style="flex:1;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;padding:3px 0">
-      <button class="sort-btn-s" id="stats-sort-alias" onclick="setStatsSort('alias')">客户 ↓</button>
-      <button class="sort-btn-s active" id="stats-sort-date" onclick="setStatsSort('date')">日期 ↓</button>
-      <button class="sort-btn-s" id="stats-sort-amount" onclick="setStatsSort('amount')">金额 ↓</button>
+    <div id="mh-ord-done-ctrl" style="display:none">
+      <div class="mobile-chips" style="gap:4px;padding-bottom:6px">
+        <div class="mobile-chip on" id="stats-chip-all" onclick="statsChipCurrency(this,'')" style="padding:3px 8px">全部</div>
+        <div class="mobile-chip" id="stats-chip-usd" onclick="statsChipCurrency(this,'USD')" style="padding:3px 8px">$ 美金</div>
+        <div class="mobile-chip" id="stats-chip-cny" onclick="statsChipCurrency(this,'CNY')" style="padding:3px 8px">¥ 人民币</div>
+        <div style="width:1px;background:rgba(255,255,255,.12);margin:0 1px;align-self:stretch;flex-shrink:0"></div>
+        <select id="sf-year" onchange="renderMobileCards('stats')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:3px 4px;font-size:11px;outline:none;flex-shrink:0"><option value="">年份</option><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option></select>
+        <select id="sf-quarter" onchange="renderMobileCards('stats')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:3px 4px;font-size:11px;outline:none;flex-shrink:0"><option value="">季度</option><option value="Q1">Q1</option><option value="Q2">Q2</option><option value="Q3">Q3</option><option value="Q4">Q4</option></select>
+        <select id="sf-month" onchange="renderMobileCards('stats')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:3px 4px;font-size:11px;outline:none;flex-shrink:0"><option value="">月份</option><option value="01">1月</option><option value="02">2月</option><option value="03">3月</option><option value="04">4月</option><option value="05">5月</option><option value="06">6月</option><option value="07">7月</option><option value="08">8月</option><option value="09">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select>
+        <select id="sf-person" onchange="renderMobileCards('stats')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:3px 4px;font-size:11px;outline:none;flex-shrink:0"><option value="">跟单</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Alan</option></select>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;width:calc(100% + 30px);margin-left:-15px;margin-right:-15px;padding:6px 10px 6px 15px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
+        <input id="stats-search" placeholder="🔍 搜索客户..." oninput="renderMobileCards('stats')" style="flex:1;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;padding:3px 0">
+        <button class="sort-btn-s" id="stats-sort-alias" onclick="setStatsSort('alias')">客户 ↓</button>
+        <button class="sort-btn-s active" id="stats-sort-date" onclick="setStatsSort('date')">日期 ↓</button>
+        <button class="sort-btn-s" id="stats-sort-amount" onclick="setStatsSort('amount')">金额 ↓</button>
+      </div>
     </div>
   </div>
   <div id="mh-quote" style="display:none;margin-bottom:-6px">
@@ -599,13 +604,12 @@ a{color:var(--accent);text-decoration:none;}
   <div class="logo"><div class="logo-title">Customento</div><div class="logo-sub">销售管理系统</div></div>
   <div class="nav-section">主菜单</div>
   <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')"><span class="nav-icon">📊</span>数据看板</div>
-  <div class="nav-item" id="nav-orders" onclick="showPage('orders')"><span class="nav-icon">📦</span>执行中订单<span class="nav-count" id="nc-ord">0</span></div>
+  <div class="nav-item" id="nav-orders" onclick="showPage('orders')"><span class="nav-icon">📦</span>订单管理<span class="nav-count" id="nc-ord">0</span></div>
   <!-- 销售团队主菜单 -->
   <div id="nav-sales-section">
     <div class="nav-item" id="nav-hot" onclick="showPage('hot')"><span class="nav-icon">🔥</span>热点商机<span class="nav-count hot" id="nc-hot">0</span></div>
     <div class="nav-item" id="nav-inquiries" onclick="showPage('inquiries')"><span class="nav-icon">📋</span>询盘列表<span class="nav-count" id="nc-inq">0</span></div>
     <div class="nav-item" id="nav-customers" onclick="showPage('customers')"><span class="nav-icon">👥</span>客户管理<span class="nav-count" id="nc-cust">0</span></div>
-    <div class="nav-item" id="nav-oldstats" onclick="showPage('oldstats')"><span class="nav-icon">📈</span>销售统计<span class="nav-count" id="nc-old">0</span></div>
   </div>
   <!-- 运营团队模块（Alan+Penny可见，紧跟销售主菜单） -->
   <div id="nav-ops-section" style="display:none">
@@ -869,66 +873,64 @@ a{color:var(--accent);text-decoration:none;}
     <div class="mobile-cards" id="mobile-cust-cards"></div>
   </div>
 </div>
-<!-- 老客户统计 -->
-<div id="page-oldstats" class="page">
-  <div class="page-head">
-    <div><div class="page-title">销售统计</div><div class="page-sub">历史成交记录与销售分析</div></div>
-    <button class="btn btn-primary" onclick="openSaleModal()">＋ 录入成交记录</button>
-  </div>
-  <div class="page-content">
-    <div class="stat-summary" id="old-summary"></div>
-    <div class="filters">
-      <input class="search-box" id="search-old" placeholder="🔍 搜索客户..." oninput="renderOldStats()">
-      <select class="filter-select" id="of-year" onchange="renderOldStats()"><option value="">所有年份</option><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option></select>
-      <select class="filter-select" id="of-currency" onchange="renderOldStats()"><option value="">所有货币</option><option value="USD">$ 美金</option><option value="CNY">¥ 人民币</option></select>
-      <select class="filter-select" id="of-person" onchange="renderOldStats()"><option value="">所有负责人</option><option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option></select>
-      <select class="filter-select" id="of-quarter" onchange="renderOldStats()"><option value="">所有季度</option><option value="Q1">Q1</option><option value="Q2">Q2</option><option value="Q3">Q3</option><option value="Q4">Q4</option></select>
-      <button class="btn btn-outline btn-sm" onclick="clearFilters('old')">清除</button>
-    </div>
-    <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
-      <div class="table-header cols-stat">
-        <div id="ths-alias" onclick="setStatsTableSort('alias')" style="cursor:pointer;user-select:none">客户 <span id="ths-alias-arr" style="color:var(--muted);opacity:.4">↕</span></div>
-        <div>产品</div>
-        <div>货币</div>
-        <div id="ths-amount" onclick="setStatsTableSort('amount')" style="cursor:pointer;user-select:none">金额 <span id="ths-amount-arr" style="color:var(--muted);opacity:.4">↕</span></div>
-        <div id="ths-date" onclick="setStatsTableSort('date')" style="cursor:pointer;user-select:none">日期 <span id="ths-date-arr" style="color:var(--accent);opacity:1">↓</span></div>
-        <div>季度</div>
-        <div id="ths-person" onclick="setStatsTableSort('person')" style="cursor:pointer;user-select:none">负责人 <span id="ths-person-arr" style="color:var(--muted);opacity:.4">↕</span></div>
-      </div>
-      <div id="old-table-body"></div>
-    </div></div></div>
-    <div class="mobile-cards" id="mobile-stats-cards"></div>
-  </div>
-</div>
-
-<!-- 执行中订单 -->
+<!-- 订单管理（执行中 + 已完成合并页） -->
 <div id="page-orders" class="page">
   <div class="page-head">
-    <div><div class="page-title">⚙️ 执行中订单</div><div class="page-sub">已下单、生产中、未完结的订单</div></div>
-    <button class="btn btn-primary" onclick="openOrderModal()">＋ 新增订单</button>
+    <div><div class="page-title">📦 订单管理</div><div class="page-sub">执行中订单与已完成销售</div></div>
+    <button class="btn btn-primary" id="ord-page-new-btn" onclick="openOrderModal()">＋ 新增订单</button>
+  </div>
+  <div class="inq-tabs" style="padding:0 28px">
+    <div class="inq-tab active" id="ord-tab-exec" onclick="switchOrdTab('exec')">执行中 <span id="ord-cnt-exec" class="inq-tab-count"></span></div>
+    <div class="inq-tab" id="ord-tab-done" onclick="switchOrdTab('done')">已完成 <span id="ord-cnt-done" class="inq-tab-count"></span></div>
   </div>
   <div class="page-content">
-    <div class="stat-summary" id="order-summary"></div>
-    <div class="filters">
-      <input class="search-box" id="search-ord" placeholder="🔍 搜索客户..." oninput="renderOrders()">
-      <select class="filter-select" id="ord-stage" onchange="renderOrders()"><option value="">所有阶段</option><option>等待打样</option><option>打样中</option><option>客户确认样品</option><option>生产中</option><option>待发货</option><option>已发货</option></select>
-      <select class="filter-select" id="ord-currency" onchange="renderOrders()"><option value="">所有货币</option><option value="USD">$ 美金</option><option value="CNY">¥ 人民币</option></select>
-      <select class="filter-select" id="ord-person" onchange="renderOrders()"><option value="">所有跟单人</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Alan</option></select>
-      <button class="btn btn-outline btn-sm" onclick="clearFilters('ord')">清除</button>
-    </div>
-    <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
-      <div class="table-header cols-ord">
-        <div id="tho-date" onclick="setOrdSort('date')" style="cursor:pointer;user-select:none">下单日期 <span id="tho-date-arr" style="color:var(--accent);opacity:1">↓</span></div>
-        <div id="tho-alias" onclick="setOrdSort('alias')" style="cursor:pointer;user-select:none">客户 <span id="tho-alias-arr" style="color:var(--muted);opacity:.4">↕</span></div>
-        <div>产品</div>
-        <div id="tho-amount" onclick="setOrdSort('amount')" style="cursor:pointer;user-select:none">订单金额 <span id="tho-amount-arr" style="color:var(--muted);opacity:.4">↕</span></div>
-        <div>当前阶段</div>
-        <div id="tho-delivery" onclick="setOrdSort('delivery')" style="cursor:pointer;user-select:none">预计交期 <span id="tho-delivery-arr" style="color:var(--muted);opacity:.4">↕</span></div>
-        <div>负责人</div>
+    <div id="ord-exec-section">
+      <div class="stat-summary" id="order-summary"></div>
+      <div class="filters">
+        <input class="search-box" id="search-ord" placeholder="🔍 搜索客户..." oninput="renderOrders()">
+        <select class="filter-select" id="ord-stage" onchange="renderOrders()"><option value="">所有阶段</option><option>等待打样</option><option>打样中</option><option>客户确认样品</option><option>生产中</option><option>待发货</option><option>已发货</option></select>
+        <select class="filter-select" id="ord-currency" onchange="renderOrders()"><option value="">所有货币</option><option value="USD">$ 美金</option><option value="CNY">¥ 人民币</option></select>
+        <select class="filter-select" id="ord-person" onchange="renderOrders()"><option value="">所有跟单人</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Alan</option></select>
+        <button class="btn btn-outline btn-sm" onclick="clearFilters('ord')">清除</button>
       </div>
-      <div id="ord-table-body"></div>
-    </div></div></div>
-    <div class="mobile-cards" id="mobile-ord-cards"></div>
+      <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
+        <div class="table-header cols-ord">
+          <div id="tho-date" onclick="setOrdSort('date')" style="cursor:pointer;user-select:none">下单日期 <span id="tho-date-arr" style="color:var(--accent);opacity:1">↓</span></div>
+          <div id="tho-alias" onclick="setOrdSort('alias')" style="cursor:pointer;user-select:none">客户 <span id="tho-alias-arr" style="color:var(--muted);opacity:.4">↕</span></div>
+          <div>产品</div>
+          <div id="tho-amount" onclick="setOrdSort('amount')" style="cursor:pointer;user-select:none">订单金额 <span id="tho-amount-arr" style="color:var(--muted);opacity:.4">↕</span></div>
+          <div>当前阶段</div>
+          <div id="tho-delivery" onclick="setOrdSort('delivery')" style="cursor:pointer;user-select:none">预计交期 <span id="tho-delivery-arr" style="color:var(--muted);opacity:.4">↕</span></div>
+          <div>负责人</div>
+        </div>
+        <div id="ord-table-body"></div>
+      </div></div></div>
+      <div class="mobile-cards" id="mobile-ord-cards"></div>
+    </div>
+    <div id="ord-done-section" style="display:none">
+      <div class="stat-summary" id="old-summary"></div>
+      <div class="filters">
+        <input class="search-box" id="search-old" placeholder="🔍 搜索客户..." oninput="renderOldStats()">
+        <select class="filter-select" id="of-year" onchange="renderOldStats()"><option value="">所有年份</option><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option></select>
+        <select class="filter-select" id="of-currency" onchange="renderOldStats()"><option value="">所有货币</option><option value="USD">$ 美金</option><option value="CNY">¥ 人民币</option></select>
+        <select class="filter-select" id="of-person" onchange="renderOldStats()"><option value="">所有负责人</option><option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option></select>
+        <select class="filter-select" id="of-quarter" onchange="renderOldStats()"><option value="">所有季度</option><option value="Q1">Q1</option><option value="Q2">Q2</option><option value="Q3">Q3</option><option value="Q4">Q4</option></select>
+        <button class="btn btn-outline btn-sm" onclick="clearFilters('old')">清除</button>
+      </div>
+      <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
+        <div class="table-header cols-stat">
+          <div id="ths-alias" onclick="setStatsTableSort('alias')" style="cursor:pointer;user-select:none">客户 <span id="ths-alias-arr" style="color:var(--muted);opacity:.4">↕</span></div>
+          <div>产品</div>
+          <div>货币</div>
+          <div id="ths-amount" onclick="setStatsTableSort('amount')" style="cursor:pointer;user-select:none">金额 <span id="ths-amount-arr" style="color:var(--muted);opacity:.4">↕</span></div>
+          <div id="ths-date" onclick="setStatsTableSort('date')" style="cursor:pointer;user-select:none">日期 <span id="ths-date-arr" style="color:var(--accent);opacity:1">↓</span></div>
+          <div>季度</div>
+          <div id="ths-person" onclick="setStatsTableSort('person')" style="cursor:pointer;user-select:none">负责人 <span id="ths-person-arr" style="color:var(--muted);opacity:.4">↕</span></div>
+        </div>
+        <div id="old-table-body"></div>
+      </div></div></div>
+      <div class="mobile-cards" id="mobile-stats-cards"></div>
+    </div>
   </div>
 </div>
 
@@ -2493,6 +2495,52 @@ function effectiveGrowing(c){if(!c.growing)return false;var d=new Date();d.setDa
 function custScoreEff(c){var sz=+c.size;var szScore=sz<=1?0:sz===2?1:2;return +c.ordered+ +c.repurchase+(effectiveGrowing(c)?1:0)+ +c.match+(effectiveActiveScore(c)?1:0)+szScore;}
 function toast(msg,dur){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),dur||2500);}
 
+var _ordActiveTab='exec';
+
+function updateOrdTabCounts(){
+  var execCount=orders.filter(function(o){return !o.completed;}).length;
+  var doneCount=saleRecords.length;
+  var execEl=document.getElementById('ord-cnt-exec');if(execEl)execEl.textContent=execCount;
+  var doneEl=document.getElementById('ord-cnt-done');if(doneEl)doneEl.textContent=doneCount;
+}
+
+function switchOrdTab(tab){
+  _ordActiveTab=tab;
+  var execSection=document.getElementById('ord-exec-section');
+  var doneSection=document.getElementById('ord-done-section');
+  var tabExec=document.getElementById('ord-tab-exec');
+  var tabDone=document.getElementById('ord-tab-done');
+  var mTabExec=document.getElementById('mh-ord-tab-exec');
+  var mTabDone=document.getElementById('mh-ord-tab-done');
+  var mExecCtrl=document.getElementById('mh-ord-exec-ctrl');
+  var mDoneCtrl=document.getElementById('mh-ord-done-ctrl');
+  var addBtn=document.getElementById('mobile-add-btn');
+  if(tab==='exec'){
+    if(execSection)execSection.style.display='';
+    if(doneSection)doneSection.style.display='none';
+    if(tabExec){tabExec.classList.add('active');}
+    if(tabDone){tabDone.classList.remove('active');}
+    if(mTabExec){mTabExec.style.color='var(--accent)';mTabExec.style.borderBottomColor='var(--accent)';}
+    if(mTabDone){mTabDone.style.color='var(--muted)';mTabDone.style.borderBottomColor='transparent';}
+    if(mExecCtrl)mExecCtrl.style.display='';
+    if(mDoneCtrl)mDoneCtrl.style.display='none';
+    if(addBtn)addBtn.onclick=function(){openOrderModal();};
+    renderOrders();renderMobileCards('ord');
+  } else {
+    if(execSection)execSection.style.display='none';
+    if(doneSection)doneSection.style.display='';
+    if(tabExec){tabExec.classList.remove('active');}
+    if(tabDone){tabDone.classList.add('active');}
+    if(mTabExec){mTabExec.style.color='var(--muted)';mTabExec.style.borderBottomColor='transparent';}
+    if(mTabDone){mTabDone.style.color='var(--accent)';mTabDone.style.borderBottomColor='var(--accent)';}
+    if(mExecCtrl)mExecCtrl.style.display='none';
+    if(mDoneCtrl)mDoneCtrl.style.display='';
+    if(addBtn)addBtn.onclick=function(){openSaleModal();};
+    renderOldStats();renderMobileCards('stats');
+  }
+  updateOrdTabCounts();
+}
+
 function updateNavCounts(){
   const myInq=inquiries.filter(i=>canSeeInq(i));
   const hotCount=myInq.filter(i=>i.isHot&&!['已成单','未成单'].includes(i.status)).length;
@@ -2502,8 +2550,8 @@ function updateNavCounts(){
   ncInq.textContent=myInq.length;
   if(overdueCount>0){ncInq.classList.add('alert');ncInq.textContent=myInq.length+' ⚠️';}else{ncInq.classList.remove('alert');}
   document.getElementById('nc-cust').textContent=customers.filter(c=>canSeeCust(c)).length;
-  document.getElementById('nc-old').textContent=saleRecords.length;
   document.getElementById('nc-ord').textContent=orders.filter(o=>!o.completed).length;
+  updateOrdTabCounts();
 }
 
 var NAV_CONFIG={
@@ -2546,15 +2594,15 @@ function switchUser(u){
 function showPage(p){
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
   var pg=document.getElementById('page-'+p);if(pg)pg.classList.add('active');
-  ['dashboard','hot','inquiries','customers','oldstats','orders','settings','proddev','prodcat','procurement','finance','suppliers','inventory'].forEach(id=>{const el=document.getElementById('nav-'+id);if(el)el.classList.toggle('active',id===p);});
+  ['dashboard','hot','inquiries','customers','orders','settings','proddev','prodcat','procurement','finance','suppliers','inventory'].forEach(id=>{const el=document.getElementById('nav-'+id);if(el)el.classList.toggle('active',id===p);});
   closeDetail();
   if(window.innerWidth<=768)setMobileHeader(p);
   if(p==='dashboard')renderDashboard();
   else if(p==='hot'){renderHot();renderMobileCards('hot');}
   else if(p==='inquiries'){currentInqFilter={};resetInqFilters();switchInqTab('active');}
   else if(p==='customers'){renderCustomers();renderMobileCards('cust');}
-  else if(p==='oldstats'){renderOldStats();renderMobileCards('stats');}
-  else if(p==='orders'){renderOrders();renderMobileCards('ord');}
+  else if(p==='oldstats'){showPage('orders');switchOrdTab('done');return;}
+  else if(p==='orders'){switchOrdTab(_ordActiveTab||'exec');}
   else if(p==='proddev'){setProdView(prodView);}
   else if(p==='prodcat'){setPcatView(pcatView);}
   else if(p==='procurement'){switchProcTab(procCurrentTab);}
@@ -4163,28 +4211,26 @@ function openOrderDetail(id){
   var tab1='<div class="detail-section">'+stageBar+'</div>';
   var itemsHtml='';
   if(o.items&&o.items.length){
-    itemsHtml='<div class="detail-section"><div class="detail-section-title">产品明细</div>'
-      +'<div style="display:grid;grid-template-columns:36px 1fr 58px 44px 76px 68px;gap:3px;margin-bottom:4px;padding:0 2px">'
-      +'<div></div>'
-      +'<div style="font-size:11px;color:var(--muted)">产品</div>'
-      +'<div style="font-size:11px;color:var(--muted)">数量</div>'
-      +'<div style="font-size:11px;color:var(--muted)">单位</div>'
-      +'<div style="font-size:11px;color:var(--muted)">单价</div>'
-      +'<div style="font-size:11px;color:var(--muted);text-align:right">小计</div>'
-      +'</div>';
+    itemsHtml='<div class="detail-section"><div class="detail-section-title">产品明细</div>';
     o.items.forEach(function(item,idx){
       var cur=o.currency==='USD'?'$':'¥';
-      itemsHtml+='<div style="display:grid;grid-template-columns:36px 1fr 58px 44px 76px 68px;gap:3px;padding:5px 2px;border-top:1px solid var(--border);align-items:center">'
-        +'<img id="ord-ith-'+idx+'" style="width:36px;height:36px;border-radius:5px;object-fit:cover;display:none;background:var(--surface2)">'
-        +'<div style="font-size:13px;color:var(--text)">'+(item.nameCN||'—')+(item.skuCode?'<div style="font-size:10px;color:var(--muted)">'+item.skuCode+'</div>':'')+'</div>'
-        +'<div style="font-size:13px;color:var(--text)">'+(item.qty||'—')+'</div>'
-        +'<div style="font-size:13px;color:var(--muted)">'+(item.unit||'')+'</div>'
-        +'<div style="font-size:13px;color:var(--text)">'+cur+(item.unitPrice?Number(item.unitPrice).toFixed(2):'—')+'</div>'
-        +'<div style="font-size:13px;font-weight:600;text-align:right;color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+cur+(item.subtotal?Number(item.subtotal).toFixed(2):'—')+'</div>'
+      var subtotalColor=o.currency==='USD'?'var(--green)':'var(--yellow)';
+      var subtotalStr=item.subtotal?cur+Number(item.subtotal).toFixed(2):'—';
+      var priceStr=item.unitPrice?(cur+Number(item.unitPrice).toFixed(2)+'/'+(item.unit||'个')):'—';
+      var qtyStr=(item.qty||'—')+(item.unit?' '+item.unit:'');
+      itemsHtml+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border)">'
+        +'<img id="ord-ith-'+idx+'" style="width:32px;height:32px;border-radius:5px;object-fit:cover;flex-shrink:0;background:var(--surface2);display:none">'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(item.nameCN||'—')+'</div>'
+        +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+(item.skuCode?item.skuCode+' · ':'')+qtyStr+' @ '+priceStr+'</div>'
+        +'</div>'
+        +'<div style="text-align:right;flex-shrink:0">'
+        +'<div style="font-size:14px;font-weight:600;color:'+subtotalColor+'">'+subtotalStr+'</div>'
+        +'</div>'
         +'</div>';
     });
     var itemTotal=0;o.items.forEach(function(it){itemTotal+=it.subtotal||0;});
-    itemsHtml+='<div style="display:flex;justify-content:flex-end;padding:6px 2px 0;border-top:1px solid var(--border)">'
+    itemsHtml+='<div style="display:flex;justify-content:flex-end;padding:6px 0 0;border-top:1px solid var(--border)">'
       +'<span style="font-size:13px;font-weight:600;color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+'">小计 '+fmtAmt(itemTotal,o.currency)+'</span>'
       +'</div></div>';
   }
@@ -5825,10 +5871,10 @@ let mobileCustShown={core:10,focus:10,nurture:10,sleeping:10,dead:10};
 const MOBILE_BATCH=10;
 
 function setMobileHeader(type){
-  ['mh-inq','mh-hot','mh-cust','mh-ord','mh-stats','mh-prod','mh-prodcat','mh-procurement','mh-quote','mh-suppliers','mh-inv','mh-fin'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
-  const titles={dashboard:'数据看板',inquiries:'询盘列表',hot:'🔥 热点商机',customers:'客户管理',oldstats:'📈 销售统计',orders:'📦 执行中订单',settings:'⚙️ 管理员设置',proddev:'🔧 产品开发',prodcat:'🗂️ 产品库',procurement:'🛒 采购跟单',finance:'💰 财务',quote:'📋 报价单',suppliers:'🏭 供应商管理',inventory:'📋 库存管理'};
+  ['mh-inq','mh-hot','mh-cust','mh-ord','mh-prod','mh-prodcat','mh-procurement','mh-quote','mh-suppliers','mh-inv','mh-fin'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  const titles={dashboard:'数据看板',inquiries:'询盘列表',hot:'🔥 热点商机',customers:'客户管理',orders:'📦 订单管理',settings:'⚙️ 管理员设置',proddev:'🔧 产品开发',prodcat:'🗂️ 产品库',procurement:'🛒 采购跟单',finance:'💰 财务',quote:'📋 报价单',suppliers:'🏭 供应商管理',inventory:'📋 库存管理'};
   document.getElementById('mobile-page-title').textContent=titles[type]||type;
-  const map={inquiries:'mh-inq',hot:'mh-hot',customers:'mh-cust',orders:'mh-ord',oldstats:'mh-stats',proddev:'mh-prod',prodcat:'mh-prodcat',procurement:'mh-procurement',quote:'mh-quote',suppliers:'mh-suppliers',inventory:'mh-inv',finance:'mh-fin'};
+  const map={inquiries:'mh-inq',hot:'mh-hot',customers:'mh-cust',orders:'mh-ord',proddev:'mh-prod',prodcat:'mh-prodcat',procurement:'mh-procurement',quote:'mh-quote',suppliers:'mh-suppliers',inventory:'mh-inv',finance:'mh-fin'};
   if(map[type]){const el=document.getElementById(map[type]);if(el)el.style.display='';}
   var addBtn=document.getElementById('mobile-add-btn');
   var backBtn=document.getElementById('mobile-back-btn');
@@ -5845,9 +5891,8 @@ function setMobileHeader(type){
   } else {
     if(addBtn){
       addBtn.style.display='';
-      if(type==='orders')addBtn.onclick=function(){openOrderModal();};
+      if(type==='orders')addBtn.onclick=function(){if(_ordActiveTab==='done')openSaleModal();else openOrderModal();};
       else if(type==='customers')addBtn.onclick=function(){openCustomerModal();};
-      else if(type==='oldstats')addBtn.onclick=function(){openSaleModal();};
       else if(type==='proddev')addBtn.onclick=function(){openProdModal();};
       else if(type==='quote')addBtn.onclick=function(){openQuoteModal(null);};
       else addBtn.onclick=function(){openInquiryModal();};
@@ -5871,10 +5916,54 @@ function mobileNavAdd(){
   const active=document.querySelector('.page.active');
   if(!active)return openInquiryModal();
   const id=active.id.replace('page-','');
-  if(id==='orders')openOrderModal();
+  if(id==='orders'){if(_ordActiveTab==='done')openSaleModal();else openOrderModal();}
   else if(id==='customers')openCustomerModal();
-  else if(id==='oldstats')openSaleModal();
   else openInquiryModal();
+}
+var _ordActiveTab='exec';
+function switchOrdTab(tab){
+  _ordActiveTab=tab;
+  var execSection=document.getElementById('ord-exec-section');
+  var doneSection=document.getElementById('ord-done-section');
+  var execTab=document.getElementById('ord-tab-exec');
+  var doneTab=document.getElementById('ord-tab-done');
+  var newBtn=document.getElementById('ord-page-new-btn');
+  var execMhTab=document.getElementById('mh-ord-tab-exec');
+  var doneMhTab=document.getElementById('mh-ord-tab-done');
+  var execCtrl=document.getElementById('mh-ord-exec-ctrl');
+  var doneCtrl=document.getElementById('mh-ord-done-ctrl');
+  if(tab==='exec'){
+    if(execSection)execSection.style.display='';
+    if(doneSection)doneSection.style.display='none';
+    if(execTab){execTab.classList.add('active');}
+    if(doneTab){doneTab.classList.remove('active');}
+    if(newBtn){newBtn.textContent='＋ 新增订单';newBtn.onclick=function(){openOrderModal();};}
+    if(execMhTab){execMhTab.style.color='var(--accent)';execMhTab.style.borderBottom='2px solid var(--accent)';}
+    if(doneMhTab){doneMhTab.style.color='var(--muted)';doneMhTab.style.borderBottom='2px solid transparent';}
+    if(execCtrl)execCtrl.style.display='';
+    if(doneCtrl)doneCtrl.style.display='none';
+    renderOrders();
+    if(window.innerWidth<=768)renderMobileCards('ord');
+  }else{
+    if(execSection)execSection.style.display='none';
+    if(doneSection)doneSection.style.display='';
+    if(execTab){execTab.classList.remove('active');}
+    if(doneTab){doneTab.classList.add('active');}
+    if(newBtn){newBtn.textContent='＋ 录入成交记录';newBtn.onclick=function(){openSaleModal();};}
+    if(execMhTab){execMhTab.style.color='var(--muted)';execMhTab.style.borderBottom='2px solid transparent';}
+    if(doneMhTab){doneMhTab.style.color='var(--accent)';doneMhTab.style.borderBottom='2px solid var(--accent)';}
+    if(execCtrl)execCtrl.style.display='none';
+    if(doneCtrl)doneCtrl.style.display='';
+    renderOldStats();
+    if(window.innerWidth<=768)renderMobileCards('stats');
+  }
+  updateOrdTabCounts();
+}
+function updateOrdTabCounts(){
+  var execEl=document.getElementById('ord-cnt-exec');
+  var doneEl=document.getElementById('ord-cnt-done');
+  if(execEl)execEl.textContent=orders.filter(function(o){return !o.completed;}).length;
+  if(doneEl)doneEl.textContent=saleRecords.length;
 }
 
 function mobileNav(type){
@@ -6395,7 +6484,7 @@ function refreshAll(){
   updateInqTabCounts();
   const active=document.querySelector('.page.active');if(!active)return;
   const id=active.id.replace('page-','');
-  if(id==='dashboard')renderDashboard();else if(id==='hot')renderHot();else if(id==='inquiries')renderInquiries();else if(id==='customers')renderCustomers();else if(id==='oldstats')renderOldStats();else if(id==='orders')renderOrders();else if(id==='proddev'){if(prodView==='card')renderProdCardView();else renderProdDev();}else if(id==='prodcat'){if(pcatView==='card')renderPcatCardView();else renderProdCat();}else if(id==='procurement')switchProcTab(procCurrentTab);else if(id==='quote')renderQuotePage();else if(id==='suppliers')renderSuppliersPage();else if(id==='inventory')renderInventoryPage();else if(id==='finance')renderFinancePage();
+  if(id==='dashboard')renderDashboard();else if(id==='hot')renderHot();else if(id==='inquiries')renderInquiries();else if(id==='customers')renderCustomers();else if(id==='oldstats')renderOldStats();else if(id==='orders'){if(_ordActiveTab==='done')renderOldStats();else renderOrders();}else if(id==='proddev'){if(prodView==='card')renderProdCardView();else renderProdDev();}else if(id==='prodcat'){if(pcatView==='card')renderPcatCardView();else renderProdCat();}else if(id==='procurement')switchProcTab(procCurrentTab);else if(id==='quote')renderQuotePage();else if(id==='suppliers')renderSuppliersPage();else if(id==='inventory')renderInventoryPage();else if(id==='finance')renderFinancePage();
 }
 
 /* ===== IndexedDB 图片存储 ===== */
