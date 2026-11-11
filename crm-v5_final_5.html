@@ -2162,6 +2162,7 @@ a{color:var(--accent);text-decoration:none;}
   <div class="modal-body">
     <div class="form-grid">
       <div class="form-group"><label class="form-label">SKU编码</label><input class="form-input" type="text" id="fpsk-sku-code" placeholder="如：MUG-001-A"></div>
+      <div class="form-group"><label class="form-label">旧系统编号 (Item No.)</label><input class="form-input" type="text" id="fpsk-item-no" placeholder="如 140302010101"></div>
       <div class="form-group full"><label class="form-label">规格描述（中文）*</label><input class="form-input" type="text" id="fpsk-variant-cn" placeholder="如：白色 · 裸装 · 36个/箱"></div>
       <div class="form-group full"><label class="form-label">规格描述（英文）</label><input class="form-input" type="text" id="fpsk-variant-en" placeholder="如：White · Bulk · 36pcs/ctn"></div>
       <div class="form-group"><label class="form-label">颜色</label><input class="form-input" type="text" id="fpsk-color" placeholder="如：白色"></div>
@@ -2396,6 +2397,15 @@ const DEF_ORD=[
     {id:'oi003',skuCode:'MGN-D001-A',nameCN:'MDF冰箱贴（圆形）',qty:300,unit:'个',unitPrice:8,subtotal:2400},
     {id:'oi004',skuCode:'CTR-D001-A',nameCN:'印图软木杯垫',qty:300,unit:'个',unitPrice:7,subtotal:2100}
   ]},
+  {id:3,date:'2026-10-15',alias:'GKK',product:'软木杯垫+冰箱贴',qty:'',amount:13776,currency:'USD',stage:'生产中',delivery:'2026-12-10',person:'Alan',notes:'PI26100007',externalNotes:'',linkedProcId:'',completed:false,fees:[],payments:[],items:[
+    {id:'oi005',itemNo:'140302010101',skuCode:'CTR-HB001-A',nameCN:'HB方形软木杯垫',nameEN:'HB Square Cork Coaster',descEN:'9.5cm Square Cork Coaster, Sublimation Printed',qty:4800,unit:'PCS',cs:10,unitPrice:0.78,subtotal:3744,ctnL:45,ctnW:34,ctnH:21,ctnWeight:20},
+    {id:'oi006',itemNo:'140106030101',skuCode:'MGN-HB002-A',nameCN:'HB心形磁铁冰箱贴',nameEN:'HB Heart Fridge Magnet',descEN:'Heart Shape MDF Fridge Magnet, Sublimation Printed',qty:6000,unit:'PCS',cs:5,unitPrice:0.70,subtotal:4200,ctnL:45,ctnW:34,ctnH:21,ctnWeight:17.5},
+    {id:'oi007',itemNo:'140106020101',skuCode:'MGN-HB003-A',nameCN:'HB圆形磁铁冰箱贴',nameEN:'HB Round Fridge Magnet',descEN:'Round Shape MDF Fridge Magnet, Sublimation Printed',qty:4800,unit:'PCS',cs:4,unitPrice:0.69,subtotal:3312,ctnL:45,ctnW:34,ctnH:21,ctnWeight:17.5},
+    {id:'oi008',itemNo:'140106040101',skuCode:'MGN-HB004-A',nameCN:'HB矩形磁铁冰箱贴',nameEN:'HB Rectangle Fridge Magnet',descEN:'Rectangle Shape MDF Fridge Magnet, Sublimation Printed',qty:3600,unit:'PCS',cs:4,unitPrice:0.70,subtotal:2520,ctnL:45,ctnW:34,ctnH:21,ctnWeight:25.8}
+  ]},
+  {id:4,date:'2026-10-05',alias:'GKK',product:'软木杯垫',qty:'',amount:3120,currency:'USD',stage:'已发货',delivery:'2026-11-20',person:'Alan',notes:'PI26100006',externalNotes:'',linkedProcId:'',completed:false,fees:[],payments:[],items:[
+    {id:'oi009',itemNo:'140302010101',skuCode:'CTR-HB001-A',nameCN:'HB方形软木杯垫',nameEN:'HB Square Cork Coaster',descEN:'9.5cm Square Cork Coaster, Sublimation Printed',qty:4800,unit:'PCS',cs:10,unitPrice:0.65,subtotal:3120,ctnL:45,ctnW:34,ctnH:21,ctnWeight:20}
+  ]}
 ];
 const DEF_SALE=[
   {id:1,date:'2026-01-15',alias:'GKK',product:'MDF冰箱贴',amount:5000,currency:'USD',person:'Alan',notes:'Q1复单'},
@@ -7011,6 +7021,18 @@ var DEF_PRODCAT=[
   ]},
   {id:'pb011',skuCode:'MBX-001',nameCN:'空白木质音乐盒',nameEN:'Blank Wooden Music Box',type:'blank',categoryCode:'MBX',materials:['MDF','木材'],processes:['激光切割','UV直打'],formTag:'礼品盒',status:'active',canSell:true,hasStock:true,descCN:'简约风格空白木质音乐盒，可激光雕刻或UV印刷定制',descEN:'Blank wooden music box for laser engraving or UV printing customization',note:'',linkedProdDevId:'',skus:[
     {id:'pbs013',skuCode:'MBX-001-A',variantCN:'原木色 · 标准款',variantEN:'Natural Wood · Standard',color:'原木色',size:'标准',shape:'',packType:'裸装',qtyPerCarton:12,ctnL:40,ctnW:30,ctnH:25,ctnWeight:8,unitWeight:550,costPrice:8.5,priceMin:14,priceMax:22,floorPrice:11,currency:'USD',stockQty:24,stockUnit:'个',safetyStock:6,bom:[],note:''}
+  ]},
+  {id:'hb001',skuCode:'CTR-HB001',nameCN:'HB方形软木杯垫',nameEN:'HB Square Cork Coaster',type:'custom',categoryCode:'CTR',materials:['软木'],processes:['热转印','UV直打'],formTag:'杯垫',status:'active',canSell:true,hasStock:false,descCN:'9.5cm方形软木杯垫，定制款',descEN:'9.5cm Square Cork Coaster, custom print',note:'',linkedProdDevId:'',skus:[
+    {id:'hbs001',skuCode:'CTR-HB001-A',itemNo:'140302010101',variantCN:'原色 · 裸装 · 480个/箱',variantEN:'Natural · Bulk · 480pcs/ctn',color:'原色',size:'9.5cm',shape:'方形',packType:'裸装',qtyPerCarton:480,ctnL:45,ctnW:34,ctnH:21,ctnWeight:20,unitWeight:28,costPrice:0,priceMin:0.65,priceMax:0.90,floorPrice:0,currency:'USD',stockQty:0,stockUnit:'pcs',safetyStock:0,bom:[],supplier:'',note:''}
+  ]},
+  {id:'hb002',skuCode:'MGN-HB002',nameCN:'HB心形磁铁冰箱贴',nameEN:'HB Heart Fridge Magnet',type:'custom',categoryCode:'MGN',materials:['MDF'],processes:['热转印','UV直打'],formTag:'冰箱贴',status:'active',canSell:true,hasStock:false,descCN:'心形MDF磁铁冰箱贴，定制款',descEN:'HB Heart Shape MDF Fridge Magnet, custom print',note:'',linkedProdDevId:'',skus:[
+    {id:'hbs002',skuCode:'MGN-HB002-A',itemNo:'140106030101',variantCN:'心形 · 散装 · 1200个/箱',variantEN:'Heart Shape · Bulk · 1200pcs/ctn',color:'原色',size:'心形',shape:'心形',packType:'裸装',qtyPerCarton:1200,ctnL:45,ctnW:34,ctnH:21,ctnWeight:17.5,unitWeight:8,costPrice:0,priceMin:0.60,priceMax:0.90,floorPrice:0,currency:'USD',stockQty:0,stockUnit:'pcs',safetyStock:0,bom:[],supplier:'',note:''}
+  ]},
+  {id:'hb003',skuCode:'MGN-HB003',nameCN:'HB圆形磁铁冰箱贴',nameEN:'HB Round Fridge Magnet',type:'custom',categoryCode:'MGN',materials:['MDF'],processes:['热转印','UV直打'],formTag:'冰箱贴',status:'active',canSell:true,hasStock:false,descCN:'圆形MDF磁铁冰箱贴，定制款',descEN:'HB Round Shape MDF Fridge Magnet, custom print',note:'',linkedProdDevId:'',skus:[
+    {id:'hbs003',skuCode:'MGN-HB003-A',itemNo:'140106020101',variantCN:'圆形 · 散装 · 1200个/箱',variantEN:'Round Shape · Bulk · 1200pcs/ctn',color:'原色',size:'圆形',shape:'圆形',packType:'裸装',qtyPerCarton:1200,ctnL:45,ctnW:34,ctnH:21,ctnWeight:17.5,unitWeight:8,costPrice:0,priceMin:0.60,priceMax:0.90,floorPrice:0,currency:'USD',stockQty:0,stockUnit:'pcs',safetyStock:0,bom:[],supplier:'',note:''}
+  ]},
+  {id:'hb004',skuCode:'MGN-HB004',nameCN:'HB矩形磁铁冰箱贴',nameEN:'HB Rectangle Fridge Magnet',type:'custom',categoryCode:'MGN',materials:['MDF'],processes:['热转印','UV直打'],formTag:'冰箱贴',status:'active',canSell:true,hasStock:false,descCN:'矩形MDF磁铁冰箱贴，定制款',descEN:'HB Rectangle Shape MDF Fridge Magnet, custom print',note:'',linkedProdDevId:'',skus:[
+    {id:'hbs004',skuCode:'MGN-HB004-A',itemNo:'140106040101',variantCN:'矩形 · 散装 · 900个/箱',variantEN:'Rectangle Shape · Bulk · 900pcs/ctn',color:'原色',size:'矩形',shape:'矩形',packType:'裸装',qtyPerCarton:900,ctnL:45,ctnW:34,ctnH:21,ctnWeight:25.8,unitWeight:10,costPrice:0,priceMin:0.65,priceMax:0.95,floorPrice:0,currency:'USD',stockQty:0,stockUnit:'pcs',safetyStock:0,bom:[],supplier:'',note:''}
   ]}
 ];
 
@@ -8501,11 +8523,12 @@ function openPcatSkuModal(prodId,skuId){
     set('fpsk-safety-stock',sk.safetyStock||'');
     set('fpsk-supplier',sk.supplier||'');
     set('fpsk-note',sk.note||'');
+    set('fpsk-item-no',sk.itemNo||'');
     if(prod&&prod.type==='custom'&&canSeeCost())renderPcatBomRows(sk.bom||[]);
     if(delArea&&canDelete())delArea.innerHTML='<button class="btn btn-danger btn-sm" onclick="deletePcatSku(\''+prodId+'\',\''+skuId+'\')">🗑 删除SKU</button>';
   } else {
     if(mt)mt.textContent='新增SKU';
-    ['fpsk-sku-code','fpsk-variant-cn','fpsk-variant-en','fpsk-color','fpsk-size','fpsk-shape','fpsk-pack-type','fpsk-qty-per-carton','fpsk-unit-weight','fpsk-ctn-l','fpsk-ctn-w','fpsk-ctn-h','fpsk-ctn-weight','fpsk-cost-price','fpsk-price-min','fpsk-price-max','fpsk-floor-price','fpsk-stock-qty','fpsk-stock-unit','fpsk-safety-stock','fpsk-supplier','fpsk-note'].forEach(function(fid){set(fid,'');});
+    ['fpsk-sku-code','fpsk-item-no','fpsk-variant-cn','fpsk-variant-en','fpsk-color','fpsk-size','fpsk-shape','fpsk-pack-type','fpsk-qty-per-carton','fpsk-unit-weight','fpsk-ctn-l','fpsk-ctn-w','fpsk-ctn-h','fpsk-ctn-weight','fpsk-cost-price','fpsk-price-min','fpsk-price-max','fpsk-floor-price','fpsk-stock-qty','fpsk-stock-unit','fpsk-safety-stock','fpsk-supplier','fpsk-note'].forEach(function(fid){set(fid,'');});
     set('fpsk-currency','USD');
     if(prod&&prod.type==='custom'&&canSeeCost())renderPcatBomRows([]);
   }
@@ -8581,6 +8604,7 @@ function savePcatSkuRecord(){
   if(!prod.skus)prod.skus=[];
   var skuData={
     skuCode:get('fpsk-sku-code'),
+    itemNo:get('fpsk-item-no'),
     variantCN:variantCN,variantEN:get('fpsk-variant-en'),
     color:get('fpsk-color'),size:get('fpsk-size'),shape:get('fpsk-shape'),
     packType:get('fpsk-pack-type'),
@@ -12430,73 +12454,84 @@ function renderTradeDoc(){
 
   /* ---- 明细表 ---- */
   if(isPL){
-    /* PL: 无单价，有箱规 */
+    /* PL: Item No. / Description / Total Qty / Unit / Ctns / Meas.(m³) / G.W.(kg) */
     html+='<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px">';
     html+='<thead><tr style="background:'+coColor+';color:#fff">';
-    ['#',isCN?'商品描述':'Description',isCN?'数量':'Qty',isCN?'单位':'Unit',
-     isCN?'箱数':'Ctns',isCN?'净重(kg)':'N.W.(kg)',isCN?'毛重(kg)':'G.W.(kg)',isCN?'尺寸(cm)':'Meas.(cm)'].forEach(function(h,i){
-      var al=i===0?'center':(i===1?'left':'right');
-      var w=i===0?'24px':(i===7?'auto':'');
-      if(i===7)al='left';
-      html+='<th style="padding:6px '+(i===1?'8px':'4px')+';text-align:'+al+';'+(w?'width:'+w:'')+'">'+h+'</th>';
+    var plHeaders=isCN?['货号','商品描述','总数量','单位','箱数','体积(m³)','毛重(kg)']:['Item No.','Description','Total Qty','Unit','Ctns','Meas.(m³)','G.W.(kg)'];
+    var plWidths=['90px','','65px','50px','55px','80px','80px'];
+    plHeaders.forEach(function(h,i){
+      var alPl=(i===0||i===1)?'left':'right';
+      var wPl=plWidths[i]?'width:'+plWidths[i]+';':'';
+      html+='<th style="padding:6px 8px;text-align:'+alPl+';'+wPl+'">'+h+'</th>';
     });
     html+='</tr></thead><tbody>';
-    var totCtns=0,totNW=0,totGW=0;
-    var useItems=items.length>0?items:[{nameCN:o.product,nameEN:o.product,qty:o.qty,unit:'PCS',skuCode:''}];
+    var totQty=0,totCtns=0,totCBM=0,totGW=0;
+    var useItems=items.length>0?items:[{itemNo:'',nameCN:o.product,nameEN:o.product,qty:o.qty,unit:'PCS'}];
     useItems.forEach(function(item,idx){
-      var sku=_tdGetSkuFromPcat(item.skuCode);
-      var qtyNum=Number(item.qty)||0;
-      var qtyPer=sku&&sku.qtyPerCarton?Number(sku.qtyPerCarton):0;
-      var ctns=qtyPer>0?Math.ceil(qtyNum/qtyPer):0;
-      var nw=sku&&sku.unitWeight?Math.round(qtyNum*Number(sku.unitWeight)*100)/100:0;
-      var gw=sku&&sku.ctnWeight&&qtyPer>0?Math.round(ctns*Number(sku.ctnWeight)*100)/100:0;
-      var dims=sku&&sku.ctnL?(sku.ctnL+'×'+sku.ctnW+'×'+sku.ctnH):'';
-      totCtns+=ctns;totNW+=nw;totGW+=gw;
       var desc=isCN?(item.nameCN||item.nameEN||''):(item.nameEN||item.nameCN||'');
+      var subDesc=(!isCN&&item.descEN)?('<br><span style="color:#aaa;font-size:10px">'+item.descEN+'</span>'):'';
+      var cs=Number(item.cs)||0;
+      var ctnL=Number(item.ctnL)||0,ctnW=Number(item.ctnW)||0,ctnH=Number(item.ctnH)||0,ctnWgt=Number(item.ctnWeight)||0;
+      if(!cs&&item.skuCode){
+        var skuFb=_tdGetSkuFromPcat(item.skuCode);
+        if(skuFb){
+          var qtyPer=Number(skuFb.qtyPerCarton)||0;
+          if(qtyPer)cs=Math.ceil((Number(item.qty)||0)/qtyPer);
+          if(!ctnL){ctnL=Number(skuFb.ctnL)||0;ctnW=Number(skuFb.ctnW)||0;ctnH=Number(skuFb.ctnH)||0;}
+          if(!ctnWgt)ctnWgt=Number(skuFb.ctnWeight)||0;
+        }
+      }
+      var cbm=Math.round(ctnL*ctnW*ctnH*cs/1000)/1000;
+      var gw=ctnWgt&&cs?Math.round(ctnWgt*cs*100)/100:0;
+      var qNum=Number(item.qty)||0;
+      totQty+=qNum;totCtns+=cs;totCBM+=cbm;totGW+=gw;
       var bg=idx%2===0?'#fff':'#f9f9f9';
       html+='<tr style="background:'+bg+'">';
-      html+='<td style="padding:5px 4px;text-align:center;border-bottom:1px solid #f0f0f0">'+(idx+1)+'</td>';
-      html+='<td style="padding:5px 8px;border-bottom:1px solid #f0f0f0">'+desc+(item.skuCode?'<br><span style="color:#bbb;font-size:10px">'+item.skuCode+'</span>':'')+'</td>';
-      html+='<td style="padding:5px 4px;text-align:right;border-bottom:1px solid #f0f0f0">'+(item.qty||'')+'</td>';
-      html+='<td style="padding:5px 4px;text-align:right;border-bottom:1px solid #f0f0f0">'+(item.unit||'PCS')+'</td>';
-      html+='<td style="padding:5px 4px;text-align:right;border-bottom:1px solid #f0f0f0">'+(ctns||'—')+'</td>';
-      html+='<td style="padding:5px 4px;text-align:right;border-bottom:1px solid #f0f0f0">'+(nw||'—')+'</td>';
-      html+='<td style="padding:5px 4px;text-align:right;border-bottom:1px solid #f0f0f0">'+(gw||'—')+'</td>';
-      html+='<td style="padding:5px 4px;border-bottom:1px solid #f0f0f0">'+(dims||'—')+'</td>';
+      html+='<td style="padding:5px 8px;border-bottom:1px solid #f0f0f0;font-size:10px;color:#888;font-family:monospace">'+(item.itemNo||'')+'</td>';
+      html+='<td style="padding:5px 8px;border-bottom:1px solid #f0f0f0">'+desc+subDesc+'</td>';
+      html+='<td style="padding:5px 8px;text-align:right;border-bottom:1px solid #f0f0f0">'+(qNum||'—')+'</td>';
+      html+='<td style="padding:5px 8px;text-align:right;border-bottom:1px solid #f0f0f0">'+(item.unit||'PCS')+'</td>';
+      html+='<td style="padding:5px 8px;text-align:right;border-bottom:1px solid #f0f0f0">'+(cs||'—')+'</td>';
+      html+='<td style="padding:5px 8px;text-align:right;border-bottom:1px solid #f0f0f0">'+(cbm?cbm.toFixed(3):'—')+'</td>';
+      html+='<td style="padding:5px 8px;text-align:right;border-bottom:1px solid #f0f0f0">'+(gw?gw.toFixed(2):'—')+'</td>';
       html+='</tr>';
     });
     html+='<tr style="background:#f5f5f5;font-weight:600">';
-    html+='<td colspan="4" style="padding:6px 8px;text-align:right">'+(isCN?'合计:':'TOTAL:')+'</td>';
-    html+='<td style="padding:6px 4px;text-align:right">'+totCtns+'</td>';
-    html+='<td style="padding:6px 4px;text-align:right">'+(totNW?totNW.toFixed(2):'—')+'</td>';
-    html+='<td style="padding:6px 4px;text-align:right">'+(totGW?totGW.toFixed(2):'—')+'</td>';
-    html+='<td></td></tr>';
+    html+='<td colspan="2" style="padding:6px 8px;text-align:right">'+(isCN?'合计:':'TOTAL:')+'</td>';
+    html+='<td style="padding:6px 8px;text-align:right">'+totQty+'</td>';
+    html+='<td></td>';
+    html+='<td style="padding:6px 8px;text-align:right">'+totCtns+'</td>';
+    html+='<td style="padding:6px 8px;text-align:right">'+(totCBM?totCBM.toFixed(3):'—')+'</td>';
+    html+='<td style="padding:6px 8px;text-align:right">'+(totGW?totGW.toFixed(2):'—')+'</td>';
+    html+='</tr>';
     html+='</tbody></table>';
 
   }else{
-    /* PI / CI: 有单价 */
+    /* PI / CI: Item No. / Description / Qty / Unit / Unit Price / Amount */
     html+='<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:4px">';
     html+='<thead><tr style="background:'+coColor+';color:#fff">';
-    ['#',isCN?'商品描述':'Description',isCN?'规格':'Spec',isCN?'数量':'Qty',
-     isCN?'单位':'Unit',isCN?'单价':'Unit Price',isCN?'金额':'Amount'].forEach(function(h,i){
-      var al=i===0?'center':(i>=5?'right':(i===1?'left':'center'));
-      html+='<th style="padding:6px '+(i===1||i>=5?'8px':'4px')+';text-align:'+al+'">'+h+'</th>';
+    var piCols=isCN?['货号','商品描述','数量','单位','单价','金额']:['Item No.','Description','Qty','Unit','Unit Price','Amount'];
+    var piWidths=['90px','','65px','50px','90px','90px'];
+    piCols.forEach(function(h,i){
+      var alPi=(i>=4)?'right':(i===1?'left':'left');
+      var wPi=piWidths[i]?'width:'+piWidths[i]+';':'';
+      html+='<th style="padding:6px 8px;text-align:'+alPi+';'+wPi+'">'+h+'</th>';
     });
     html+='</tr></thead><tbody>';
 
     var subtotalAll=0;
-    var useItems2=items.length>0?items:[{nameCN:o.product,nameEN:o.product,qty:o.qty,unit:'PCS',skuCode:'',unitPrice:0,subtotal:o.amount||0}];
+    var useItems2=items.length>0?items:[{itemNo:'',nameCN:o.product,nameEN:o.product,descEN:'',qty:o.qty,unit:'PCS',skuCode:'',unitPrice:0,subtotal:o.amount||0}];
     useItems2.forEach(function(item,idx){
       var desc=isCN?(item.nameCN||item.nameEN||''):(item.nameEN||item.nameCN||'');
+      var subDesc=(!isCN&&item.descEN)?('<br><span style="color:#aaa;font-size:10px">'+item.descEN+'</span>'):'';
       var bg=idx%2===0?'#fff':'#f9f9f9';
       var subAmt=Number(item.subtotal)||0;
       subtotalAll+=subAmt;
       html+='<tr style="background:'+bg+'">';
-      html+='<td style="padding:5px 4px;text-align:center;border-bottom:1px solid #f0f0f0">'+(idx+1)+'</td>';
-      html+='<td style="padding:5px 8px;border-bottom:1px solid #f0f0f0">'+desc+(item.skuCode?'<br><span style="color:#bbb;font-size:10px">'+item.skuCode+'</span>':'')+'</td>';
-      html+='<td style="padding:5px 4px;text-align:center;border-bottom:1px solid #f0f0f0"></td>';
-      html+='<td style="padding:5px 4px;text-align:right;border-bottom:1px solid #f0f0f0">'+(item.qty||'')+'</td>';
-      html+='<td style="padding:5px 4px;text-align:center;border-bottom:1px solid #f0f0f0">'+(item.unit||'PCS')+'</td>';
+      html+='<td style="padding:5px 8px;border-bottom:1px solid #f0f0f0;font-size:10px;color:#888;font-family:monospace">'+(item.itemNo||'')+'</td>';
+      html+='<td style="padding:5px 8px;border-bottom:1px solid #f0f0f0">'+desc+subDesc+'</td>';
+      html+='<td style="padding:5px 8px;text-align:right;border-bottom:1px solid #f0f0f0">'+(item.qty||'')+'</td>';
+      html+='<td style="padding:5px 8px;text-align:right;border-bottom:1px solid #f0f0f0">'+(item.unit||'PCS')+'</td>';
       html+='<td style="padding:5px 8px;text-align:right;border-bottom:1px solid #f0f0f0">'+(item.unitPrice?cur+' '+Number(item.unitPrice).toFixed(2):'')+'</td>';
       html+='<td style="padding:5px 8px;text-align:right;border-bottom:1px solid #f0f0f0">'+(subAmt?cur+' '+subAmt.toFixed(2):'')+'</td>';
       html+='</tr>';
