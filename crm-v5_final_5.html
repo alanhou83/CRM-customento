@@ -4225,19 +4225,28 @@ function openOrderDetail(id){
       var subtotalColor=o.currency==='USD'?'var(--green)':'var(--yellow)';
       var subtotalStr=item.subtotal?cur+Number(item.subtotal).toFixed(2):'—';
       var unit=item.unit||'个';
-      var qtyStr=item.qty?(item.qty+unit):'—';
-      var priceStr=item.unitPrice?(cur+Number(item.unitPrice).toFixed(2)+'/'+unit):'';
-      var detailStr=item.skuCode?item.skuCode:'';
-      if(qtyStr!=='—'&&priceStr)detailStr+=(detailStr?' · ':'')+qtyStr+' × '+priceStr;
-      else if(qtyStr!=='—')detailStr+=(detailStr?' · ':'')+qtyStr;
-      itemsHtml+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border)">'
-        +'<img id="ord-ith-'+idx+'" style="width:32px;height:32px;border-radius:5px;object-fit:cover;flex-shrink:0;background:var(--surface2);display:none">'
+      var qtyNum=Number(item.qty)||0;
+      var csNum=Number(item.cs)||0;
+      var pcsPerCs=Number(item.pcsPerCarton)||0;
+      var ctnWgt=Number(item.ctnWeight)||0;
+      var ctnL=Number(item.ctnL)||0,ctnW=Number(item.ctnW)||0,ctnH=Number(item.ctnH)||0;
+      var skuLine=(item.skuCode||'')+(item.itemNo?(' · '+item.itemNo):'');
+      var priceLine=qtyNum?(qtyNum+unit+(item.unitPrice?(' × '+cur+Number(item.unitPrice).toFixed(2)+'/'+unit):'')):'—';
+      var ctnLine=(csNum&&pcsPerCs)?(csNum+'箱 × '+pcsPerCs+unit+'/箱'+(ctnWgt?(' · '+ctnWgt+'kg/箱'):'')+(ctnL?(' · '+ctnL+'×'+ctnW+'×'+ctnH+'cm'):'')):'';
+      itemsHtml+='<div style="padding:8px 0;border-top:1px solid var(--border)">'
+        +'<div style="display:flex;align-items:flex-start;gap:8px">'
+        +'<img id="ord-ith-'+idx+'" style="width:36px;height:36px;border-radius:5px;object-fit:cover;flex-shrink:0;background:var(--surface2);display:none">'
         +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(item.nameCN||'—')+'</div>'
-        +(detailStr?'<div style="font-size:11px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+detailStr+'</div>':'')
+        +'<div style="font-size:13px;font-weight:600;color:var(--text)">'+(item.nameCN||'—')+'</div>'
+        +(item.nameEN?'<div style="font-size:11px;color:var(--muted);margin-top:1px">'+item.nameEN+'</div>':'')
+        +(item.descEN?'<div style="font-size:10px;color:var(--muted2);margin-top:2px;white-space:normal;line-height:1.4">'+item.descEN+'</div>':'')
+        +(skuLine?'<div style="font-size:10px;color:var(--accent2);margin-top:3px;font-family:monospace">'+skuLine+'</div>':'')
+        +'<div style="font-size:11px;color:var(--text);margin-top:3px">'+priceLine+'</div>'
+        +(ctnLine?'<div style="font-size:10px;color:var(--muted);margin-top:2px">📦 '+ctnLine+'</div>':'')
         +'</div>'
-        +'<div style="text-align:right;flex-shrink:0;min-width:60px">'
-        +'<div style="font-size:14px;font-weight:600;color:'+subtotalColor+'">'+subtotalStr+'</div>'
+        +'<div style="text-align:right;flex-shrink:0;min-width:64px">'
+        +'<div style="font-size:15px;font-weight:700;color:'+subtotalColor+'">'+subtotalStr+'</div>'
+        +'</div>'
         +'</div>'
         +'</div>';
     });
@@ -7288,6 +7297,66 @@ var DEF_PRODCAT=[
     {id:'hbs004',skuCode:'MGN-HB004-A',itemNo:'140106040101',variantCN:'矩形 · 散装 · 900个/箱',variantEN:'Rectangle Shape · Bulk · 900pcs/ctn',color:'原色',size:'矩形',shape:'矩形',packType:'裸装',qtyPerCarton:900,ctnL:45,ctnW:34,ctnH:21,ctnWeight:25.8,unitWeight:10,costPrice:0,priceMin:0.65,priceMax:0.95,floorPrice:0,currency:'USD',stockQty:0,stockUnit:'pcs',safetyStock:0,bom:[],supplier:'',note:''}
   ]}
 ];
+
+/* ===== 数据补丁：首次运行时把新增默认数据 merge 进已有 localStorage ===== */
+(function patchData(){
+  /* 1. 修正 GKK 客户公司名 + 添加联系人 */
+  var gkk=customers.find(function(c){return c.alias==='GKK';});
+  if(gkk){
+    var custChanged=false;
+    if(gkk.company==='Giftware Keepsake Kingdom GmbH'){gkk.company='Gerd Koch Konzept & Handels GmbH';custChanged=true;}
+    if(!gkk.contacts){
+      gkk.contacts=[
+        {name:'Frank Van Den Broek',role:'采购',phone:gkk.phone||'',email:gkk.email||'',wechat:''},
+        {name:'Gerrit',role:'',phone:'',email:'',wechat:''}
+      ];
+      custChanged=true;
+    }
+    if(custChanged)localStorage.setItem(SK.cust,JSON.stringify(customers));
+  }
+  /* 2. 补充/更新 GKK 订单 id:3 和 id:4（以 DEF_ORD 中的正确数据为准） */
+  var needSaveOrd=false;
+  [3,4].forEach(function(oid){
+    var defO=DEF_ORD.find(function(d){return d.id===oid;});
+    if(!defO)return;
+    var idx=-1;
+    orders.forEach(function(o,i){if(o.id===oid)idx=i;});
+    if(idx<0){
+      orders.push(JSON.parse(JSON.stringify(defO)));
+      needSaveOrd=true;
+    } else if(!orders[idx].items||!orders[idx].items.length||Math.abs((orders[idx].amount||0)-defO.amount)>1){
+      var saved={followups:orders[idx].followups||[],payments:orders[idx].payments||[]};
+      orders.splice(idx,1,JSON.parse(JSON.stringify(defO)));
+      orders[idx].followups=saved.followups;
+      orders[idx].payments=saved.payments;
+      needSaveOrd=true;
+    }
+  });
+  if(needSaveOrd){
+    var maxOid=0;
+    orders.forEach(function(o){if(o.id>maxOid)maxOid=o.id;});
+    nextOrdId=maxOid+1;
+    localStorage.setItem(SK.ord,JSON.stringify(orders));
+  }
+  /* 3. 补充 HB 系列产品到产品库（有存量时 merge，无存量时 getProdCatData 加载全量） */
+  var ps=localStorage.getItem(SK.prodcat);
+  if(ps){
+    var pd=JSON.parse(ps);
+    if(pd&&pd.products){
+      var changed=false;
+      var hbIds=['hb001','hb002','hb003','hb004'];
+      hbIds.forEach(function(hid){
+        var dp=null;
+        DEF_PRODCAT.forEach(function(x){if(x.id===hid)dp=x;});
+        if(!dp)return;
+        var exists=false;
+        pd.products.forEach(function(p){if(p.id===hid)exists=true;});
+        if(!exists){pd.products.push(JSON.parse(JSON.stringify(dp)));changed=true;}
+      });
+      if(changed)localStorage.setItem(SK.prodcat,JSON.stringify(pd));
+    }
+  }
+})();
 
 /* ===== 采购跟单示例数据 ===== */
 var DEF_PROC_SUPPLIERS=[
