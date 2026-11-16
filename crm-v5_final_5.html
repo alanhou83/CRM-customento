@@ -90,7 +90,8 @@ a{color:var(--accent);text-decoration:none;}
 .inq-list-thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;display:block;}
 .inq-list-thumb-ph{width:36px;height:36px;border-radius:6px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted);opacity:.4;}
 .cols-hot{grid-template-columns:46px 80px 1fr 90px 90px 100px 55px 100px 150px 65px;}
-.cols-ord{grid-template-columns:85px 120px 1fr 120px 110px 100px 70px;}
+.cols-ord{grid-template-columns:158px 88px 80px minmax(130px,1fr) minmax(130px,1fr) 125px 90px 100px 65px;}
+#ord-exec-section .table-inner{min-width:1120px;}
 .cols-stat{grid-template-columns:110px 1fr 70px 120px 100px 70px 70px;}
 .cols-prodcat{display:grid;grid-template-columns:52px 90px 1fr 80px 120px 70px 100px 70px;gap:0;align-items:center;}
 .cols-proc{display:grid;grid-template-columns:100px 120px 90px 1fr 90px 90px 90px 80px 60px;gap:0;align-items:center;}
@@ -475,7 +476,7 @@ a{color:var(--accent);text-decoration:none;}
         <select id="mb-ord-person" onchange="renderMobileCards('ord')" style="background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--text);padding:3px 6px;font-size:11px;outline:none;flex-shrink:0"><option value="">跟单</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Alan</option></select>
       </div>
       <div style="display:flex;align-items:center;gap:3px;width:calc(100% + 30px);margin-left:-15px;margin-right:-15px;margin-top:-0.5px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
-        <input id="mb-ord-search" placeholder="🔍 搜索客户..." oninput="renderMobileCards('ord')" style="flex:1;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;padding:3px 0;min-width:0">
+        <input id="mb-ord-search" placeholder="🔍 搜索编号 / 客户 / 备注" oninput="renderMobileCards('ord')" style="flex:1;background:transparent;border:none;color:var(--text);font-size:13px;outline:none;padding:3px 0;min-width:0">
         <button class="sort-btn-s" id="ord-sort-date" onclick="setOrdMobileSort('date')">日期 ↓</button>
         <button class="sort-btn-s" id="ord-sort-alias" onclick="setOrdMobileSort('alias')">客户 ↓</button>
         <button class="sort-btn-s" id="ord-sort-amount" onclick="setOrdMobileSort('amount')">金额 ↓</button>
@@ -890,7 +891,7 @@ a{color:var(--accent);text-decoration:none;}
     <div id="ord-exec-section">
       <div class="stat-summary" id="order-summary"></div>
       <div class="filters">
-        <input class="search-box" id="search-ord" placeholder="🔍 搜索客户..." oninput="renderOrders()">
+        <input class="search-box" id="search-ord" placeholder="🔍 搜索编号 / 客户 / 备注" oninput="renderOrders()">
         <select class="filter-select" id="ord-stage" onchange="renderOrders()"><option value="">所有阶段</option><option>等待打样</option><option>打样中</option><option>客户确认样品</option><option>生产中</option><option>待发货</option><option>已发货</option></select>
         <select class="filter-select" id="ord-currency" onchange="renderOrders()"><option value="">所有货币</option><option value="USD">$ 美金</option><option value="CNY">¥ 人民币</option></select>
         <select class="filter-select" id="ord-person" onchange="renderOrders()"><option value="">所有跟单人</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Alan</option></select>
@@ -898,9 +899,11 @@ a{color:var(--accent);text-decoration:none;}
       </div>
       <div class="table-wrap"><div class="table-scroll"><div class="table-inner">
         <div class="table-header cols-ord">
+          <div>订单编号</div>
           <div id="tho-date" onclick="setOrdSort('date')" style="cursor:pointer;user-select:none">下单日期 <span id="tho-date-arr" style="color:var(--accent);opacity:1">↓</span></div>
           <div id="tho-alias" onclick="setOrdSort('alias')" style="cursor:pointer;user-select:none">客户 <span id="tho-alias-arr" style="color:var(--muted);opacity:.4">↕</span></div>
           <div>产品</div>
+          <div>备注</div>
           <div id="tho-amount" onclick="setOrdSort('amount')" style="cursor:pointer;user-select:none">订单金额 <span id="tho-amount-arr" style="color:var(--muted);opacity:.4">↕</span></div>
           <div>当前阶段</div>
           <div id="tho-delivery" onclick="setOrdSort('delivery')" style="cursor:pointer;user-select:none">预计交期 <span id="tho-delivery-arr" style="color:var(--muted);opacity:.4">↕</span></div>
@@ -1917,6 +1920,7 @@ a{color:var(--accent);text-decoration:none;}
   <div class="modal-head"><div class="modal-title" id="order-modal-title">新增订单</div><button class="modal-close" onclick="closeModal('order-modal')">×</button></div>
   <div class="modal-body">
     <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">订单编号（系统生成，不可修改）</label><div id="fo-order-number" class="form-input" style="color:var(--muted)">首次保存后自动生成</div></div>
       <div class="form-group"><label class="form-label">下单日期</label><input class="form-input" type="date" id="fo-date"></div>
       <div class="form-group"><label class="form-label">客户代号 *</label><input class="form-input" type="text" id="fo-alias" placeholder="如：GKK"></div>
       <div class="form-group"><label class="form-label">当前阶段</label><select class="form-input" id="fo-stage"><option>等待打样</option><option>打样中</option><option>客户确认样品</option><option>生产中</option><option>待发货</option><option>已发货</option></select></div>
@@ -2445,7 +2449,8 @@ let currentUser=localStorage.getItem(SK.user)||'Alan';
 let crmSettings=JSON.parse(localStorage.getItem(SK.settings)||'null')||{products:DEF_PRODUCTS.slice(),pcatCategories:[{code:'MUG',nameCN:'杯子类',nameEN:'Mugs',icon:'☕'},{code:'CTR',nameCN:'杯垫类',nameEN:'Coasters',icon:'🟫'},{code:'BAG',nameCN:'包袋类',nameEN:'Bags',icon:'👜'},{code:'MGN',nameCN:'冰箱贴/装饰',nameEN:'Magnets & Decor',icon:'🧲'},{code:'TEE',nameCN:'T恤/布艺',nameEN:'Apparel',icon:'👕'},{code:'TIL',nameCN:'瓷砖/板材',nameEN:'Tiles & Boards',icon:'🪨'},{code:'BRD',nameCN:'原板材',nameEN:'Raw Boards',icon:'📐'},{code:'PKG',nameCN:'包装耗材',nameEN:'Packaging',icon:'📦'},{code:'INK',nameCN:'墨水/耗材',nameEN:'Inks & Supplies',icon:'🖨️'},{code:'PAP',nameCN:'纸张',nameEN:'Paper',icon:'📄'},{code:'SVC',nameCN:'加工服务',nameEN:'Services',icon:'⚙️'},{code:'MBX',nameCN:'音乐盒',nameEN:'Music Boxes',icon:'🎵'}],pcatMaterials:['陶瓷','玻璃','搪瓷','塑料','MDF','软木','布艺','帆布','亚克力','橡胶','金属','铝合金','不锈钢','石头','大理石','卡纸','皮革','树脂'],pcatProcesses:['热转印','UV直打','DTF打印','激光切割','激光打标','丝网印刷','刺绣','水晶标','贴标','热压','烫金','压印'],pcatForms:['杯子','杯垫','冰箱贴','T恤','帆布袋','背包','瓷砖','盘子','音乐盒','钥匙扣','手机壳','相框','书签','徽章','贴纸']};
 let nextInqId=inquiries.length?Math.max(...inquiries.map(i=>i.id))+1:1;
 let nextCustId=customers.length?Math.max(...customers.map(c=>c.id))+1:1;
-let nextOrdId=orders.length?Math.max(...orders.map(o=>o.id))+1:1;
+let nextOrdId=1;
+ensureOrderNumbers();
 let nextSaleId=saleRecords.length?Math.max(...saleRecords.map(s=>s.id))+1:1;
 let editingInqId=null,editingCustId=null,editingOrdId=null,editingSaleId=null;
 let currentDetailId=null,currentDetailType=null;
@@ -2457,7 +2462,40 @@ var dashTeamPeriod='month';
 var _dashOvList=[],_dashOvCustList=[],_dashTdList=[],_dashTdCustList=[],_dashDlList=[];
 var _dashOvExpanded=false,_dashTdExpanded=false,_dashVipExpanded=false;
 
-function saveAll(){localStorage.setItem(SK.inq,JSON.stringify(inquiries));localStorage.setItem(SK.cust,JSON.stringify(customers));localStorage.setItem(SK.ord,JSON.stringify(orders));localStorage.setItem(SK.sale,JSON.stringify(saleRecords));}
+/* 订单编号首次分配后固定；持久化ID计数，删除后不复用。 */
+function ensureOrderNumbers(){
+  var sequenceKey='crm_ord_sequence_v5';
+  var highWater=Number(localStorage.getItem(sequenceKey))||0;
+  var changed=false;
+  orders.forEach(function(o){
+    highWater=Math.max(highWater,Number(o.id)||0);
+    if(!o.orderNumber){o.orderNumber=buildOrderNumber(o);changed=true;}
+  });
+  nextOrdId=Math.max(nextOrdId||1,highWater+1);
+  localStorage.setItem(sequenceKey,String(nextOrdId-1));
+  if(changed)localStorage.setItem(SK.ord,JSON.stringify(orders));
+}
+function buildOrderNumber(o){
+  var serial=String(o.id);
+  while(serial.length<4)serial='0'+serial;
+  return 'PI-'+(o.date||today()).replace(/-/g,'')+'-'+serial;
+}
+function orderMatchesSearch(o,search){
+  return [o.orderNumber,o.alias,o.notes,o.product].join(' ').toLowerCase().includes(search);
+}
+function saleOrderNumber(sale){
+  var source=orders.find(function(o){return o.id===sale.fromOrderId;});
+  return sale.orderNumber||(source?source.orderNumber:'');
+}
+function saleMatchesSearch(sale,search){
+  var source=orders.find(function(o){return o.id===sale.fromOrderId;});
+  return [saleOrderNumber(sale),sale.alias,sale.notes,source?source.notes:''].join(' ').toLowerCase().includes(search);
+}
+function orderDisplayText(value){
+  return String(value||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function saveAll(){ensureOrderNumbers();localStorage.setItem(SK.inq,JSON.stringify(inquiries));localStorage.setItem(SK.cust,JSON.stringify(customers));localStorage.setItem(SK.ord,JSON.stringify(orders));localStorage.setItem(SK.sale,JSON.stringify(saleRecords));}
 function saveSettings(){localStorage.setItem(SK.settings,JSON.stringify(crmSettings));}
 function getProducts(){return(crmSettings.products&&crmSettings.products.length)?crmSettings.products:DEF_PRODUCTS.slice();}
 function getPcatCategories(){if(!crmSettings.pcatCategories||!crmSettings.pcatCategories.length)crmSettings.pcatCategories=[{code:'MUG',nameCN:'杯子类',nameEN:'Mugs',icon:'☕'},{code:'CTR',nameCN:'杯垫类',nameEN:'Coasters',icon:'🟫'},{code:'BAG',nameCN:'包袋类',nameEN:'Bags',icon:'👜'},{code:'MGN',nameCN:'冰箱贴/装饰',nameEN:'Magnets & Decor',icon:'🧲'},{code:'TEE',nameCN:'T恤/布艺',nameEN:'Apparel',icon:'👕'},{code:'TIL',nameCN:'瓷砖/板材',nameEN:'Tiles & Boards',icon:'🪨'},{code:'BRD',nameCN:'原板材',nameEN:'Raw Boards',icon:'📐'},{code:'PKG',nameCN:'包装耗材',nameEN:'Packaging',icon:'📦'},{code:'INK',nameCN:'墨水/耗材',nameEN:'Inks & Supplies',icon:'🖨️'},{code:'PAP',nameCN:'纸张',nameEN:'Paper',icon:'📄'},{code:'SVC',nameCN:'加工服务',nameEN:'Services',icon:'⚙️'},{code:'MBX',nameCN:'音乐盒',nameEN:'Music Boxes',icon:'🎵'}];return crmSettings.pcatCategories;}
@@ -4080,7 +4118,7 @@ function renderOldStats(){
   const person=document.getElementById('of-person')?.value||'';
   const quarter=document.getElementById('of-quarter')?.value||'';
   const filtered=saleRecords.filter(s=>{
-    if(search&&!s.alias.toLowerCase().includes(search))return false;
+    if(search&&!saleMatchesSearch(s,search))return false;
     if(year&&!s.date.startsWith(year))return false;
     if(currency&&s.currency!==currency)return false;
     if(person&&s.person!==person)return false;
@@ -4119,7 +4157,7 @@ function renderOldStats(){
     const cust=custMap[s.alias];
     const icon=cust?typeIcon[cust.type]||'':'';
     return '<div class="table-row cols-stat" style="cursor:pointer" onclick="openSaleDetail('+s.id+')">'
-      +'<div class="table-cell" style="font-weight:500">'+s.alias+' '+icon+(s.notes?'<div style="font-size:11px;color:var(--muted2);font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.notes+'</div>':'')+'</div>'
+      +'<div class="table-cell" style="font-weight:500">'+s.alias+' '+icon+(saleOrderNumber(s)?'<div style="font-size:11px;color:var(--accent);font-weight:400">'+orderDisplayText(saleOrderNumber(s))+'</div>':'')+(s.notes?'<div style="font-size:11px;color:var(--muted2);font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.notes+'</div>':'')+'</div>'
       +'<div class="table-cell">'+s.product+'</div>'
       +'<div class="table-cell"><span class="'+(s.currency==='USD'?'cur-usd':'cur-cny')+'">'+s.currency+'</span></div>'
       +'<div class="table-cell" style="font-weight:500;color:'+(s.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(s.amount,s.currency)+'</div>'
@@ -4137,7 +4175,7 @@ function renderOrders(){
   const person=(document.getElementById('ord-person')?.value||'');
   const filtered=orders.filter(function(o){
     if(o.completed)return false;
-    if(search&&!o.alias.toLowerCase().includes(search))return false;
+    if(search&&!orderMatchesSearch(o,search))return false;
     if(stage&&o.stage!==stage)return false;
     if(currency&&o.currency!==currency)return false;
     if(person&&o.person!==person)return false;
@@ -4170,9 +4208,11 @@ function renderOrders(){
   body.innerHTML=filtered.map(function(o){
     var deliveryOverdue=o.delivery&&o.delivery<todayStr;
     return '<div class="table-row cols-ord" onclick="openOrderDetail('+o.id+')">'
+      +'<div class="table-cell" style="font-size:12px;color:var(--accent);white-space:nowrap">'+orderDisplayText(o.orderNumber)+'</div>'
       +'<div class="table-cell" style="color:var(--muted);font-size:12px">'+o.date+'</div>'
       +'<div class="table-cell" style="font-weight:500">'+o.alias+'</div>'
-      +'<div class="table-cell"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+o.product+'</div>'+(o.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">注：'+o.notes+'</div>':'')+'</div>'
+      +'<div class="table-cell" title="'+orderDisplayText(o.product)+'" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+orderDisplayText(o.product)+'</div>'
+      +'<div class="table-cell" title="'+orderDisplayText(o.notes)+'" style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(orderDisplayText(o.notes)||'—')+'</div>'
       +'<div class="table-cell" style="font-weight:500;color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+'"><span class="'+(o.currency==='USD'?'cur-usd':'cur-cny')+'">'+o.currency+'</span> '+fmtAmt(o.amount,o.currency)+'</div>'
       +'<div class="table-cell"><span style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;'+getOrdStageStyle(o.stage)+'">'+o.stage+'</span></div>'
       +'<div class="table-cell" style="font-size:12px;color:'+(deliveryOverdue?'var(--red)':'var(--muted)')+'">'+(deliveryOverdue?'⚠️ ':'')+( o.delivery||'未设定')+'</div>'
@@ -4192,7 +4232,7 @@ function completeOrder(id){
 function doCompleteOrder(id){
   document.querySelector('.confirm-overlay')?.remove();
   const o=orders.find(x=>x.id===id);if(!o)return;
-  saleRecords.push({id:nextSaleId++,date:today(),alias:o.alias,product:o.product,amount:o.amount,currency:o.currency,person:o.person,notes:'从执行中订单完成',fromOrderId:id});
+  saleRecords.push({id:nextSaleId++,date:today(),alias:o.alias,product:o.product,amount:o.amount,currency:o.currency,person:o.person,notes:'从执行中订单完成',orderNumber:o.orderNumber,fromOrderId:id});
   o.completed=true;saveAll();closeDetail();refreshAll();toast('订单完成，已录入老客户统计 ✓');
 }
 
@@ -4259,6 +4299,7 @@ function openOrderDetail(id){
   }
   tab1+=itemsHtml;
   tab1+='<div class="detail-section"><div class="detail-section-title">订单信息</div>'
+    +'<div class="detail-row"><span class="detail-key">订单编号</span><span class="detail-val">'+orderDisplayText(o.orderNumber)+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">下单日期</span><span class="detail-val">'+o.date+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">客户代号</span><span class="detail-val">'+o.alias+'</span></div>'
     +((!o.items||!o.items.length)?'<div class="detail-row"><span class="detail-key">产品</span><span class="detail-val">'+(o.product||'—')+'</span></div>'+'<div class="detail-row"><span class="detail-key">数量</span><span class="detail-val">'+(o.qty||'—')+'</span></div>'+'<div class="detail-row"><span class="detail-key">产品金额</span><span class="detail-val" style="color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(o.amount,o.currency)+'</span></div>':'')
@@ -5335,7 +5376,7 @@ function addFollowup(){
   else if(currentDetailType==='order'){const o=orders.find(x=>x.id===currentDetailId);if(o){if(!o.followups)o.followups=[];o.followups.push(entry);saveAll();openOrderDetail(currentDetailId);switchDpTab('followup');refreshAll();toast('跟进记录已添加 ✓');}}
 }
 
-function openModal(id){document.getElementById(id).classList.add('open');}
+function openModal(id){if(id==='order-modal'){var numberEl=document.getElementById('fo-order-number');var order=orders.find(function(o){return o.id===editingOrdId;});if(numberEl)numberEl.textContent=order?order.orderNumber:'首次保存后自动生成';}document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function closeModalBg(e,id){if(e.target===document.getElementById(id))closeModal(id);}
 
@@ -5775,6 +5816,7 @@ function saveOrder(){
   }
   var linkedProcId=(document.getElementById('fo-linkedprocid')||{}).value||'';
   var data={date:document.getElementById('fo-date').value,alias:alias,product:derivedProduct,qty:derivedQty,amount:derivedAmount,currency:currency,items:ordItems,linkedProcId:linkedProcId,stage:document.getElementById('fo-stage').value,delivery:document.getElementById('fo-delivery').value,person:document.getElementById('fo-person').value,notes:document.getElementById('fo-notes').value,externalNotes:(document.getElementById('fo-ext-notes')||{}).value||'',completed:false,fees:ordFees};
+  ensureOrderNumbers();
   if(editingOrdId){var eo=orders.find(function(x){return x.id===editingOrdId;});if(eo){data.completed=eo.completed;data.followups=eo.followups;Object.assign(eo,data);}}
   else{orders.push({id:nextOrdId++,followups:[],completed:false,fees:ordFees,items:ordItems,linkedProcId:linkedProcId,product:derivedProduct,qty:derivedQty,amount:derivedAmount,currency:currency,stage:document.getElementById('fo-stage').value,date:document.getElementById('fo-date').value,alias:alias,delivery:document.getElementById('fo-delivery').value,person:document.getElementById('fo-person').value,notes:document.getElementById('fo-notes').value,externalNotes:(document.getElementById('fo-ext-notes')||{}).value||''});}
   saveAll();closeModal('order-modal');refreshAll();toast('订单已保存 ✓');
@@ -6410,7 +6452,7 @@ function renderMobileCards(page){
       if(f.overdue&&!(o.delivery&&o.delivery<todayForFilter))return false;
       if(f.filter&&o.stage!==f.filter)return false;
       if(mbOrdPerson&&o.person!==mbOrdPerson)return false;
-      if(mbOrdSearch&&!o.alias.toLowerCase().includes(mbOrdSearch))return false;
+      if(mbOrdSearch&&!orderMatchesSearch(o,mbOrdSearch))return false;
       return true;
     }).sort(function(a,b){
       var k=ordMobileSort.key,d=ordMobileSort.dir==='asc'?1:-1;
@@ -6436,9 +6478,10 @@ function renderMobileCards(page){
         +'<span style="font-size:13px;font-weight:600;white-space:nowrap">'+o.alias+'</span>'
         +stageSpan
         +(delivOvd?'<span style="font-size:10px;font-weight:600;color:var(--red);white-space:nowrap">超时</span>':'')
-        +(o.notes?'<span style="font-size:10px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">注：'+o.notes+'</span>':'')
         +'</div>'
+        +'<div style="font-size:10px;color:var(--accent);margin-top:3px">'+orderDisplayText(o.orderNumber)+'</div>'
         +'<div style="font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+o.product+(lfStr?' · '+lfStr:'')+'</div>'
+        +(o.notes?'<div style="font-size:10px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">注：'+orderDisplayText(o.notes)+'</div>':'')
         +(o.followupDate?'<div style="font-size:10px;color:'+(todoOvd?'var(--red)':'var(--muted)')+';margin-top:2px">'+(todoOvd?'🔔 ':'📅 ')+o.followupDate+(o.followupNote?'<span style="color:'+(todoOvd?'var(--red)':'var(--green)')+'"> 📌 '+o.followupNote+'</span>':'')+'</div>':'')
         +'</div>'
         +'<div style="text-align:right;flex-shrink:0">'
@@ -6457,7 +6500,7 @@ function renderMobileCards(page){
     const typeIcon={tourist:'🎯',ecom:'🛒',custom:'✏️',consumable:'🏭',promo:'🎁',personal:'👤'};
     const custMap={};customers.forEach(c=>{custMap[c.alias]=c;});
     const filtered=saleRecords.filter(function(s){
-      if(sfSearch&&!s.alias.toLowerCase().includes(sfSearch))return false;
+      if(sfSearch&&!saleMatchesSearch(s,sfSearch))return false;
       if(statsCurrency==='USD'&&s.currency!=='USD')return false;
       if(statsCurrency==='CNY'&&s.currency!=='CNY')return false;
       if(sfYear&&!s.date.startsWith(sfYear))return false;
@@ -6480,6 +6523,7 @@ function renderMobileCards(page){
         +'<div style="display:flex;justify-content:space-between;align-items:stretch;gap:8px">'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.alias+' '+icon+' <span style="font-size:11px;font-weight:400;color:var(--muted)">'+getQ(s.date)+'</span></div>'
+        +(saleOrderNumber(s)?'<div style="font-size:10px;color:var(--accent);margin-top:3px">'+orderDisplayText(saleOrderNumber(s))+'</div>':'')
         +'<div style="font-size:11px;color:var(--muted);margin-top:4px;display:flex;align-items:center;gap:4px;overflow:hidden"><span class="'+(s.currency==='USD'?'cur-usd':'cur-cny')+'" style="flex-shrink:0">'+s.currency+'</span><span style="flex:0 0 120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.product+'</span>'+(s.notes?'<span style="background:rgba(107,114,195,0.18);color:var(--muted);border-radius:4px;padding:1px 5px;font-size:10px;flex-shrink:0;white-space:nowrap">注：</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">'+s.notes+'</span>':'')+'</div>'
         +'</div>'
         +'<div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;justify-content:space-between">'
@@ -6567,6 +6611,7 @@ function exportData(){
     inquiries:inquiries,
     customers:customers,
     orders:orders,
+    orderSequence:Number(localStorage.getItem('crm_ord_sequence_v5'))||0,
     saleRecords:saleRecords,
     settings:crmSettings
   };
@@ -6610,6 +6655,9 @@ function importData(input){
       inquiries=data.inquiries||[];
       customers=data.customers||[];
       orders=data.orders||[];
+      var importedSequence=Number(data.orderSequence)||0;
+      localStorage.setItem('crm_ord_sequence_v5',String(Math.max(Number(localStorage.getItem('crm_ord_sequence_v5'))||0,importedSequence)));
+      ensureOrderNumbers();
       saleRecords=data.saleRecords||[];
       if(data.settings) crmSettings=data.settings;
       localStorage.setItem(SK.inq,JSON.stringify(inquiries));
@@ -7327,8 +7375,11 @@ var DEF_PRODCAT=[
       orders.push(JSON.parse(JSON.stringify(defO)));
       needSaveOrd=true;
     } else if(!orders[idx].items||!orders[idx].items.length||Math.abs((orders[idx].amount||0)-defO.amount)>1){
-      var saved={followups:orders[idx].followups||[],payments:orders[idx].payments||[]};
+      var saved={followups:orders[idx].followups||[],payments:orders[idx].payments||[],orderNumber:orders[idx].orderNumber,notes:orders[idx].notes,externalNotes:orders[idx].externalNotes};
       orders.splice(idx,1,JSON.parse(JSON.stringify(defO)));
+      orders[idx].orderNumber=saved.orderNumber;
+      orders[idx].notes=saved.notes;
+      orders[idx].externalNotes=saved.externalNotes;
       orders[idx].followups=saved.followups;
       orders[idx].payments=saved.payments;
       needSaveOrd=true;
@@ -7337,9 +7388,10 @@ var DEF_PRODCAT=[
   if(needSaveOrd){
     var maxOid=0;
     orders.forEach(function(o){if(o.id>maxOid)maxOid=o.id;});
-    nextOrdId=maxOid+1;
+    nextOrdId=Math.max(nextOrdId,maxOid+1);
     localStorage.setItem(SK.ord,JSON.stringify(orders));
   }
+  ensureOrderNumbers();
   /* 3. 补充/更新 HB 系列产品到产品库（有存量时 merge+覆盖，确保 type 正确） */
   var ps=localStorage.getItem(SK.prodcat);
   if(ps){
@@ -12632,7 +12684,9 @@ function printTdDoc(){
   var ov=document.getElementById('trade-doc-overlay');
   if(ov){ov.scrollLeft=0;ov.scrollTop=0;ov.classList.add('printing');}
   var docNum=_tdCurrentDocNumber||'贸易文件';
-  document.title=docNum;
+  var printOrder=orders.find(function(o){return o.id===_tdCurrentOrderId;});
+  var fileAlias=printOrder&&_tdDocType!=='po'?String(printOrder.alias||'').replace(/[\\/:*?"<>|]/g,'_'):'';
+  document.title=docNum+(fileAlias?'_'+fileAlias:'');
   _tdOrigHref=location.href;
   try{history.replaceState({},docNum,location.href.split('#')[0]+'#'+docNum);}catch(e){}
   var _c=false;
@@ -12686,10 +12740,8 @@ function getTdDocTitle(type,isCN){
   return '';
 }
 function getTdDocNum(o,type){
-  var prefix=type.toUpperCase();
-  var dateStr=(o.date||today()).replace(/-/g,'');
-  var ordNum=('0000'+o.id).slice(-4);
-  return prefix+'-'+dateStr+'-'+ordNum;
+  var number=o.orderNumber||buildOrderNumber(o);
+  return type.toUpperCase()+number.slice(2);
 }
 function _tdGetSkuFromPcat(skuCode){
   if(!skuCode)return null;
