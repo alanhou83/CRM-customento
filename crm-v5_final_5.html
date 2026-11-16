@@ -2480,6 +2480,35 @@ function buildOrderNumber(o){
   while(serial.length<4)serial='0'+serial;
   return 'PI-'+(o.date||today()).replace(/-/g,'')+'-'+serial;
 }
+/* 新订单按北京时间的首次保存日编号；旧编号保持不变。 */
+function orderNumberDay(){
+  var parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  var values={};parts.forEach(function(p){values[p.type]=p.value;});
+  return values.year+values.month+values.day;
+}
+function mergeOrderDailySequences(incoming){
+  var key='crm_ord_daily_sequences_v5';
+  var counters=JSON.parse(localStorage.getItem(key)||'{}');
+  Object.keys(incoming||{}).forEach(function(day){
+    if(/^\d{8}$/.test(day))counters[day]=Math.max(Number(counters[day])||0,Number(incoming[day])||0);
+  });
+  orders.concat(saleRecords||[]).forEach(function(o){
+    var match=/^PI-(\d{8})-(\d+)$/.exec(o.orderNumber||'');
+    if(match&&(o.orderNumberRule==='daily'||match[2].length<4)){
+      counters[match[1]]=Math.max(Number(counters[match[1]])||0,Number(match[2]));
+    }
+  });
+  localStorage.setItem(key,JSON.stringify(counters));
+  return counters;
+}
+function allocateDailyOrderNumber(){
+  var day=orderNumberDay();
+  var counters=mergeOrderDailySequences();
+  var sequence=(Number(counters[day])||0)+1;
+  counters[day]=sequence;
+  localStorage.setItem('crm_ord_daily_sequences_v5',JSON.stringify(counters));
+  return 'PI-'+day+'-'+String(sequence).padStart(2,'0');
+}
 function orderMatchesSearch(o,search){
   return [o.orderNumber,o.alias,o.notes,o.product].join(' ').toLowerCase().includes(search);
 }
@@ -4232,7 +4261,7 @@ function completeOrder(id){
 function doCompleteOrder(id){
   document.querySelector('.confirm-overlay')?.remove();
   const o=orders.find(x=>x.id===id);if(!o)return;
-  saleRecords.push({id:nextSaleId++,date:today(),alias:o.alias,product:o.product,amount:o.amount,currency:o.currency,person:o.person,notes:'从执行中订单完成',orderNumber:o.orderNumber,fromOrderId:id});
+  saleRecords.push({id:nextSaleId++,date:today(),alias:o.alias,product:o.product,amount:o.amount,currency:o.currency,person:o.person,notes:'从执行中订单完成',orderNumber:o.orderNumber,orderNumberRule:o.orderNumberRule,fromOrderId:id});
   o.completed=true;saveAll();closeDetail();refreshAll();toast('订单完成，已录入老客户统计 ✓');
 }
 
@@ -5818,7 +5847,7 @@ function saveOrder(){
   var data={date:document.getElementById('fo-date').value,alias:alias,product:derivedProduct,qty:derivedQty,amount:derivedAmount,currency:currency,items:ordItems,linkedProcId:linkedProcId,stage:document.getElementById('fo-stage').value,delivery:document.getElementById('fo-delivery').value,person:document.getElementById('fo-person').value,notes:document.getElementById('fo-notes').value,externalNotes:(document.getElementById('fo-ext-notes')||{}).value||'',completed:false,fees:ordFees};
   ensureOrderNumbers();
   if(editingOrdId){var eo=orders.find(function(x){return x.id===editingOrdId;});if(eo){data.completed=eo.completed;data.followups=eo.followups;Object.assign(eo,data);}}
-  else{orders.push({id:nextOrdId++,followups:[],completed:false,fees:ordFees,items:ordItems,linkedProcId:linkedProcId,product:derivedProduct,qty:derivedQty,amount:derivedAmount,currency:currency,stage:document.getElementById('fo-stage').value,date:document.getElementById('fo-date').value,alias:alias,delivery:document.getElementById('fo-delivery').value,person:document.getElementById('fo-person').value,notes:document.getElementById('fo-notes').value,externalNotes:(document.getElementById('fo-ext-notes')||{}).value||''});}
+  else{orders.push({id:nextOrdId++,orderNumber:allocateDailyOrderNumber(),orderNumberRule:'daily',followups:[],completed:false,fees:ordFees,items:ordItems,linkedProcId:linkedProcId,product:derivedProduct,qty:derivedQty,amount:derivedAmount,currency:currency,stage:document.getElementById('fo-stage').value,date:document.getElementById('fo-date').value,alias:alias,delivery:document.getElementById('fo-delivery').value,person:document.getElementById('fo-person').value,notes:document.getElementById('fo-notes').value,externalNotes:(document.getElementById('fo-ext-notes')||{}).value||''});}
   saveAll();closeModal('order-modal');refreshAll();toast('订单已保存 ✓');
 }
 
@@ -6612,6 +6641,7 @@ function exportData(){
     customers:customers,
     orders:orders,
     orderSequence:Number(localStorage.getItem('crm_ord_sequence_v5'))||0,
+    orderDailySequences:mergeOrderDailySequences(),
     saleRecords:saleRecords,
     settings:crmSettings
   };
@@ -6659,6 +6689,7 @@ function importData(input){
       localStorage.setItem('crm_ord_sequence_v5',String(Math.max(Number(localStorage.getItem('crm_ord_sequence_v5'))||0,importedSequence)));
       ensureOrderNumbers();
       saleRecords=data.saleRecords||[];
+      mergeOrderDailySequences(data.orderDailySequences);
       if(data.settings) crmSettings=data.settings;
       localStorage.setItem(SK.inq,JSON.stringify(inquiries));
       localStorage.setItem(SK.cust,JSON.stringify(customers));
@@ -7375,9 +7406,10 @@ var DEF_PRODCAT=[
       orders.push(JSON.parse(JSON.stringify(defO)));
       needSaveOrd=true;
     } else if(!orders[idx].items||!orders[idx].items.length||Math.abs((orders[idx].amount||0)-defO.amount)>1){
-      var saved={followups:orders[idx].followups||[],payments:orders[idx].payments||[],orderNumber:orders[idx].orderNumber,notes:orders[idx].notes,externalNotes:orders[idx].externalNotes};
+      var saved={followups:orders[idx].followups||[],payments:orders[idx].payments||[],orderNumber:orders[idx].orderNumber,orderNumberRule:orders[idx].orderNumberRule,notes:orders[idx].notes,externalNotes:orders[idx].externalNotes};
       orders.splice(idx,1,JSON.parse(JSON.stringify(defO)));
       orders[idx].orderNumber=saved.orderNumber;
+      orders[idx].orderNumberRule=saved.orderNumberRule;
       orders[idx].notes=saved.notes;
       orders[idx].externalNotes=saved.externalNotes;
       orders[idx].followups=saved.followups;
