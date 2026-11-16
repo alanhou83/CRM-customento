@@ -878,11 +878,13 @@ a{color:var(--accent);text-decoration:none;}
 <div id="page-orders" class="page">
   <div class="page-head">
     <div><div class="page-title">📦 订单管理</div><div class="page-sub">执行中订单与已完成销售</div></div>
-    <button class="btn btn-primary" id="ord-page-new-btn" onclick="openOrderModal()">＋ 新增订单</button>
-  </div>
-  <div class="inq-tabs" style="padding:0 28px">
-    <div class="inq-tab active" id="ord-tab-exec" onclick="switchOrdTab('exec')">执行中 <span id="ord-cnt-exec" class="inq-tab-count"></span></div>
-    <div class="inq-tab" id="ord-tab-done" onclick="switchOrdTab('done')">已完成 <span id="ord-cnt-done" class="inq-tab-count"></span></div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="seg-tabs">
+        <button type="button" class="tab-btn active" id="ord-tab-exec" onclick="switchOrdTab('exec')">执行中 <span id="ord-cnt-exec" class="tab-count"></span></button>
+        <button type="button" class="tab-btn" id="ord-tab-done" onclick="switchOrdTab('done')">已完成 <span id="ord-cnt-done" class="tab-count"></span></button>
+      </div>
+      <button class="btn btn-primary" id="ord-page-new-btn" onclick="openOrderModal()">＋ 新增订单</button>
+    </div>
   </div>
   <div class="page-content">
     <div id="ord-exec-section">
