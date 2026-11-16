@@ -2466,10 +2466,9 @@ var _dashOvExpanded=false,_dashTdExpanded=false,_dashVipExpanded=false;
 function ensureOrderNumbers(){
   var sequenceKey='crm_ord_sequence_v5';
   var highWater=Number(localStorage.getItem(sequenceKey))||0;
-  var changed=false;
+  var changed=migrateExistingOrderNumbers();
   orders.forEach(function(o){
     highWater=Math.max(highWater,Number(o.id)||0);
-    if(!o.orderNumber){o.orderNumber=buildOrderNumber(o);changed=true;}
   });
   nextOrdId=Math.max(nextOrdId||1,highWater+1);
   localStorage.setItem(sequenceKey,String(nextOrdId-1));
@@ -2500,6 +2499,40 @@ function mergeOrderDailySequences(incoming){
   });
   localStorage.setItem(key,JSON.stringify(counters));
   return counters;
+}
+/* 用户授权的一次性旧号迁移：保留原编号日期，已采用当日规则的不再改号。 */
+function migrateExistingOrderNumbers(){
+  var counters=mergeOrderDailySequences();
+  var changed=false,salesChanged=false;
+  function migrate(record){
+    if(record.orderNumberRule==='daily')return false;
+    var previous=record.orderNumber||'';
+    var match=/^PI-(\d{8})-(\d+)$/.exec(previous);
+    if(match&&match[2].length<4){record.orderNumberRule='daily';return true;}
+    var day=match?match[1]:(record.date||'').replace(/-/g,'');
+    if(!/^\d{8}$/.test(day))day=orderNumberDay();
+    var sequence=(Number(counters[day])||0)+1;
+    counters[day]=sequence;
+    if(previous)record.previousOrderNumber=previous;
+    record.orderNumber='PI-'+day+'-'+String(sequence).padStart(2,'0');
+    record.orderNumberRule='daily';
+    return true;
+  }
+  orders.slice().sort(function(a,b){return Number(a.id)-Number(b.id);}).forEach(function(o){
+    if(migrate(o))changed=true;
+  });
+  (saleRecords||[]).forEach(function(sale){
+    var source=orders.find(function(o){return o.id===sale.fromOrderId;});
+    if(source){
+      if(sale.orderNumber!==source.orderNumber||sale.orderNumberRule!=='daily'){
+        if(sale.orderNumber&&sale.orderNumber!==source.orderNumber)sale.previousOrderNumber=sale.orderNumber;
+        sale.orderNumber=source.orderNumber;sale.orderNumberRule='daily';salesChanged=true;
+      }
+    }else if(sale.orderNumber&&migrate(sale)){salesChanged=true;}
+  });
+  localStorage.setItem('crm_ord_daily_sequences_v5',JSON.stringify(counters));
+  if(salesChanged)localStorage.setItem(SK.sale,JSON.stringify(saleRecords));
+  return changed;
 }
 function allocateDailyOrderNumber(){
   var day=orderNumberDay();
@@ -6687,9 +6720,9 @@ function importData(input){
       orders=data.orders||[];
       var importedSequence=Number(data.orderSequence)||0;
       localStorage.setItem('crm_ord_sequence_v5',String(Math.max(Number(localStorage.getItem('crm_ord_sequence_v5'))||0,importedSequence)));
-      ensureOrderNumbers();
       saleRecords=data.saleRecords||[];
       mergeOrderDailySequences(data.orderDailySequences);
+      ensureOrderNumbers();
       if(data.settings) crmSettings=data.settings;
       localStorage.setItem(SK.inq,JSON.stringify(inquiries));
       localStorage.setItem(SK.cust,JSON.stringify(customers));
@@ -7406,10 +7439,11 @@ var DEF_PRODCAT=[
       orders.push(JSON.parse(JSON.stringify(defO)));
       needSaveOrd=true;
     } else if(!orders[idx].items||!orders[idx].items.length||Math.abs((orders[idx].amount||0)-defO.amount)>1){
-      var saved={followups:orders[idx].followups||[],payments:orders[idx].payments||[],orderNumber:orders[idx].orderNumber,orderNumberRule:orders[idx].orderNumberRule,notes:orders[idx].notes,externalNotes:orders[idx].externalNotes};
+      var saved={followups:orders[idx].followups||[],payments:orders[idx].payments||[],orderNumber:orders[idx].orderNumber,orderNumberRule:orders[idx].orderNumberRule,previousOrderNumber:orders[idx].previousOrderNumber,notes:orders[idx].notes,externalNotes:orders[idx].externalNotes};
       orders.splice(idx,1,JSON.parse(JSON.stringify(defO)));
       orders[idx].orderNumber=saved.orderNumber;
       orders[idx].orderNumberRule=saved.orderNumberRule;
+      orders[idx].previousOrderNumber=saved.previousOrderNumber;
       orders[idx].notes=saved.notes;
       orders[idx].externalNotes=saved.externalNotes;
       orders[idx].followups=saved.followups;
