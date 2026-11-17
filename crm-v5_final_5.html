@@ -92,6 +92,31 @@ a{color:var(--accent);text-decoration:none;}
 .cols-hot{grid-template-columns:46px 80px 1fr 90px 90px 100px 55px 100px 150px 65px;}
 .cols-ord{grid-template-columns:158px 88px 80px minmax(130px,1fr) minmax(130px,1fr) 125px 90px 100px 65px;}
 #ord-exec-section .table-inner{min-width:1120px;}
+
+/* 保留原紧凑明细列表：描述在左，数量与价格靠右，箱规独立一行。 */
+.ord-compact-item{padding:10px 0;border-top:1px solid var(--border);}
+.ord-compact-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.ord-compact-name{min-width:0;font-size:13px;font-weight:600;color:var(--text);line-height:1.5;}
+.ord-compact-right{text-align:right;flex-shrink:0;max-width:60%;}
+.ord-compact-qty{font-size:11px;color:var(--text);line-height:1.5;display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap;}
+.ord-compact-price{font-size:12px;color:var(--text);margin-top:2px;}
+.ord-compact-amount{font-size:15px;font-weight:700;color:var(--green);margin-top:2px;}
+.ord-compact-spec{font-size:11px;color:var(--muted);line-height:1.5;margin-top:3px;overflow-wrap:anywhere;}
+.ord-compact-spec-cn{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ord-compact-sku-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+.ord-compact-sku-row .ord-compact-amount{flex-shrink:0;}
+.ord-compact-code{min-width:0;font-size:10px;color:var(--accent2);margin-top:3px;overflow-wrap:anywhere;}
+.ord-compact-packing{display:flex;justify-content:space-between;align-items:baseline;gap:5px 10px;flex-wrap:wrap;margin-top:5px;font-size:10px;line-height:1.5;color:var(--muted);}
+.ord-compact-freight{font-size:11px;color:var(--text);white-space:nowrap;}
+.ord-compact-total{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:9px;font-size:11px;color:var(--text);}
+.ord-compact-subtotal{font-size:13px;color:var(--green);font-weight:600;white-space:nowrap;}
+.ord-item-warning{font-size:11px;color:var(--yellow);margin-top:5px;}
+.ord-edit-item{padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:12px;}
+.ord-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.ord-edit-field{display:block;min-width:0;font-size:11px;color:var(--muted);}
+.ord-edit-field .form-input{margin-top:4px;width:100%;min-width:0;box-sizing:border-box;font-size:13px;}
+.ord-edit-wide{grid-column:1/-1;}
+
 .cols-stat{grid-template-columns:110px 1fr 70px 120px 100px 70px 70px;}
 .cols-prodcat{display:grid;grid-template-columns:52px 90px 1fr 80px 120px 70px 100px 70px;gap:0;align-items:center;}
 .cols-proc{display:grid;grid-template-columns:100px 120px 90px 1fr 90px 90px 90px 80px 60px;gap:0;align-items:center;}
@@ -1937,13 +1962,6 @@ a{color:var(--accent);text-decoration:none;}
           <button class="btn btn-outline btn-sm" type="button" onclick="addOrdItem()">+ 添加产品</button>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 62px 44px 82px 60px;gap:4px;margin-bottom:3px;padding:0 2px">
-        <div style="font-size:11px;color:var(--muted)">产品</div>
-        <div style="font-size:11px;color:var(--muted)">数量</div>
-        <div style="font-size:11px;color:var(--muted)">单位</div>
-        <div style="font-size:11px;color:var(--muted)">单价</div>
-        <div style="font-size:11px;color:var(--muted);text-align:right">小计</div>
-      </div>
       <datalist id="ord-sku-datalist"></datalist>
       <div id="ford-items-area"><div style="font-size:12px;color:var(--muted);padding:4px 0">点击「+ 添加产品」；无明细时在下方填写合计金额</div></div>
       <div id="ford-items-total" style="text-align:right;font-size:13px;font-weight:600;margin-top:4px;display:none"></div>
@@ -2407,15 +2425,15 @@ const DEF_ORD=[
   {id:3,date:'2026-10-28',alias:'GKK',product:'软木杯垫+冰箱贴',qty:'',amount:13768.40,currency:'USD',stage:'生产中',delivery:'2026-12-27',person:'Alan',notes:'PI26100007',externalNotes:'',linkedProcId:'',completed:false,
     fees:[{id:'f001',name:'Bank Of Charge',amount:50,currency:'USD'},{id:'f002',name:'FOB Charge',amount:730,currency:'USD'},{id:'f003',name:'Telex Release Charge',amount:50,currency:'USD'}],
     payments:[],items:[
-    {id:'oi005',itemNo:'140302010101',skuCode:'CTR-HB001-A',nameCN:'HB方形软木杯垫',nameEN:'HB SCW/IC',descEN:'Square Coaster 9.5*9.5cm With Cork,W34.8g,Thickness3mm',remark:'',qty:10080,unit:'PCS',cs:21,pcsPerCarton:480,unitPrice:0.53,subtotal:5342.40,ctnL:45,ctnW:34,ctnH:21,ctnWeight:20},
-    {id:'oi006',itemNo:'140106030101',skuCode:'MGN-HB002-A',nameCN:'HB心形磁铁冰箱贴',nameEN:'HBMT-HE',descEN:'HB Magnet Heart 5*5cm W10g Thickness3mm',remark:'',qty:3600,unit:'PCS',cs:3,pcsPerCarton:1200,unitPrice:0.39,subtotal:1404.00,ctnL:45,ctnW:34,ctnH:21,ctnWeight:17.5},
-    {id:'oi007',itemNo:'140106020101',skuCode:'MGN-HB003-A',nameCN:'HB圆形磁铁冰箱贴',nameEN:'HBMT-CI',descEN:'HB Magnet Circle 5*5cm W11g Thickness3mm',remark:'',qty:3600,unit:'PCS',cs:3,pcsPerCarton:1200,unitPrice:0.34,subtotal:1224.00,ctnL:45,ctnW:34,ctnH:21,ctnWeight:17.5},
-    {id:'oi008',itemNo:'140106040101',skuCode:'MGN-HB004-A',nameCN:'HB矩形磁铁冰箱贴',nameEN:'HBMT-5585',descEN:'HB Magnet Rectangle 5.5*8.5cm W25.2g Thickness3mm',remark:'',qty:10800,unit:'PCS',cs:12,pcsPerCarton:900,unitPrice:0.46,subtotal:4968.00,ctnL:45,ctnW:34,ctnH:21,ctnWeight:25.8}
+    {id:'oi005',itemNo:'140302010101',skuCode:'CTR-HB001-A',nameCN:'HB方形软木杯垫',nameEN:'HB SCW/IC',descEN:'Square Coaster 9.5*9.5cm With Cork,W34.8g,Thickness3mm',descCN:'方形杯垫，9.5 × 9.5 cm，带软木底，厚度 3 mm，单重 34.8 g',remark:'',qty:10080,unit:'PCS',cs:21,pcsPerCarton:480,unitPrice:0.53,subtotal:5342.40,ctnL:45,ctnW:34,ctnH:21,ctnWeight:20},
+    {id:'oi006',itemNo:'140106030101',skuCode:'MGN-HB002-A',nameCN:'HB心形磁铁冰箱贴',nameEN:'HBMT-HE',descEN:'HB Magnet Heart 5*5cm W10g Thickness3mm',descCN:'心形磁铁冰箱贴，5 × 5 cm，厚度 3 mm，单重 10 g',remark:'',qty:3600,unit:'PCS',cs:3,pcsPerCarton:1200,unitPrice:0.39,subtotal:1404.00,ctnL:45,ctnW:34,ctnH:21,ctnWeight:17.5},
+    {id:'oi007',itemNo:'140106020101',skuCode:'MGN-HB003-A',nameCN:'HB圆形磁铁冰箱贴',nameEN:'HBMT-CI',descEN:'HB Magnet Circle 5*5cm W11g Thickness3mm',descCN:'圆形磁铁冰箱贴，5 × 5 cm，厚度 3 mm，单重 11 g',remark:'',qty:3600,unit:'PCS',cs:3,pcsPerCarton:1200,unitPrice:0.34,subtotal:1224.00,ctnL:45,ctnW:34,ctnH:21,ctnWeight:17.5},
+    {id:'oi008',itemNo:'140106040101',skuCode:'MGN-HB004-A',nameCN:'HB矩形磁铁冰箱贴',nameEN:'HBMT-5585',descEN:'HB Magnet Rectangle 5.5*8.5cm W25.2g Thickness3mm',descCN:'矩形磁铁冰箱贴，5.5 × 8.5 cm，厚度 3 mm，单重 25.2 g',remark:'',qty:10800,unit:'PCS',cs:12,pcsPerCarton:900,unitPrice:0.46,subtotal:4968.00,ctnL:45,ctnW:34,ctnH:21,ctnWeight:25.8}
   ]},
   {id:4,date:'2026-10-27',alias:'GKK',product:'矩形磁铁冰箱贴',qty:'',amount:3118.00,currency:'USD',stage:'生产中',delivery:'2026-12-26',person:'Alan',notes:'PI26100006',externalNotes:'',linkedProcId:'',completed:false,
     fees:[{id:'f004',name:'FOB Charge',amount:75,currency:'USD'},{id:'f005',name:'Custom Wooden Inspection charge',amount:75,currency:'USD'},{id:'f006',name:'Airport Magnet inspction charge',amount:70,currency:'USD'}],
     payments:[],items:[
-    {id:'oi009',itemNo:'140106040101',skuCode:'MGN-HB004-A',nameCN:'HB矩形磁铁冰箱贴',nameEN:'HBMT-5585',descEN:'HB Magnet Rectangle 5.5*8.5cm W25.2g Thickness3mm',remark:'',qty:6300,unit:'PCS',cs:7,pcsPerCarton:900,unitPrice:0.46,subtotal:2898.00,ctnL:45,ctnW:34,ctnH:21,ctnWeight:25.8}
+    {id:'oi009',itemNo:'140106040101',skuCode:'MGN-HB004-A',nameCN:'HB矩形磁铁冰箱贴',nameEN:'HBMT-5585',descEN:'HB Magnet Rectangle 5.5*8.5cm W25.2g Thickness3mm',descCN:'矩形磁铁冰箱贴，5.5 × 8.5 cm，厚度 3 mm，单重 25.2 g',remark:'',qty:6300,unit:'PCS',cs:7,pcsPerCarton:900,unitPrice:0.46,subtotal:2898.00,ctnL:45,ctnW:34,ctnH:21,ctnWeight:25.8}
   ]}
 ];
 const DEF_SALE=[
@@ -4298,6 +4316,71 @@ function doCompleteOrder(id){
   o.completed=true;saveAll();closeDetail();refreshAll();toast('订单完成，已录入老客户统计 ✓');
 }
 
+/* 箱规由订单快照计算，缺少数据时不以零冒充完整合计。 */
+function ordPositive(value){var n=Number(value);return Number.isFinite(n)&&n>0?n:null;}
+function ordNumber(value,digits){return Number(value).toLocaleString('zh-CN',{maximumFractionDigits:digits===undefined?3:digits});}
+function ordMoney(value,currency){return (currency==='CNY'?'¥':'$')+Number(value).toLocaleString('zh-CN',{maximumFractionDigits:4});}
+function ordUnit(unit){return /^(pcs?|个)$/i.test(unit||'个')?'个':unit;}
+function getOrderItemPacking(item){
+  var boxes=ordPositive(item.cs),perBox=ordPositive(item.pcsPerCarton),qty=ordPositive(item.qty);
+  var weight=ordPositive(item.ctnWeight),l=ordPositive(item.ctnL),w=ordPositive(item.ctnW),h=ordPositive(item.ctnH);
+  return {boxes:boxes,perBox:perBox,qty:qty,weight:weight,
+    gross:boxes!==null&&weight!==null?boxes*weight:null,
+    volume:boxes!==null&&l!==null&&w!==null&&h!==null?boxes*l*w*h/1000000:null,
+    dimensions:l!==null&&w!==null&&h!==null?[l,w,h].map(function(v){return ordNumber(v);}).join(' × ')+' cm':null,
+    mismatch:boxes!==null&&perBox!==null&&qty!==null&&Math.abs(boxes*perBox-qty)>0.000001};
+}
+function getOrderPackingSummary(items){
+  var result={boxes:0,gross:0,volume:0,missingBoxes:0,missingGross:0,missingVolume:0,missingQty:0,quantities:{},mismatch:0};
+  (items||[]).forEach(function(item){
+    var p=getOrderItemPacking(item);
+    ['boxes','gross','volume'].forEach(function(key){
+      var missingKey={boxes:'missingBoxes',gross:'missingGross',volume:'missingVolume'}[key];
+      if(p[key]===null)result[missingKey]++;else result[key]+=p[key];
+    });
+    if(p.qty===null)result.missingQty++;else{
+      var unit=ordUnit(item.unit||'个');result.quantities[unit]=(result.quantities[unit]||0)+p.qty;
+    }
+    if(p.mismatch)result.mismatch++;
+  });
+  return result;
+}
+function ordPackingValue(value,unit,digits){return value===null?'待补充':ordNumber(value,digits)+' '+unit;}
+function renderOrderPackingSummary(items){
+  var p=getOrderPackingSummary(items);
+  var quantities=Object.keys(p.quantities).map(function(unit){return ordNumber(p.quantities[unit])+' '+unit;}).join(' / ');
+  return (p.missingBoxes?'箱数待补充':ordNumber(p.boxes)+' 箱')+' · '
+    +(p.missingQty?'数量待补充':quantities||'数量待补充')+' · '
+    +(p.missingGross?'毛重待补充':ordNumber(p.gross)+' kg')+' · '
+    +(p.missingVolume?'体积待补充':ordNumber(p.volume,3)+' m³');
+}
+function renderOrderItemDetails(o){
+  if(!o.items||!o.items.length)return '';
+  var html='<div class="detail-section"><div class="detail-section-title">产品明细</div>';
+  var total=0;
+  o.items.forEach(function(item){
+    var p=getOrderItemPacking(item),unit=ordUnit(item.unit||'个');
+    var price=item.unitPrice!==undefined&&item.unitPrice!==null&&item.unitPrice!==''?Number(item.unitPrice):null;
+    var amount=item.subtotal!==undefined&&item.subtotal!==null?Number(item.subtotal):null;
+    if(Number.isFinite(amount))total+=amount;
+    html+='<div class="ord-compact-item"><div class="ord-compact-head"><div style="flex:1;min-width:0"><div class="ord-compact-name">'+orderDisplayText(item.nameCN||'未命名产品')+'</div>'
+      +(item.nameEN?'<div class="ord-compact-spec">'+orderDisplayText(item.nameEN)+'</div>':'')+'</div>'
+      +'<div class="ord-compact-right"><div class="ord-compact-qty">'
+      +'<span>'+orderDisplayText(ordPackingValue(p.boxes,'箱'))+'</span>'
+      +'<span>'+orderDisplayText(ordPackingValue(p.perBox,unit+'/箱'))+'</span>'
+      +'<span>'+orderDisplayText(ordPackingValue(p.qty,unit))+'</span></div>'
+      +'<div class="ord-compact-price">'+orderDisplayText(price!==null&&Number.isFinite(price)?ordMoney(price,o.currency)+' / '+unit:'单价待补充')+'</div>'
+      +'</div></div>'
+      +'<div class="ord-compact-spec ord-compact-spec-cn" title="'+orderDisplayText(item.descCN||'')+'">'+orderDisplayText(item.descCN||'中文规格待补充')+'</div>'
+      +(item.descEN?'<div class="ord-compact-spec">'+orderDisplayText(item.descEN)+'</div>':'')
+      +'<div class="ord-compact-sku-row"><div class="ord-compact-code">'+orderDisplayText(item.skuCode||'—')+(item.itemNo?' · '+orderDisplayText(item.itemNo):'')+'</div>'
+      +'<div class="ord-compact-amount"'+(o.currency==='CNY'?' style="color:var(--yellow)"':'')+'>'+orderDisplayText(amount!==null&&Number.isFinite(amount)?ordMoney(amount,o.currency):'金额待补充')+'</div></div>'
+      +'<div class="ord-compact-packing"><span>📦 '+orderDisplayText(ordPackingValue(p.weight,'kg/箱'))+' · '+orderDisplayText(p.dimensions||'外箱尺寸待补充')+'</span>'
+      +'<span class="ord-compact-freight" title="本款总毛重 · 本款总体积">'+orderDisplayText(ordPackingValue(p.gross,'kg'))+' · '+orderDisplayText(ordPackingValue(p.volume,'m³',3))+'</span></div>'
+      +(p.mismatch?'<div class="ord-item-warning">箱数 × 每箱数量与总数量不一致，请核对。</div>':'')+'</div>';
+  });
+  return html+'<div class="ord-compact-total"><span>'+orderDisplayText(renderOrderPackingSummary(o.items))+'</span><span class="ord-compact-subtotal"'+(o.currency==='CNY'?' style="color:var(--yellow)"':'')+'>小计 '+ordMoney(total,o.currency)+'</span></div></div>';
+}
 function openOrderDetail(id){
   const o=orders.find(function(x){return x.id===id;});if(!o)return;
   currentDetailId=id;currentDetailType='order';
@@ -4321,44 +4404,7 @@ function openOrderDetail(id){
   /* Tab1：订单详情 */
   var dOvd=o.delivery&&o.delivery<today();
   var tab1='<div class="detail-section">'+stageBar+'</div>';
-  var itemsHtml='';
-  if(o.items&&o.items.length){
-    itemsHtml='<div class="detail-section"><div class="detail-section-title">产品明细</div>';
-    o.items.forEach(function(item,idx){
-      var cur=o.currency==='USD'?'$':'¥';
-      var subtotalColor=o.currency==='USD'?'var(--green)':'var(--yellow)';
-      var subtotalStr=item.subtotal?cur+Number(item.subtotal).toFixed(2):'—';
-      var unit=item.unit||'个';
-      var qtyNum=Number(item.qty)||0;
-      var csNum=Number(item.cs)||0;
-      var pcsPerCs=Number(item.pcsPerCarton)||0;
-      var ctnWgt=Number(item.ctnWeight)||0;
-      var ctnL=Number(item.ctnL)||0,ctnW=Number(item.ctnW)||0,ctnH=Number(item.ctnH)||0;
-      var skuLine=(item.skuCode||'')+(item.itemNo?(' · '+item.itemNo):'');
-      var priceLine=qtyNum?(qtyNum+unit+(item.unitPrice?(' × '+cur+Number(item.unitPrice).toFixed(2)+'/'+unit):'')):'—';
-      var ctnLine=(csNum&&pcsPerCs)?(csNum+'箱 × '+pcsPerCs+unit+'/箱'+(ctnWgt?(' · '+ctnWgt+'kg/箱'):'')+(ctnL?(' · '+ctnL+'×'+ctnW+'×'+ctnH+'cm'):'')):'';
-      itemsHtml+='<div style="padding:8px 0;border-top:1px solid var(--border)">'
-        +'<div style="display:flex;align-items:flex-start;gap:8px">'
-        +'<img id="ord-ith-'+idx+'" style="width:36px;height:36px;border-radius:5px;object-fit:cover;flex-shrink:0;background:var(--surface2);display:none">'
-        +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:600;color:var(--text)">'+(item.nameCN||'—')+'</div>'
-        +(item.nameEN?'<div style="font-size:11px;color:var(--muted);margin-top:1px">'+item.nameEN+'</div>':'')
-        +(item.descEN?'<div style="font-size:10px;color:var(--muted2);margin-top:2px;white-space:normal;line-height:1.4">'+item.descEN+'</div>':'')
-        +(skuLine?'<div style="font-size:10px;color:var(--accent2);margin-top:3px;font-family:monospace">'+skuLine+'</div>':'')
-        +'<div style="font-size:11px;color:var(--text);margin-top:3px">'+priceLine+'</div>'
-        +(ctnLine?'<div style="font-size:10px;color:var(--muted);margin-top:2px">📦 '+ctnLine+'</div>':'')
-        +'</div>'
-        +'<div style="text-align:right;flex-shrink:0;min-width:64px">'
-        +'<div style="font-size:15px;font-weight:700;color:'+subtotalColor+'">'+subtotalStr+'</div>'
-        +'</div>'
-        +'</div>'
-        +'</div>';
-    });
-    var itemTotal=0;o.items.forEach(function(it){itemTotal+=it.subtotal||0;});
-    itemsHtml+='<div style="display:flex;justify-content:flex-end;padding:6px 0 0;border-top:1px solid var(--border)">'
-      +'<span style="font-size:13px;font-weight:600;color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+'">小计 '+fmtAmt(itemTotal,o.currency)+'</span>'
-      +'</div></div>';
-  }
+  var itemsHtml=renderOrderItemDetails(o);
   tab1+=itemsHtml;
   tab1+='<div class="detail-section"><div class="detail-section-title">订单信息</div>'
     +'<div class="detail-row"><span class="detail-key">订单编号</span><span class="detail-val">'+orderDisplayText(o.orderNumber)+'</span></div>'
@@ -4370,14 +4416,14 @@ function openOrderDetail(id){
       if(!o.fees||!o.fees.length)return'';
       var feeUSD=0,feeCNY=0;
       o.fees.forEach(function(f){if(f.currency==='USD')feeUSD+=f.amount;else feeCNY+=f.amount;});
-      var feeListStr=o.fees.map(function(f){return f.name+' '+(f.currency==='USD'?'$':'¥')+f.amount.toFixed(2);}).join(' · ');
-      var mainAmt=Number(o.amount)||0;
+      var feeListStr=o.fees.map(function(f){return '<div class="detail-row ord-fee-row"><span style="color:var(--muted);flex:1;min-width:0;overflow-wrap:anywhere">'+orderDisplayText(f.name||'其他费用')+'</span><span class="detail-val" style="flex-shrink:0;white-space:nowrap">'+(f.currency==='USD'?'$':'¥')+Number(f.amount||0).toFixed(2)+'</span></div>';}).join('');
+      var mainAmt=o.items&&o.items.length?o.items.reduce(function(sum,item){return sum+(Number(item.subtotal)||0);},0):(Number(o.amount)||0);
       var sameFee=o.currency==='USD'?feeUSD:feeCNY;
       var diffFee=o.currency==='USD'?feeCNY:feeUSD;
       var diffCurStr=o.currency==='USD'?'¥':'$';
       var totalStr=fmtAmt(mainAmt+sameFee,o.currency)+(diffFee?(' + '+diffCurStr+diffFee.toFixed(2)):'');
-      return '<div class="detail-row"><span class="detail-key">额外费用</span><span class="detail-val" style="color:var(--muted2)">'+feeListStr+'</span></div>'
-        +'<div class="detail-row"><span class="detail-key">合计</span><span class="detail-val" style="color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+';font-weight:600">'+totalStr+'</span></div>';
+      return '<div class="ord-fees-details"><div class="detail-row"><span class="detail-key">额外费用</span></div>'+feeListStr
+        +'<div class="detail-row"><span class="detail-key">合计</span><span class="detail-val" style="color:'+(o.currency==='USD'?'var(--green)':'var(--yellow)')+';font-weight:600">'+totalStr+'</span></div></div>';
     })()
     +'<div class="detail-row"><span class="detail-key">预计交期</span><span class="detail-val" style="color:'+(dOvd?'var(--red)':'')+'">'+(o.delivery?(dOvd?'⚠️ ':'📦 ')+o.delivery:'未设定')+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">负责人</span><span class="detail-val">'+o.person+'</span></div>'
@@ -5604,29 +5650,36 @@ function populateOrdSkuDatalist(){
     }
   });
 }
-function addOrdItem(){
-  var area=document.getElementById('ford-items-area');
-  if(!area)return;
-  var rows=area.querySelectorAll('[data-ord-item]');
-  if(!rows.length)area.innerHTML='';
-  var idx=rows.length;
-  var div=document.createElement('div');
-  div.setAttribute('data-ord-item',idx);
-  div.style.cssText='display:grid;grid-template-columns:1fr 62px 44px 82px 60px;gap:4px;align-items:center;margin-bottom:5px';
-  div.innerHTML='<input list="ord-sku-datalist" data-oitem="name" class="form-input" placeholder="产品名称" style="min-width:0;font-size:12px" oninput="onOrdItemProductInput(this)">'
-    +'<input data-oitem="qty" type="number" class="form-input" placeholder="数量" style="font-size:12px" oninput="updateOrdItemSubtotal(this)">'
-    +'<input data-oitem="unit" class="form-input" placeholder="单位" value="个" style="font-size:12px">'
-    +'<input data-oitem="unitprice" type="number" class="form-input" placeholder="单价" style="font-size:12px" oninput="updateOrdItemSubtotal(this)">'
-    +'<div style="display:flex;align-items:center;justify-content:flex-end;gap:2px">'
-    +'<span data-oitem="subtotal" style="font-size:12px;color:var(--muted)">—</span>'
-    +'<span onclick="removeOrdItem(this)" style="cursor:pointer;color:var(--muted);font-size:18px;padding:0 2px;line-height:1;flex-shrink:0">×</span>'
-    +'</div>'
-    +'<input type="hidden" data-oitem="skucode" value="">';
-  area.appendChild(div);
+function ordEditField(key,label,value,type,wide){
+  var multiline=type==='textarea';
+  var attrs=' data-oitem="'+key+'" class="form-input"';
+  var input=multiline?'<textarea'+attrs+' rows="2">'+orderDisplayText(value)+'</textarea>':
+    '<input'+attrs+' type="'+(type||'text')+'"'+(type==='number'?' min="0" step="'+(['cs','pcsPerCarton'].includes(key)?'1':'any')+'"':'')+' value="'+orderDisplayText(value)+'"'+(key==='name'?' list="ord-sku-datalist" oninput="onOrdItemProductInput(this)"':'')+(['qty','unitprice'].includes(key)?' oninput="updateOrdItemSubtotal(this)"':'')+'>';
+  return '<label class="ord-edit-field'+(wide?' ord-edit-wide':'')+'">'+label+input+'</label>';
+}
+function addOrdItem(initial){
+  var area=document.getElementById('ford-items-area');if(!area)return;
+  if(!area.querySelector('[data-ord-item]'))area.innerHTML='';
+  var item=initial||{};
+  var row=document.createElement('div');row.className='ord-edit-item';row.setAttribute('data-ord-item',area.children.length);
+  row._ordItemSource=Object.assign({},item);
+  row.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong style="font-size:12px">产品与装箱信息</strong><button type="button" class="btn btn-outline btn-sm" onclick="removeOrdItem(this)">移除</button></div><div class="ord-edit-grid">'
+    +ordEditField('name','中文产品名称',item.nameCN||'','text',true)
+    +ordEditField('descCN','中文规格描述',item.descCN||'','textarea',true)
+    +ordEditField('nameEN','英文产品名称',item.nameEN||'','text',true)
+    +ordEditField('descEN','英文规格描述',item.descEN||'','textarea',true)
+    +ordEditField('skucode','SKU编码',item.skuCode||'')+ordEditField('itemNo','旧货号',item.itemNo||'')
+    +ordEditField('qty','总数量',item.qty===undefined?'':item.qty,'number')+ordEditField('unit','单位',item.unit||'个')
+    +ordEditField('unitprice','单价',item.unitPrice===undefined?'':item.unitPrice,'number')+ordEditField('cs','箱数',item.cs===undefined?'':item.cs,'number')
+    +ordEditField('pcsPerCarton','每箱数量',item.pcsPerCarton===undefined?'':item.pcsPerCarton,'number')+ordEditField('ctnWeight','每箱毛重（kg）',item.ctnWeight===undefined?'':item.ctnWeight,'number')
+    +ordEditField('ctnL','外箱长（cm）',item.ctnL===undefined?'':item.ctnL,'number')+ordEditField('ctnW','外箱宽（cm）',item.ctnW===undefined?'':item.ctnW,'number')
+    +ordEditField('ctnH','外箱高（cm）',item.ctnH===undefined?'':item.ctnH,'number')
+    +'</div><div style="text-align:right;font-size:12px;margin-top:8px">商品金额：<span data-oitem="subtotal">—</span></div>';
+  area.appendChild(row);updateOrdItemSubtotal(row.querySelector('[data-oitem="qty"]'));
 }
 function onOrdItemProductInput(inputEl){
   var val=inputEl.value;
-  var matchParen=val.match(/\(([A-Z]+-\d+(?:-[A-Z]+)?)\)$/);
+  var matchParen=val.match(/\(([A-Z0-9]+(?:-[A-Z0-9]+)+)\)$/);
   if(matchParen){
     var skuCode=matchParen[1];
     var d=getProdCatData();
@@ -5647,7 +5700,9 @@ function onOrdItemProductInput(inputEl){
       if(skuEl)skuEl.value=skuCode;
       if(unitEl&&foundSku.unit)unitEl.value=foundSku.unit;
       if(priceEl&&foundSku.priceMin)priceEl.value=foundSku.priceMin;
-      inputEl.value=foundSku.variantCN||foundProd.nameCN;
+      inputEl.value=foundProd.nameCN;
+      var snapshot={nameEN:foundProd.nameEN||'',descCN:[foundProd.descCN,foundSku.variantCN].filter(Boolean).join('；'),descEN:[foundProd.descEN,foundSku.variantEN].filter(Boolean).join('; '),itemNo:foundSku.itemNo||'',unit:foundSku.stockUnit||foundSku.unit||'个',pcsPerCarton:foundSku.qtyPerCarton,ctnWeight:foundSku.ctnWeight,ctnL:foundSku.ctnL,ctnW:foundSku.ctnW,ctnH:foundSku.ctnH};
+      Object.keys(snapshot).forEach(function(key){var el=row.querySelector('[data-oitem="'+key+'"]');if(el)el.value=snapshot[key]===undefined?'':snapshot[key];});
       updateOrdItemSubtotal(inputEl);
     }
   } else {
@@ -5707,63 +5762,26 @@ function removeOrdItem(btn){
   }
 }
 function collectOrdItemsFromDOM(){
-  var area=document.getElementById('ford-items-area');
-  if(!area)return[];
-  var rows=area.querySelectorAll('[data-ord-item]');
+  var area=document.getElementById('ford-items-area');if(!area)return[];
   var result=[];
-  rows.forEach(function(row){
-    var nameEl=row.querySelector('[data-oitem="name"]');
-    var skuEl=row.querySelector('[data-oitem="skucode"]');
-    var qtyEl=row.querySelector('[data-oitem="qty"]');
-    var unitEl=row.querySelector('[data-oitem="unit"]');
-    var priceEl=row.querySelector('[data-oitem="unitprice"]');
-    var name=nameEl?nameEl.value.trim():'';
-    var qty=Number(qtyEl?qtyEl.value:0)||0;
-    var unitPrice=Number(priceEl?priceEl.value:0)||0;
-    if(!name&&!qty)return;
-    result.push({
-      id:'oi'+Date.now()+Math.floor(Math.random()*1000),
-      skuCode:skuEl?skuEl.value:'',
-      nameCN:name||'—',
-      qty:qty,
-      unit:unitEl?unitEl.value:'个',
-      unitPrice:unitPrice,
-      subtotal:Math.round(qty*unitPrice*100)/100
-    });
-  });
-  return result;
+  area.querySelectorAll('[data-ord-item]').forEach(function(row){
+    var get=function(key){var el=row.querySelector('[data-oitem="'+key+'"]');return el?el.value.trim():'';};
+    if(!get('name')&&!get('qty'))return;
+    var item=Object.assign({},row._ordItemSource||{});
+    if(!item.id)item.id='oi'+Date.now()+Math.floor(Math.random()*1000);
+    item.nameCN=get('name')||'—';item.skuCode=get('skucode');item.unit=get('unit')||'个';
+    ['descCN','nameEN','descEN','itemNo'].forEach(function(key){item[key]=get(key);});
+    item.qty=Number(get('qty'))||0;item.unitPrice=Number(get('unitprice'))||0;
+    ['cs','pcsPerCarton','ctnWeight','ctnL','ctnW','ctnH'].forEach(function(key){var raw=get(key);item[key]=raw===''?null:Number(raw);});
+    item.subtotal=Math.round(item.qty*item.unitPrice*100)/100;
+    result.push(item);
+  });return result;
 }
 function renderOrdItems(items,currency){
-  var area=document.getElementById('ford-items-area');
-  var totalEl=document.getElementById('ford-items-total');
-  var amtEl=document.getElementById('fo-amount');
-  if(!area)return;
-  if(!items||!items.length){
-    area.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0">点击「+ 添加产品」；无明细时在下方填写合计金额</div>';
-    if(totalEl)totalEl.style.display='none';
-    if(amtEl){amtEl.removeAttribute('readonly');amtEl.style.color='';}
-    return;
-  }
-  var cur=currency||'USD';
+  var area=document.getElementById('ford-items-area');if(!area)return;
   area.innerHTML='';
-  items.forEach(function(item,idx){
-    var div=document.createElement('div');
-    div.setAttribute('data-ord-item',idx);
-    div.style.cssText='display:grid;grid-template-columns:1fr 62px 44px 82px 60px;gap:4px;align-items:center;margin-bottom:5px';
-    var sub=item.subtotal>0?((cur==='USD'?'$':'¥')+Number(item.subtotal).toFixed(2)):'—';
-    var subColor=item.subtotal>0?(cur==='USD'?'var(--green)':'var(--yellow)'):'var(--muted)';
-    div.innerHTML='<input list="ord-sku-datalist" data-oitem="name" class="form-input" placeholder="产品名称" value="'+(item.nameCN||'')+'" style="min-width:0;font-size:12px" oninput="onOrdItemProductInput(this)">'
-      +'<input data-oitem="qty" type="number" class="form-input" placeholder="数量" value="'+(item.qty||'')+'" style="font-size:12px" oninput="updateOrdItemSubtotal(this)">'
-      +'<input data-oitem="unit" class="form-input" placeholder="单位" value="'+(item.unit||'个')+'" style="font-size:12px">'
-      +'<input data-oitem="unitprice" type="number" class="form-input" placeholder="单价" value="'+(item.unitPrice||'')+'" style="font-size:12px" oninput="updateOrdItemSubtotal(this)">'
-      +'<div style="display:flex;align-items:center;justify-content:flex-end;gap:2px">'
-      +'<span data-oitem="subtotal" style="font-size:12px;color:'+subColor+'">'+sub+'</span>'
-      +'<span onclick="removeOrdItem(this)" style="cursor:pointer;color:var(--muted);font-size:18px;padding:0 2px;line-height:1;flex-shrink:0">×</span>'
-      +'</div>'
-      +'<input type="hidden" data-oitem="skucode" value="'+(item.skuCode||'')+'">';
-    area.appendChild(div);
-  });
-  updateOrdItemTotal();
+  if(!items||!items.length){area.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0">点击「+ 添加产品」填写产品、数量和装箱信息</div>';updateOrdItemTotal();return;}
+  items.forEach(function(item){addOrdItem(item);});updateOrdItemTotal();
 }
 function addOrdFee(){
   var area=document.getElementById('ford-fees-area');
@@ -5845,6 +5863,7 @@ function renderOrdFees(fees){
     div.setAttribute('data-ord-fee',idx);
     div.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:6px';
     div.innerHTML='<select data-ofee="name" class="form-input" style="flex:1;min-width:80px">'
+      +(feeNames.indexOf(fee.name)<0?'<option selected>'+orderDisplayText(fee.name)+'</option>':'')
       +feeNames.map(function(n){return '<option'+(n===fee.name?' selected':'')+'>'+n+'</option>';}).join('')
       +'</select>'
       +'<input data-ofee="amount" type="number" class="form-input" placeholder="金额" value="'+(fee.amount||'')+'" style="width:88px" oninput="updateOrdFeeTotal()">'
@@ -5861,6 +5880,8 @@ function saveQuoteData(){localStorage.setItem(SK.quote,JSON.stringify(quoteRecor
 function saveOrder(){
   var alias=document.getElementById('fo-alias').value.trim();if(!alias){alert('请填写客户代号');return;}
   var currency=(document.getElementById('fo-currency')||{}).value||'USD';
+  var invalidField=document.querySelector('#ford-items-area input:invalid');
+  if(invalidField){invalidField.reportValidity();return;}
   var ordItems=collectOrdItemsFromDOM();
   var ordFees=collectOrdFeesFromDOM();
   var derivedProduct='其他',derivedQty='',derivedAmount=0;
@@ -7428,7 +7449,7 @@ var DEF_PRODCAT=[
     }
     if(custChanged)localStorage.setItem(SK.cust,JSON.stringify(customers));
   }
-  /* 2. 补充/更新 GKK 订单 id:3 和 id:4（以 DEF_ORD 中的正确数据为准） */
+  /* 2. 仅补充缺失的GKK测试订单，不覆盖员工已编辑的明细与箱规。 */
   var needSaveOrd=false;
   [3,4].forEach(function(oid){
     var defO=DEF_ORD.find(function(d){return d.id===oid;});
@@ -7438,17 +7459,7 @@ var DEF_PRODCAT=[
     if(idx<0){
       orders.push(JSON.parse(JSON.stringify(defO)));
       needSaveOrd=true;
-    } else if(!orders[idx].items||!orders[idx].items.length||Math.abs((orders[idx].amount||0)-defO.amount)>1){
-      var saved={followups:orders[idx].followups||[],payments:orders[idx].payments||[],orderNumber:orders[idx].orderNumber,orderNumberRule:orders[idx].orderNumberRule,previousOrderNumber:orders[idx].previousOrderNumber,notes:orders[idx].notes,externalNotes:orders[idx].externalNotes};
-      orders.splice(idx,1,JSON.parse(JSON.stringify(defO)));
-      orders[idx].orderNumber=saved.orderNumber;
-      orders[idx].orderNumberRule=saved.orderNumberRule;
-      orders[idx].previousOrderNumber=saved.previousOrderNumber;
-      orders[idx].notes=saved.notes;
-      orders[idx].externalNotes=saved.externalNotes;
-      orders[idx].followups=saved.followups;
-      orders[idx].payments=saved.payments;
-      needSaveOrd=true;
+
     }
   });
   if(needSaveOrd){
@@ -7458,6 +7469,14 @@ var DEF_PRODCAT=[
     localStorage.setItem(SK.ord,JSON.stringify(orders));
   }
   ensureOrderNumbers();
+  var descriptionsChanged=false;
+  orders.forEach(function(order){(order.items||[]).forEach(function(item){
+    if(item.descCN)return;
+    DEF_ORD.forEach(function(sample){(sample.items||[]).forEach(function(source){
+      if(source.skuCode===item.skuCode&&source.descCN&&source.descEN===item.descEN){item.descCN=source.descCN;descriptionsChanged=true;}
+    });});
+  });});
+  if(descriptionsChanged)localStorage.setItem(SK.ord,JSON.stringify(orders));
   /* 3. 补充/更新 HB 系列产品到产品库（有存量时 merge+覆盖，确保 type 正确） */
   var ps=localStorage.getItem(SK.prodcat);
   if(ps){
