@@ -108,8 +108,9 @@ a{color:var(--accent);text-decoration:none;}
 .ord-compact-code{min-width:0;font-size:10px;color:var(--accent2);margin-top:3px;overflow-wrap:anywhere;}
 .ord-compact-packing{display:flex;justify-content:space-between;align-items:baseline;gap:5px 10px;flex-wrap:wrap;margin-top:5px;font-size:10px;line-height:1.5;color:var(--muted);}
 .ord-compact-freight{font-size:11px;color:var(--text);white-space:nowrap;}
-.ord-compact-total{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:9px;font-size:11px;color:var(--text);}
-.ord-compact-subtotal{font-size:13px;color:var(--green);font-weight:600;white-space:nowrap;}
+.ord-compact-total{display:flex;flex-direction:column;align-items:stretch;gap:3px;border-top:1px solid var(--border);padding-top:9px;font-size:11px;color:var(--text);}
+.ord-compact-summary{text-align:right;font-size:14px;font-weight:600;color:var(--accent);line-height:1.6;}
+.ord-compact-subtotal{align-self:flex-end;font-size:13px;color:var(--green);font-weight:600;white-space:nowrap;}
 .ord-item-warning{font-size:11px;color:var(--yellow);margin-top:5px;}
 .ord-edit-item{padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:12px;}
 .ord-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
@@ -4379,7 +4380,7 @@ function renderOrderItemDetails(o){
       +'<span class="ord-compact-freight" title="本款总毛重 · 本款总体积">'+orderDisplayText(ordPackingValue(p.gross,'kg'))+' · '+orderDisplayText(ordPackingValue(p.volume,'m³',3))+'</span></div>'
       +(p.mismatch?'<div class="ord-item-warning">箱数 × 每箱数量与总数量不一致，请核对。</div>':'')+'</div>';
   });
-  return html+'<div class="ord-compact-total"><span>'+orderDisplayText(renderOrderPackingSummary(o.items))+'</span><span class="ord-compact-subtotal"'+(o.currency==='CNY'?' style="color:var(--yellow)"':'')+'>小计 '+ordMoney(total,o.currency)+'</span></div></div>';
+  return html+'<div class="ord-compact-total"><span class="ord-compact-summary">'+orderDisplayText(renderOrderPackingSummary(o.items))+'</span><span class="ord-compact-subtotal"'+(o.currency==='CNY'?' style="color:var(--yellow)"':'')+'>小计 '+ordMoney(total,o.currency)+'</span></div></div>';
 }
 function openOrderDetail(id){
   const o=orders.find(function(x){return x.id===id;});if(!o)return;
