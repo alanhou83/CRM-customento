@@ -2,11 +2,21 @@
 
 
 ## 记忆维护约定（2026-11-16 接续）
+### 应收应付演示精简为两币种未结汇总（2026-11-18，用户已验收并授权推送）
+- 用户再确认：预收金额用红色、预付金额用绿色（不分币种）；只调整资金区预收/预付列，未分配到账/付款仍沿用既有配色，应收USD绿/CNY黄、应付红不变。已通过node --check、git diff --check及隔离浏览器实际颜色核对；预览 settlement-precolors-ar/ap-mobile.png，用户已授权推送。
+- 用户进一步确认配色及紧凑行：应收USD绿色/CNY黄色，应付两币种统一红色；应用于顶部汇总、列表及展开金额。默认客户/供应商单行只显示名称/币种、未结金额、展开箭头；发货确认金额与已收/已付抵扣移入展开区，未删明细。
+- 本轮沿用前次未推送的精简内容，追加node --check、git diff --check和隔离Chromium14项验证：实际渲染颜色、行高不超过46px、默认隐藏发货和抵扣信息，以及原11项未结筛选/资金保留/存储不变检查；无页面错误。脚本 /tmp/test_compact_settlement.py；预览 /workspace/CRM-customento-preview/settlement-compact-ar/ap-mobile/desktop.png，结果settlement-compact-validation.json。用户已验收并授权推送。
+- 用户要求已结清直接不显示、美元人民币同屏，追加不需要搜索，已确认按此调整演示页。取消币种/全部往来/搜索控件；顶部只显示USD与CNY各自未结总额，不做汇率折算或混加。
+- 客户/供应商和明细仅显示单据正的未结余额，按分计算；结清单据不删，复制分组后筛选，同组有结清与未结时仅显示未结单据，不能用超付单据抵掉其他单据欠款。默认收起明细，点击展开。此规则属于演示展示，正式预付款/超收账务逻辑仍见下方待办。
+- 预收/预付、未分配资金仍从全部分组单独列示，不随“已结清隐藏”丢失；两币种资金均带币种与符号。只有预收/预付而无应收/应付的客户/供应商也应在资金区保留。
+- 仅改finance-settlement-demo.html及记忆，仍为沙箱演示，不接正式数据。原财务收支概览/订单/认领/银行余额均不变。
+- node --check、git diff --check及隔离Chromium11项验证通过：无筛选控件、两币种同时汇总、结清客户和单据隐藏但源数据保留、资金单列保留、两币种零余额与空态、明细展开、手机电脑无溢出、CRM存储前后一致、原概览可返回，无页面错误。脚本 /tmp/test_simplified_settlement.py；截图 /workspace/CRM-customento-preview/settlement-simple-ar/ap-mobile/desktop.png，结果settlement-simple-validation.json。用户已验收并明确授权本次推送。
+
 ### 财务报表应收/应付汇总（2026-11-18，演示结构接入，用户授权直接推送）
 - 用户最终明确：“先把演示和结构放进去就好了，之后把方案更新和逻辑记入记忆文件”。本次上线的是演示入口与结构，不是正式应收应付台账；后续接真实数据需另讲方案确认。
 - 入口：财务→财务报表→收支概览 / 应收汇总·演示 / 应付汇总·演示。原renderFinReports中的真实旧概览搬到renderFinOverview，仍可查看；未修改原概览的统计公式。
 - 应收/应付演示独立文件finance-settlement-demo.html，iframe sandbox仅allow-scripts，无allow-same-origin，不能访问父页面或CRM本地存储。演示数据只在该文件内存中，绝不注入orders、采购、财务流水或备份。页首及入口显著标“演示、未接入正式账款、请勿用于对账”；GKK单号仅用于虚构情景，不改变原订单生产状态。
-- 演示结构：三项金额（发货确认金额、已收/已付抵扣、未结余额），按客户/供应商汇总，点击展开单据；支持币种、搜索、仅未结清筛选；下方单列未发货预收/预付及未分配到账/付款。
+- 初版演示为三金额及币种/搜索/未结筛选；用户后续确认改为两币种未结总额同屏、隐藏结清并去掉所有筛选。客户/供应商行保留发货金额、已收/已付抵扣、未结余额，点击展开；下方预收/预付和未分配资金独立列示，最新约定见本节上方精简记录。
 - 父页面_finReportView控制三入口；子页面hash选择ar/ap。子页仅postMessage展示高度，父页校验event.source为当前iframe且高度有限，手机和电脑自适应。没有新增外部依赖，未修改SW的HTML网络优先策略、IndexedDB或PWA数据。
 - node --check（主HTML及演示页）、git diff --check、隔离Chromium集成检查通过：原概览保留、演示标注、筛选/币种/明细、沙箱禁止访问localStorage、高度稳定、手机父子页面无横向溢出、切回概览和流水、全部交互前后主页面localStorage完全一致，无页面错误。
 - 测试 /tmp/test_integrated_fin_demo.py；结果 /workspace/CRM-customento-preview/integrated-fin-demo-validation.json；截图 integrated-ar/ap-desktop/mobile.png。测试仍预置采购数据绕过既有空存储初始化缺陷，不代表真实iOS或正式多用户账务验收。
