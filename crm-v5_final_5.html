@@ -222,6 +222,9 @@ a{color:var(--accent);text-decoration:none;}
 .cc-todo.soon{background:rgba(247,147,79,.1);color:#c87531;}
 .cc-todo.ok{background:rgba(62,207,142,.08);color:#2d9969;}
 .cc-todo.none{background:var(--surface2);color:var(--muted2);}
+.fin-receipt-filters{display:flex;gap:6px;flex-wrap:wrap;padding:0 28px 14px;}
+.fin-receipt-filters .mobile-chip{cursor:pointer;font-family:inherit;white-space:nowrap;}
+@media(max-width:768px){.fin-receipt-filters{padding:10px 15px;border-bottom:1px solid var(--border);}}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s;}
 .modal-overlay.open{opacity:1;pointer-events:all;}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:660px;max-height:92vh;overflow-y:auto;}
@@ -1399,6 +1402,7 @@ a{color:var(--accent);text-decoration:none;}
         <button class="btn btn-outline btn-sm" onclick="clearFilters('fin')">清除</button>
       </div>
     </div>
+    <div id="fin-receipt-filters" class="fin-receipt-filters" role="group" aria-label="收款分配状态"></div>
     <div class="table-wrap">
       <div class="table-scroll"><div class="table-inner">
         <div class="table-header cols-fin">
@@ -2754,7 +2758,7 @@ function clearFilters(type){
   else if(type==='suppliers'){var sse=document.getElementById('search-suppliers');if(sse)sse.value='';renderSuppliersPage();}
   else if(type==='inv'){var s=document.getElementById('search-inv');if(s)s.value='';var sm=document.getElementById('search-inv-m');if(sm)sm.value='';var st=document.getElementById('fi-inv-status');if(st)st.value='';_invChipStatus='';renderInventoryPage();renderMobileCards_inv();}
   else if(type==='fin'){var sf=document.getElementById('search-fin');if(sf)sf.value='';var sfm=document.getElementById('search-fin-m');if(sfm)sfm.value='';var fft=document.getElementById('ff-type');if(fft)fft.value='';var ffa=document.getElementById('ff-account');if(ffa){ffa.value='';ffa.dataset.populated='';}
-  _finTypeFilter='';['mb-fin-type-in','mb-fin-type-out','mb-fin-type-exp'].forEach(function(id){var c=document.getElementById(id);if(c)c.className='mobile-chip';});renderFinTransactions();}
+  _finTypeFilter='';_finReceiptFilter='';['mb-fin-type-in','mb-fin-type-out','mb-fin-type-exp'].forEach(function(id){var c=document.getElementById(id);if(c)c.className='mobile-chip';});renderFinTransactions();}
 }
 
 function renderDashboard(){
@@ -4618,10 +4622,15 @@ function eligibleOrderReceipts(o,d){return d.transactions.filter(function(t){ret
   var priorityA=receiptKnownCustomer(a)===o.alias?1:0,priorityB=receiptKnownCustomer(b)===o.alias?1:0;
   return priorityB-priorityA||String(b.date).localeCompare(String(a.date));
 });}
-function receiptStatusText(t,d){
+function receiptAllocationStatus(t,d){
   if(!isBusinessReceipt(t))return '';
-  var allocated=receiptAllocatedCents(t,d),remaining=receiptRemaining(t,d);
-  return (allocated<=0?'待认领':remaining>0?'部分分配':'已分配')+' · 可分配 '+fmtAmt(remaining,t.currency);
+  if(receiptAllocatedCents(t,d)<=0)return 'unclaimed';
+  return receiptCents(receiptRemaining(t,d))>0?'partial':'allocated';
+}
+function receiptStatusText(t,d){
+  var status=receiptAllocationStatus(t,d);if(!status)return '';
+  var labels={unclaimed:'待认领',partial:'部分分配',allocated:'已分配'};
+  return labels[status]+' · 可分配 '+fmtAmt(receiptRemaining(t,d),t.currency);
 }
 function buildOrdPaySection(o){
   var d=readReceiptData(),paid=getOrdPayTotal(o),remaining=(receiptCents(orderSettlementAmount(o))-receiptCents(paid))/100;
@@ -11165,6 +11174,7 @@ function canInvControl(){return currentUser==='Penny'||currentUser==='Alan';}
 var _finTab='txn';
 var _editingFinId=null;
 var _finTypeFilter='';
+var _finReceiptFilter='';
 
 function canFinControl(){return currentUser==='Alan'||currentUser==='Penny';}
 function getFinData(){
@@ -11236,6 +11246,19 @@ function finTypeChip(el,type){
   renderFinTransactions();
 }
 
+function setFinReceiptFilter(status){
+  if(['','unclaimed','partial','allocated'].indexOf(status)<0)return;
+  _finReceiptFilter=status;renderFinTransactions();
+}
+function renderFinReceiptFilters(txns,d){
+  var box=document.getElementById('fin-receipt-filters');if(!box)return;
+  var counts={'':txns.length,unclaimed:0,partial:0,allocated:0};
+  txns.forEach(function(t){var status=receiptAllocationStatus(t,d);if(status)counts[status]++;});
+  var labels={'':'全部',unclaimed:'待认领',partial:'部分分配',allocated:'已分配'};
+  box.innerHTML=['','unclaimed','partial','allocated'].map(function(status){
+    return '<button type="button" class="mobile-chip'+(_finReceiptFilter===status?' on':'')+'" data-fin-receipt="'+status+'" aria-pressed="'+(_finReceiptFilter===status?'true':'false')+'" onclick="setFinReceiptFilter(this.dataset.finReceipt)">'+labels[status]+' <span style="font-size:10px;opacity:.7">'+counts[status]+'</span></button>';
+  }).join('');
+}
 function renderFinTransactions(){
   var d=getFinData();
   var txns=d.transactions||[];
@@ -11257,6 +11280,8 @@ function renderFinTransactions(){
     if(_finTypeFilter&&t.type!==_finTypeFilter)return false;
     return true;
   });
+  renderFinReceiptFilters(filtered,d);
+  if(_finReceiptFilter)filtered=filtered.filter(function(t){return receiptAllocationStatus(t,d)===_finReceiptFilter;});
   filtered.sort(function(a,b){return (b.date||'')>(a.date||'')?1:-1;});
   var body=document.getElementById('fin-txn-body');
   if(body){
