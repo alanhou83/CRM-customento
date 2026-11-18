@@ -112,7 +112,22 @@ a{color:var(--accent);text-decoration:none;}
 .ord-compact-summary{text-align:right;font-size:14px;font-weight:600;color:var(--accent);line-height:1.6;}
 .ord-compact-subtotal{align-self:flex-end;font-size:13px;color:var(--green);font-weight:600;white-space:nowrap;}
 .ord-item-warning{font-size:11px;color:var(--yellow);margin-top:5px;}
-.ord-edit-item{padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:12px;}
+.ord-edit-item{padding:7px 0;border-bottom:1px solid var(--border);}
+.ord-edit-main,.ord-edit-columns{display:grid;grid-template-columns:minmax(70px,1fr) 48px 30px 44px 58px 20px;gap:4px;align-items:center;}
+.ord-edit-columns{font-size:10px;color:var(--muted);margin:8px 0 3px;}
+.ord-edit-main .ord-edit-field{font-size:0;line-height:0;}
+.ord-edit-main .ord-edit-field .form-input{margin:0;padding:6px 3px;font-size:12px;height:32px;}
+.ord-edit-main input[type="number"]{appearance:textfield;-moz-appearance:textfield;}
+.ord-edit-main input[type="number"]::-webkit-inner-spin-button,.ord-edit-main input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+.ord-edit-spec-preview{font-size:11px;color:var(--muted);line-height:1.45;margin-top:4px;white-space:normal;overflow-wrap:anywhere;}
+.ord-edit-main [data-oitem="name"]{font-size:11px;}
+.ord-edit-main [data-oitem="subtotal"]{font-size:11px;text-align:right;overflow-wrap:anywhere;}
+.ord-edit-remove{border:0;background:transparent;color:var(--red);font-size:18px;cursor:pointer;padding:0;height:32px;}
+.ord-edit-more>summary{font-size:11px;color:var(--muted);cursor:pointer;list-style:none;padding:4px 0 0;text-align:right;}
+.ord-edit-more>summary::-webkit-details-marker{display:none;}
+.ord-edit-more>summary::before{content:'▸ ';}
+.ord-edit-more[open]>summary::before{content:'▾ ';}
+.ord-edit-more .ord-edit-grid{margin:8px 0 5px;padding:10px;background:var(--surface2);border-radius:6px;}
 .ord-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
 .ord-edit-field{display:block;min-width:0;font-size:11px;color:var(--muted);}
 .ord-edit-field .form-input{margin-top:4px;width:100%;min-width:0;box-sizing:border-box;font-size:13px;}
@@ -1964,6 +1979,7 @@ a{color:var(--accent);text-decoration:none;}
         </div>
       </div>
       <datalist id="ord-sku-datalist"></datalist>
+      <div class="ord-edit-columns"><span>产品</span><span>数量</span><span>单位</span><span>单价</span><span style="text-align:right">小计</span><span></span></div>
       <div id="ford-items-area"><div style="font-size:12px;color:var(--muted);padding:4px 0">点击「+ 添加产品」；无明细时在下方填写合计金额</div></div>
       <div id="ford-items-total" style="text-align:right;font-size:13px;font-weight:600;margin-top:4px;display:none"></div>
       <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
@@ -5653,7 +5669,7 @@ function populateOrdSkuDatalist(){
 }
 function ordEditField(key,label,value,type,wide){
   var multiline=type==='textarea';
-  var attrs=' data-oitem="'+key+'" class="form-input"';
+  var attrs=' data-oitem="'+key+'" class="form-input"'+(key==='descCN'?' oninput="updateOrdSpecPreview(this.closest(\'[data-ord-item]\'))"':'');
   var input=multiline?'<textarea'+attrs+' rows="2">'+orderDisplayText(value)+'</textarea>':
     '<input'+attrs+' type="'+(type||'text')+'"'+(type==='number'?' min="0" step="'+(['cs','pcsPerCarton'].includes(key)?'1':'any')+'"':'')+' value="'+orderDisplayText(value)+'"'+(key==='name'?' list="ord-sku-datalist" oninput="onOrdItemProductInput(this)"':'')+(['qty','unitprice'].includes(key)?' oninput="updateOrdItemSubtotal(this)"':'')+'>';
   return '<label class="ord-edit-field'+(wide?' ord-edit-wide':'')+'">'+label+input+'</label>';
@@ -5664,19 +5680,36 @@ function addOrdItem(initial){
   var item=initial||{};
   var row=document.createElement('div');row.className='ord-edit-item';row.setAttribute('data-ord-item',area.children.length);
   row._ordItemSource=Object.assign({},item);
-  row.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong style="font-size:12px">产品与装箱信息</strong><button type="button" class="btn btn-outline btn-sm" onclick="removeOrdItem(this)">移除</button></div><div class="ord-edit-grid">'
-    +ordEditField('name','中文产品名称',item.nameCN||'','text',true)
+  row.innerHTML='<div class="ord-edit-main">'
+    +ordEditField('name','产品',item.nameCN||'')
+    +ordEditField('qty','数量',item.qty===undefined?'':item.qty,'number')
+    +ordEditField('unit','单位',item.unit||'个')
+    +ordEditField('unitprice','单价',item.unitPrice===undefined?'':item.unitPrice,'number')
+    +'<span data-oitem="subtotal">—</span>'
+    +'<button type="button" class="ord-edit-remove" title="移除产品" aria-label="移除产品" onclick="removeOrdItem(this)">×</button></div>'
+    +'<div class="ord-edit-spec-preview"></div>'
+    +'<details class="ord-edit-more"><summary>更多：描述 / 箱规</summary><div class="ord-edit-grid">'
     +ordEditField('descCN','中文规格描述',item.descCN||'','textarea',true)
     +ordEditField('nameEN','英文产品名称',item.nameEN||'','text',true)
     +ordEditField('descEN','英文规格描述',item.descEN||'','textarea',true)
     +ordEditField('skucode','SKU编码',item.skuCode||'')+ordEditField('itemNo','旧货号',item.itemNo||'')
-    +ordEditField('qty','总数量',item.qty===undefined?'':item.qty,'number')+ordEditField('unit','单位',item.unit||'个')
-    +ordEditField('unitprice','单价',item.unitPrice===undefined?'':item.unitPrice,'number')+ordEditField('cs','箱数',item.cs===undefined?'':item.cs,'number')
-    +ordEditField('pcsPerCarton','每箱数量',item.pcsPerCarton===undefined?'':item.pcsPerCarton,'number')+ordEditField('ctnWeight','每箱毛重（kg）',item.ctnWeight===undefined?'':item.ctnWeight,'number')
+    +ordEditField('cs','箱数',item.cs===undefined?'':item.cs,'number')
+    +ordEditField('pcsPerCarton','每箱数量',item.pcsPerCarton===undefined?'':item.pcsPerCarton,'number')
+    +ordEditField('ctnWeight','每箱毛重（kg）',item.ctnWeight===undefined?'':item.ctnWeight,'number')
     +ordEditField('ctnL','外箱长（cm）',item.ctnL===undefined?'':item.ctnL,'number')+ordEditField('ctnW','外箱宽（cm）',item.ctnW===undefined?'':item.ctnW,'number')
     +ordEditField('ctnH','外箱高（cm）',item.ctnH===undefined?'':item.ctnH,'number')
-    +'</div><div style="text-align:right;font-size:12px;margin-top:8px">商品金额：<span data-oitem="subtotal">—</span></div>';
-  area.appendChild(row);updateOrdItemSubtotal(row.querySelector('[data-oitem="qty"]'));
+    +'</div></details>';
+  area.appendChild(row);updateOrdSpecPreview(row);updateOrdItemSubtotal(row.querySelector('[data-oitem="qty"]'));
+  if(!initial)row.querySelector('[data-oitem="name"]').focus();
+}
+function updateOrdSpecPreview(row){
+  if(!row)return;
+  var field=row.querySelector('[data-oitem="descCN"]');
+  var preview=row.querySelector('.ord-edit-spec-preview');
+  if(!preview)return;
+  var text=field?field.value.trim():'';
+  preview.textContent=text;
+  preview.style.display=text?'':'none';
 }
 function onOrdItemProductInput(inputEl){
   var val=inputEl.value;
@@ -5704,6 +5737,7 @@ function onOrdItemProductInput(inputEl){
       inputEl.value=foundProd.nameCN;
       var snapshot={nameEN:foundProd.nameEN||'',descCN:[foundProd.descCN,foundSku.variantCN].filter(Boolean).join('；'),descEN:[foundProd.descEN,foundSku.variantEN].filter(Boolean).join('; '),itemNo:foundSku.itemNo||'',unit:foundSku.stockUnit||foundSku.unit||'个',pcsPerCarton:foundSku.qtyPerCarton,ctnWeight:foundSku.ctnWeight,ctnL:foundSku.ctnL,ctnW:foundSku.ctnW,ctnH:foundSku.ctnH};
       Object.keys(snapshot).forEach(function(key){var el=row.querySelector('[data-oitem="'+key+'"]');if(el)el.value=snapshot[key]===undefined?'':snapshot[key];});
+      updateOrdSpecPreview(row);
       updateOrdItemSubtotal(inputEl);
     }
   } else {
@@ -5882,7 +5916,7 @@ function saveOrder(){
   var alias=document.getElementById('fo-alias').value.trim();if(!alias){alert('请填写客户代号');return;}
   var currency=(document.getElementById('fo-currency')||{}).value||'USD';
   var invalidField=document.querySelector('#ford-items-area input:invalid');
-  if(invalidField){invalidField.reportValidity();return;}
+  if(invalidField){var more=invalidField.closest('details');if(more)more.open=true;invalidField.reportValidity();return;}
   var ordItems=collectOrdItemsFromDOM();
   var ordFees=collectOrdFeesFromDOM();
   var derivedProduct='其他',derivedQty='',derivedAmount=0;
