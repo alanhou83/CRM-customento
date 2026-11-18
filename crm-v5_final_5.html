@@ -1240,8 +1240,8 @@ a{color:var(--accent);text-decoration:none;}
       <select class="filter-select" id="fp-proc-payment" onchange="renderProcurement()">
         <option value="">全部付款</option>
         <option value="未付款">未付款</option>
-        <option value="已付定金">已付定金</option>
-        <option value="已付全款">已付全款</option>
+        <option value="部分已付">部分已付</option>
+        <option value="已结清">已结清</option>
       </select>
       <select class="filter-select" id="fp-proc-person" onchange="renderProcurement()"><option value="">全部负责人</option></select>
       <button class="btn btn-outline" onclick="clearFilters('proc')">清除</button>
@@ -1606,7 +1606,7 @@ a{color:var(--accent);text-decoration:none;}
       <div class="form-group"><label class="form-label">关联销售订单（可选）</label><div style="position:relative"><input class="form-input" type="text" id="fproc-linked-order" placeholder="输入客户简称或产品名模糊搜索..." oninput="onProcLinkedOrderInput(this)" onblur="onProcLinkedOrderBlur(this)"><div id="proc-order-dd" class="autocomplete-dd" style="display:none"></div></div></div>
       <div class="form-group"><label class="form-label">预计交期</label><input class="form-input" type="date" id="fproc-expected-date"></div>
       <div class="form-group"><label class="form-label">付款状态</label>
-        <select class="form-input" id="fproc-payment-status">
+        <select class="form-input" id="fproc-payment-status" disabled title="按真实付款认领及差额调整自动计算">
           <option value="未付款">未付款</option>
           <option value="已付定金">已付定金</option>
           <option value="已付全款">已付全款</option>
@@ -2332,8 +2332,8 @@ a{color:var(--accent);text-decoration:none;}
         </select>
       </div>
       <div class="form-group"><label class="form-label">类别</label>
-        <select class="form-input" id="ff-category">
-          <option>客户收款</option><option>供应商付款</option><option>员工工资</option><option>房租</option><option>快递</option><option>其他支出</option><option>内部转账</option>
+        <select class="form-input" id="ff-category" onchange="updateFinWithheldFee()">
+          <option>客户收款</option><option>供应商付款</option><option>银行手续费</option><option>员工工资</option><option>房租</option><option>快递</option><option>其他支出</option><option>内部转账</option>
         </select>
       </div>
       <div class="form-group"><label class="form-label">账户 *</label><select class="form-input" id="ff-modal-account"></select></div>
@@ -2358,6 +2358,7 @@ a{color:var(--accent);text-decoration:none;}
       </div>
       <div class="form-group"><label class="form-label">经办人</label><select class="form-input" id="ff-person"><option>Alan</option><option>Kelly</option><option>Momi</option><option>Mille</option><option>Penny</option></select></div>
       <div class="form-group" style="grid-column:span 2"><label class="form-label">备注</label><input class="form-input" type="text" id="ff-note" placeholder="说明..."></div>
+      <details id="ff-withheld-wrap" style="grid-column:span 2;font-size:12px;color:var(--muted)"><summary style="cursor:pointer">内扣银行手续费（可选）</summary><label class="form-label" style="display:block;margin-top:9px">内扣金额（与到账同币种）</label><input class="form-input" type="number" min="0" step="0.01" id="ff-withheld-fee" placeholder="如40；上面的金额仍填写实际到账7960"><div style="font-size:11px;line-height:1.6;margin-top:6px">仅填写已在到账前扣除、没有独立扣款流水的手续费。若银行另有手续费流水，此处填0，另记“银行手续费”支出。</div></details>
     </div>
     <div style="margin-top:8px" id="fin-delete-area"></div>
     <div class="modal-footer">
@@ -2871,15 +2872,15 @@ function renderDashboard(){
   if(arApRow){
     var arUSD=0,arCNY=0;
     orders.forEach(function(o){
-      var remUSD=orderSettlementAmount(o,'USD')-getOrdPayTotal(o,'USD');
-      var remCNY=orderSettlementAmount(o,'CNY')-getOrdPayTotal(o,'CNY');
+      var remUSD=targetBalance('order',o,'USD');
+      var remCNY=targetBalance('order',o,'CNY');
       if(remUSD>0)arUSD+=remUSD;if(remCNY>0)arCNY+=remCNY;
     });
     var d2=getProcData();
     var apCNY=0,apUSD=0;
     d2.pos.forEach(function(p){
-      var remC=(+p.totalCNY||0)-getProcPayTotal(p,'CNY');
-      var remU=(+p.totalUSD||0)-getProcPayTotal(p,'USD');
+      var remC=targetBalance('proc',p,'CNY');
+      var remU=targetBalance('proc',p,'USD');
       if(remC>0)apCNY+=remC;
       if(remU>0)apUSD+=remU;
     });
@@ -4583,7 +4584,7 @@ function openOrderFromCust(custId,orderId){
 function readReceiptData(){
   var raw=localStorage.getItem(SK.fin);
   var d=raw?JSON.parse(raw):{};
-  d.transactions=d.transactions||[];d.accounts=d.accounts||[];d.receiptAllocations=d.receiptAllocations||[];
+  d.transactions=d.transactions||[];d.accounts=d.accounts||[];d.receiptAllocations=d.receiptAllocations||[];d.paymentAllocations=d.paymentAllocations||[];d.settlementAdjustments=d.settlementAdjustments||[];
   return d;
 }
 function receiptCents(value){return Math.round((Number(value)||0)*100);}
@@ -4596,17 +4597,9 @@ function orderSettlementAmount(o,cur){
   var base=cur===(o.currency||'USD')?(o.items&&o.items.length?o.items.reduce(function(s,it){return s+receiptCents(it.subtotal);},0):receiptCents(o.amount)):0;
   return (base+(o.fees||[]).filter(function(f){return (f.currency||o.currency)===cur;}).reduce(function(s,f){return s+receiptCents(f.amount);},0))/100;
 }
-function getOrdPayTotal(o,cur){
-  var c=cur||o.currency||'USD';
-  return activeReceiptClaims(readReceiptData()).filter(function(a){return String(a.orderId)===String(o.id)&&a.currency===c;}).reduce(function(s,a){return s+receiptCents(a.amount);},0)/100;
-}
-function getOrdPayStatus(o){
-  var total=orderSettlementAmount(o),paid=getOrdPayTotal(o);
-  if(!total)return '';
-  if(paid<=0)return '未收款';
-  if(receiptCents(paid)>=receiptCents(total))return '已收全款';
-  return '部分已收';
-}
+function getOrdPayTotal(o,cur){return targetCash('order',o,cur||o.currency||'USD');}
+function getProcPayTotal(p,cur){return targetCash('proc',p,cur);}
+function getOrdPayStatus(o){if(!orderSettlementAmount(o))return '';var left=targetBalance('order',o,o.currency||'USD');return left<=0?'已结清':getOrdPayTotal(o)>0?'部分已收':'未收款';}
 function canClaimOrderReceipt(o){return currentUser==='Alan'||currentUser==='Kelly'||(o.person===currentUser&&(currentUser==='Momi'||currentUser==='Mille'));}
 function receiptKnownCustomer(t){
   var party=String(t.party||'').trim().toLowerCase();
@@ -4639,177 +4632,177 @@ function receiptStatusText(t,d){
   var amount=remaining===0?(t.currency==='CNY'?'¥0':'$0'):fmtAmt(remaining,t.currency);
   return labels[status]+(status==='allocated'?' · 剩余 ':' · 可分配 ')+amount;
 }
-function buildOrdPaySection(o){
-  var d=readReceiptData(),paid=getOrdPayTotal(o),remaining=(receiptCents(orderSettlementAmount(o))-receiptCents(paid))/100;
-  var html='<div class="detail-section" id="order-receipts-'+o.id+'"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px"><div class="detail-section-title" style="margin:0">收款记录</div>';
-  if(canClaimOrderReceipt(o))html+='<button id="opf-btn-'+o.id+'" class="btn btn-outline btn-sm" onclick="showOrdPayForm('+o.id+')">＋认领收款</button>';
-  html+='</div><div style="display:flex;gap:16px;flex-wrap:wrap;padding:9px 10px;background:var(--surface2);border-radius:6px;font-size:13px"><span style="color:var(--muted)">已收 <b style="color:var(--green)">'+fmtAmt(paid,o.currency)+'</b></span><span style="color:var(--muted)">'+(remaining<0?'超收':'待收')+' <b style="color:'+(remaining>0?'var(--red)':'var(--accent)')+'">'+fmtAmt(Math.abs(remaining),o.currency)+'</b></span></div>';
-  (o.fees||[]).filter(function(f){return f.currency&&f.currency!==o.currency;}).forEach(function(f){html+='<div style="font-size:11px;color:var(--muted);margin-top:5px">另有 '+fmtAmt(f.amount,f.currency)+' 费用，需单独处理。</div>';});
-  var claims=(d.receiptAllocations||[]).filter(function(a){return String(a.orderId)===String(o.id);}),active=claims.filter(function(a){return a.status==='active';}),revoked=claims.filter(function(a){return a.status==='revoked';});
-  if(!active.length)html+='<div style="font-size:12px;color:var(--muted);padding:10px 0">暂无收款记录</div>';
+/* ===== 收付款认领与非现金差额：不改变银行余额 ===== */
+function settlementClaims(d,kind){return (d[kind==='order'?'receiptAllocations':'paymentAllocations']||[]).filter(function(a){return a.status==='active';});}
+function settlementAdjustments(d){return (d.settlementAdjustments||[]).filter(function(a){return a.status==='active';});}
+function targetCash(kind,target,cur,d){return settlementClaims(d||readReceiptData(),kind).filter(function(a){return String(kind==='order'?a.orderId:a.procId)===String(target.id)&&a.currency===cur;}).reduce(function(s,a){return s+receiptCents(a.amount);},0)/100;}
+function targetAdjust(kind,target,cur,d){return settlementAdjustments(d||readReceiptData()).filter(function(a){return a.targetType===kind&&String(a.targetId)===String(target.id)&&a.currency===cur;}).reduce(function(s,a){return s+receiptCents(a.amount);},0)/100;}
+function targetAmount(kind,target,cur){return kind==='order'?orderSettlementAmount(target,cur):Number(cur==='USD'?target.totalUSD:target.totalCNY)||0;}
+function targetBalance(kind,target,cur,d){return (receiptCents(targetAmount(kind,target,cur))-receiptCents(targetCash(kind,target,cur,d))-receiptCents(targetAdjust(kind,target,cur,d)))/100;}
+function settlementTarget(kind,id){return (kind==='order'?orders:getProcData().pos).find(function(t){return String(t.id)===String(id);});}
+function procPaymentStatus(p){var any=0,pending=0;['CNY','USD'].forEach(function(c){any+=receiptCents(targetCash('proc',p,c))+receiptCents(targetAdjust('proc',p,c));pending+=Math.max(0,receiptCents(targetBalance('proc',p,c)));});return any>0?(pending>0?'部分已付':'已结清'):'未付款';}
+function canSettle(kind,t){return kind==='order'?canClaimOrderReceipt(t):(canFinControl()||currentUser==='Kelly'||t.person===currentUser);}
+function isSupplierPayment(t){return t&&t.type==='付款'&&t.category==='供应商付款';}
+function isBankFee(t){return t&&(t.type==='付款'||t.type==='运营支出')&&t.category==='银行手续费';}
+function transactionClaimCents(t,d){return settlementClaims(d,'order').concat(settlementClaims(d,'proc')).filter(function(a){return a.transactionId===t.id;}).reduce(function(s,a){return s+receiptCents(a.amount);},0);}
+function feeUsedCents(source,d){return settlementAdjustments(d).filter(function(a){return a.feeSource===source;}).reduce(function(s,a){return s+receiptCents(a.amount);},0);}
+function feeSources(t,d){
+  var list=[];
+  if(isBusinessReceipt(t)&&receiptCents(t.withheldFee)>0)list.push({id:'net:'+t.id,amount:Number(t.withheldFee),label:'本笔到账内扣手续费'});
+  d.transactions.filter(function(f){return isBankFee(f)&&f.currency===t.currency&&f.accountId===t.accountId;}).forEach(function(f){list.push({id:'txn:'+f.id,amount:Number(f.amount),label:f.date+' · '+(f.note||f.party||'独立手续费流水')});});
+  return list.map(function(f){f.remaining=(receiptCents(f.amount)-feeUsedCents(f.id,d))/100;return f;}).filter(function(f){return receiptCents(f.remaining)>0;});
+}
+function paymentMatchesSupplier(t,target,d){
+  var claims=settlementClaims(d,'proc').filter(function(a){return a.transactionId===t.id;});
+  if(claims.length)return claims.every(function(a){return a.supplierId&&target.supplierId?a.supplierId===target.supplierId:a.supplierName===target.supplierName;});
+  var party=String(t.party||'').trim().toLowerCase();if(!party)return true;
+  // 已识别其他供应商的付款不混领；未识别款项须由采购明确确认。
+  var pd=getProcData(),known=pd.suppliers.find(function(s){return String(s.name||'').trim().toLowerCase()===party;});
+  if(known)return known.id===target.supplierId;
+  var other=pd.pos.find(function(p){return String(p.supplierName||'').trim().toLowerCase()===party;});
+  return !other||other.supplierName===target.supplierName;
+}
+function matchesTarget(kind,t,target,d){return kind==='order'?isBusinessReceipt(t)&&receiptMatchesCustomer(t,target,d):isSupplierPayment(t)&&paymentMatchesSupplier(t,target,d);}
+function knownTarget(kind,t,target){var bound=settlementClaims(readReceiptData(),kind).filter(function(a){return a.transactionId===t.id;});if(bound.length)return bound.every(function(a){return kind==='order'?a.customerAlias===target.alias:(a.supplierId&&target.supplierId?a.supplierId===target.supplierId:a.supplierName===target.supplierName);});return kind==='order'?receiptKnownCustomer(t)===target.alias:String(t.party||'').trim().toLowerCase()===String(target.supplierName||'').trim().toLowerCase();}
+function eligibleSettlementCash(kind,target,cur,d){return d.transactions.filter(function(t){
+  if(t.currency!==cur||!matchesTarget(kind,t,target,d))return false;
+  var cashLeft=receiptCents(t.amount)-transactionClaimCents(t,d);
+  var associated=settlementClaims(d,kind).some(function(a){return a.transactionId===t.id&&String(kind==='order'?a.orderId:a.procId)===String(target.id);});
+  return cashLeft>0||associated;
+}).sort(function(a,b){return Number(knownTarget(kind,b,target))-Number(knownTarget(kind,a,target))||String(b.date).localeCompare(String(a.date));});}
+function cashFormat(amount,cur){return receiptCents(amount)===0?(cur==='USD'?'$0':'¥0'):fmtAmt(amount,cur);}
+function settlementFeeSummary(d,cur){return d.transactions.filter(function(t){return t.currency===cur;}).reduce(function(s,t){return s+(isBankFee(t)?receiptCents(t.amount):0)+(isBusinessReceipt(t)?receiptCents(t.withheldFee):0);},0)/100;}
+function buildSettlementSection(kind,target){
+  var order=kind==='order',d=readReceiptData(),id=String(target.id),cur=order?(target.currency||'USD'):'CNY';
+  var allowed=canSettle(kind,target),cashKey=order?'receiptAllocations':'paymentAllocations';
+  var attrs=' data-kind="'+kind+'" data-target="'+orderDisplayText(id)+'"';
+  var html='<div class="detail-section" id="'+(order?'order-receipts-':'proc-payments-')+orderDisplayText(id)+'"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div class="detail-section-title" style="margin:0">'+(order?'收款记录':'付款记录')+'</div>';
+  if(allowed)html+='<button class="btn btn-outline btn-sm"'+(order?' id="opf-btn-'+id+'"':'')+attrs+' onclick="showSettlementForm(this.dataset.kind,this.dataset.target)">＋认领'+(order?'收款':'付款')+'</button>';
+  html+='</div>';
+  (order?[cur]:['CNY','USD']).forEach(function(c){
+    var amount=targetAmount(kind,target,c),paid=targetCash(kind,target,c,d),adjust=targetAdjust(kind,target,c,d),left=targetBalance(kind,target,c,d);
+    if(!order&&!amount&&!paid&&!adjust)return;
+    html+='<div style="display:flex;gap:12px;flex-wrap:wrap;padding:9px 10px;margin-bottom:5px;background:var(--surface2);border-radius:6px;font-size:12px"><span>已'+(order?'收':'付')+' <b style="color:var(--green)">'+cashFormat(paid,c)+'</b></span>'+(adjust?'<span>差额调整 <b>'+cashFormat(adjust,c)+'</b></span>':'')+'<span>'+(left<0?'超额':order?'待收':'待付')+' <b style="color:'+(left>0?'var(--red)':'var(--accent)')+'">'+cashFormat(Math.abs(left),c)+'</b></span></div>';
+  });
+  var rows=(d[cashKey]||[]).filter(function(a){return String(order?a.orderId:a.procId)===id;});
+  var active=rows.filter(function(a){return a.status==='active';}),adjusts=(d.settlementAdjustments||[]).filter(function(a){return a.targetType===kind&&String(a.targetId)===id;}),history=[];
+  if(!active.length&&!adjusts.some(function(a){return a.status==='active';}))html+='<div style="font-size:12px;color:var(--muted);padding:9px 0">暂无认领记录</div>';
   active.forEach(function(a){
-    var t=d.transactions.find(function(x){return x.id===a.transactionId;}),date=(t?t.date:a.receiptDate)||'日期待核对';
-    html+='<details class="ord-receipt-row" style="border-bottom:1px solid var(--border);font-size:12px"><summary style="list-style:none;display:grid;grid-template-columns:76px minmax(0,1fr) auto 18px;align-items:center;gap:8px;padding:11px 0;cursor:pointer"><span style="color:var(--muted)">'+orderDisplayText(date)+'</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+orderDisplayText(a.note||'收款')+'">'+orderDisplayText(a.note||'收款')+'</span><b style="color:var(--green);white-space:nowrap">'+fmtAmt(a.amount,a.currency)+'</b><span style="color:var(--muted);text-align:right">⋯</span></summary><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:0 0 10px;color:var(--muted)"><span>认领人：'+orderDisplayText(a.createdBy||'—')+'</span>';
-    if(canClaimOrderReceipt(o))html+='<button class="btn btn-outline btn-sm" data-claim-id="'+orderDisplayText(a.id)+'" onclick="revokeOrderClaim('+o.id+',this.dataset.claimId)" style="font-size:11px;padding:4px 9px">撤回认领</button>';
+    var t=d.transactions.find(function(x){return x.id===a.transactionId;});
+    html+='<details class="ord-receipt-row" style="border-bottom:1px solid var(--border);font-size:12px"><summary style="list-style:none;display:grid;grid-template-columns:76px minmax(0,1fr) auto 16px;gap:7px;align-items:center;padding:10px 0;cursor:pointer"><span style="color:var(--muted)">'+orderDisplayText(t?t.date:a.receiptDate)+'</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+orderDisplayText(a.note||'款项认领')+'</span><b style="color:var(--green)">'+fmtAmt(a.amount,a.currency)+'</b><span>⋯</span></summary><div style="display:flex;justify-content:space-between;padding-bottom:9px;color:var(--muted)"><span>认领人：'+orderDisplayText(a.createdBy)+'</span>';
+    if(allowed)html+='<button class="btn btn-outline btn-sm"'+attrs+' data-id="'+orderDisplayText(a.id)+'" onclick="revokeSettlementCash(this.dataset.kind,this.dataset.target,this.dataset.id)">撤回认领</button>';
     html+='</div></details>';
   });
-  var legacy=o.payments||[],historyCount=revoked.length+legacy.length;
-  if(historyCount){
-    html+='<details class="ord-receipt-history" style="font-size:11px;color:var(--muted);margin-top:10px"><summary style="cursor:pointer">历史记录 · '+historyCount+'</summary><div style="margin-top:6px">';
-    revoked.forEach(function(a){html+='<div style="padding:7px 0;border-bottom:1px solid var(--border);overflow-wrap:anywhere">'+orderDisplayText(a.receiptDate||'')+' · 已撤回 '+fmtAmt(a.amount,a.currency)+'<div style="margin-top:3px">'+orderDisplayText(a.revokedBy)+' · '+orderDisplayText(a.revokedReason)+'</div></div>';});
-    legacy.forEach(function(pay){html+='<div style="padding:7px 0;border-bottom:1px solid var(--border);overflow-wrap:anywhere">'+orderDisplayText(pay.date)+' · '+fmtAmt(pay.amount,pay.currency)+' · '+orderDisplayText(pay.note||'旧收款')+'<div style="margin-top:3px">待核对旧记录，不计入已收</div></div>';});
+  adjusts.forEach(function(a){
+    if(a.status!=='active'){history.push('已撤回调整 '+fmtAmt(a.amount,a.currency)+' · '+orderDisplayText(a.revokedReason));return;}
+    html+='<details class="settlement-adjustment" style="font-size:12px;border-bottom:1px solid var(--border)"><summary style="padding:10px 0;cursor:pointer;color:var(--accent)">'+(a.kind==='fee'?'手续费差额':'小额减免')+' '+fmtAmt(a.amount,a.currency)+' · 不计资金收支</summary><div style="padding-bottom:9px;line-height:1.7;color:var(--muted)">'+orderDisplayText(a.reason)+'<br>'+orderDisplayText(a.createdBy)+' · '+orderDisplayText(a.createdAt.slice(0,10));
+    if(allowed)html+='<button class="btn btn-outline btn-sm"'+attrs+' data-id="'+orderDisplayText(a.id)+'" onclick="revokeSettlementAdjustment(this.dataset.kind,this.dataset.target,this.dataset.id)">撤回调整</button>';
     html+='</div></details>';
-  }
+  });
+  rows.filter(function(a){return a.status==='revoked';}).forEach(function(a){history.push('已撤回认领 '+fmtAmt(a.amount,a.currency)+' · '+orderDisplayText(a.revokedReason));});
+  (target.payments||[]).forEach(function(p){history.push('待核对旧记录 '+orderDisplayText(p.date)+' · '+fmtAmt(p.amount,p.currency)+' · '+orderDisplayText(p.note||'')+'（不计入已'+(order?'收':'付')+'）');});
+  if(history.length)html+='<details class="ord-receipt-history" style="font-size:11px;color:var(--muted);margin-top:9px"><summary>历史记录 · '+history.length+'</summary>'+history.map(function(h){return '<div style="padding:6px 0">'+h+'</div>';}).join('')+'</details>';
   return html+'</div>';
 }
-function showOrdPayForm(ordId){
-  var o=orders.find(function(x){return x.id===ordId;});if(!o||!canClaimOrderReceipt(o))return;
-  var previous=document.getElementById('ord-receipt-modal');if(previous)previous.remove();
-  var overlay=document.createElement('div');overlay.id='ord-receipt-modal';overlay.className='modal-overlay';
-  overlay.innerHTML='<div class="modal" role="dialog" aria-modal="true" aria-labelledby="ord-receipt-title" style="max-width:440px"><div class="modal-head"><div><div class="modal-title" id="ord-receipt-title">认领收款</div><div style="font-size:11px;color:var(--muted);margin-top:4px">'+orderDisplayText(o.alias)+' · '+orderDisplayText(o.orderNumber)+'</div></div><button class="modal-close" aria-label="关闭" onclick="hideOrdPayForm('+ordId+')">×</button></div><div class="modal-body" id="opf-'+ordId+'"></div></div>';
-  overlay.addEventListener('click',function(e){if(e.target===overlay)hideOrdPayForm(ordId);});
-  overlay.addEventListener('keydown',function(e){if(e.key==='Escape'){e.stopPropagation();hideOrdPayForm(ordId);}});
-  document.body.appendChild(overlay);
-  var f=document.getElementById('opf-'+ordId),d=getFinData(),list=eligibleOrderReceipts(o,d);
-  var html='';
-  if(!list.length){
-    f.innerHTML='<div style="font-size:13px;margin-bottom:8px">暂无可认领的到账款项</div><div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:18px">请财务核查是否到账，并登记为客户收款。</div><button class="btn btn-outline btn-sm" onclick="hideOrdPayForm('+ordId+')">关闭</button>';
-    openModal('ord-receipt-modal');return;
+function buildOrdPaySection(o){return buildSettlementSection('order',o);}
+function buildProcPaySection(p){return buildSettlementSection('proc',p);}
+function showOrdPayForm(id){showSettlementForm('order',id);}
+function showProcPayForm(id){showSettlementForm('proc',id);}
+function saveOrdPayment(id){saveSettlementClaim('order',id);}
+function saveProcPayment(id){saveSettlementClaim('proc',id);}
+function hideOrdPayForm(){hideSettlementForm();}
+function hideProcPayForm(){hideSettlementForm();}
+function deleteOrdPayment(){toast('旧记录保留待核对，请认领真实财务到账');}
+function deleteProcPayment(){toast('旧记录保留待核对，请认领真实财务付款');}
+function hideSettlementForm(){var el=document.getElementById('ord-receipt-modal');if(el)el.remove();}
+function reopenSettlementTarget(kind,id){if(kind==='order')openOrderDetail(Number(id));else openProcDetail(id);}
+function showSettlementForm(kind,id,selectedCurrency){
+  if(kind!=='order'&&kind!=='proc')return;
+  var t=settlementTarget(kind,id);if(!t||!canSettle(kind,t))return;
+  hideSettlementForm();
+  var order=kind==='order',cur=selectedCurrency||(order?t.currency:(t.totalCNY?'CNY':'USD'))||'USD';
+  var modal=document.createElement('div');modal.id='ord-receipt-modal';modal.className='modal-overlay';modal.dataset.kind=kind;modal.dataset.target=id;modal.dataset.currency=cur;
+  var title='认领'+(order?'收款':'付款');
+  modal.innerHTML='<div class="modal" role="dialog" aria-modal="true" aria-label="'+title+'" style="max-width:460px"><div class="modal-head"><div><div class="modal-title">'+title+'</div><div style="font-size:11px;color:var(--muted);margin-top:4px">'+orderDisplayText(order?t.alias:t.supplierName)+' · '+orderDisplayText(order?t.orderNumber:t.poNumber)+'</div></div><button class="modal-close" aria-label="关闭" onclick="hideSettlementForm()">×</button></div><div class="modal-body" id="settlement-form-body"></div></div>';
+  modal.addEventListener('click',function(e){if(e.target===modal)hideSettlementForm();});modal.addEventListener('keydown',function(e){if(e.key==='Escape')hideSettlementForm();});document.body.appendChild(modal);
+  var d=getFinData(),list=eligibleSettlementCash(kind,t,cur,d),html='';
+  if(!order)html+='<label class="form-label">本次币种</label><select id="settle-cur" class="form-input" onchange="var m=document.getElementById(\'ord-receipt-modal\');showSettlementForm(m.dataset.kind,m.dataset.target,this.value)" style="margin:5px 0 12px"><option value="CNY"'+(cur==='CNY'?' selected':'')+'>CNY</option><option value="USD"'+(cur==='USD'?' selected':'')+'>USD</option></select>';
+  if(!list.length){html+='<div style="font-size:13px">暂无可认领的'+cur+(order?'到账款项':'供应商付款')+'</div><p style="font-size:12px;color:var(--muted)">请财务核实并登记真实银行流水。</p><button class="btn btn-outline btn-sm" onclick="hideSettlementForm()">关闭</button>';}else{
+    html+='<label class="form-label">选择'+(order?'到账款项':'付款流水')+'</label><select id="settle-txn" class="form-input" onchange="updateSettlementForm()" style="margin:5px 0">';
+    list.forEach(function(x){html+='<option value="'+orderDisplayText(x.id)+'">'+orderDisplayText(x.date)+' · '+orderDisplayText(x.party||'往来方待确认')+' · '+fmtAmt(x.amount,x.currency)+'</option>';});
+    html+='</select><div id="settle-info" style="font-size:12px;color:var(--muted);margin:5px 0 12px"></div><label id="settle-party-wrap" style="display:none;font-size:12px;color:var(--yellow);margin-bottom:10px"><input type="checkbox" id="settle-party-confirm"> 我确认属于 '+orderDisplayText(order?t.alias:t.supplierName)+'</label><label class="form-label">本单'+(order?'收款':'付款')+'认领金额（'+cur+'）</label><input class="form-input" type="number" min="0" step="0.01" inputmode="decimal" id="settle-amount" placeholder="本次实际货款；仅处理差额可填0" style="margin:5px 0 12px"><input class="form-input" id="settle-note" placeholder="备注（选填，如定金）" style="margin-bottom:12px">';
+    html+='<details id="settle-more" style="font-size:12px;margin-bottom:16px"><summary style="cursor:pointer;color:var(--accent)">手续费／差额处理（可选）</summary><div style="display:grid;gap:8px;padding-top:10px"><select id="settle-policy" class="form-input" onchange="updateSettlementPolicy()"><option value="none">不处理差额，继续保留待'+(order?'收':'付')+'</option><option value="fee">'+(order?'手续费由我方承担，同意结清差额':'手续费差额，供应商认可结清')+'</option><option value="waiver">'+(order?'小额差额，我方同意减免':'小额差额，供应商同意减免')+'</option></select><div id="settle-extra" style="display:none"><select class="form-input" id="settle-fee-source" style="margin-bottom:8px"></select><input class="form-input" type="number" min="0.01" step="0.01" id="settle-adjust-amount" placeholder="差额金额（'+cur+'）" style="margin-bottom:8px"><input class="form-input" id="settle-adjust-reason" placeholder="必填：承担或对方认可的说明"><div style="font-size:11px;color:var(--muted);margin-top:6px">只调整单据未结余额，不新增银行收支。减免不计银行手续费。</div></div></div></details><div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn btn-outline btn-sm" onclick="hideSettlementForm()">取消</button><button class="btn btn-primary btn-sm" onclick="var m=document.getElementById(\'ord-receipt-modal\');saveSettlementClaim(m.dataset.kind,m.dataset.target)">确认认领</button></div>';
   }
-  html+='<label for="opf-txn-'+ordId+'" class="form-label">选择到账款项</label><select id="opf-txn-'+ordId+'" class="form-input" onchange="updateOrderClaimInfo('+ordId+')" style="margin:6px 0">';
-  list.forEach(function(t){html+='<option value="'+orderDisplayText(t.id)+'">'+orderDisplayText(t.date)+' · '+orderDisplayText(t.party||'客户待确认')+' · '+fmtAmt(t.amount,t.currency)+'</option>';});
-  html+='</select><div id="opf-info-'+ordId+'" style="font-size:12px;color:var(--muted);margin:2px 0 16px;overflow-wrap:anywhere"></div><label id="opf-confirm-wrap-'+ordId+'" style="display:none;font-size:12px;margin-bottom:14px;color:var(--yellow)"><input type="checkbox" id="opf-confirm-'+ordId+'"> 我确认这笔到账属于 '+orderDisplayText(o.alias)+'</label><label for="opf-amt-'+ordId+'" class="form-label">本单认领金额（'+orderDisplayText(o.currency)+'）</label><input id="opf-amt-'+ordId+'" class="form-input" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="填写分配给本单的金额" style="margin:6px 0 14px"><label for="opf-note-'+ordId+'" class="form-label">备注（选填）</label><input id="opf-note-'+ordId+'" class="form-input" placeholder="如：定金、尾款" style="margin:6px 0 18px"><div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn btn-outline btn-sm" onclick="hideOrdPayForm('+ordId+')">取消</button><button class="btn btn-primary btn-sm" onclick="saveOrdPayment('+ordId+')">确认认领</button></div>';
-  f.innerHTML=html;openModal('ord-receipt-modal');updateOrderClaimInfo(ordId);
-  document.getElementById('opf-txn-'+ordId).focus({preventScroll:true});
+  document.getElementById('settlement-form-body').innerHTML=html;openModal('ord-receipt-modal');if(list.length)updateSettlementForm();
 }
-function updateOrderClaimInfo(ordId){
-  var sel=document.getElementById('opf-txn-'+ordId),info=document.getElementById('opf-info-'+ordId);if(!sel||!info)return;
-  var d=readReceiptData(),t=d.transactions.find(function(x){return x.id===sel.value;});
-  var wrap=document.getElementById('opf-confirm-wrap-'+ordId),check=document.getElementById('opf-confirm-'+ordId);
-  var needsConfirm=t&&!receiptKnownCustomer(t)&&!activeReceiptClaims(d).some(function(a){return a.transactionId===t.id;});
-  if(wrap)wrap.style.display=needsConfirm?'block':'none';if(check)check.checked=false;
-  info.textContent=t?'可认领 '+fmtAmt(receiptRemaining(t,d),t.currency):'';
+function updateSettlementForm(){
+  var m=document.getElementById('ord-receipt-modal'),sel=document.getElementById('settle-txn');if(!m||!sel)return;
+  var kind=m.dataset.kind,target=settlementTarget(kind,m.dataset.target),d=readReceiptData(),t=d.transactions.find(function(x){return x.id===sel.value;});if(!t)return;
+  var cashLeft=(receiptCents(t.amount)-transactionClaimCents(t,d))/100;
+  document.getElementById('settle-info').textContent='可认领 '+cashFormat(cashLeft,t.currency)+' · 本单待'+(kind==='order'?'收 ':'付 ')+cashFormat(Math.max(0,targetBalance(kind,target,t.currency,d)),t.currency);
+  document.getElementById('settle-party-wrap').style.display=knownTarget(kind,t,target)?'none':'block';document.getElementById('settle-party-confirm').checked=false;
+  var amount=document.getElementById('settle-amount');amount.value=cashLeft<=0?'0':'';
+  var fees=feeSources(t,d),feeSel=document.getElementById('settle-fee-source');
+  feeSel.innerHTML='<option value="">选择手续费来源（请财务先登记）</option>'+fees.map(function(f){return '<option value="'+orderDisplayText(f.id)+'">'+orderDisplayText(f.label)+' · 可用 '+fmtAmt(f.remaining,t.currency)+'</option>';}).join('');
+  document.getElementById('settle-policy').value='none';document.getElementById('settle-adjust-amount').value='';document.getElementById('settle-adjust-reason').value='';updateSettlementPolicy();
 }
-function hideOrdPayForm(ordId){var modal=document.getElementById('ord-receipt-modal');if(modal)modal.remove();var button=document.getElementById('opf-btn-'+ordId);if(button)button.focus({preventScroll:true});}
-function saveOrdPayment(ordId){
-  var o=orders.find(function(x){return x.id===ordId;});if(!o||!canClaimOrderReceipt(o))return;
-  var input=document.getElementById('opf-amt-'+ordId),sel=document.getElementById('opf-txn-'+ordId),note=document.getElementById('opf-note-'+ordId);
-  if(!input||!sel)return;
-  var amount=Number(input.value),cents=receiptCents(amount);
-  if(!Number.isFinite(amount)||cents<=0||Math.abs(amount*100-cents)>.00001){toast('请输入有效金额，最多两位小数');return;}
-  // 保存时重新读取可用余额，防止重复点击使用过期表单。
-  var d=readReceiptData(),t=d.transactions.find(function(x){return x.id===sel.value;});
-  if(!isBusinessReceipt(t)||t.currency!==o.currency||!receiptMatchesCustomer(t,o,d)){toast('款项已变更，请重新选择');return;}
-  if(!receiptKnownCustomer(t)&&!activeReceiptClaims(d).some(function(a){return a.transactionId===t.id;})&&!((document.getElementById('opf-confirm-'+ordId)||{}).checked)){toast('请先确认到账款项的客户归属');return;}
-  if(cents>receiptCents(receiptRemaining(t,d))){toast('认领金额超过款项可分配余额');return;}
-  if(cents>receiptCents(Math.max(0,orderSettlementAmount(o)-getOrdPayTotal(o)))){toast('认领金额超过本单待收，剩余款项可保留或分配其他订单');return;}
-  var a={id:'claim_'+Date.now()+'_'+Math.random().toString(36).slice(2,9),transactionId:t.id,orderId:o.id,customerAlias:o.alias,amount:cents/100,currency:t.currency,receiptDate:t.date,receiptAmount:t.amount,receiptParty:t.party||'',status:'active',createdAt:new Date().toISOString(),createdBy:currentUser,note:note?note.value.trim():''};
-  d.receiptAllocations=d.receiptAllocations||[];d.receiptAllocations.push(a);saveFinData(d);hideOrdPayForm(ordId);openOrderDetail(ordId);toast('收款已认领');
-}
-function revokeOrderClaim(ordId,claimId){
-  var o=orders.find(function(x){return x.id===ordId;});if(!o||!canClaimOrderReceipt(o))return;
-  var reason=prompt('撤回认领的原因（只撤回分配，不删除财务到账）');if(reason===null)return;if(!reason.trim()){toast('请填写撤回原因');return;}
-  var d=readReceiptData(),a=(d.receiptAllocations||[]).find(function(x){return x.id===claimId&&String(x.orderId)===String(ordId)&&x.status==='active';});if(!a)return;
-  a.status='revoked';a.revokedAt=new Date().toISOString();a.revokedBy=currentUser;a.revokedReason=reason.trim();saveFinData(d);openOrderDetail(ordId);toast('已撤回认领，到账款可重新分配');
-}
-function deleteOrdPayment(){toast('旧手工记录保留待核对，请通过到账款项认领');}
-function getProcPayTotal(p,cur){
-  return (p.payments||[]).filter(function(pay){return pay.currency===cur;}).reduce(function(s,pay){return s+(+pay.amount||0);},0);
-}
-
-/* ===== 收付款记录（采购侧） ===== */
-function buildProcPaySection(p){
-  var paidCNY=getProcPayTotal(p,'CNY');
-  var paidUSD=getProcPayTotal(p,'USD');
-  var totalCNY=+p.totalCNY||0;
-  var totalUSD=+p.totalUSD||0;
-  var remainCNY=totalCNY-paidCNY;
-  var remainUSD=totalUSD-paidUSD;
-  var html='<div class="detail-section">';
-  html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
-  html+='<div class="detail-section-title" style="margin:0">付款记录</div>';
-  html+='<button id="ppf-btn-'+p.id+'" onclick="showProcPayForm('+p.id+')" style="font-size:11px;padding:3px 9px;border-radius:5px;border:0.5px solid var(--accent);color:var(--accent);background:rgba(107,114,195,.12);cursor:pointer">+ 录入</button>';
-  html+='</div>';
-  html+='<div style="display:flex;gap:16px;padding:8px 12px;background:var(--surface2);border-radius:6px;margin-bottom:6px;flex-wrap:wrap">';
-  if(totalCNY>0||paidCNY>0){
-    html+='<div style="font-size:12px"><span style="color:var(--muted)">PO总额 </span><span style="font-weight:600">¥'+totalCNY.toLocaleString()+'</span></div>';
-    html+='<div style="font-size:12px"><span style="color:var(--muted)">已付 </span><span style="font-weight:600;color:'+(paidCNY>0?'var(--yellow)':'var(--muted)')+'">¥'+paidCNY.toLocaleString()+'</span></div>';
-    html+='<div style="font-size:12px"><span style="color:var(--muted)">待付 </span><span style="font-weight:600;color:'+(remainCNY>0?'var(--red)':'var(--muted)')+'">¥'+Math.max(0,remainCNY).toLocaleString()+'</span></div>';
+function updateSettlementPolicy(){var policy=document.getElementById('settle-policy');if(!policy)return;document.getElementById('settle-extra').style.display=policy.value==='none'?'none':'';document.getElementById('settle-fee-source').style.display=policy.value==='fee'?'':'none';}
+function validMoneyInput(value,allowZero){var n=Number(value);return String(value).trim()!==''&&Number.isFinite(n)&&(allowZero?n>=0:n>0)&&Math.abs(n*100-receiptCents(n))<.00001;}
+function saveSettlementClaim(kind,id){
+  if(kind!=='order'&&kind!=='proc')return;
+  var target=settlementTarget(kind,id),m=document.getElementById('ord-receipt-modal'),el=document.getElementById('settle-txn');if(!target||!m||!el||!canSettle(kind,target)||m.dataset.kind!==kind||String(m.dataset.target)!==String(id))return;
+  var d=readReceiptData(),t=d.transactions.find(function(x){return x.id===el.value;}),cur=m.dataset.currency;
+  if(!t||t.currency!==cur||!matchesTarget(kind,t,target,d)){toast('款项归属或币种已变更，请重新选择');return;}
+  if(!knownTarget(kind,t,target)&&!document.getElementById('settle-party-confirm').checked){toast('请先确认款项往来方');return;}
+  var raw=document.getElementById('settle-amount').value,policy=document.getElementById('settle-policy').value,adjRaw=document.getElementById('settle-adjust-amount').value;
+  if(!validMoneyInput(raw,true)){toast('请填写有效货款金额，最多两位小数');return;}
+  if(['none','fee','waiver'].indexOf(policy)<0){toast('请选择有效的差额处理方式');return;}
+  var cash=receiptCents(raw),adjust=policy==='none'?0:receiptCents(adjRaw),reason=document.getElementById('settle-adjust-reason').value.trim(),source=document.getElementById('settle-fee-source').value;
+  if(policy!=='none'&&(!validMoneyInput(adjRaw,false)||!reason)){toast('请填写有效差额及承担/认可说明');return;}
+  if(cash<=0&&adjust<=0){toast('认领或差额金额至少有一项大于0');return;}
+  if(cash>receiptCents(t.amount)-transactionClaimCents(t,d)){toast('超过款项可分配余额');return;}
+  if(cash+adjust>receiptCents(Math.max(0,targetBalance(kind,target,cur,d)))){toast('货款与差额合计超过本单待结余额');return;}
+  var previous=settlementClaims(d,kind).find(function(a){return a.transactionId===t.id&&String(kind==='order'?a.orderId:a.procId)===String(id)&&a.currency===cur;});
+  if(!cash&&!previous){toast('差额必须关联本单已认领的货款');return;}
+  if(policy==='fee'){
+    var fee=feeSources(t,d).find(function(f){return f.id===source;});
+    if(!fee||adjust>receiptCents(fee.remaining)){toast('手续费来源无效或差额超过可用手续费');return;}
   }
-  if(totalUSD>0||paidUSD>0){
-    html+='<div style="font-size:12px"><span style="color:var(--muted)">PO总额 </span><span style="font-weight:600">$'+totalUSD.toLocaleString()+'</span></div>';
-    html+='<div style="font-size:12px"><span style="color:var(--muted)">已付 </span><span style="font-weight:600;color:'+(paidUSD>0?'var(--green)':'var(--muted)')+'">$'+paidUSD.toLocaleString()+'</span></div>';
-    html+='<div style="font-size:12px"><span style="color:var(--muted)">待付 </span><span style="font-weight:600;color:'+(remainUSD>0?'var(--red)':'var(--muted)')+'">$'+Math.max(0,remainUSD).toLocaleString()+'</span></div>';
+  var now=new Date().toISOString(),uid='settle_'+Date.now()+'_'+Math.random().toString(36).slice(2,9),claim=previous;
+  if(cash){
+    claim={id:uid,transactionId:t.id,amount:cash/100,currency:cur,status:'active',createdAt:now,createdBy:currentUser,receiptDate:t.date,receiptAmount:t.amount,receiptParty:t.party||'',note:document.getElementById('settle-note').value.trim()};
+    if(kind==='order'){claim.orderId=target.id;claim.customerAlias=target.alias;}else{claim.procId=target.id;claim.supplierId=target.supplierId;claim.supplierName=target.supplierName;}
+    var key=kind==='order'?'receiptAllocations':'paymentAllocations';d[key]=d[key]||[];d[key].push(claim);
   }
-  if(totalCNY<=0&&paidCNY<=0&&totalUSD<=0&&paidUSD<=0){
-    html+='<div style="font-size:12px;color:var(--muted)">未设定采购金额</div>';
-  }
-  html+='</div>';
-  if(p.payments&&p.payments.length){
-    p.payments.forEach(function(pay,idx){
-      html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">';
-      html+='<div><span style="color:var(--muted)">'+pay.date+'</span>'+(pay.note?' <span style="color:var(--muted2)">· '+pay.note+'</span>':'')+'</div>';
-      html+='<div style="display:flex;align-items:center;gap:8px">';
-      html+='<span style="font-weight:600;color:'+(pay.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(pay.amount,pay.currency)+'</span>';
-      html+='<span onclick="deleteProcPayment('+p.id+','+idx+')" style="cursor:pointer;color:var(--muted);font-size:10px;padding:1px 5px;border:1px solid var(--border);border-radius:3px">删</span>';
-      html+='</div></div>';
-    });
-  }else{
-    html+='<div style="font-size:12px;color:var(--muted);padding:2px 0">暂无付款记录</div>';
-  }
-  html+='<div id="ppf-'+p.id+'" style="display:none;margin-top:8px;padding:8px;background:var(--surface2);border-radius:6px">';
-  html+='<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px">';
-  html+='<input type="date" id="ppf-dt-'+p.id+'" value="'+today()+'" style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);width:130px">';
-  html+='<input type="number" id="ppf-amt-'+p.id+'" placeholder="金额" step="0.01" style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);width:90px">';
-  html+='<select id="ppf-cur-'+p.id+'" style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)">';
-  html+='<option value="CNY">CNY</option>';
-  html+='<option value="USD">USD</option>';
-  html+='</select>';
-  html+='<input type="text" id="ppf-note-'+p.id+'" placeholder="备注（如首付定金）" style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);flex:1;min-width:100px">';
-  html+='</div>';
-  html+='<div style="display:flex;gap:6px">';
-  html+='<button onclick="saveProcPayment('+p.id+')" style="font-size:12px;padding:4px 14px;border-radius:4px;background:var(--accent);color:white;border:none;cursor:pointer">保存</button>';
-  html+='<button onclick="hideProcPayForm('+p.id+')" style="font-size:12px;padding:4px 14px;border-radius:4px;background:transparent;color:var(--muted);border:1px solid var(--border);cursor:pointer">取消</button>';
-  html+='</div></div>';
-  html+='</div>';
-  return html;
+  if(adjust){d.settlementAdjustments=d.settlementAdjustments||[];d.settlementAdjustments.push({id:uid+'_adjust',targetType:kind,targetId:target.id,transactionId:t.id,allocationId:claim.id,amount:adjust/100,currency:cur,kind:policy,feeSource:policy==='fee'?source:'',reason:reason,status:'active',createdAt:now,createdBy:currentUser,party:kind==='order'?target.alias:target.supplierName});}
+  // 一次保存分配和差额，不更改transactions、账户或原单据金额。
+  saveFinData(d);hideSettlementForm();reopenSettlementTarget(kind,id);toast('已保存认领与差额，银行流水不变');
 }
-function showProcPayForm(procId){
-  var f=document.getElementById('ppf-'+procId);
-  var b=document.getElementById('ppf-btn-'+procId);
-  if(f)f.style.display='';
-  if(b)b.style.display='none';
+function revokeSettlementCash(kind,id,claimId){
+  var t=settlementTarget(kind,id);if(!t||!canSettle(kind,t))return;
+  var d=readReceiptData(),a=settlementClaims(d,kind).find(function(x){return x.id===claimId&&String(kind==='order'?x.orderId:x.procId)===String(id);});if(!a)return;
+  if(settlementAdjustments(d).some(function(x){return x.allocationId===a.id;})){toast('请先撤回这笔认领关联的差额调整');return;}
+  var reason=prompt('撤回认领原因（不会删除银行流水）');if(reason===null||!reason.trim())return;
+  a.status='revoked';a.revokedAt=new Date().toISOString();a.revokedBy=currentUser;a.revokedReason=reason.trim();saveFinData(d);reopenSettlementTarget(kind,id);
 }
-function hideProcPayForm(procId){
-  var f=document.getElementById('ppf-'+procId);
-  var b=document.getElementById('ppf-btn-'+procId);
-  if(f)f.style.display='none';
-  if(b)b.style.display='';
+function revokeOrderClaim(id,claimId){revokeSettlementCash('order',id,claimId);}
+function revokeSettlementAdjustment(kind,id,adjustId){
+  var t=settlementTarget(kind,id);if(!t||!canSettle(kind,t))return;
+  var d=readReceiptData(),a=settlementAdjustments(d).find(function(x){return x.id===adjustId&&x.targetType===kind&&String(x.targetId)===String(id);});if(!a)return;
+  var reason=prompt('撤回差额原因（单据恢复待结余额，银行流水不变）');if(reason===null||!reason.trim())return;
+  a.status='revoked';a.revokedAt=new Date().toISOString();a.revokedBy=currentUser;a.revokedReason=reason.trim();saveFinData(d);reopenSettlementTarget(kind,id);
 }
-function saveProcPayment(procId){
-  var d=getProcData();
-  var p=d.pos.find(function(x){return x.id===procId;});if(!p)return;
-  var amt=document.getElementById('ppf-amt-'+procId);
-  var dt=document.getElementById('ppf-dt-'+procId);
-  var cur=document.getElementById('ppf-cur-'+procId);
-  var note=document.getElementById('ppf-note-'+procId);
-  if(!amt)return;
-  var amount=parseFloat(amt.value);
-  if(!amount||amount<=0){toast('请输入有效金额');return;}
-  if(!p.payments)p.payments=[];
-  p.payments.push({id:Date.now(),date:(dt?dt.value:today()),amount:amount,currency:(cur?cur.value:'CNY'),note:(note?note.value:'')});
-  saveProcData(d);
-  openProcDetail(procId);
-  toast('付款已记录');
+function financeTransactionHasDependencies(t,d){return transactionClaimCents(t,d)>0||settlementAdjustments(d).some(function(a){return a.transactionId===t.id||a.feeSource==='txn:'+t.id||a.feeSource==='net:'+t.id;});}
+function validateFinSettlementEdit(old,entry,d){
+  var claimed=transactionClaimCents(old,d),usedNet=feeUsedCents('net:'+old.id,d),usedFee=feeUsedCents('txn:'+old.id,d);
+  if(financeTransactionHasDependencies(old,d)&&(entry.type!==old.type||entry.category!==old.category||entry.currency!==old.currency||entry.party!==old.party||entry.accountId!==old.accountId))return '该流水已有认领或差额关联，请先撤回后再更改类型、币种、账户或往来方';
+  if(receiptCents(entry.amount)<Math.max(claimed,usedFee))return '流水金额不能小于已分配金额或已使用手续费';
+  if(receiptCents(entry.withheldFee)<usedNet)return '内扣手续费不能低于已用于差额结清的金额';
+  return '';
 }
-function deleteProcPayment(procId,idx){
-  var d=getProcData();
-  var p=d.pos.find(function(x){return x.id===procId;});if(!p||!p.payments)return;
-  if(!confirm('删除这条付款记录？'))return;
-  p.payments.splice(idx,1);
-  saveProcData(d);
-  openProcDetail(procId);
-  toast('已删除');
+function updateFinWithheldFee(){
+  var box=document.getElementById('ff-withheld-wrap'),type=document.getElementById('ff-modal-type'),cat=document.getElementById('ff-category');if(!box||!type||!cat)return;
+  box.style.display=type.value==='收款'&&cat.value==='客户收款'?'':'none';
 }
 
 function renderSaleProductChips(){
@@ -6834,6 +6827,7 @@ function exportData(){
     orderSequence:Number(localStorage.getItem('crm_ord_sequence_v5'))||0,
     orderDailySequences:mergeOrderDailySequences(),
     finance:readReceiptData(),
+    procurement:(function(){var raw=localStorage.getItem(SK.proc);return raw?JSON.parse(raw):{suppliers:[],pos:[]};})(),
     saleRecords:saleRecords,
     settings:crmSettings
   };
@@ -6871,7 +6865,9 @@ function importData(input){
         toast('文件格式错误，请使用正确的备份文件');
         return;
       }
-      if(!data.finance&&activeReceiptClaims(readReceiptData()).length){toast('旧备份不含财务认领数据，不能直接覆盖已有认领的订单，请先核对备份');input.value='';return;}
+      var restoredPayments=((data.finance||{}).paymentAllocations||[]).filter(function(a){return a.status==='active';});
+      if(restoredPayments.some(function(a){return !data.procurement||!(data.procurement.pos||[]).some(function(p){return String(p.id)===String(a.procId);});})){toast('备份缺少付款认领对应的采购单，请使用含采购资料的完整备份');input.value='';return;}
+      if(!data.finance&&(activeReceiptClaims(readReceiptData()).length||settlementClaims(readReceiptData(),'proc').length)){toast('旧备份不含财务认领数据，不能直接覆盖已有认领的订单，请先核对备份');input.value='';return;}
       if(!confirm('确认恢复备份？当前所有数据将被备份文件覆盖，此操作不可撤销。')){
         input.value='';
         return;
@@ -6880,6 +6876,7 @@ function importData(input){
       customers=data.customers||[];
       orders=data.orders||[];
       if(data.finance)saveFinData(data.finance);
+      if(data.procurement)saveProcData(data.procurement);
       var importedSequence=Number(data.orderSequence)||0;
       localStorage.setItem('crm_ord_sequence_v5',String(Math.max(Number(localStorage.getItem('crm_ord_sequence_v5'))||0,importedSequence)));
       saleRecords=data.saleRecords||[];
@@ -9381,7 +9378,7 @@ function getProcData(){
   var d=s?JSON.parse(s):{suppliers:[],pos:[]};
   if(!d.suppliers)d.suppliers=[];
   if(!d.pos)d.pos=[];
-  if(!d.suppliers.length&&!d.pos.length){d.suppliers=DEF_PROC_SUPPLIERS.slice();d.pos=DEF_PROC_POS.slice();saveProcData(d);}
+  if(!s){d.suppliers=DEF_PROC_SUPPLIERS.slice();d.pos=DEF_PROC_POS.slice();saveProcData(d);}
   return d;
 }
 function saveProcData(d){localStorage.setItem(SK.proc,JSON.stringify(d));}
@@ -9400,8 +9397,8 @@ function getProcStageStyle(stage){
   return 'background:'+c+'22;color:'+c+';border:1px solid '+c+'55;border-radius:4px;padding:1px 7px;font-size:11px;font-weight:500';
 }
 function getProcPaymentStyle(status){
-  if(status==='已付全款')return 'color:var(--green);font-size:11px';
-  if(status==='已付定金')return 'color:var(--yellow);font-size:11px';
+  if(status==='已付全款'||status==='已结清')return 'color:var(--green);font-size:11px';
+  if(status==='已付定金'||status==='部分已付')return 'color:var(--yellow);font-size:11px';
   return 'color:var(--muted);font-size:11px';
 }
 function isPoOverdue(po){return po.expectedDate&&po.expectedDate<today()&&po.stage!=='已入库';}
@@ -9455,7 +9452,7 @@ function getFilteredPos(){
   return pos.filter(function(p){
     if(supplier&&p.supplierId!==supplier)return false;
     if(stage&&p.stage!==stage)return false;
-    if(payment&&p.paymentStatus!==payment)return false;
+    if(payment&&procPaymentStatus(p)!==payment)return false;
     if(person&&p.person!==person)return false;
     if(search){
       var itemsText=(p.items||[]).map(function(i){return (i.nameCN||'')+(i.skuCode||'');}).join(' ').toLowerCase();
@@ -9504,7 +9501,7 @@ function renderProcurement(){
       '<div style="font-size:12px;color:var(--green);font-weight:500">'+(totalStr||'—')+'</div>'+
       '<div><span style="'+getProcStageStyle(p.stage)+'">'+p.stage+'</span></div>'+
       '<div style="font-size:12px;color:'+ovdColor+'">'+ovdPrefix+(p.expectedDate||'—')+'</div>'+
-      '<div style="'+getProcPaymentStyle(p.paymentStatus)+'">'+p.paymentStatus+'</div>'+
+      '<div style="'+getProcPaymentStyle(procPaymentStatus(p))+'">'+procPaymentStatus(p)+'</div>'+
       '<div style="font-size:12px;color:var(--muted)">'+p.person+'</div>'+
       '</div>';
   });
@@ -9685,6 +9682,7 @@ function openProcDetail(id){
   var dpTab3=document.getElementById('dp-tab-sales');
   var dpTab4=document.getElementById('dp-tab-quote');
   if(dpTitle)dpTitle.textContent=p.poNumber;
+  var dpSub=document.getElementById('dp-sub');if(dpSub)dpSub.textContent=p.supplierName||'';
   if(dpTab1){dpTab1.textContent='采购详情';dpTab1.style.display='';}
   if(dpTab2){dpTab2.textContent='跟进记录';dpTab2.style.display='';}
   if(dpTab3)dpTab3.style.display='none';
@@ -9750,7 +9748,7 @@ function openProcDetail(id){
     '<div><span style="color:var(--muted)">创建日期：</span>'+(p.createDate||'—')+'</div>'+
     '<div><span style="color:var(--muted)">预计交期：</span><span style="color:'+ovdColor+'">'+ovdPrefix+(p.expectedDate||'—')+'</span></div>'+
     (p.linkedOrderAlias?'<div><span style="color:var(--muted)">关联订单：</span><span style="color:var(--accent)">'+p.linkedOrderAlias+'</span></div>':'')+
-    '<div><span style="color:var(--muted)">付款状态：</span><span style="'+getProcPaymentStyle(p.paymentStatus)+'">'+p.paymentStatus+'</span></div>'+
+    '<div><span style="color:var(--muted)">付款状态：</span><span style="'+getProcPaymentStyle(procPaymentStatus(p))+'">'+procPaymentStatus(p)+'</span></div>'+
     (p.paymentTerms?'<div><span style="color:var(--muted)">付款条款：</span>'+p.paymentTerms+'</div>':'')+
     (p.deliveryTerms?'<div><span style="color:var(--muted)">交货方式：</span>'+p.deliveryTerms+'</div>':'')+
     '<div style="grid-column:1/-1"><span style="color:var(--muted)">总金额：</span><span style="color:var(--green);font-weight:600">'+(totalStr||'—')+'</span></div>'+
@@ -9889,7 +9887,7 @@ function openProcModal(id,linkedOrderId,linkedOrderAlias){
     _procLinkedOrderAlias=p.linkedOrderAlias||'';
     set('fproc-linked-order',p.linkedOrderAlias||p.linkedOrderId||'');
     set('fproc-expected-date',p.expectedDate||'');
-    set('fproc-payment-status',p.paymentStatus||'未付款');
+    set('fproc-payment-status',procPaymentStatus(p)==='已结清'?'已付全款':procPaymentStatus(p)==='部分已付'?'已付定金':'未付款');
     set('fproc-payment-terms',p.paymentTerms||'');
     set('fproc-delivery-terms',p.deliveryTerms||'');
     set('fproc-note',p.note||'');
@@ -10140,6 +10138,7 @@ function saveProcRecord(){
   var procData={supplierId:supplierId,supplierName:sup?sup.name:'',linkedOrderId:_procLinkedOrderId||'',linkedOrderAlias:_procLinkedOrderAlias||'',person:get('fproc-person'),expectedDate:get('fproc-expected-date'),paymentStatus:get('fproc-payment-status'),paymentTerms:get('fproc-payment-terms'),deliveryTerms:get('fproc-delivery-terms'),note:get('fproc-note'),externalNote:get('fproc-ext-note'),items:items,fees:fees,totalCNY:totalCNY,totalUSD:totalUSD,paymentIds:[]};
   if(_editingProcId){
     var p=d.pos.find(function(x){return x.id===_editingProcId;});
+    if(p&&settlementClaims(readReceiptData(),'proc').some(function(a){return String(a.procId)===String(p.id);})&&p.supplierId!==procData.supplierId){toast('采购单已有付款认领，请先撤回再更换供应商');return;}
     if(p){Object.keys(procData).forEach(function(k){p[k]=procData[k];});}
   } else {
     procData.id='po'+Date.now();
@@ -10160,6 +10159,7 @@ function saveProcRecord(){
   toast('采购单已保存');
 }
 function deleteProcRecord(id){
+  if(settlementClaims(readReceiptData(),'proc').some(function(a){return String(a.procId)===String(id);})){toast('采购单已有付款认领，请先撤回分配再删除');return;}
   if(!confirm('确认删除此采购单？'))return;
   var d=getProcData();
   d.pos=d.pos.filter(function(p){return p.id!==id;});
@@ -10281,7 +10281,7 @@ function renderMobileCards_proc(){
     if(p.totalUSD)totalStr+=(totalStr?' ':'')+'$'+p.totalUSD.toFixed(2);
     var itemSummary=(p.items&&p.items.length)?(p.items[0].nameCN+(p.items.length>1?' 等'+p.items.length+'项':'')):'—';
     var lastFollowup=(p.followups&&p.followups.length)?p.followups[p.followups.length-1].content:'';
-    var payColor=p.paymentStatus==='已付全款'?'var(--green)':(p.paymentStatus==='已付定金'?'var(--yellow)':'var(--muted)');
+    var payColor=procPaymentStatus(p)==='已结清'?'var(--green)':(procPaymentStatus(p)==='部分已付'?'var(--yellow)':'var(--muted)');
     html+='<div class="mobile-card'+(ovd?' is-overdue':'')+'" onclick="openProcDetail(\''+p.id+'\')" style="border-left:3px solid '+getProcStageColor(p.stage)+'">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
         +'<div style="display:flex;align-items:center;gap:6px">'
@@ -10295,7 +10295,7 @@ function renderMobileCards_proc(){
       +'<div style="font-size:12px;color:var(--muted2);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+itemSummary+'</div>'
       +(lastFollowup?'<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+lastFollowup+'</div>':'')
       +'<div style="display:flex;justify-content:space-between;margin-top:5px;font-size:11px">'
-        +'<span style="color:'+payColor+'">'+p.paymentStatus+'</span>'
+        +'<span style="color:'+payColor+'">'+procPaymentStatus(p)+'</span>'
         +'<span style="color:'+(ovd?'var(--red)':'var(--muted)')+'">'+(p.expectedDate?'交期 '+p.expectedDate:'')+'</span>'
         +'<span style="color:var(--muted)">'+p.person+'</span>'
       +'</div>'
@@ -11473,6 +11473,8 @@ function renderFinOverview(){
   var txns=d.transactions||[];
   var html='';
 
+  html+='<div style="margin-bottom:20px;font-size:13px">银行手续费：<b>$'+settlementFeeSummary(d,'USD').toLocaleString()+'</b> · <b>¥'+settlementFeeSummary(d,'CNY').toLocaleString()+'</b><div style="font-size:11px;color:var(--muted);margin-top:5px">费用含到账内扣及独立手续费支出；内扣费用不再扣减账户余额。</div></div>';
+
   /* ── 月度收支（3列：月份 / 收款 / 支出） ── */
   html+='<div style="margin-bottom:28px"><div style="font-size:15px;font-weight:600;margin-bottom:12px">月度收支</div>';
   var months={};
@@ -11519,8 +11521,9 @@ function renderFinOverview(){
   });
   var custRec={};
   orders.forEach(function(o){
-    var p=o.alias||'';if(!custRec[p])custRec[p]={usd:0,cny:0};
+    var p=o.alias||'';if(!custRec[p])custRec[p]={usd:0,cny:0,adjUsd:0,adjCny:0};
     custRec[p].usd+=getOrdPayTotal(o,'USD');custRec[p].cny+=getOrdPayTotal(o,'CNY');
+    custRec[p].adjUsd+=targetAdjust('order',o,'USD');custRec[p].adjCny+=targetAdjust('order',o,'CNY');
   });
   var arKeys=Object.keys(custOrders);
   if(!arKeys.length){html+='<div style="color:var(--muted);font-size:13px">暂无订单</div>';}
@@ -11529,7 +11532,7 @@ function renderFinOverview(){
     html+='<div style="display:grid;grid-template-columns:1fr 100px 100px;padding:8px 12px;background:var(--surface2);font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)"><div>客户</div><div style="text-align:right">订单</div><div style="text-align:right">已认领</div></div>';
     arKeys.forEach(function(alias){
       var ord=custOrders[alias];var rec=custRec[alias]||{usd:0,cny:0};
-      var arUsd=ord.usd-rec.usd;var arCny=ord.cny-rec.cny;
+      var arUsd=ord.usd-rec.usd-(rec.adjUsd||0);var arCny=ord.cny-rec.cny-(rec.adjCny||0);
       var ordHtml='';
       if(ord.usd>0)ordHtml+='<div style="font-size:13px">$'+ord.usd+'</div>';
       if(ord.cny>0)ordHtml+='<div style="font-size:12px">¥'+ord.cny+'</div>';
@@ -11537,6 +11540,8 @@ function renderFinOverview(){
       var recHtml='';
       if(rec.usd>0)recHtml+='<div style="font-size:13px;color:var(--green)">$'+rec.usd+'</div>';
       if(rec.cny>0)recHtml+='<div style="font-size:12px;color:var(--green)">¥'+rec.cny+'</div>';
+      if(rec.adjUsd)recHtml+='<div style="font-size:11px;color:var(--muted)">差额调整 $'+rec.adjUsd+'</div>';
+      if(rec.adjCny)recHtml+='<div style="font-size:11px;color:var(--muted)">差额调整 ¥'+rec.adjCny+'</div>';
       if(!recHtml)recHtml='<div style="color:var(--muted);font-size:13px">—</div>';
       var arColor=(arUsd>0||arCny>0)?'var(--red)':'var(--green)';
       html+='<div style="display:grid;grid-template-columns:1fr 100px 100px;border-bottom:1px solid var(--border);padding:8px 12px;align-items:start">';
@@ -11556,41 +11561,22 @@ function renderFinOverview(){
   }
   html+='</div>';
 
-  /* ── 应付账款（3列：供应商 / PO / 已付 / 待付） ── */
-  html+='<div><div style="font-size:15px;font-weight:600;margin-bottom:12px">应付账款</div>';
-  var suppPos={};
-  try{var ps=localStorage.getItem(SK.proc);var pd=ps?JSON.parse(ps):null;
-    if(pd&&pd.pos){pd.pos.forEach(function(po){
-      if(po.stage==='已入库'||po.stage==='草稿')return;
-      var sn=po.supplierName||'';
-      if(!suppPos[sn])suppPos[sn]={cny:0,usd:0};
-      suppPos[sn].cny+=(po.totalCNY||0);suppPos[sn].usd+=(po.totalUSD||0);
-    });}
-  }catch(e){}
-  var suppPaid={};
-  txns.forEach(function(t){
-    if(t.type!=='付款')return;
-    var p=t.party||'';
-    if(!suppPaid[p])suppPaid[p]={usd:0,cny:0};
-    if(t.currency==='USD')suppPaid[p].usd+=(t.amount||0);
-    else suppPaid[p].cny+=(t.amount||0);
+  html+='<div><div style="font-size:15px;font-weight:600;margin-bottom:12px">采购付款进度</div><div style="font-size:11px;color:var(--muted);margin-bottom:10px">按采购单与付款认领统计，包含未发货单据；不等于发货应付。</div>';
+  var procurement=getProcData(),suppliers={};
+  procurement.pos.forEach(function(p){
+    var key=p.supplierId||p.supplierName||'未识别供应商';
+    if(!suppliers[key])suppliers[key]={name:p.supplierName||key,docs:[]};suppliers[key].docs.push(p);
   });
-  var apKeys=Object.keys(suppPos);
-  if(!apKeys.length){html+='<div style="color:var(--muted);font-size:13px">暂无进行中采购单</div>';}
-  else{
-    html+='<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden">';
-    html+='<div style="display:grid;grid-template-columns:1fr 90px 90px 90px;padding:8px 12px;background:var(--surface2);font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)"><div>供应商</div><div style="text-align:right">PO总额</div><div style="text-align:right">已付</div><div style="text-align:right">待付</div></div>';
-    apKeys.forEach(function(sn){
-      var pos=suppPos[sn];var paid=suppPaid[sn]||{cny:0};var ap=pos.cny-paid.cny;
-      html+='<div style="display:grid;grid-template-columns:1fr 90px 90px 90px;border-bottom:1px solid var(--border);padding:8px 12px;align-items:center">';
-      html+='<div style="font-size:13px;font-weight:500">'+sn+'</div>';
-      html+='<div style="text-align:right;font-size:13px">'+(pos.cny>0?'¥'+pos.cny:'—')+'</div>';
-      html+='<div style="text-align:right;font-size:13px;color:var(--green)">'+(paid.cny>0?'¥'+paid.cny:'—')+'</div>';
-      html+='<div style="text-align:right;font-size:13px;color:'+(ap>0?'var(--red)':'var(--green)')+'">'+( ap>0?'¥'+ap:'已结清')+'</div>';
-      html+='</div>';
+  Object.keys(suppliers).forEach(function(key){
+    var supplier=suppliers[key];
+    ['CNY','USD'].forEach(function(cur){
+      var amount=0,cash=0,adjust=0;
+      supplier.docs.forEach(function(p){amount+=receiptCents(targetAmount('proc',p,cur));cash+=receiptCents(targetCash('proc',p,cur));adjust+=receiptCents(targetAdjust('proc',p,cur));});
+      if(!amount&&!cash&&!adjust)return;
+      html+='<div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:12px"><b>'+orderDisplayText(supplier.name)+' · '+cur+'</b><div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:5px;color:var(--muted)"><span>采购金额 '+cashFormat(amount/100,cur)+'</span><span>已付 '+cashFormat(cash/100,cur)+'</span>'+(adjust?'<span>差额调整 '+cashFormat(adjust/100,cur)+'</span>':'')+'<span style="color:var(--accent)">'+(amount-cash-adjust<0?'超额 ':'待付 ')+cashFormat(Math.abs(amount-cash-adjust)/100,cur)+'</span></div></div>';
     });
-    html+='</div>';
-  }
+  });
+  if(!Object.keys(suppliers).length)html+='<div style="color:var(--muted);font-size:12px">暂无采购单</div>';
   html+='</div>';
 
   var rb=document.getElementById('fin-report-overview');if(rb)rb.innerHTML=html;
@@ -11630,6 +11616,13 @@ function openFinDetail(id){
       html+=_finRow('分配订单',orderDisplayText(o?o.orderNumber:'订单已删除')+' · '+orderDisplayText(a.customerAlias)+' · '+fmtAmt(a.amount,a.currency));
     });
   }
+  if(t.withheldFee)html+=_finRow('内扣手续费',cashFormat(t.withheldFee,t.currency)+'（已在净到账中扣除）');
+  if(isSupplierPayment(t)){
+    html+=_finRow('已分配货款',cashFormat(transactionClaimCents(t,d)/100,t.currency));
+    html+=_finRow('可分配货款',cashFormat((receiptCents(t.amount)-transactionClaimCents(t,d))/100,t.currency));
+    settlementClaims(d,'proc').filter(function(a){return a.transactionId===t.id;}).forEach(function(a){var p=getProcData().pos.find(function(x){return String(x.id)===String(a.procId);});html+=_finRow('分配采购单',orderDisplayText(p?p.poNumber:a.procId)+' · '+fmtAmt(a.amount,a.currency));});
+  }
+  settlementAdjustments(d).filter(function(a){return a.transactionId===t.id||a.feeSource==='txn:'+t.id;}).forEach(function(a){var target=settlementTarget(a.targetType,a.targetId);html+=_finRow('差额结清',orderDisplayText(target?(a.targetType==='order'?target.orderNumber:target.poNumber):a.targetId)+' · '+fmtAmt(a.amount,a.currency)+'（非资金收支） · '+orderDisplayText(a.reason));});
   if(t.linkedType)html+=_finRow('关联来源',(t.linkedType==='order'?'销售订单':t.linkedType==='po'?'采购单':'其他')+(t.linkedId?' · '+t.linkedId:''));
   html+=_finRow('经办人',t.person||'—');
   if(t.note)html+=_finRow('备注',t.note);
@@ -11668,6 +11661,8 @@ function openFinModal(id){
   var noteEl=document.getElementById('ff-note');if(noteEl)noteEl.value=t?t.note||'':'';
   var delArea=document.getElementById('fin-delete-area');
   if(delArea)delArea.innerHTML=(t&&canFinControl())?'<button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteFinRecord(\''+t.id+'\');closeModal(\'fin-modal\')">删除</button>':'';
+  var feeInput=document.getElementById('ff-withheld-fee');if(feeInput)feeInput.value=t?(t.withheldFee||''):'';
+  var feeBox=document.getElementById('ff-withheld-wrap');if(feeBox)feeBox.open=!!(t&&t.withheldFee);updateFinWithheldFee();
   openModal('fin-modal');
 }
 
@@ -11676,7 +11671,7 @@ function _onFinTypeChange(){
   var catEl=document.getElementById('ff-category');
   if(!typeEl||!catEl)return;
   var map={'收款':'客户收款','付款':'供应商付款','内部转账':'内部转账','运营支出':'其他支出'};
-  catEl.value=map[typeEl.value]||'客户收款';
+  catEl.value=map[typeEl.value]||'客户收款';updateFinWithheldFee();
   var partyEl=document.getElementById('ff-party');
   var dd=document.getElementById('ff-party-dd');
   if(partyEl){
@@ -11820,12 +11815,17 @@ function saveFinRecord(){
   if(!Number.isFinite(amount)||amount<=0||Math.abs(amount*100-receiptCents(amount))>.00001){toast('请填写有效金额，最多两位小数');return;}
   if(!accountId){toast('请选择账户');return;}
   var entry={date:date,type:type,category:catEl?catEl.value:'',amount:amount,currency:curEl?curEl.value:'USD',accountId:accountId,party:partyEl?partyEl.value.trim():'',linkedType:lTypeEl?lTypeEl.value:'',linkedId:lIdEl?lIdEl.value.trim():'',person:personEl?personEl.value:currentUser,note:noteEl?noteEl.value.trim():''};
+  var feeRaw=isBusinessReceipt(entry)?((document.getElementById('ff-withheld-fee')||{}).value||'0'):'0';
+  if(!validMoneyInput(feeRaw,true)){toast('内扣手续费请输入非负金额，最多两位小数');return;}
+  entry.withheldFee=isBusinessReceipt(entry)?Number(feeRaw):0;
   var d=getFinData();
+  var account=d.accounts.find(function(a){return a.id===entry.accountId;});
+  if(!account||account.currency!==entry.currency){toast('账户不存在或账户币种与流水不一致');return;}
   if(_editingFinId){
     var idx=-1;(d.transactions||[]).forEach(function(t,i){if(t.id===_editingFinId)idx=i;});
     if(idx>=0){
-      var old=d.transactions[idx],allocated=receiptAllocatedCents(old,d);
-      if(allocated>0&&(!isBusinessReceipt(entry)||entry.currency!==old.currency||receiptCents(entry.amount)<allocated||entry.party!==old.party||entry.accountId!==old.accountId)){toast('该到账已被认领，请先撤回相关分配，再修改账户、往来方、币种、类型或降低金额');return;}
+      var old=d.transactions[idx],error=validateFinSettlementEdit(old,entry,d);
+      if(error){toast(error);return;}
       entry=Object.assign({},old,entry);entry.id=_editingFinId;d.transactions[idx]=entry;
     }
   }else{
@@ -11844,7 +11844,7 @@ function deleteFinRecord(id){
   if(!canFinControl())return;
   var d=getFinData();
   var target=d.transactions.find(function(t){return t.id===id;});
-  if(target&&receiptAllocatedCents(target,d)>0){toast('该到账已被认领，请先撤回分配再删除流水');return;}
+  if(target&&financeTransactionHasDependencies(target,d)){toast('流水已有认领或差额关联，请先撤回后再删除');return;}
   if(!confirm('确定删除此流水记录？此操作不可撤销。'))return;
   d.transactions=(d.transactions||[]).filter(function(t){return t.id!==id;});
   saveFinData(d);
