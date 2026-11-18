@@ -11444,7 +11444,31 @@ function openFinModalForAccount(accountId){
   var curEl=document.getElementById('ff-currency');if(curEl&&acc)curEl.value=acc.currency;
 }
 
+/* 应收应付仅接入演示结构，资金与实际报表数据保持独立。 */
+var _finReportView='overview';
+function switchFinReportView(view){
+  if(['overview','ar','ap'].indexOf(view)<0)return;
+  _finReportView=view;renderFinReports();
+}
 function renderFinReports(){
+  var body=document.getElementById('fin-report-body');if(!body)return;
+  var labels={overview:'收支概览',ar:'应收汇总 · 演示',ap:'应付汇总 · 演示'};
+  var nav='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px" role="group" aria-label="财务报表类型">';
+  ['overview','ar','ap'].forEach(function(view){nav+='<button type="button" class="btn '+(_finReportView===view?'btn-primary':'btn-outline')+' btn-sm" data-fin-report="'+view+'" aria-pressed="'+(_finReportView===view?'true':'false')+'" onclick="switchFinReportView(this.dataset.finReport)">'+labels[view]+'</button>';});
+  nav+='</div>';
+  if(_finReportView==='overview'){
+    body.innerHTML=nav+'<div id="fin-report-overview"></div>';renderFinOverview();
+  }else{
+    body.innerHTML=nav+'<iframe id="fin-settlement-demo" title="'+(_finReportView==='ar'?'应收汇总演示':'应付汇总演示')+'" src="finance-settlement-demo.html#'+_finReportView+'" sandbox="allow-scripts" scrolling="no" style="display:block;width:100%;height:1150px;border:0;background:var(--bg)"></iframe>';
+  }
+}
+window.addEventListener('message',function(event){
+  var frame=document.getElementById('fin-settlement-demo');
+  if(!frame||event.source!==frame.contentWindow||!event.data||event.data.type!=='customento-fin-demo-height')return;
+  var height=Number(event.data.height);if(!Number.isFinite(height)||height<=0)return;
+  frame.style.height=Math.max(350,Math.min(10000,height+4))+'px';
+});
+function renderFinOverview(){
   var d=getFinData();
   var txns=d.transactions||[];
   var html='';
@@ -11569,7 +11593,7 @@ function renderFinReports(){
   }
   html+='</div>';
 
-  var rb=document.getElementById('fin-report-body');if(rb)rb.innerHTML=html;
+  var rb=document.getElementById('fin-report-overview');if(rb)rb.innerHTML=html;
 }
 
 function openFinDetail(id){
