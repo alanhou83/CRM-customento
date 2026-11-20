@@ -2189,7 +2189,8 @@ a{color:var(--accent);text-decoration:none;}
           <option value="service">加工服务</option>
         </select>
       </div>
-      <div class="form-group"><label class="form-label">SKU编码 *</label><input class="form-input" type="text" id="fpc-sku-code" placeholder="如：MUG-001"></div>
+      <div class="form-group"><label class="form-label">产品编码</label><input class="form-input" type="text" id="fpc-sku-code" readonly placeholder="首次保存时自动生成"></div>
+      <div class="form-group"><label class="form-label">原英文型号 / 原编码</label><input class="form-input" id="fpc-original-model" placeholder="保留原型号，支持查询"></div>
       <div class="form-group full"><label class="form-label">中文名称 *</label><input class="form-input" type="text" id="fpc-name-cn" placeholder="如：11oz白色升华马克杯"></div>
       <div class="form-group full"><label class="form-label">英文名称</label><input class="form-input" type="text" id="fpc-name-en" placeholder="如：11oz White Sublimation Ceramic Mug"></div>
       <div class="form-group"><label class="form-label">产品类目</label><select class="form-input" id="fpc-category"><option value="">请选择...</option></select></div>
@@ -2223,7 +2224,8 @@ a{color:var(--accent);text-decoration:none;}
   <div class="modal-head"><div class="modal-title" id="pcat-sku-modal-title">新增SKU</div><button class="modal-close" onclick="closeModal('pcat-sku-modal')">×</button></div>
   <div class="modal-body">
     <div class="form-grid">
-      <div class="form-group"><label class="form-label">SKU编码</label><input class="form-input" type="text" id="fpsk-sku-code" placeholder="如：MUG-001-A"></div>
+      <div class="form-group"><label class="form-label">SKU编码</label><input class="form-input" type="text" id="fpsk-sku-code" readonly placeholder="首次保存时自动生成"></div>
+      <div class="form-group"><label class="form-label">原英文型号 / 原编码</label><input class="form-input" id="fpsk-original-model" placeholder="保留原型号，支持查询"></div>
       <div class="form-group"><label class="form-label">旧系统编号 (Item No.)</label><input class="form-input" type="text" id="fpsk-item-no" placeholder="如 140302010101"></div>
       <div class="form-group full"><label class="form-label">规格描述（中文）*</label><input class="form-input" type="text" id="fpsk-variant-cn" placeholder="如：白色 · 裸装 · 36个/箱"></div>
       <div class="form-group full"><label class="form-label">规格描述（英文）</label><input class="form-input" type="text" id="fpsk-variant-en" placeholder="如：White · Bulk · 36pcs/ctn"></div>
@@ -5717,7 +5719,7 @@ function populateOrdSkuDatalist(){
       if(!specs)specs=product.descCN||'';
       var code=sku?sku.skuCode||'':product.skuCode||'';
       choices.push({product:product,sku:sku,specs:specs,code:code,
-        search:[product.nameCN,product.nameEN,product.descCN,product.descEN,variant,sku?sku.variantEN:'',sku?sku.size:'',code,sku?sku.itemNo:''].join(' ')});
+        search:[product.nameCN,product.nameEN,product.descCN,product.descEN,variant,sku?sku.variantEN:'',sku?sku.size:'',code,sku?sku.itemNo:'',sku?sku.originalModel:'',product.originalModel].join(' ')});
     });
   });
   return choices;
@@ -6835,6 +6837,7 @@ function exportData(){
     orderSequence:Number(localStorage.getItem('crm_ord_sequence_v5'))||0,
     orderDailySequences:mergeOrderDailySequences(),
     finance:readReceiptData(),
+    catalogCodeBackup:(function(){var raw=localStorage.getItem('crm_before_catalog_codes_v1');return raw?JSON.parse(raw):null;})(),
     productCatalog:(function(){var raw=localStorage.getItem(SK.prodcat);return raw?JSON.parse(raw):null;})(),
     catalogBeforeRealSamples:(function(){var raw=localStorage.getItem('crm_prodcat_before_real_samples_v1');return raw?JSON.parse(raw):null;})(),
     catalogBeforeSharedBases:(function(){var raw=localStorage.getItem('crm_prodcat_before_shared_bases_v2');return raw?JSON.parse(raw):null;})(),
@@ -6889,6 +6892,7 @@ function importData(input){
       if(data.finance)saveFinData(data.finance);
       if(data.procurement)saveProcData(data.procurement);
       if(data.productCatalog)saveProdCatData(data.productCatalog);
+      if(data.catalogCodeBackup)localStorage.setItem('crm_before_catalog_codes_v1',JSON.stringify(data.catalogCodeBackup));
       if(data.catalogBeforeRealSamples)localStorage.setItem('crm_prodcat_before_real_samples_v1',JSON.stringify(data.catalogBeforeRealSamples));
       if(data.catalogBeforeSharedBases)localStorage.setItem('crm_prodcat_before_shared_bases_v2',JSON.stringify(data.catalogBeforeSharedBases));
       var importedSequence=Number(data.orderSequence)||0;
@@ -6902,6 +6906,7 @@ function importData(input){
       localStorage.setItem(SK.ord,JSON.stringify(orders));
       localStorage.setItem(SK.sale,JSON.stringify(saleRecords));
       saveSettings();
+      getProdCatData();
       refreshAll();
       rebuildProductSelects();
       var el=document.getElementById('backup-status');
@@ -9124,6 +9129,7 @@ function importRealSourceOrders(){
     });});
   });});
   if(descriptionsChanged)localStorage.setItem(SK.ord,JSON.stringify(orders));
+  getProdCatData();
   importRealSourceOrders();
   /* 产品库样板与一次性迁移统一由getProdCatData处理，不再在启动时覆盖HB资料。 */
 })();
@@ -9997,13 +10003,87 @@ function migrateRealOrderCatalog(d,raw){
   if(added)saveSettings();
   d._realOrderSamplesVersion=2;d._gkkSpecsVersion=Math.max(1,Number(d._gkkSpecsVersion)||0);return true;
 }
+/* 产品编号注册表随产品库备份；删除不回收，分类变化不改已分配编号。 */
+function ensureCatalogCodes(d){
+  var registry=d.codeRegistry||{products:{},skus:{},productCounters:{},skuCounters:{},aliases:{}};
+  var changed=!d.codeRegistry;
+  var aliases=registry.aliases;
+  var allCodes={};
+  d.products.forEach(function(p){allCodes[p.skuCode]=true;(p.skus||[]).forEach(function(s){allCodes[s.skuCode]=true;});});
+  /* 合并本机高水位，恢复较早备份也不复用已分配编号。 */
+  var high=JSON.parse(localStorage.getItem('crm_catalog_code_highwater_v1')||'{}');
+  function merge(target,source){Object.keys(source||{}).forEach(function(k){target[k]=Math.max(target[k]||0,source[k]||0);});}
+  merge(registry.productCounters,high.products);merge(registry.skuCounters,high.skus);
+  d.products.forEach(function(p){
+    var code=registry.products[p.id];
+    if(!code){
+      var prefix=String(p.categoryCode||'PRD').toUpperCase().replace(/[^A-Z0-9]/g,'')||'PRD';
+      do{registry.productCounters[prefix]=(registry.productCounters[prefix]||0)+1;code=prefix+'-'+String(registry.productCounters[prefix]).padStart(4,'0');}while(allCodes[code]);
+      registry.products[p.id]=code;allCodes[code]=true;changed=true;
+    }
+    if(p.skuCode!==code){
+      if(p.skuCode&&!aliases[p.skuCode])aliases[p.skuCode]=code;
+      if(!p.originalModel)p.originalModel=p.skuCode||'';
+      p.skuCode=code;changed=true;
+    }
+    (p.skus||[]).forEach(function(sk){
+      var key=p.id+':'+sk.id,skuCode=registry.skus[key];
+      if(!skuCode){
+        do{registry.skuCounters[code]=(registry.skuCounters[code]||0)+1;skuCode=code+'-'+String(registry.skuCounters[code]).padStart(2,'0');}while(allCodes[skuCode]);
+        registry.skus[key]=skuCode;allCodes[skuCode]=true;changed=true;
+      }
+      if(sk.skuCode!==skuCode){
+        if(sk.skuCode)aliases[sk.skuCode]=skuCode;
+        if(!sk.originalModel)sk.originalModel=sk.skuCode||'';
+        sk.skuCode=skuCode;changed=true;
+      }
+    });
+  });
+  d.codeRegistry=registry;
+  localStorage.setItem('crm_catalog_code_highwater_v1',JSON.stringify({products:registry.productCounters,skus:registry.skuCounters}));
+  return changed;
+}
+/* 仅改明确的编码引用，原单文字/旧货号/金额/数量及图片ID不动。 */
+function rewriteCatalogCodeReferences(value,aliases){
+  var changed=false;
+  if(!value||typeof value!=='object')return false;
+  Object.keys(value).forEach(function(key){
+    var v=value[key];
+    if((key==='skuCode'||key==='baseSkuCode'||key==='refSkuCode'||(key==='nameCN'&&value.type==='ref'))&&typeof v==='string'&&aliases[v]){
+      if(key==='skuCode'&&!value.originalModel)value.originalModel=v;
+      value[key]=aliases[v];changed=true;
+    }else if(v&&typeof v==='object'&&key!=='codeRegistry'&&key!=='retiredSampleReferences'){
+      if(rewriteCatalogCodeReferences(v,aliases))changed=true;
+    }
+  });return changed;
+}
+function syncCatalogCodeReferences(d){
+  var aliases=(d.codeRegistry||{}).aliases||{};
+  var keys=[SK.ord,SK.sale,SK.quote,SK.proc,SK.inv,SK.prod];
+  var snapshot={};keys.forEach(function(key){snapshot[key]=localStorage.getItem(key);});
+  var backup='crm_before_catalog_codes_v1';
+  if(!localStorage.getItem(backup))localStorage.setItem(backup,JSON.stringify({productCatalog:JSON.parse(localStorage.getItem('crm_catalog_before_codes_v1')||JSON.stringify(d)),stores:snapshot}));
+  keys.forEach(function(key){var raw=localStorage.getItem(key);if(!raw)return;var data=JSON.parse(raw);if(rewriteCatalogCodeReferences(data,aliases))localStorage.setItem(key,JSON.stringify(data));});
+  if(rewriteCatalogCodeReferences(orders,aliases))localStorage.setItem(SK.ord,JSON.stringify(orders));
+  if(rewriteCatalogCodeReferences(saleRecords,aliases))localStorage.setItem(SK.sale,JSON.stringify(saleRecords));
+  if(rewriteCatalogCodeReferences(quoteRecords,aliases))saveQuoteData();
+  rewriteCatalogCodeReferences(DEF_ORD,aliases);
+  if(typeof REAL_SOURCE_ORDERS!=='undefined')rewriteCatalogCodeReferences(REAL_SOURCE_ORDERS,aliases);
+  rewriteCatalogCodeReferences(d.products,aliases);
+}
+
 function getProdCatData(){
   var raw=localStorage.getItem(SK.prodcat),d=raw?JSON.parse(raw):{products:[]};
   if(!Array.isArray(d.products))d.products=[];
-  if(migrateRealOrderCatalog(d,raw))saveProdCatData(d);
+  var migrated=migrateRealOrderCatalog(d,raw);
+  var beforeCodes=JSON.stringify(d);
+  if(!d.codeRegistry&&!localStorage.getItem('crm_catalog_before_codes_v1'))localStorage.setItem('crm_catalog_before_codes_v1',beforeCodes);
+  var numbered=ensureCatalogCodes(d);
+  syncCatalogCodeReferences(d);
+  if(migrated||numbered||JSON.stringify(d)!==beforeCodes)localStorage.setItem(SK.prodcat,JSON.stringify(d));
   return d;
 }
-function saveProdCatData(d){localStorage.setItem(SK.prodcat,JSON.stringify(d));}
+function saveProdCatData(d){ensureCatalogCodes(d);syncCatalogCodeReferences(d);localStorage.setItem(SK.prodcat,JSON.stringify(d));}
 
 function getPcatStatusLabel(st){
   if(st==='active')return '在售';
@@ -10068,7 +10148,7 @@ function getFilteredProdCat(){
   var stF=(document.getElementById('fp-pcat-status')||{}).value||'';
   return d.products.filter(function(p){
     if(p.type!==pcatCurrentType)return false;
-    var searchText=[p.nameCN,p.nameEN,p.skuCode,p.descCN,p.descEN].concat((p.skus||[]).map(function(sk){return [sk.skuCode,sk.itemNo,sk.variantCN,sk.variantEN,sk.size].join(' ');})).join(' ').toLowerCase();
+    var searchText=[p.nameCN,p.nameEN,p.skuCode,p.originalModel,p.descCN,p.descEN].concat((p.skus||[]).map(function(sk){return [sk.skuCode,sk.originalModel,sk.itemNo,sk.variantCN,sk.variantEN,sk.size].join(' ');})).join(' ').toLowerCase();
     if(q&&searchText.indexOf(q)<0)return false;
     if(catF&&p.categoryCode!==catF)return false;
     if(matF&&!(p.materials&&p.materials.indexOf(matF)>=0))return false;
@@ -10506,7 +10586,7 @@ function openProdCatModal(id){
     var p=d.products.find(function(x){return x.id===id;});if(!p)return;
     _editingPcatId=id;
     if(pmTitle)pmTitle.textContent='编辑产品';
-    set('fpc-sku-code',p.skuCode);set('fpc-name-cn',p.nameCN);set('fpc-name-en',p.nameEN);
+    set('fpc-original-model',p.originalModel||'');set('fpc-sku-code',p.skuCode);set('fpc-name-cn',p.nameCN);set('fpc-name-en',p.nameEN);
     set('fpc-type',p.type);set('fpc-category',p.categoryCode);set('fpc-status',p.status);
     set('fpc-form-tag',p.formTag||'');set('fpc-note',p.note||'');
     set('fpc-desc-cn',p.descCN||'');set('fpc-desc-en',p.descEN||'');
@@ -10527,7 +10607,7 @@ function openProdCatModal(id){
   } else {
     _editingPcatId=null;
     if(pmTitle)pmTitle.textContent='新建产品';
-    ['fpc-sku-code','fpc-name-cn','fpc-name-en','fpc-form-tag','fpc-note','fpc-desc-cn','fpc-desc-en'].forEach(function(fid){set(fid,'');});
+    ['fpc-original-model','fpc-sku-code','fpc-name-cn','fpc-name-en','fpc-form-tag','fpc-note','fpc-desc-cn','fpc-desc-en'].forEach(function(fid){set(fid,'');});
     set('fpc-type',pcatCurrentType);
     set('fpc-status','active');
     var csEl2=document.getElementById('fpc-can-sell');if(csEl2)csEl2.checked=true;
@@ -10558,11 +10638,12 @@ function getPcatSelectedChips(containerId){
 function saveProdCatRecord(){
   var get=function(fid){var el=document.getElementById(fid);return el?el.value.trim():'';};
   var skuCode=get('fpc-sku-code');var nameCN=get('fpc-name-cn');
-  if(!skuCode||!nameCN){alert('请填写SKU编码和中文名称');return;}
+  if(!nameCN){alert('请填写中文名称');return;}
+  skuCode='';
   var canSellEl=document.getElementById('fpc-can-sell');
   var hasStockEl=document.getElementById('fpc-has-stock');
   var data={
-    skuCode:skuCode,nameCN:nameCN,nameEN:get('fpc-name-en'),
+    skuCode:skuCode,originalModel:get('fpc-original-model'),nameCN:nameCN,nameEN:get('fpc-name-en'),
     type:get('fpc-type')||pcatCurrentType,
     categoryCode:get('fpc-category'),
     status:get('fpc-status')||'active',
@@ -10579,7 +10660,7 @@ function saveProdCatRecord(){
   if(_editingPcatId){
     var p=d.products.find(function(x){return x.id===_editingPcatId;});
     if(p){
-      p.skuCode=data.skuCode;p.nameCN=data.nameCN;p.nameEN=data.nameEN;
+      p.originalModel=data.originalModel;p.nameCN=data.nameCN;p.nameEN=data.nameEN;
       p.type=data.type;p.categoryCode=data.categoryCode;p.status=data.status;
       p.formTag=data.formTag;p.note=data.note;p.descCN=data.descCN;p.descEN=data.descEN;
       p.canSell=data.canSell;p.hasStock=data.hasStock;
@@ -10626,7 +10707,7 @@ function openPcatSkuModal(prodId,skuId){
     var sk=prod?((prod.skus||[]).find(function(s){return s.id===skuId;})):null;
     if(!sk)return;
     if(mt)mt.textContent='编辑SKU';
-    set('fpsk-sku-code',sk.skuCode);set('fpsk-variant-cn',sk.variantCN);set('fpsk-variant-en',sk.variantEN);
+    set('fpsk-original-model',sk.originalModel||'');set('fpsk-sku-code',sk.skuCode);set('fpsk-variant-cn',sk.variantCN);set('fpsk-variant-en',sk.variantEN);
     set('fpsk-color',sk.color);set('fpsk-size',sk.size);set('fpsk-shape',sk.shape);
     set('fpsk-pack-type',sk.packType);set('fpsk-qty-per-carton',sk.qtyPerCarton);
     set('fpsk-unit-weight',sk.unitWeight);
@@ -10645,7 +10726,7 @@ function openPcatSkuModal(prodId,skuId){
     if(delArea&&canDelete())delArea.innerHTML='<button class="btn btn-danger btn-sm" onclick="deletePcatSku(\''+prodId+'\',\''+skuId+'\')">🗑 删除SKU</button>';
   } else {
     if(mt)mt.textContent='新增SKU';
-    ['fpsk-sku-code','fpsk-item-no','fpsk-variant-cn','fpsk-variant-en','fpsk-color','fpsk-size','fpsk-shape','fpsk-pack-type','fpsk-qty-per-carton','fpsk-unit-weight','fpsk-ctn-l','fpsk-ctn-w','fpsk-ctn-h','fpsk-ctn-weight','fpsk-cost-price','fpsk-price-min','fpsk-price-max','fpsk-floor-price','fpsk-stock-qty','fpsk-stock-unit','fpsk-safety-stock','fpsk-supplier','fpsk-note'].forEach(function(fid){set(fid,'');});
+    ['fpsk-original-model','fpsk-sku-code','fpsk-item-no','fpsk-variant-cn','fpsk-variant-en','fpsk-color','fpsk-size','fpsk-shape','fpsk-pack-type','fpsk-qty-per-carton','fpsk-unit-weight','fpsk-ctn-l','fpsk-ctn-w','fpsk-ctn-h','fpsk-ctn-weight','fpsk-cost-price','fpsk-price-min','fpsk-price-max','fpsk-floor-price','fpsk-stock-qty','fpsk-stock-unit','fpsk-safety-stock','fpsk-supplier','fpsk-note'].forEach(function(fid){set(fid,'');});
     set('fpsk-currency','USD');
     if(prod&&prod.type==='custom'&&canSeeCost())renderPcatBomRows([]);
   }
@@ -10720,7 +10801,7 @@ function savePcatSkuRecord(){
   var prod=d.products.find(function(x){return x.id===_editingPcatSkuProdId;});if(!prod)return;
   if(!prod.skus)prod.skus=[];
   var skuData={
-    skuCode:get('fpsk-sku-code'),
+    originalModel:get('fpsk-original-model'),
     itemNo:get('fpsk-item-no'),
     variantCN:variantCN,variantEN:get('fpsk-variant-en'),
     color:get('fpsk-color'),size:get('fpsk-size'),shape:get('fpsk-shape'),
@@ -13346,9 +13427,7 @@ function deleteFinRecord(id){
 }
 
 function getPcatForInv(){
-  var s=localStorage.getItem(SK.prodcat);
-  if(s){try{return JSON.parse(s);}catch(e){}}
-  return null;
+  return getProdCatData();
 }
 
 function getStockedSkus(){
@@ -13396,7 +13475,7 @@ function renderInventoryPage(){
   var statusF=document.getElementById('fi-inv-status');
   var filterSt=_invChipStatus||(statusF?statusF.value:'');
   var list=getStockedSkus();
-  if(q){list=list.filter(function(x){return (x.sku.skuCode||'').toLowerCase().indexOf(q)>=0||(x.product.nameCN||'').toLowerCase().indexOf(q)>=0||(x.sku.variantCN||'').toLowerCase().indexOf(q)>=0;});}
+  if(q){list=list.filter(function(x){return (x.sku.skuCode||'').toLowerCase().indexOf(q)>=0||(x.product.nameCN||'').toLowerCase().indexOf(q)>=0||(x.sku.variantCN||'').toLowerCase().indexOf(q)>=0||(x.sku.originalModel||'').toLowerCase().indexOf(q)>=0||(x.sku.itemNo||'').toLowerCase().indexOf(q)>=0;});}
   if(filterSt){list=list.filter(function(x){var qty=getCurrentStock(x.sku.skuCode);var st=getInvStatus(qty,x.sku.safetyStock);return st===filterSt;});}
   if(!list.length){body.innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)">'+(q||filterSt?'没有符合条件的库存记录':'暂无库存产品，请先在产品库中设置 hasStock=true 的 SKU')+'</div>';return;}
   var html='';
