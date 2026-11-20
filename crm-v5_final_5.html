@@ -592,6 +592,7 @@ a{color:var(--accent);text-decoration:none;}
       <div class="mobile-chip on" onclick="pcatMobileChip(this,'raw')">原材料</div>
       <div class="mobile-chip" onclick="pcatMobileChip(this,'blank')">空白产品</div>
       <div class="mobile-chip" onclick="pcatMobileChip(this,'custom')">定制品</div>
+      <div class="mobile-chip" onclick="pcatMobileChip(this,'packaging')">包装材料</div>
       <div class="mobile-chip" onclick="pcatMobileChip(this,'service')">加工服务</div>
     </div>
     <div style="display:flex;align-items:center;gap:3px;width:calc(100% + 30px);margin-left:-15px;margin-right:-15px;margin-top:-0.5px;padding:5px 8px 5px 12px;border-top:1px solid var(--border);background:var(--surface2);box-sizing:border-box">
@@ -1127,6 +1128,7 @@ a{color:var(--accent);text-decoration:none;}
         <button class="tab-btn active" id="pcat-tab-raw" onclick="switchPcatType('raw')">原材料<span class="tab-count" id="pcat-cnt-raw">0</span></button>
         <button class="tab-btn" id="pcat-tab-blank" onclick="switchPcatType('blank')">空白产品<span class="tab-count" id="pcat-cnt-blank">0</span></button>
         <button class="tab-btn" id="pcat-tab-custom" onclick="switchPcatType('custom')">定制品<span class="tab-count" id="pcat-cnt-custom">0</span></button>
+        <button class="tab-btn" id="pcat-tab-packaging" onclick="switchPcatType('packaging')">包装材料<span class="tab-count" id="pcat-cnt-packaging">0</span></button>
         <button class="tab-btn" id="pcat-tab-service" onclick="switchPcatType('service')">加工服务<span class="tab-count" id="pcat-cnt-service">0</span></button>
       </div>
       <button class="btn btn-primary" onclick="openProdCatModal('')">+ 新建</button>
@@ -2183,7 +2185,7 @@ a{color:var(--accent);text-decoration:none;}
     <div class="form-grid">
       <div class="form-group"><label class="form-label">产品类型 *</label>
         <select class="form-input" id="fpc-type">
-          <option value="raw">原材料</option>
+          <option value="packaging">包装材料</option><option value="raw">原材料</option>
           <option value="blank">空白产品</option>
           <option value="custom">定制品</option>
           <option value="service">加工服务</option>
@@ -2276,6 +2278,9 @@ a{color:var(--accent);text-decoration:none;}
         <div class="form-group"><label class="form-label">安全库存</label><input class="form-input" type="number" id="fpsk-safety-stock" placeholder="0"></div>
       </div>
     </div>
+    <div id="fpsk-components-section" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center"><strong>每套包装物料</strong><button type="button" class="btn btn-outline btn-sm" onclick="addPackagingComponent()">＋ 添加物料</button></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">仅记录组合用量，不自动扣库存；实际包装比例请核对。</div><div id="fpsk-components-area"></div></div>
     <div id="fpsk-bom-section" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:13px;font-weight:600;color:var(--text)">🔩 BOM 材料清单 <span style="font-size:11px;color:var(--muted);font-weight:400">（仅限Alan/Penny）</span></div>
@@ -6837,6 +6842,8 @@ function exportData(){
     orderSequence:Number(localStorage.getItem('crm_ord_sequence_v5'))||0,
     orderDailySequences:mergeOrderDailySequences(),
     finance:readReceiptData(),
+    catalogBeforePackagingCorrection:(function(){var raw=localStorage.getItem('crm_catalog_before_packaging_correction_v2');return raw?JSON.parse(raw):null;})(),
+    catalogBeforePackaging:(function(){var raw=localStorage.getItem('crm_catalog_before_packaging_v1');return raw?JSON.parse(raw):null;})(),
     catalogCodeBackup:(function(){var raw=localStorage.getItem('crm_before_catalog_codes_v1');return raw?JSON.parse(raw):null;})(),
     productCatalog:(function(){var raw=localStorage.getItem(SK.prodcat);return raw?JSON.parse(raw):null;})(),
     catalogBeforeRealSamples:(function(){var raw=localStorage.getItem('crm_prodcat_before_real_samples_v1');return raw?JSON.parse(raw):null;})(),
@@ -6892,6 +6899,8 @@ function importData(input){
       if(data.finance)saveFinData(data.finance);
       if(data.procurement)saveProcData(data.procurement);
       if(data.productCatalog)saveProdCatData(data.productCatalog);
+      if(data.catalogBeforePackagingCorrection)localStorage.setItem('crm_catalog_before_packaging_correction_v2',JSON.stringify(data.catalogBeforePackagingCorrection));
+      if(data.catalogBeforePackaging)localStorage.setItem('crm_catalog_before_packaging_v1',JSON.stringify(data.catalogBeforePackaging));
       if(data.catalogCodeBackup)localStorage.setItem('crm_before_catalog_codes_v1',JSON.stringify(data.catalogCodeBackup));
       if(data.catalogBeforeRealSamples)localStorage.setItem('crm_prodcat_before_real_samples_v1',JSON.stringify(data.catalogBeforeRealSamples));
       if(data.catalogBeforeSharedBases)localStorage.setItem('crm_prodcat_before_shared_bases_v2',JSON.stringify(data.catalogBeforeSharedBases));
@@ -9408,6 +9417,7 @@ function openProdDetail(id){
   }
   imgGallery+='</div></div>';
 
+  if(p.isBundle)infoHtml+='<div class="ord-item-warning">组合销售项，不另建套装库存；纸盒和内衬分别采购、盘点。已有套装历史流水仍保留，需单独核对。</div>';
   /* SKU列表 */
   var skus=p.skus||[];
   var skuHtml='<div class="detail-section"><div class="detail-section-title" style="display:flex;align-items:center;justify-content:space-between">款式列表 <button onclick="openSkuModal('+id+',null)" style="font-size:11px;padding:3px 9px;border-radius:5px;border:0.5px solid var(--accent);color:var(--accent);background:rgba(79,142,247,.12);cursor:pointer;font-weight:400">＋ 新增款式</button></div>';
@@ -10072,10 +10082,96 @@ function syncCatalogCodeReferences(d){
   rewriteCatalogCodeReferences(d.products,aliases);
 }
 
+/* 包装独立物料与组合收费项分开；只建档，不从销售数量推算库存。 */
+function migratePackagingCatalog(d){
+  if(d._packagingVersion>=2)return false;
+  if(!localStorage.getItem('crm_catalog_before_packaging_v1'))localStorage.setItem('crm_catalog_before_packaging_v1',JSON.stringify(d));
+  if(d._packagingVersion===1&&!localStorage.getItem('crm_catalog_before_packaging_correction_v2'))localStorage.setItem('crm_catalog_before_packaging_correction_v2',JSON.stringify(d));
+  var bundle=d.products.find(function(p){return p.id==='real_csm_pack';});
+  var gift=d.products.find(function(p){return p.id==='real_csm_gift';});
+  if(gift){gift.type='packaging';gift.hasStock=true;}
+  if(bundle){
+    var outer=d.products.find(function(p){return p.id==='csm_outer_boxes';});
+    var inner=d.products.find(function(p){return p.id==='csm_epe_inserts';});
+    function makeProduct(id,name,material){return {id:id,skuCode:'',nameCN:name,nameEN:'',type:'packaging',categoryCode:'PKG',status:'active',canSell:true,hasStock:true,materials:[material],processes:[],skus:[],note:'独立采购、入库和盘点；供应商、成本、尺寸及实际库存待补。'};}
+    function makeSku(id,label,cur){return {id:id,skuCode:'',originalModel:'',itemNo:'',variantCN:label,stockUnit:'个',stockQty:0,supplier:'',currency:cur||'USD'};}
+    if(!outer){outer=makeProduct('csm_outer_boxes','CSM单支外纸盒','卡纸');d.products.push(outer);}
+    if(!inner){inner=makeProduct('csm_epe_inserts','通用单支珍珠棉内盒','珍珠棉');d.products.push(inner);}
+    inner.nameCN='通用单支珍珠棉内盒';
+    var singles=(bundle.skus||[]).filter(function(s){return /CSMCP(11|15|16)/.test(s.originalModel||s.skuCode||'');});
+    singles.forEach(function(source){
+      var capacity=/CSMCP(11|15|16)/.exec(source.originalModel||source.skuCode)[1];
+      var id='box_'+source.id;
+      if(!outer.skus.some(function(s){return s.id===id;}))outer.skus.push(makeSku(id,capacity+'oz单支外盒',source.currency));
+    });
+    var shared=inner.skus.find(function(s){return s.id==='epe_common_single';})||inner.skus[0];
+    if(!shared){shared=makeSku('epe_common_single','通用单支珍珠棉内盒（11oz / 15oz / 16oz）','CNY');inner.skus.push(shared);}
+    shared.variantCN='通用单支珍珠棉内盒（11oz / 15oz / 16oz）';
+    /* 首版仅隔离试用，撤下未被业务使用的重复内盒；有库存或人工资料则保留核对。 */
+    var stores=[SK.ord,SK.sale,SK.proc,SK.inv,SK.quote,SK.prod].map(function(key){return localStorage.getItem(key)||'';}).join(' ');
+    inner.skus=inner.skus.filter(function(s){
+      if(s===shared)return true;
+      if(!/^epe_/.test(s.id))return true;
+      if((s.skuCode&&stores.indexOf('"'+s.skuCode+'"')>=0)||s.stockQty||s.supplier||s.costPrice||s.priceMin){s.note=(s.note||'')+' 首版独立内盒资料保留待核；新组合使用共用内盒。';return true;}
+      if(!d.retiredPackagingSamples)d.retiredPackagingSamples=[];d.retiredPackagingSamples.push(s);return false;
+    });
+    bundle.type='packaging';bundle.isBundle=true;bundle.hasStock=false;
+    bundle.materials=(bundle.materials||[]).map(function(m){return m==='泡沫'?'珍珠棉':m;});
+    bundle.nameCN='CSM纸盒＋珍珠棉包装套装';
+    bundle.note='组合销售收费项，四种外盒分别备货，共用一种单支珍珠棉内盒；单支每套1个内盒，11oz双支每套2个内盒。不自动扣料。';
+    singles.forEach(function(sku){
+      sku.isBundle=true;sku.hasStock=false;sku.variantCN=(sku.variantCN||'').replace(/泡沫/g,'珍珠棉');
+      sku.components=[{productId:outer.id,skuId:'box_'+sku.id,qty:1,unit:'个'},{productId:inner.id,skuId:shared.id,qty:1,unit:'个'}];
+    });
+    if(gift&&gift.skus&&gift.skus[0]&&!bundle.skus.some(function(s){return s.id==='csm_double11_bundle';})){
+      var double=makeSku('csm_double11_bundle','11oz双支包装：双支外盒＋2个通用单支内盒','USD');
+      double.stockUnit='套';double.isBundle=true;double.hasStock=false;
+      double.note='组合售价待定；原CSM双杯礼盒收费仍保留在原订单，不据外盒报价猜填整套价格。';
+      double.components=[{productId:gift.id,skuId:gift.skus[0].id,qty:1,unit:'个'},{productId:inner.id,skuId:shared.id,qty:2,unit:'个'}];
+      bundle.skus.push(double);
+    }
+    var mats=getPcatMaterials();if(mats.indexOf('珍珠棉')<0){mats.push('珍珠棉');saveSettings();}
+  }
+  d._packagingVersion=2;return true;
+}
+function resolvePackagingComponent(d,component){
+  var p=d.products.find(function(x){return x.id===component.productId;});
+  var s=p&&(p.skus||[]).find(function(x){return x.id===component.skuId;});
+  return s?{product:p,sku:s}:null;
+}
+function packagingComponentsHtml(d,sku){
+  if(!sku.components||!sku.components.length)return '';
+  return '<div style="font-size:12px;color:var(--muted);margin-top:8px;overflow-wrap:anywhere">组合内容（每套）'+sku.components.map(function(c){var ref=resolvePackagingComponent(d,c);return '<div style="padding-top:4px">'+orderDisplayText(ref?ref.sku.variantCN+' · '+ref.sku.skuCode:'物料已缺失，请核对')+' × '+orderDisplayText(c.qty)+' '+orderDisplayText(c.unit||'个')+'</div>';}).join('')+'<div style="padding-top:6px">仅组合关系，按物料分别采购盘点；不自动生成出入库。</div></div>';
+}
+function renderPackagingComponents(d,components){
+  var area=document.getElementById('fpsk-components-area');if(!area)return;
+  var options=[];
+  d.products.filter(function(p){return p.type==='packaging'&&!p.isBundle;}).forEach(function(p){(p.skus||[]).forEach(function(sk){options.push({p:p,s:sk});});});
+  area.innerHTML=(components||[]).map(function(c){
+    var found=resolvePackagingComponent(d,c);
+    return '<div class="package-component-row" style="display:flex;gap:6px;align-items:center;margin-top:6px">'+
+      '<select class="form-input" data-component="ref" style="flex:1;min-width:0">'+(!found?'<option value="">请选择物料（原引用缺失）</option>':'')+
+      options.map(function(ref){var value=ref.p.id+':'+ref.s.id;return '<option value="'+orderDisplayText(value)+'"'+(c.productId===ref.p.id&&c.skuId===ref.s.id?' selected':'')+'>'+orderDisplayText(ref.s.variantCN+' · '+ref.s.skuCode)+'</option>';}).join('')+'</select>'+
+      '<input class="form-input" data-component="qty" type="number" min="0.000001" step="any" style="width:70px" value="'+orderDisplayText(c.qty)+'" aria-label="每套用量">'+
+      '<input class="form-input" data-component="unit" style="width:50px" value="'+orderDisplayText(c.unit||'个')+'" aria-label="单位">'+
+      '<button type="button" class="btn btn-outline btn-sm" onclick="this.parentElement.remove()">×</button></div>';
+  }).join('');
+}
+function collectPackagingComponents(){
+  return Array.from(document.querySelectorAll('#fpsk-components-area .package-component-row')).map(function(row){var parts=row.querySelector('[data-component="ref"]').value.split(':');return {productId:parts[0],skuId:parts[1],qty:Number(row.querySelector('[data-component="qty"]').value),unit:row.querySelector('[data-component="unit"]').value.trim()||'个'};});
+}
+function addPackagingComponent(){
+  var d=getProdCatData(),list=collectPackagingComponents();list.push({productId:'',skuId:'',qty:1,unit:'个'});renderPackagingComponents(d,list);
+}
+function packagingReferenceExists(d,productId,skuId){
+  return d.products.some(function(p){return(p.skus||[]).some(function(sk){return(sk.components||[]).some(function(c){return c.productId===productId&&(!skuId||c.skuId===skuId);});});});
+}
+
 function getProdCatData(){
   var raw=localStorage.getItem(SK.prodcat),d=raw?JSON.parse(raw):{products:[]};
   if(!Array.isArray(d.products))d.products=[];
   var migrated=migrateRealOrderCatalog(d,raw);
+  migrated=migratePackagingCatalog(d)||migrated;
   var beforeCodes=JSON.stringify(d);
   if(!d.codeRegistry&&!localStorage.getItem('crm_catalog_before_codes_v1'))localStorage.setItem('crm_catalog_before_codes_v1',beforeCodes);
   var numbered=ensureCatalogCodes(d);
@@ -10098,6 +10194,7 @@ function getPcatStatusStyle(st){
   return 'background:rgba(107,114,195,.12);color:var(--muted);';
 }
 function getPcatTypeLabel(t){
+  if(t==='packaging')return '包装材料';
   if(t==='raw')return '原材料';
   if(t==='blank')return '空白品';
   if(t==='custom')return '定制品';
@@ -10112,7 +10209,7 @@ function getPcatCategoryName(code){
 
 function updatePcatTabCounts(){
   var d=getProdCatData();
-  var types=['raw','blank','custom','service'];
+  var types=['raw','blank','custom','packaging','service'];
   types.forEach(function(t){
     var cnt=d.products.filter(function(p){return p.type===t;}).length;
     var el=document.getElementById('pcat-cnt-'+t);
@@ -10122,7 +10219,7 @@ function updatePcatTabCounts(){
 
 function switchPcatType(type){
   pcatCurrentType=type;
-  var types=['raw','blank','custom','service'];
+  var types=['raw','blank','custom','packaging','service'];
   types.forEach(function(t){
     var btn=document.getElementById('pcat-tab-'+t);
     if(btn)btn.classList.toggle('active',t===type);
@@ -10409,6 +10506,7 @@ function openProdCatDetail(id){
         (p.hasStock?'<span style="color:'+(sk.stockQty>0?'var(--green)':'var(--red)')+'">库存：'+(sk.stockQty||0)+(sk.stockUnit||'')+'</span>':'')+
         (sk.supplier?'<span style="color:var(--muted)">供应商：'+sk.supplier+'</span>':'')+
         '</div>';
+      skuHtml+=packagingComponentsHtml(d,sk);
       /* BOM */
       if(canSeeCost()&&sk.bom&&sk.bom.length){
         skuHtml+='<div style="margin-top:6px;border-top:1px solid var(--border);padding-top:6px">'+
@@ -10591,7 +10689,7 @@ function openProdCatModal(id){
     set('fpc-form-tag',p.formTag||'');set('fpc-note',p.note||'');
     set('fpc-desc-cn',p.descCN||'');set('fpc-desc-en',p.descEN||'');
     var csEl=document.getElementById('fpc-can-sell');if(csEl)csEl.checked=!!p.canSell;
-    var hsEl=document.getElementById('fpc-has-stock');if(hsEl)hsEl.checked=!!p.hasStock;
+    var hsEl=document.getElementById('fpc-has-stock');if(hsEl){hsEl.checked=!!p.hasStock;hsEl.disabled=!!p.isBundle;hsEl.title=p.isBundle?'组合销售项不另计套装库存':'';}
     /* 高亮已选材质/工艺 */
     if(matChips)(p.materials||[]).forEach(function(m){
       var chip=Array.prototype.find.call(matChips.querySelectorAll('.pcat-sel-chip'),function(c){return c.textContent===m;});
@@ -10611,7 +10709,7 @@ function openProdCatModal(id){
     set('fpc-type',pcatCurrentType);
     set('fpc-status','active');
     var csEl2=document.getElementById('fpc-can-sell');if(csEl2)csEl2.checked=true;
-    var hsEl2=document.getElementById('fpc-has-stock');if(hsEl2)hsEl2.checked=false;
+    var hsEl2=document.getElementById('fpc-has-stock');if(hsEl2){hsEl2.checked=false;hsEl2.disabled=false;hsEl2.title='';}
   }
   openModal('prodcat-modal');
 }
@@ -10663,7 +10761,7 @@ function saveProdCatRecord(){
       p.originalModel=data.originalModel;p.nameCN=data.nameCN;p.nameEN=data.nameEN;
       p.type=data.type;p.categoryCode=data.categoryCode;p.status=data.status;
       p.formTag=data.formTag;p.note=data.note;p.descCN=data.descCN;p.descEN=data.descEN;
-      p.canSell=data.canSell;p.hasStock=data.hasStock;
+      p.canSell=data.canSell;p.hasStock=p.isBundle?false:data.hasStock;if(p.isBundle)p.type='packaging';
       p.materials=data.materials;p.processes=data.processes;
     }
     var sid=_editingPcatId;_editingPcatId=null;
@@ -10680,6 +10778,7 @@ function saveProdCatRecord(){
 function deleteProdCatItem(id){
   if(!confirm('确认删除该产品？此操作不可撤销。'))return;
   var d=getProdCatData();
+  if(packagingReferenceExists(d,id)){toast('此物料已被包装组合引用，请先调整组合关系');return;}
   d.products=d.products.filter(function(x){return x.id!==id;});
   saveProdCatData(d);
   var panel=document.getElementById('detail-panel');
@@ -10730,6 +10829,9 @@ function openPcatSkuModal(prodId,skuId){
     set('fpsk-currency','USD');
     if(prod&&prod.type==='custom'&&canSeeCost())renderPcatBomRows([]);
   }
+  document.getElementById('fpsk-components-section').style.display=prod&&prod.isBundle?'block':'none';
+  var componentSku=skuId&&(prod.skus||[]).find(function(s){return s.id===skuId;});
+  renderPackagingComponents(d,componentSku?componentSku.components||[]:[]);
   /* 库存区块: 仅hasStock产品显示 */
   var stockSection=document.getElementById('fpsk-stock-section');
   if(stockSection)stockSection.style.display=(prod&&prod.hasStock)?'block':'none';
@@ -10800,6 +10902,9 @@ function savePcatSkuRecord(){
   var d=getProdCatData();
   var prod=d.products.find(function(x){return x.id===_editingPcatSkuProdId;});if(!prod)return;
   if(!prod.skus)prod.skus=[];
+  var components=prod.isBundle?collectPackagingComponents():null;
+  if(components&&(!components.length||components.some(function(c){var ref=resolvePackagingComponent(d,c);return !ref||ref.product.isBundle||!Number.isFinite(c.qty)||c.qty<=0;}))){toast('请选择有效包装物料并填写正的每套用量');return;}
+  if(components&&new Set(components.map(function(c){return c.productId+':'+c.skuId;})).size!==components.length){toast('同一物料请合并为一行用量');return;}
   var skuData={
     originalModel:get('fpsk-original-model'),
     itemNo:get('fpsk-item-no'),
@@ -10821,8 +10926,10 @@ function savePcatSkuRecord(){
     supplier:get('fpsk-supplier'),
     note:get('fpsk-note')
   };
+  if(prod.isBundle){skuData.components=components;skuData.isBundle=true;skuData.hasStock=false;}
   if(_editingPcatSkuId){
     var sk=prod.skus.find(function(s){return s.id===_editingPcatSkuId;});
+    if(sk&&!(prod.type==='custom'&&canSeeCost()))skuData.bom=sk.bom||[];
     if(sk){Object.keys(skuData).forEach(function(k){sk[k]=skuData[k];});}
   } else {
     skuData.id='psk'+Date.now();
@@ -10836,6 +10943,7 @@ function deletePcatSku(prodId,skuId){
   if(!confirm('确认删除该SKU？'))return;
   var d=getProdCatData();
   var prod=d.products.find(function(x){return x.id===prodId;});if(!prod)return;
+  if(packagingReferenceExists(d,prodId,skuId)){toast('此SKU已被包装组合引用，请先调整组合关系');return;}
   prod.skus=(prod.skus||[]).filter(function(s){return s.id!==skuId;});
   saveProdCatData(d);closeModal('pcat-sku-modal');openProdCatDetail(prodId);
   toast('SKU已删除');
@@ -13437,6 +13545,7 @@ function getStockedSkus(){
   pc.products.forEach(function(p){
     (p.skus||[]).forEach(function(sk){
       var effStock=(sk.hasStock===true)||(sk.hasStock===undefined&&p.hasStock===true);
+      if(p.isBundle||sk.isBundle){var raw=localStorage.getItem(SK.inv);var inv=raw?JSON.parse(raw):{movements:[]};var legacy=(inv.movements||[]).filter(function(m){return m.skuCode===sk.skuCode;}).reduce(function(sum,m){return sum+(Number(m.qty)||0);},0);effStock=legacy!==0;}
       if(effStock){result.push({product:p,sku:sk});}
     });
   });
