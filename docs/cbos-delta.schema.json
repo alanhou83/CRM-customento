@@ -1,0 +1,14 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"CBOS询盘增量 v1",
+  "type":"object",
+  "required":["schemaVersion","source","batchId","exportedAt","inquiries","followups"],
+  "properties":{
+    "schemaVersion":{"const":1},"source":{"const":"CBOS"},
+    "batchId":{"type":"string","pattern":"^[A-Za-z0-9_-]+$"},
+    "exportedAt":{"type":"string","format":"date-time"},
+    "inquiries":{"type":"array","items":{"type":"object","required":["sourceImportId","revision","fields"],"properties":{"sourceImportId":{"type":"string","minLength":1},"revision":{"type":"integer","minimum":1},"fields":{"type":"object"}}}},
+    "followups":{"type":"array","items":{"type":"object","required":["eventId","inquiryId","revision","content"],"properties":{"eventId":{"type":"string","minLength":1},"inquiryId":{"type":"string","minLength":1},"revision":{"type":"integer","minimum":1},"date":{"type":"string"},"person":{"type":"string"},"content":{"type":"string","minLength":1}}}},
+    "backgrounds":{"type":"array","items":{"type":"object","required":["id","alias","fields"],"properties":{"id":{"type":"string","minLength":1},"alias":{"type":"string","minLength":1},"fields":{"type":"object"}}}}
+  }
+}

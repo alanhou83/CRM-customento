@@ -1,6 +1,9 @@
-const CACHE_NAME = 'customento-crm-v48';
+const CACHE_NAME = 'customento-crm-v49';
 const STATIC_ASSETS = [
   '/CRM-customento/manifest.json',
+  '/CRM-customento/crm-image-codec.js',
+  '/CRM-customento/crm-cbos-delta.js',
+  '/CRM-customento/crm-data-sync.js',
   '/CRM-customento/icon-192.png',
   '/CRM-customento/icon-512.png'
 ];
@@ -23,8 +26,10 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
+  // 带授权或跨域请求交由浏览器直接处理，私有数据不进入静态缓存。
+  if(url.origin!==self.location.origin||e.request.headers.has('Authorization'))return;
   // HTML 文件：网络优先，离线时回退缓存
-  if (url.pathname.endsWith('.html') || e.request.destination === 'document') {
+  if (url.pathname.endsWith('.html') || e.request.destination === 'document' || /crm-(image-codec|cbos-delta|data-sync)\.js$/.test(url.pathname)) {
     e.respondWith(
       fetch(e.request).then(res => {
         const clone = res.clone();
