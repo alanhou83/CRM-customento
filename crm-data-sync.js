@@ -131,19 +131,19 @@
     try{
       status('正在检查云端与本机修改…');
       var c=config(),repo=await api(c,'');if(!repo)throw new Error('仓库不存在或当前令牌无法访问，请核对仓库授权');if(repo.private!==true)throw new Error('数据仓库必须为私有，已停止同步');
-      var initial=capture(),initialRecords=await imageRecords(),localImages=await imageIndex(initialRecords),local={stores:initial,images:localImages.index};
+      var initial=capture(),initialRecords=await imageRecords();
       var f=await file(c,'state/snapshot.json'),remote=f?safe(JSON.parse(decode(f.content))):null;
       if(!remote&&!initialize)throw new Error('私有仓库尚无基准数据，请先使用初始化按钮');
       if(remote&&remote.schemaVersion!==1)throw new Error('不支持的云端数据格式');
       if(remote&&initialize)throw new Error('远端已有数据，不能再次初始化覆盖');
-      var base=JSON.parse(localStorage.getItem(baseStorageKey(c))||'null');
-      if(remote&&!base){
-        if(initialRecords.length)throw new Error('首次连接发现本机图片，请先导出完整备份并核对记录ID映射，未覆盖本地');
-        var hasLocalRecords=[SK.inq,SK.cust,SK.ord].some(function(k){return Array.isArray(initial[k])&&initial[k].length;});
-        if(hasLocalRecords&&!confirm('首次连接将完整备份本机，并以私有仓库基准替换本机业务数据。若本机有尚未迁移的新修改，请取消并先导出备份。是否继续？')){status('已取消，未更改本机或云端数据');return;}
-        base=clone(local);
+      var base=JSON.parse(localStorage.getItem(baseStorageKey(c))||'null'),firstDownload=!!remote&&!base;
+      if(firstDownload){
+        var hasLocalRecords=initialRecords.length||Object.keys(initial).some(function(k){return Array.isArray(initial[k])?initial[k].length:initial[k]&&typeof initial[k]==='object'&&Object.keys(initial[k]).length;});
+        if(hasLocalRecords&&!confirm('首次同步：使用云端数据替换本机旧数据和图片，本机旧内容不会上传。已确认本机内容不需要保留？取消可先导出完整备份。')){status('已取消，未更改本机或云端数据');return;}
       }
-      var problems=[],merged=remote?merge(base||{},local,{stores:remote.stores,images:remote.images||{}},'',problems,resolutions):local;
+      // 首次接收不解析或上传旧图片，避免演示图片大小/ID阻止接入或混入云端。
+      var localImages=firstDownload?{index:{},uploads:{}}:await imageIndex(initialRecords),local={stores:initial,images:localImages.index};
+      var problems=[],merged=firstDownload?{stores:clone(remote.stores),images:clone(remote.images||{})}:remote?merge(base||{},local,{stores:remote.stores,images:remote.images||{}},'',problems,resolutions):local;
       var manifestFile=await file(c,'cbos/manifest.json');
       if(manifestFile){var manifest=JSON.parse(decode(manifestFile.content));if(manifest.schemaVersion!==1||!Array.isArray(manifest.batches))throw new Error('CBOS批次索引格式错误');
         for(var batch of manifest.batches){if(!/^cbos\/batches\/[A-Za-z0-9_-]+\.json$/.test(batch.path))throw new Error('CBOS批次路径无效');if(((merged.stores[SK.settings]||{}).cbosAppliedBatches||[]).indexOf(batch.id)>=0)continue;var batchFile=await file(c,batch.path);if(!batchFile)throw new Error('CBOS批次文件缺失');var delta=safe(JSON.parse(decode(batchFile.content)));if(delta.batchId!==batch.id)throw new Error('CBOS批次编号不一致');var result=CrmCbosDelta.plan(merged.stores,delta,resolutions);merged.stores=result.stores;problems=problems.concat(result.conflicts);}
@@ -160,7 +160,9 @@
       if(!same(capture(),initial)||!same(await imageRecords(),initialRecords))throw new Error('本地发生修改，已停止覆盖，请重新同步');
       if(!remote||!same({stores:remote.stores,images:remote.images||{}},merged))await write(c,'state/snapshot.json',encode(JSON.stringify(next)),f&&f.sha);
       if(!same(capture(),initial)||!same(await imageRecords(),initialRecords))throw new Error('云端已写入，但本地同时有新修改；新修改保留，需再次同步');
+      if(firstDownload)initialRecords.forEach(function(r){if(!imageData.some(function(v){return v.id===r.id;}))imageData.push({id:r.id,deleted:true});});
       await imagePut(imageData);
+      if(firstDownload)Object.keys(initial).forEach(function(k){if(!(k in merged.stores))localStorage.removeItem(k);});
       Object.keys(merged.stores).forEach(function(k){if(!/^crm_/.test(k)||/sync|token|secret/i.test(k))throw new Error('云端数据包含不允许的键');});
       Object.keys(merged.stores).forEach(function(k){localStorage.setItem(k,JSON.stringify(merged.stores[k]));});
       localStorage.setItem(baseStorageKey(c),JSON.stringify({stores:merged.stores,images:merged.images}));

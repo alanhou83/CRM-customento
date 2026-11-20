@@ -1,4 +1,4 @@
-const CACHE_NAME = 'customento-crm-v50';
+const CACHE_NAME = 'customento-crm-v51';
 const STATIC_ASSETS = [
   '/CRM-customento/manifest.json',
   '/CRM-customento/crm-image-codec.js',
