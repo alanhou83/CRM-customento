@@ -1,16 +1,16 @@
-const CACHE_NAME = 'customento-crm-v51';
+const CACHE_NAME = 'customento-crm-v52';
 const STATIC_ASSETS = [
   '/CRM-customento/manifest.json',
-  '/CRM-customento/crm-image-codec.js',
-  '/CRM-customento/crm-cbos-delta.js',
-  '/CRM-customento/crm-data-sync.js',
+  '/CRM-customento/crm-image-codec.js?v=52',
+  '/CRM-customento/crm-cbos-delta.js?v=52',
+  '/CRM-customento/crm-data-sync.js?v=52',
   '/CRM-customento/icon-192.png',
   '/CRM-customento/icon-512.png'
 ];
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS.map(url => new Request(url, {cache:'reload'}))))
   );
   self.skipWaiting();
 });
@@ -31,9 +31,10 @@ self.addEventListener('fetch', e => {
   // HTML 文件：网络优先，离线时回退缓存
   if (url.pathname.endsWith('.html') || e.request.destination === 'document' || /crm-(image-codec|cbos-delta|data-sync)\.js$/.test(url.pathname)) {
     e.respondWith(
-      fetch(e.request).then(res => {
+      fetch(e.request, {cache:'no-cache'}).then(res => {
+        if(!res.ok)throw new Error('应用资源暂不可用');
         const clone = res.clone();
-        caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+        e.waitUntil(caches.open(CACHE_NAME).then(c => c.put(e.request, clone)));
         return res;
       }).catch(() => caches.match(e.request))
     );

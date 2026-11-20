@@ -25,7 +25,7 @@
 
 ## PWA及移动端排错
 
-- 保留HTML网络优先，私有跨域/带Authorization请求不入静态缓存；模块脚本缓存需能离线回退。不要建议重装。
+- 保留HTML网络优先，私有跨域/带Authorization请求不入静态缓存；模块脚本缓存需能离线回退。发布同步脚本须同步更新HTML资源版本参数、SW缓存及预缓存参数；网络优先使用HTTP重新验证，不把网络优先误作绕过HTTP缓存。设置显示脚本版本并提供保留数据的“更新应用”。不要建议重装。
 - 不用`history.replaceState`改到不存在路径，不用`window.open`做打印；打印走行内overlay。
 - detail-panel维持`overflow-y:hidden`、`will-change:transform`；仅detail-body滚动，并用`overscroll-behavior:contain`防iOS触摸锁定。
 - 移动端固定面板及flex高度不确定时检查布局折叠；桌面filters/table隐藏需必要的`!important`，不要误伤设置页。

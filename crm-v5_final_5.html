@@ -2373,7 +2373,7 @@ a{color:var(--accent);text-decoration:none;}
 
 <div class="toast" id="toast"></div>
 
-<script src="crm-image-codec.js"></script>
+<script src="crm-image-codec.js?v=52"></script>
 <script>
 const SK={inq:'crm_inq_v5',cust:'crm_cust_v5',ord:'crm_ord_v5',sale:'crm_sale_v5',user:'crm_user_v5',settings:'crm_settings_v5',prod:'crm_prod_v5',prodcat:'crm_prodcat_v5',proc:'crm_proc_v5',quote:'crm_quote_v5',inv:'crm_inv_v5',fin:'crm_fin_v6'};
 const DEF_PRODUCTS=['MDF杯垫','MDF冰箱贴','马克杯','帆布袋','T恤','Shot Glass','软木杯垫','其他'];
@@ -13140,7 +13140,7 @@ function renderPoDoc(){
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load', function(){
-    navigator.serviceWorker.register('/CRM-customento/service-worker.js');
+    navigator.serviceWorker.register('/CRM-customento/service-worker.js', {updateViaCache:'none'}).then(function(reg){reg.update().catch(function(){});}).catch(function(){});
   });
 }
 window.addEventListener('beforeprint', function(){
@@ -13150,7 +13150,7 @@ window.addEventListener('beforeprint', function(){
   if(qov){qov.scrollLeft=0;qov.scrollTop=0;}
 });
 </script>
-<script src="crm-cbos-delta.js"></script>
-<script src="crm-data-sync.js"></script>
+<script src="crm-cbos-delta.js?v=52"></script>
+<script src="crm-data-sync.js?v=52"></script>
 </body>
 </html>
