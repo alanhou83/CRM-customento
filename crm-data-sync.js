@@ -1,8 +1,12 @@
-/* GitHub私有数据同步适配器。令牌仅驻留内存，数据写入须校验远端SHA。 */
+/* GitHub私有数据同步适配器。令牌默认仅驻留内存，可由用户选择记住本机；数据写入须校验远端SHA。 */
 (function(root){
   'use strict';
   var secret='',running=false,resolutions={},conflicts=[];
-  var configKey='crm_sync_config_v1',baseKey='crm_sync_base_v1';
+  var configKey='crm_sync_config_v1',baseKey='crm_sync_base_v1',credentialKey='crm_sync_device_token_v1',secretRepository='';
+  // 本机授权单独保存，不进入业务存储、同步快照或备份。
+  function forgetDevice(){if(running)throw new Error('同步正在进行，请结束后取消授权');localStorage.removeItem(credentialKey);secret='';secretRepository='';document.getElementById('crm-sync-token').value='';document.getElementById('crm-sync-remember').checked=false;status('已取消本机授权；业务数据和图片保留');}
+  function rememberDevice(c){var checkbox=document.getElementById('crm-sync-remember');if(checkbox.checked&&secret&&secretRepository===c.repository){localStorage.setItem(credentialKey,JSON.stringify({repository:c.repository,token:secret}));}else localStorage.removeItem(credentialKey);}
+  function restoreDevice(c){try{var saved=JSON.parse(localStorage.getItem(credentialKey)||'null');if(saved&&saved.repository===c.repository&&typeof saved.token==='string'&&saved.token){secret=saved.token;secretRepository=c.repository;return true;}}catch(e){}return false;}
   function safe(value){if(value&&typeof value==='object')Object.keys(value).forEach(function(k){if(['__proto__','constructor','prototype'].indexOf(k)>=0)throw new Error('数据包含不安全的键');safe(value[k]);});return value;}
   function same(a,b){return JSON.stringify(a)===JSON.stringify(b);}
   function clone(v){return v===undefined?undefined:JSON.parse(JSON.stringify(v));}
@@ -39,11 +43,18 @@
   function status(text){var el=document.getElementById('crm-sync-status');if(el)el.textContent=text;var fab=document.getElementById('crm-sync-fab');if(fab){fab.textContent=text.indexOf('已同步')===0?'☁ 已同步':text.indexOf('正在')===0?'☁ 同步中':'☁ 同步';fab.title=text;}}
   function config(){return JSON.parse(localStorage.getItem(configKey)||'{"repository":"alanhou83/CRM-customento-data","branch":"main"}');}
   function baseStorageKey(c){return baseKey+':'+c.repository+':'+c.branch;}
-  function setConfig(){var repository=document.getElementById('crm-sync-repository').value.trim();if(!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository))throw new Error('请填写所有者/仓库名');var c={repository:repository,branch:document.getElementById('crm-sync-branch').value.trim()||'main'};localStorage.setItem(configKey,JSON.stringify(c));var entered=document.getElementById('crm-sync-token').value.trim();if(entered)secret=entered;document.getElementById('crm-sync-token').value='';return c;}
+  function setConfig(){
+    if(running)throw new Error('同步正在进行，请稍后修改授权');
+    var repository=document.getElementById('crm-sync-repository').value.trim();if(!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository))throw new Error('请填写所有者/仓库名');
+    var c={repository:repository,branch:document.getElementById('crm-sync-branch').value.trim()||'main'};
+    if(secretRepository&&secretRepository!==repository){secret='';secretRepository='';localStorage.removeItem(credentialKey);}
+    localStorage.setItem(configKey,JSON.stringify(c));var entered=document.getElementById('crm-sync-token').value.trim();if(entered){secret=entered;secretRepository=repository;}
+    document.getElementById('crm-sync-token').value='';rememberDevice(c);return c;
+  }
   function encode(text){var bytes=new TextEncoder().encode(text),s='';bytes.forEach(function(v){s+=String.fromCharCode(v);});return btoa(s);}
   function decode(content){var s=atob(content.replace(/\s/g,''));return new TextDecoder().decode(Uint8Array.from(s,function(c){return c.charCodeAt(0);}));}
   async function api(c,path,options){
-    if(!secret)throw new Error('请在本次会话填写仅限私有数据仓库的GitHub令牌');
+    if(!secret||secretRepository!==c.repository)throw new Error('请填写仅限当前私有数据仓库的GitHub令牌');
     var response=await fetch('https://api.github.com/repos/'+c.repository+path,Object.assign({cache:'no-store',headers:{Authorization:'Bearer '+secret,Accept:'application/vnd.github+json','Content-Type':'application/json','X-GitHub-Api-Version':'2022-11-28'}},options||{}));
     if(response.status===404){if(options&&options.method&&options.method!=='GET')throw new Error('GitHub写入未成功，请检查仓库、分支及Contents写入权限');return null;}
     if(!response.ok){if(response.status===409||response.status===422)throw new Error('远端版本已改变，请重新同步并核对冲突');throw new Error('GitHub请求失败（'+response.status+'），请检查权限或网络');}
@@ -73,7 +84,7 @@
     running=true;
     try{await saveLocalBackup({createdAt:new Date().toISOString(),stores:capture(),imageRecords:await imageRecords()});await imagePut(value.imageRecords);
       Object.keys(SK).filter(function(k){return k!=='user';}).forEach(function(k){if(!(SK[k] in stores))localStorage.removeItem(SK[k]);});
-      Object.keys(stores).forEach(function(k){localStorage.setItem(k,JSON.stringify(stores[k]));});secret='';status('已恢复完整备份，尚未上传云端；刷新后重新授权');setTimeout(function(){location.reload();},500);return true;
+      Object.keys(stores).forEach(function(k){localStorage.setItem(k,JSON.stringify(stores[k]));});localStorage.removeItem(credentialKey);secret='';secretRepository='';status('已恢复完整备份，尚未上传云端；刷新后重新授权');setTimeout(function(){location.reload();},500);return true;
     }finally{running=false;}
   }
   function imagePut(records){return new Promise(function(resolve,reject){openImgDB(function(db){if(!db){reject(new Error('无法保存图片'));return;}var tx=db.transaction('imgs','readwrite'),store=tx.objectStore('imgs');records.forEach(function(r){if(r.deleted)store.delete(r.id);else store.put(r);});tx.oncomplete=resolve;tx.onerror=function(){reject(new Error('保存图片失败，未标记同步成功'));};});});}
@@ -161,12 +172,16 @@
   function mount(){
     var host=document.querySelector('#page-settings .page-content>div');if(!host)return;
     var box=document.createElement('div');box.style.cssText='border-top:2px solid var(--border);margin-top:24px;padding-top:20px';
-    box.innerHTML='<div style="font-weight:600">☁ GitHub私有数据同步（个人试跑）</div><div style="font-size:12px;color:var(--muted);margin:8px 0">令牌只保留在当前页面会话；刷新后重新填写。请先导出备份。</div><input id="crm-sync-repository" class="form-input" aria-label="私有数据仓库"><input id="crm-sync-branch" class="form-input" aria-label="分支"><input id="crm-sync-token" type="password" autocomplete="off" class="form-input" placeholder="本次会话GitHub细粒度令牌"><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button id="crm-sync-run" class="btn btn-primary">同步数据</button><button id="crm-sync-init" class="btn btn-outline">首次初始化私有仓库</button><button id="crm-sync-export" class="btn btn-outline">导出完整数据及图片</button></div><div id="crm-sync-status" style="font-size:12px;margin-top:8px;overflow-wrap:anywhere">未连接；当前修改仅保存在本机</div><div id="crm-sync-conflicts" hidden></div>';
+    box.innerHTML='<div style="font-weight:600">☁ GitHub私有数据同步（个人试跑）</div><div style="font-size:12px;color:var(--muted);margin:8px 0">默认仅本次页面使用；勾选记住此设备后，下次打开可继续同步。请先导出备份。</div><input id="crm-sync-repository" class="form-input" aria-label="私有数据仓库"><input id="crm-sync-branch" class="form-input" aria-label="分支"><input id="crm-sync-token" type="password" autocomplete="off" class="form-input" placeholder="GitHub细粒度令牌（已记住时可留空）"><label style="display:flex;align-items:center;gap:8px;margin:10px 0"><input id="crm-sync-remember" type="checkbox">记住此设备（仅限自己的手机或电脑）</label><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button id="crm-sync-run" class="btn btn-primary">同步数据</button><button id="crm-sync-init" class="btn btn-outline">首次初始化私有仓库</button><button id="crm-sync-forget" class="btn btn-outline">取消授权</button><button id="crm-sync-export" class="btn btn-outline">导出完整数据及图片</button></div><div id="crm-sync-status" style="font-size:12px;margin-top:8px;overflow-wrap:anywhere">未连接；当前修改仅保存在本机</div><div id="crm-sync-conflicts" hidden></div>';
     var fab=document.createElement('button');fab.id='crm-sync-fab';fab.className='btn btn-primary btn-sm';fab.textContent='☁ 同步';fab.style.cssText='position:fixed;right:14px;bottom:76px;z-index:250;box-shadow:0 2px 10px #0005';fab.onclick=function(){showPage('settings');box.scrollIntoView({block:'start'});};document.body.appendChild(fab);
     host.prepend(box);var c=config();document.getElementById('crm-sync-repository').value=c.repository;document.getElementById('crm-sync-branch').value=c.branch;
+    var remembered=restoreDevice(c);document.getElementById('crm-sync-remember').checked=remembered;if(remembered)status('已记住此设备，正在准备同步');
+    document.getElementById('crm-sync-forget').onclick=function(){try{forgetDevice();}catch(e){status(e.message);}};
+    document.getElementById('crm-sync-remember').onchange=function(){try{if(running){this.checked=!!localStorage.getItem(credentialKey);throw new Error('同步正在进行，请稍后修改记住设置');}if(!this.checked){localStorage.removeItem(credentialKey);status('已关闭记住此设备；当前页面仍可同步，重新打开需填写令牌');}else{setConfig();status(secret?'已记住此设备':'请填写令牌后点击同步数据，以记住此设备');}}catch(e){status(e.message);}};
     document.getElementById('crm-sync-export').onclick=exportPortableBackup;
     document.getElementById('crm-sync-run').onclick=function(){try{setConfig();sync(false);}catch(e){status(e.message);}};
     document.getElementById('crm-sync-init').onclick=function(){try{setConfig();if(confirm('仅在私有仓库为空时上传当前本机基准，确认已备份？'))sync(true);}catch(e){status(e.message);}};
+    if(remembered)setTimeout(function(){if(secret&&!running)sync(false);},500);
     setInterval(function(){if(secret&&!running)sync(false);},180000);
     document.addEventListener('visibilitychange',function(){if(secret&&document.visibilityState==='visible'&&!running)sync(false);});
     window.addEventListener('pagehide',function(){if(secret&&!running)sync(false);});
