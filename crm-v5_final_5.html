@@ -10134,6 +10134,17 @@ function migratePackagingCatalog(d){
   }
   d._packagingVersion=2;return true;
 }
+/* 产品名不绑定容量，容量与装杯数量放在SKU规格；只修正一次。 */
+function migratePackagingNames(d){
+  if(d._packagingNamesVersion>=1)return false;
+  var p=d.products.find(function(x){return x.id==='real_csm_gift';});
+  if(p){
+    d.packagingNamingHistory={productId:p.id,nameCN:p.nameCN,skus:(p.skus||[]).map(function(sk){return {id:sk.id,variantCN:sk.variantCN};})};
+    p.nameCN='CSM双支外纸盒';
+    (p.skus||[]).forEach(function(sk){if(sk.originalModel==='CSM-GFB11TM'||sk.skuCode==='CSM-GFB11TM')sk.variantCN='11oz双支装外盒';});
+  }
+  d._packagingNamesVersion=1;return true;
+}
 function resolvePackagingComponent(d,component){
   var p=d.products.find(function(x){return x.id===component.productId;});
   var s=p&&(p.skus||[]).find(function(x){return x.id===component.skuId;});
@@ -10172,6 +10183,7 @@ function getProdCatData(){
   if(!Array.isArray(d.products))d.products=[];
   var migrated=migrateRealOrderCatalog(d,raw);
   migrated=migratePackagingCatalog(d)||migrated;
+  migrated=migratePackagingNames(d)||migrated;
   var beforeCodes=JSON.stringify(d);
   if(!d.codeRegistry&&!localStorage.getItem('crm_catalog_before_codes_v1'))localStorage.setItem('crm_catalog_before_codes_v1',beforeCodes);
   var numbered=ensureCatalogCodes(d);
@@ -10304,6 +10316,7 @@ function renderProdCat(){
     } else if(!p.hasStock){
       stockStr='按需';
     }
+    if(p.isBundle)stockStr='组合·不单独计库存';
     return '<div class="table-row cols-prodcat" onclick="openProdCatDetail(\''+p.id+'\')">'+
       '<div class="table-cell"><div class="prod-img-ph" id="pcat-thumb-'+p.id+'">🗂️</div></div>'+
       '<div class="table-cell" style="font-size:11px;color:var(--muted);font-family:monospace">'+p.skuCode+'</div>'+
@@ -10344,7 +10357,7 @@ function renderMobileCards_prodcat(){
       '<span class="status-badge" style="'+getPcatStatusStyle(p.status)+'font-size:10px;padding:1px 5px;flex-shrink:0">'+getPcatStatusLabel(p.status)+'</span>'+
       '</div>'+
       '<div style="font-size:11px;color:var(--muted);margin-bottom:1px">'+p.skuCode+(matStr?' · '+matStr:'')+'</div>'+
-      '<div style="font-size:11px;color:var(--muted2)">'+getPcatCategoryName(p.categoryCode)+' · '+(p.skus?p.skus.length:0)+'个SKU</div>'+
+      '<div style="font-size:11px;color:var(--muted2)">'+getPcatCategoryName(p.categoryCode)+' · '+(p.skus?p.skus.length:0)+'个SKU'+(p.isBundle?' · 组合·不单独计库存':'')+'</div>'+
       '</div>'+
       '<div style="text-align:right;flex-shrink:0">'+
       '<div style="font-size:13px;font-weight:600;color:var(--green)">'+priceStr+'</div>'+
@@ -10404,7 +10417,7 @@ function renderPcatCardView(){
       '<div class="inq-card-img-ph" id="pcat-card-img-'+p.id+'"><div style="font-size:28px">🗂️</div><div>暂无图片</div></div>'+
       '<div class="inq-card-body">'+
       '<div class="inq-card-name">'+p.nameCN+'</div>'+
-      '<div class="inq-card-company" style="font-size:10px;font-family:monospace">'+p.skuCode+'</div>'+
+      '<div class="inq-card-company" style="font-size:10px;font-family:monospace">'+p.skuCode+(p.isBundle?' · 组合·不单独计库存':'')+'</div>'+
       '<div class="inq-card-meta"><span class="status-badge" style="'+getPcatStatusStyle(p.status)+'font-size:10px">'+getPcatStatusLabel(p.status)+'</span>'+
       '<span style="font-size:11px;color:var(--muted)">'+skuCount+' SKU</span></div>'+
       '<div class="inq-card-footer"><span>'+getPcatCategoryName(p.categoryCode)+'</span><span style="color:var(--green);font-weight:600">'+priceStr+'</span></div>'+
