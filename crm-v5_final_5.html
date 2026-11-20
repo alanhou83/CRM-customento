@@ -2500,18 +2500,18 @@ const DEF_QUOTE=[
     totalAmount:1400,paymentTermsCN:'T/T 30% 定金，70% 发货前付清',paymentTermsEN:'T/T 30% deposit, 70% before shipment',shippingTermsCN:'FOB 深圳',shippingTermsEN:'FOB Shenzhen',notesCN:'',notesEN:''},
 ];
 
-let inquiries=JSON.parse(localStorage.getItem(SK.inq)||'null')||JSON.parse(JSON.stringify(DEF_INQ));
-let customers=JSON.parse(localStorage.getItem(SK.cust)||'null')||JSON.parse(JSON.stringify(DEF_CUST));
-let orders=JSON.parse(localStorage.getItem(SK.ord)||'null')||JSON.parse(JSON.stringify(DEF_ORD));
-let saleRecords=JSON.parse(localStorage.getItem(SK.sale)||'null')||JSON.parse(JSON.stringify(DEF_SALE));
+let inquiries=JSON.parse(localStorage.getItem(SK.inq)||'null')||[];
+let customers=JSON.parse(localStorage.getItem(SK.cust)||'null')||JSON.parse(JSON.stringify(DEF_CUST.filter(function(c){return ['GKK','CAZL','CSM'].indexOf(c.alias)>=0;})));
+let orders=JSON.parse(localStorage.getItem(SK.ord)||'null')||JSON.parse(JSON.stringify(DEF_ORD.filter(function(o){return o.id===3||o.id===4;})));
+let saleRecords=JSON.parse(localStorage.getItem(SK.sale)||'null')||[];
 var quoteRecords=JSON.parse(localStorage.getItem(SK.quote)||'null')||JSON.parse(JSON.stringify(DEF_QUOTE));var nextQuoteId=quoteRecords.length?Math.max.apply(null,quoteRecords.map(function(q){return q._num||0;}))+1:1;
 /* 修复旧数据/演示数据中只有日期没有内容（或反之）的待办，两项必须同时有值 */
 inquiries.forEach(function(i){if(!i.followupDate||!i.followupNote){i.followupDate='';i.followupNote='';}});
 customers.forEach(function(c){if(!c.followupDate||!c.followupNote){c.followupDate='';c.followupNote='';}});
 let currentUser=localStorage.getItem(SK.user)||'Alan';
 let crmSettings=JSON.parse(localStorage.getItem(SK.settings)||'null')||{products:DEF_PRODUCTS.slice(),pcatCategories:[{code:'MUG',nameCN:'杯子类',nameEN:'Mugs',icon:'☕'},{code:'CTR',nameCN:'杯垫类',nameEN:'Coasters',icon:'🟫'},{code:'BAG',nameCN:'包袋类',nameEN:'Bags',icon:'👜'},{code:'MGN',nameCN:'冰箱贴/装饰',nameEN:'Magnets & Decor',icon:'🧲'},{code:'TEE',nameCN:'T恤/布艺',nameEN:'Apparel',icon:'👕'},{code:'TIL',nameCN:'瓷砖/板材',nameEN:'Tiles & Boards',icon:'🪨'},{code:'BRD',nameCN:'原板材',nameEN:'Raw Boards',icon:'📐'},{code:'PKG',nameCN:'包装耗材',nameEN:'Packaging',icon:'📦'},{code:'INK',nameCN:'墨水/耗材',nameEN:'Inks & Supplies',icon:'🖨️'},{code:'PAP',nameCN:'纸张',nameEN:'Paper',icon:'📄'},{code:'SVC',nameCN:'加工服务',nameEN:'Services',icon:'⚙️'},{code:'MBX',nameCN:'音乐盒',nameEN:'Music Boxes',icon:'🎵'}],pcatMaterials:['陶瓷','玻璃','搪瓷','塑料','MDF','软木','布艺','帆布','亚克力','橡胶','金属','铝合金','不锈钢','石头','大理石','卡纸','皮革','树脂'],pcatProcesses:['热转印','UV直打','DTF打印','激光切割','激光打标','丝网印刷','刺绣','水晶标','贴标','热压','烫金','压印'],pcatForms:['杯子','杯垫','冰箱贴','T恤','帆布袋','背包','瓷砖','盘子','音乐盒','钥匙扣','手机壳','相框','书签','徽章','贴纸']};
-let nextInqId=inquiries.length?Math.max(...inquiries.map(i=>i.id))+1:1;
-let nextCustId=customers.length?Math.max(...customers.map(c=>c.id))+1:1;
+let nextInqId=Math.max(Number(localStorage.getItem('crm_inq_highwater_v1'))||1,inquiries.length?Math.max(...inquiries.map(i=>i.id))+1:1);
+let nextCustId=Math.max(Number(localStorage.getItem('crm_cust_highwater_v1'))||1,customers.length?Math.max(...customers.map(c=>c.id))+1:1);
 let nextOrdId=1;
 ensureOrderNumbers();
 let nextSaleId=saleRecords.length?Math.max(...saleRecords.map(s=>s.id))+1:1;
@@ -3249,7 +3249,7 @@ function renderHot(){
       +'<div class="table-cell">'+marks+'</div>'
       +'<div class="table-cell"><span class="source-tag">'+i.source+'</span></div>'
       +'<div class="table-cell"><div>'+i.product+'</div>'+(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.notes+'</div>':'')+'</div>'
-      +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+i.grade+'级</span></div>'
+      +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+(i.grade?orderDisplayText(i.grade)+'级':'待确认')+'</span></div>'
       +'<div class="table-cell"><span class="status-badge '+SC[i.status]+'">'+i.status+'</span>'+(flagsHtmlH?'<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">'+flagsHtmlH+'</div>':'')+'</div>'
       +(function(){var ov=i.followupDate&&i.followupDate<today();return '<div class="table-cell">'+(i.followupDate?'<div>'+(ov?'<span style="font-size:14px">🔔</span> ':'<span style="font-size:9px">📅</span> ')+'<span style="font-size:'+(ov?'13':'12')+'px;color:'+(ov?'var(--red)':'var(--muted)')+';font-weight:'+(ov?'600':'400')+'">'+i.followupDate+'</span>'+(i.followupNote?'<div style="font-size:'+(ov?'12':'11')+'px;color:'+(ov?'var(--red)':'var(--green)')+';margin-top:2px">📌 '+i.followupNote+'</div>':'')+'</div>':(i.followupNote?'<div style="font-size:11px;color:var(--green)">📌 '+i.followupNote+'</div>':'<span style="font-size:12px;color:var(--muted2)">—</span>'))+'</div>';}())
       +'<div class="table-cell" style="color:var(--muted)">'+i.person+'</div>'
@@ -3354,7 +3354,7 @@ function renderArchive(){
         +'<div class="table-cell">'+marks+'</div>'
         +'<div class="table-cell"><span class="source-tag">'+i.source+'</span></div>'
         +'<div class="table-cell"><div>'+i.product+'</div>'+(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.notes+'</div>':'')+'</div>'
-        +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+i.grade+'级</span></div>'
+        +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+(i.grade?orderDisplayText(i.grade)+'级':'待确认')+'</span></div>'
         +'<div class="table-cell"><span class="status-badge '+(SC[i.status]||'')+'">'+i.status+'</span></div>'
         +'<div class="table-cell">'+col9+'</div>'
         +'<div class="table-cell" style="color:var(--muted)">'+i.person+'</div>'
@@ -3388,7 +3388,7 @@ function renderArchive(){
         +'<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end">'
         +'<span style="font-size:10px;color:var(--muted);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.product+'</span>'
         +'<span style="font-size:10px;color:var(--muted2)">'+i.date+'</span>'
-        +'<span class="badge '+GC[i.grade]+'">'+i.grade+'级</span>'
+        +'<span class="badge '+GC[i.grade]+'">'+(i.grade?orderDisplayText(i.grade)+'级':'待确认')+'</span>'
         +'</div>'
         +'<div style="font-size:10px;color:var(--muted)">'+i.person+'</div>'
         +'<div style="font-size:13px;font-weight:700;color:'+amtColor+'">'+fmtAmt(i.amount||0,i.currency||'USD')+'</div>'
@@ -3437,7 +3437,7 @@ function renderSilent(){
         +'<div class="table-cell">'+marks+'</div>'
         +'<div class="table-cell"><span class="source-tag">'+i.source+'</span></div>'
         +'<div class="table-cell"><div>'+i.product+'</div>'+(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.notes+'</div>':'')+'</div>'
-        +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+i.grade+'级</span></div>'
+        +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+(i.grade?orderDisplayText(i.grade)+'级':'待确认')+'</span></div>'
         +'<div class="table-cell"><span class="status-badge '+(SC[i.status]||'')+'">'+i.status+'</span></div>'
         +'<div class="table-cell">'+col9+'</div>'
         +'<div class="table-cell" style="color:var(--muted)">'+i.person+'</div>'
@@ -3472,7 +3472,7 @@ function renderSilent(){
         +'<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end">'
         +'<span style="font-size:10px;color:var(--muted);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.product+'</span>'
         +'<span style="font-size:10px;color:var(--muted2)">'+i.date+'</span>'
-        +'<span class="badge '+GC[i.grade]+'">'+i.grade+'级</span>'
+        +'<span class="badge '+GC[i.grade]+'">'+(i.grade?orderDisplayText(i.grade)+'级':'待确认')+'</span>'
         +'</div>'
         +'<div style="font-size:10px;color:var(--muted)">'+i.person+'</div>'
         +'<div style="font-size:11px;color:'+(warn?'var(--red)':'var(--muted)')+';font-weight:'+(warn?'600':'400')+'">'+(warn?'⚠️ ':'💤 ')+'沉默'+days+'天'+(warn?' 待确认':'')+'</div>'
@@ -3526,7 +3526,7 @@ function renderExpired(){
         +'<div class="table-cell">'+marks+'</div>'
         +'<div class="table-cell"><span class="source-tag">'+i.source+'</span></div>'
         +'<div class="table-cell"><div>'+i.product+'</div>'+(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.notes+'</div>':'')+'</div>'
-        +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+i.grade+'级</span></div>'
+        +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+(i.grade?orderDisplayText(i.grade)+'级':'待确认')+'</span></div>'
         +'<div class="table-cell"><span class="status-badge s-lost">'+i.status+'</span></div>'
         +'<div class="table-cell">'+col9+'</div>'
         +'<div class="table-cell" style="color:var(--muted)">'+i.person+'</div>'
@@ -3560,7 +3560,7 @@ function renderExpired(){
         +'<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end">'
         +'<span style="font-size:10px;color:var(--muted);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.product+'</span>'
         +'<span style="font-size:10px;color:var(--muted2)">'+i.date+'</span>'
-        +'<span class="badge '+GC[i.grade]+'">'+i.grade+'级</span>'
+        +'<span class="badge '+GC[i.grade]+'">'+(i.grade?orderDisplayText(i.grade)+'级':'待确认')+'</span>'
         +'</div>'
         +'<div style="font-size:10px;color:var(--muted)">'+i.person+'</div>'
         +'</div></div>';
@@ -3578,7 +3578,7 @@ function autoExpireInquiries(){
   var now=new Date();
   var changed=false;
   inquiries.forEach(function(i){
-    if(i.archived||i.expired)return;
+    if(i.archived||i.expired||i.importedStatusNeedsReview)return;
     if(i.status==='已成单'||i.status==='失效')return;
     /* 取最后跟进日期或询盘日期 */
     var lastDate=i.date;
@@ -3826,7 +3826,7 @@ function renderInquiries(){
       +'<div class="table-cell">'+marks+'</div>'
       +'<div class="table-cell"><span class="source-tag">'+i.source+'</span></div>'
       +'<div class="table-cell"><div>'+i.product+'</div>'+(i.notes?'<div style="font-size:10px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.notes+'</div>':'')+'</div>'
-      +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+i.grade+'级</span></div>'
+      +'<div class="table-cell"><span class="badge '+GC[i.grade]+'">'+(i.grade?orderDisplayText(i.grade)+'级':'待确认')+'</span></div>'
       +'<div class="table-cell"><span class="status-badge '+SC[i.status]+'">'+i.status+'</span>'+(i.flags&&i.flags.length?'<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">'+i.flags.map(function(f){var fc=f==='已报价'?'background:rgba(192,130,0,.18);color:#b87800':'background:rgba(210,55,115,.18);color:#c43270';return '<span style="font-size:10px;padding:1px 6px;border-radius:10px;'+fc+'">✓ '+f+'</span>';}).join('')+'</div>':'')+'</div>'
       +(function(){var ov=i.followupDate&&i.followupDate<today();return '<div class="table-cell">'+(i.followupDate?'<div>'+(ov?'<span style="font-size:14px">🔔</span> ':'<span style="font-size:9px">📅</span> ')+'<span style="font-size:'+(ov?'13':'12')+'px;color:'+(ov?'var(--red)':'var(--muted)')+';font-weight:'+(ov?'600':'400')+'">'+i.followupDate+'</span>'+(i.followupNote?'<div style="font-size:'+(ov?'12':'11')+'px;color:'+(ov?'var(--red)':'var(--green)')+';margin-top:2px">📌 '+i.followupNote+'</div>':'')+'</div>':(i.followupNote?'<div style="font-size:11px;color:var(--green)">📌 '+i.followupNote+'</div>':'<span style="font-size:12px;color:var(--muted2)">—</span>'))+'</div>';}())
       +'<div class="table-cell" style="color:var(--muted)">'+i.person+'</div>'
@@ -4650,9 +4650,9 @@ function targetCash(kind,target,cur,d){return settlementClaims(d||readReceiptDat
 function targetAdjust(kind,target,cur,d){return settlementAdjustments(d||readReceiptData()).filter(function(a){return a.targetType===kind&&String(a.targetId)===String(target.id)&&a.currency===cur;}).reduce(function(s,a){return s+receiptCents(a.amount);},0)/100;}
 function targetAmount(kind,target,cur){return kind==='order'?orderSettlementAmount(target,cur):Number(cur==='USD'?target.totalUSD:target.totalCNY)||0;}
 function targetBalance(kind,target,cur,d){return (receiptCents(targetAmount(kind,target,cur))-receiptCents(targetCash(kind,target,cur,d))-receiptCents(targetAdjust(kind,target,cur,d)))/100;}
-function settlementTarget(kind,id){return (kind==='order'?orders:getProcData().pos).find(function(t){return String(t.id)===String(id);});}
+function settlementTarget(kind,id){var target=(kind==='order'?orders:getProcData().pos).find(function(t){return String(t.id)===String(id);});if(!target&&kind==='order'){var raw=localStorage.getItem('crm_before_real_trial_cleanup_v1');var archive=raw?JSON.parse(raw):{};var old=(archive.orders||[]).find(function(t){return String(t.id)===String(id);});if(old)target=Object.assign({},old,{archivedForTrial:true});}return target;}
 function procPaymentStatus(p){var any=0,pending=0;['CNY','USD'].forEach(function(c){any+=receiptCents(targetCash('proc',p,c))+receiptCents(targetAdjust('proc',p,c));pending+=Math.max(0,receiptCents(targetBalance('proc',p,c)));});return any>0?(pending>0?'部分已付':'已结清'):'未付款';}
-function canSettle(kind,t){return kind==='order'?canClaimOrderReceipt(t):(canFinControl()||currentUser==='Kelly'||t.person===currentUser);}
+function canSettle(kind,t){if(!t||t.archivedForTrial)return false;return kind==='order'?canClaimOrderReceipt(t):(canFinControl()||currentUser==='Kelly'||t.person===currentUser);}
 function isSupplierPayment(t){return t&&t.type==='付款'&&t.category==='供应商付款';}
 function isBankFee(t){return t&&(t.type==='付款'||t.type==='运营支出')&&t.category==='银行手续费';}
 function transactionClaimCents(t,d){return settlementClaims(d,'order').concat(settlementClaims(d,'proc')).filter(function(a){return a.transactionId===t.id;}).reduce(function(s,a){return s+receiptCents(a.amount);},0);}
@@ -4919,13 +4919,13 @@ function openInqDetail(id){
   tab1+='<div class="detail-section">'
     +statusBar+flagBar+convertBar+'</div>';
   tab1+='<div class="detail-section"><div class="detail-section-title">询盘信息</div>'
-    +'<div class="detail-row"><span class="detail-key">日期</span><span class="detail-val">'+i.date+'</span></div>'
+    +'<div class="detail-row"><span class="detail-key">日期</span><span class="detail-val">'+orderDisplayText(i.date||'待确认')+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">渠道</span><span class="detail-val"><span class="source-tag">'+i.source+'</span></span></div>'
     +'<div class="detail-row"><span class="detail-key">产品</span><span class="detail-val">'+i.product+'</span></div>'
     +'<div class="detail-row"><span class="detail-key">数量</span><span class="detail-val">'+(i.qty||'—')+'</span></div>'
-    +'<div class="detail-row"><span class="detail-key">评级</span><span class="detail-val"><span class="badge '+GC[i.grade]+'">'+i.grade+'级</span></span></div>'
+    +'<div class="detail-row"><span class="detail-key">评级</span><span class="detail-val"><span class="badge '+GC[i.grade]+'">'+(i.grade?orderDisplayText(i.grade)+'级':'待确认')+'</span></span></div>'
     +(i.amount&&i.amount>0?'<div class="detail-row"><span class="detail-key">目标金额</span><span class="detail-val" style="color:'+(i.currency==='USD'?'var(--green)':'var(--yellow)')+'">'+fmtAmt(i.amount,i.currency)+'</span></div>':'')
-    +'<div class="detail-row"><span class="detail-key">负责人</span><span class="detail-val">'+i.person+'</span></div>'
+    +'<div class="detail-row"><span class="detail-key">负责人</span><span class="detail-val">'+orderDisplayText(i.person||'待分配')+'</span></div>'
     +(i.followupDate||i.followupNote?'<div class="detail-row"><span class="detail-key">待办</span><span class="detail-val" style="text-align:right">'+(i.followupDate?'<span style="color:'+(i.followupDate<today()?'var(--red)':'var(--text)')+'">'+i.followupDate+'</span>':'')+(i.followupNote?'<br><span style="font-size:11px;color:'+(i.followupDate&&i.followupDate<today()?'var(--red)':'var(--green)')+'">📌 '+i.followupNote+'</span>':'')+'</span></div>':'')
     +(i.reason?'<div class="detail-row"><span class="detail-key">未成单原因</span><span class="detail-val" style="color:var(--red)">'+i.reason+'</span></div>':'')
     +'<div class="detail-row"><span class="detail-key">热点商机</span><span class="detail-val"><button class="btn btn-outline btn-xs" style="'+(i.isHot?'background:rgba(247,147,79,.15);color:var(--accent2);border-color:var(--accent2)':'')+'" onclick="toggleInqHot('+i.id+')">'+( i.isHot?'🔥 取消热点':'标记热点')+'</button></span></div>'
@@ -4939,8 +4939,11 @@ function openInqDetail(id){
       +'</div>';
   }
   if(i.notes){
-    tab1+='<div class="detail-section"><div class="detail-section-title">备注</div><div style="font-size:13px;line-height:1.6">'+i.notes+'</div></div>';
+    tab1+='<div class="detail-section"><div class="detail-section-title">备注</div><div style="font-size:13px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere">'+orderDisplayText(i.notes)+'</div></div>';
   }
+  if(i.suggestedNextAction)tab1+='<div class="detail-section"><div class="detail-section-title">下一步事项（未约定日期）</div><div style="font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere">'+orderDisplayText(i.suggestedNextAction)+'</div></div>';
+  if(i.importedStatusNeedsReview)tab1+='<div style="font-size:12px;color:var(--muted);padding:8px 0">按导入状态保留，历史时效待核；新增实际跟进后恢复自动超期判断。</div>';
+  tab1+=inquiryBackgroundHtml(i.alias);
   /* 产品图片占位，异步填充 */
   tab1+='<div class="detail-section" id="dp-inq-img-section" style="display:none">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
@@ -5096,6 +5099,7 @@ function openCustDetail(id){
     +tagBtn('match',1,'🏅 画像匹配','○ 画像匹配','rgba(255,180,0,.25)','rgba(255,255,255,.06)')
     +'</div>'
     +'</div>';
+  tab1+=inquiryBackgroundHtml(c.alias);
   if(c.email||c.phone||c.wechat||c.wangwang||c.whatsapp||c.facebook||c.instagram||c.telegram){
     var waNum=c.whatsapp?(c.whatsapp.replace(/[^0-9]/g,'')):'';
     var fbUrl=c.facebook?(c.facebook.indexOf('http')===0?c.facebook:'https://www.facebook.com/'+c.facebook):'';
@@ -5441,12 +5445,12 @@ function renderFollowups(fus){
     return '<div class="detail-row" style="flex-direction:column;align-items:flex-start;gap:3px;padding:8px 0;border-bottom:1px solid var(--border)">'
       +'<div style="display:flex;gap:7px;align-items:center;width:100%;justify-content:space-between">'
       +'<div style="display:flex;gap:7px;align-items:center">'
-      +'<span style="font-size:11px;color:var(--muted)">'+date+'</span>'
-      +(user?'<span style="font-size:11px;color:var(--accent);font-weight:500">'+user+'</span>':'')
+      +'<span style="font-size:11px;color:var(--muted)">'+orderDisplayText(date)+'</span>'
+      +(user?'<span style="font-size:11px;color:var(--accent);font-weight:500">'+orderDisplayText(user)+'</span>':'')
       +'</div>'
       +'<span onclick="deleteFollowup('+origIdx+')" style="font-size:11px;color:var(--muted);cursor:pointer;padding:2px 6px;border-radius:4px" title="删除">✕</span>'
       +'</div>'
-      +'<div style="font-size:13px;color:var(--text)">'+text+'</div>'
+      +'<div style="font-size:13px;color:var(--text)">'+orderDisplayText(text)+'</div>'
       +'</div>';
   }).join('');
 }
@@ -5557,7 +5561,7 @@ function toggleTarget(){
 function addFollowup(){
   const text=document.getElementById('dp-fu-input')?.value.trim();if(!text||!currentDetailId)return;
   const entry=today()+' ['+currentUser+'] '+text;
-  if(currentDetailType==='inquiry'){const i=inquiries.find(x=>x.id===currentDetailId);if(i){if(!i.followups)i.followups=[];i.followups.push(entry);saveAll();openInqDetail(currentDetailId);switchDpTab('followup');refreshAll();toast('跟进记录已添加 ✓');}}
+  if(currentDetailType==='inquiry'){const i=inquiries.find(x=>x.id===currentDetailId);if(i){i.importedStatusNeedsReview=false;if(!i.followups)i.followups=[];i.followups.push(entry);saveAll();openInqDetail(currentDetailId);switchDpTab('followup');refreshAll();toast('跟进记录已添加 ✓');}}
   else if(currentDetailType==='customer'){const c=customers.find(x=>x.id===currentDetailId);if(c){if(!c.followups)c.followups=[];c.followups.push(entry);saveAll();openCustDetail(currentDetailId);switchDpTab('followup');refreshAll();toast('跟进记录已添加 ✓');}}
   else if(currentDetailType==='order'){const o=orders.find(x=>x.id===currentDetailId);if(o){if(!o.followups)o.followups=[];o.followups.push(entry);saveAll();openOrderDetail(currentDetailId);switchDpTab('followup');refreshAll();toast('跟进记录已添加 ✓');}}
 }
@@ -5591,8 +5595,8 @@ function editInquiry(id){
   const i=inquiries.find(x=>x.id===id);if(!i)return;
   editingInqId=id;document.getElementById('inq-modal-title').textContent='编辑询盘';
   document.getElementById('inq-delete-area').innerHTML=canDelete()?'<button class="btn btn-danger btn-sm" onclick="confirmDelete(\'inq\','+id+')">🗑 删除</button>':'';
-  const set=(fid,val)=>{const el=document.getElementById(fid);if(el)el.value=val||'';};
-  set('fi-date',i.date);set('fi-source',i.source);set('fi-alias',i.alias);set('fi-company',i.company);set('fi-country',i.country);set('fi-person',i.person);set('fi-product',i.product);set('fi-qty',i.qty);set('fi-grade',i.grade);set('fi-status',i.status);set('fi-amount',i.amount||'');set('fi-currency',i.currency||'USD');set('fi-followup',i.followupDate);set('fi-reason',i.reason);set('fi-notes',i.notes);set('fi-email',i.email);set('fi-phone',i.phone);set('fi-wechat',i.wechat);set('fi-wangwang',i.wangwang);
+  const set=(fid,val)=>{const el=document.getElementById(fid);if(!el)return;var value=val===undefined||val===null?'':String(val);if(el.tagName==='SELECT'&&!Array.from(el.options).some(function(o){return o.value===value;})){var option=document.createElement('option');option.value=value;option.textContent=value||'待确认';el.appendChild(option);}el.value=value;};
+  set('fi-date',i.date);set('fi-source',i.source);set('fi-alias',i.alias);set('fi-company',i.company);set('fi-country',i.country);set('fi-person',i.person);set('fi-product',i.product);set('fi-qty',i.qty);set('fi-grade',i.grade);set('fi-status',i.status);set('fi-amount',i.amount||'');set('fi-currency',i.sourceImportId?(i.currency||''):(i.currency||'USD'));set('fi-followup',i.followupDate);set('fi-reason',i.reason);set('fi-notes',i.notes);set('fi-email',i.email);set('fi-phone',i.phone);set('fi-wechat',i.wechat);set('fi-wangwang',i.wangwang);
   document.getElementById('fi-is-hot').checked=!!i.isHot;
   /* 恢复 flags 芯片状态 */
   var flags=i.flags||[];
@@ -5631,7 +5635,7 @@ function saveInquiry(){
   if(chipS&&chipS.classList.contains('flag-active'))newFlags.push('已打样');
   /* 沉默中时自动记录 silentSince */
   var newStatus=document.getElementById('fi-status').value;
-  var data={date:document.getElementById('fi-date').value,source:document.getElementById('fi-source').value,alias,company:document.getElementById('fi-company').value,country:document.getElementById('fi-country').value,person:document.getElementById('fi-person').value,product:document.getElementById('fi-product').value,qty:document.getElementById('fi-qty').value,grade:document.getElementById('fi-grade').value,status:newStatus,amount:document.getElementById('fi-amount').value||0,currency:document.getElementById('fi-currency').value,followupDate:document.getElementById('fi-followup').value,reason:document.getElementById('fi-reason').value,notes:document.getElementById('fi-notes').value,email:document.getElementById('fi-email').value,phone:document.getElementById('fi-phone').value,wechat:document.getElementById('fi-wechat').value,wangwang:document.getElementById('fi-wangwang').value,isHot:document.getElementById('fi-is-hot').checked,flags:newFlags};
+  var data={date:document.getElementById('fi-date').value,source:document.getElementById('fi-source').value,alias,company:document.getElementById('fi-company').value,country:document.getElementById('fi-country').value,person:document.getElementById('fi-person').value,product:document.getElementById('fi-product').value,qty:document.getElementById('fi-qty').value,grade:document.getElementById('fi-grade').value,status:newStatus,amount:document.getElementById('fi-amount').value===''?null:Number(document.getElementById('fi-amount').value),currency:document.getElementById('fi-currency').value,followupDate:document.getElementById('fi-followup').value,reason:document.getElementById('fi-reason').value,notes:document.getElementById('fi-notes').value,email:document.getElementById('fi-email').value,phone:document.getElementById('fi-phone').value,wechat:document.getElementById('fi-wechat').value,wangwang:document.getElementById('fi-wangwang').value,isHot:document.getElementById('fi-is-hot').checked,flags:newFlags};
   if(editingInqId){
     const i=inquiries.find(x=>x.id===editingInqId);
     if(i){
@@ -6524,7 +6528,7 @@ function renderMobileCards(page){
         +'<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end">'
         +'<span style="font-size:10px;color:var(--muted);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.product+'</span>'
         +'<span style="font-size:10px;color:var(--muted2)">'+i.date+'</span>'
-        +'<span class="badge '+GC[i.grade]+'">'+i.grade+'级</span>'
+        +'<span class="badge '+GC[i.grade]+'">'+(i.grade?orderDisplayText(i.grade)+'级':'待确认')+'</span>'
         +'</div>'
         +'<div style="display:flex;align-items:center;gap:4px;justify-content:flex-end">'+(ov?'<span class="mark-overdue" style="font-size:10px">超时</span>':'')+'<span style="font-size:10px;color:var(--muted)">'+i.person+'</span></div>'
         +(i.followupDate?'<div style="font-size:10px;color:'+(todOv?'var(--red)':'var(--muted)')+'">'+(todOv?'🔔 ':'📅 ')+i.followupDate+'</div>':'')
@@ -6561,7 +6565,7 @@ function renderMobileCards(page){
         +'<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end">'
         +'<span style="font-size:10px;color:var(--muted);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+i.product+'</span>'
         +'<span style="font-size:10px;color:var(--muted2)">'+i.date+'</span>'
-        +'<span class="badge '+GC[i.grade]+'">'+i.grade+'级</span>'
+        +'<span class="badge '+GC[i.grade]+'">'+(i.grade?orderDisplayText(i.grade)+'级':'待确认')+'</span>'
         +'</div>'
         +'<div style="font-size:10px;color:var(--muted)">'+i.person+'</div>'
         +(i.followupDate?'<div style="font-size:10px;color:'+(todOv?'var(--red)':'var(--muted)')+'">'+(todOv?'🔔 ':'📅 ')+i.followupDate+'</div>':'')
@@ -6842,6 +6846,8 @@ function exportData(){
     orderSequence:Number(localStorage.getItem('crm_ord_sequence_v5'))||0,
     orderDailySequences:mergeOrderDailySequences(),
     finance:readReceiptData(),
+    realInquiryImportBackup:(function(){var raw=localStorage.getItem('crm_before_real_inquiries_20261120');return raw?JSON.parse(raw):null;})(),
+    realTrialCleanupBackup:(function(){var raw=localStorage.getItem('crm_before_real_trial_cleanup_v1');return raw?JSON.parse(raw):null;})(),
     catalogBeforePackagingCorrection:(function(){var raw=localStorage.getItem('crm_catalog_before_packaging_correction_v2');return raw?JSON.parse(raw):null;})(),
     catalogBeforePackaging:(function(){var raw=localStorage.getItem('crm_catalog_before_packaging_v1');return raw?JSON.parse(raw):null;})(),
     catalogCodeBackup:(function(){var raw=localStorage.getItem('crm_before_catalog_codes_v1');return raw?JSON.parse(raw):null;})(),
@@ -6899,6 +6905,8 @@ function importData(input){
       if(data.finance)saveFinData(data.finance);
       if(data.procurement)saveProcData(data.procurement);
       if(data.productCatalog)saveProdCatData(data.productCatalog);
+      if(data.realInquiryImportBackup)localStorage.setItem('crm_before_real_inquiries_20261120',JSON.stringify(data.realInquiryImportBackup));
+      if(data.realTrialCleanupBackup)localStorage.setItem('crm_before_real_trial_cleanup_v1',JSON.stringify(data.realTrialCleanupBackup));
       if(data.catalogBeforePackagingCorrection)localStorage.setItem('crm_catalog_before_packaging_correction_v2',JSON.stringify(data.catalogBeforePackagingCorrection));
       if(data.catalogBeforePackaging)localStorage.setItem('crm_catalog_before_packaging_v1',JSON.stringify(data.catalogBeforePackaging));
       if(data.catalogCodeBackup)localStorage.setItem('crm_before_catalog_codes_v1',JSON.stringify(data.catalogCodeBackup));
@@ -9095,6 +9103,4237 @@ function importRealSourceOrders(){
   saveAll();crmSettings.realSourceOrderImports=imported;saveSettings();
 }
 
+/* 用户提供的真实询盘快照；源文只作为数据，不执行其中的行动建议。 */
+var REAL_INQUIRY_IMPORT={
+  "records": [
+    {
+      "sourceImportId": "CBOS-ADINDN-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "",
+      "alias": "ADINDN",
+      "company": "",
+      "country": "印度尼西亚（收货地）",
+      "source": "WhatsApp",
+      "person": "Alan",
+      "product": "陶瓷杯垫；MDF冰箱贴；新增钥匙扣／包挂",
+      "qty": "杯垫160个（8款×20）；磁贴200个（10款×20）；钥匙扣数量待定",
+      "notes": "AI搜索推荐（Alan确认）；回复WhatsApp Aldy。杯垫Ø10cm，磁贴5×7cm；杯垫0.37/0.45USD裸货/含包装，磁贴0.39/0.47USD；贸易术语及包装形式待核。原360件货价算术合计137.20/166.00USD，不含未核运税。地址Sakura residence, Block.E, no.8, Lenser, Lombok Tengah, NTB, Indonesia。原询盘日期未核。",
+      "status": "互动中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "Alan拿钥匙扣设计、尺寸、款数与每款数量；安排称重箱规、包装及邮编，核原360件DDP，新增品另列选项。",
+      "email": "",
+      "phone": "+31 6 16140483",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-11-17 [Alan] Alan提供需求、地址和前后报价；DDP含税曾向客户表述，线路与总价未核。",
+        "2026-11-20 [Alan] 新增截图：客户确认收到报价，新增钥匙扣并希望一家供应商；Alan已答可做、请发设计。截图实际来信日期待核。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-11-17",
+          "person": "Alan",
+          "content": "Alan提供需求、地址和前后报价；DDP含税曾向客户表述，线路与总价未核。"
+        },
+        {
+          "date": "2026-11-20",
+          "person": "Alan",
+          "content": "新增截图：客户确认收到报价，新增钥匙扣并希望一家供应商；Alan已答可做、请发设计。截图实际来信日期待核。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "自带Lombok旅游主题设计，希望一家供应商供多个品类；公司店铺、国籍和复购待核。",
+        "position": "",
+        "assessment": "荷兰区号不代表荷兰国籍；客户确认收到报价，不代表接受或下单。",
+        "source": "03_客户数据库/ADINDN.md；Alan 11-17及11-20截图",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-FEDJO-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "",
+      "alias": "FEDJO",
+      "company": "",
+      "country": "中国（客户当前所在地）",
+      "source": "WhatsApp",
+      "person": "Alan",
+      "product": "酒店软木杯垫；MDF UV对比样",
+      "qty": "1000个软木杯垫",
+      "notes": "AI搜索推荐；联系人FEDJO，显示名~YoungB。SUNSTONE BEACH酒店设计；软木报价1.5CNY/个，包含项目待核；不套用MDF。DTF软木与MDF UV两种对比样。",
+      "status": "追单中",
+      "archived": false,
+      "expired": false,
+      "grade": "B",
+      "amount": 1500,
+      "currency": "CNY",
+      "flags": [
+        "已报价",
+        "已打样"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": "是"
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "Alan通过WhatsApp等审样／采购计划反馈；不急催，建议一周后复核（AI建议，非约定日期）。",
+      "email": "",
+      "phone": "+86 19574944401",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-11-17 [Alan] Alan确认需求1000个、单价1.5元，计划次日两种工艺打样。",
+        "2026-11-20 [Alan] Alan确认样品及报价均已发；预计不会很快下单为Alan判断，未成交。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-11-17",
+          "person": "Alan",
+          "content": "Alan确认需求1000个、单价1.5元，计划次日两种工艺打样。"
+        },
+        {
+          "date": "2026-11-20",
+          "person": "Alan",
+          "content": "Alan确认样品及报价均已发；预计不会很快下单为Alan判断，未成交。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "在中国的外国客户，酒店用途，公司及国籍未核。",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/2026-11_WhatsApp询盘汇总.md",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-VGMMG-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "",
+      "alias": "VGMMG",
+      "company": "",
+      "country": "蒙古",
+      "source": "WhatsApp",
+      "person": "Alan",
+      "product": "寺庙纪念挂件及冰箱贴",
+      "qty": "约4000–5000个（意向）",
+      "notes": "AI搜索引流并已来访；联系人Vanchigmaa。寺庙顶棚图案拟用于挂件和磁贴；微信同名，账号视觉识读有歧义，暂不填账号。",
+      "status": "互动中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已打样"
+      ],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": "是"
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "Alan通过WhatsApp／微信追大喇嘛审样结果，认可后选品、出设计并核价。",
+      "email": "",
+      "phone": "+976 9911 4588",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-11-17 [Alan] Alan说明客户来访并拿走参考样品，将给大喇嘛看；认可后选品设计，需长期跟进。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-11-17",
+          "person": "Alan",
+          "content": "Alan说明客户来访并拿走参考样品，将给大喇嘛看；认可后选品设计，需长期跟进。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "Alan介绍客户组织慈善基金会活动；具体基金会、寺庙、职位待核。",
+        "position": "",
+        "assessment": "",
+        "source": "03_客户数据库/VGMMG.md；Alan 11-17",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-Katarina Krajnc-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-11-17",
+      "alias": "Katarina Krajnc",
+      "company": "",
+      "country": "斯洛文尼亚",
+      "source": "Customento",
+      "person": "Alan",
+      "product": "定制旋律迷你音乐盒",
+      "qty": "1个工作样品＋100个成品；我方定制旋律MOQ1000/首",
+      "notes": "弹簧发条自动播放、无电池；优先纸盒约70×60×40mm、哑光全彩、侧钥匙，MDF备选；自供定制机芯100个可印刷组装，须核适配。我方旋律定制MOQ1000/首，开模525USD一次性，同旋律同模复单不再收。未报完整产品价。",
+      "status": "互动中",
+      "archived": false,
+      "expired": false,
+      "grade": "B",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "等客户选1000个我方机芯或100个自供机芯方案；拿机芯尺寸安装点，出分项报价及交期。",
+      "email": "katarina94.krajnc@gmail.com",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-11-17 [Alan] 收到UID45；首封回复已发，问工艺、机芯和参考。",
+        "2026-11-18 [Alan] UID46追加纸盒、机芯来料方案、尺寸及报价要求；接受邮件视频链接。",
+        "2026-11-20 [Alan] 16:15:21第36封及4张照片已发，Sent UID35；16:27:47视频链接第39封已发，Sent UID36。等选方案，不当天催。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-11-17",
+          "person": "Alan",
+          "content": "收到UID45；首封回复已发，问工艺、机芯和参考。"
+        },
+        {
+          "date": "2026-11-18",
+          "person": "Alan",
+          "content": "UID46追加纸盒、机芯来料方案、尺寸及报价要求；接受邮件视频链接。"
+        },
+        {
+          "date": "2026-11-20",
+          "person": "Alan",
+          "content": "16:15:21第36封及4张照片已发，Sent UID35；16:27:47视频链接第39封已发，Sent UID36。等选方案，不当天催。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "Gmail采购者，品牌、用途、销售渠道及复购未核；与黑山同名客户不同。",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/2026-11_官网邮箱询盘汇总.md UID45/46；邮件草稿35/36/39",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-EasyStepUK-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-11-19",
+      "alias": "EasyStepUK",
+      "company": "EasyStepUK",
+      "country": "英国",
+      "source": "Customento",
+      "person": "Alan",
+      "product": "杯垫／冰箱贴等文化纪念品渠道试销",
+      "qty": "",
+      "notes": "联系人Yao Yan；免费评估样品、运费由客户承担（Alan11-20确认）。愿意讨论合作，未同意寄售／代发／赊销，无确定订单量。",
+      "status": "互动中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "第37封修订草稿未发送；Alan审阅后确认发送，问实际店铺渠道、选样和试销量，探讨按确认订单供货。",
+      "email": "info@easystepuk.org",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-11-19 [Alan] UID47 17:55:40来信；Alan指定目标客户持续跟进；草稿37未发。",
+        "2026-11-20 [Alan] Alan确认可免费供样、客户承担运费；先探查真实需求与渠道。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-11-19",
+          "person": "Alan",
+          "content": "UID47 17:55:40来信；Alan指定目标客户持续跟进；草稿37未发。"
+        },
+        {
+          "date": "2026-11-20",
+          "person": "Alan",
+          "content": "Alan确认可免费供样、客户承担运费；先探查真实需求与渠道。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "https://www.easystepuk.org",
+        "business": "注册慈善机构1210944，自述社区活动、慈善零售、eBay及社交渠道；Alan认定目标客户持续跟进。",
+        "position": "",
+        "assessment": "11-19历史查询支持机构存在；未核发件权限、销量和履约。无证据显示收费服务推销，但属于渠道合作而非已定采购。未在本次重新背调。",
+        "source": "04_询盘库/2026-11_官网邮箱询盘汇总.md UID47；英国慈善登记 https://register-of-charities.charitycommission.gov.uk/en/charity-search/-/charity-details/5251090",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-TMFR-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-10-19",
+      "alias": "TMFR",
+      "company": "",
+      "country": "法国（寄鲁昂）",
+      "source": "WhatsApp",
+      "person": "Alan",
+      "product": "来图陶瓷杯垫＋定制礼盒",
+      "qty": "500片杯垫＋500个单片礼盒（原100片）",
+      "notes": "网站产品页找到；Alan判断AI自然流。联系人Théo Maccione，锦鲤与底部logo；抽屉盒/瓦楞盒选择待定，10-31粗估杯垫0.60USD、抽屉盒2.25USD，运费粗估最终看箱规；不得当正式到门价。",
+      "status": "互动中",
+      "archived": false,
+      "expired": false,
+      "grade": "A",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "核实插画与logo是否已定稿；原预计11-15交付，收到文件后打样；不反复配合新方案。",
+      "email": "maccione.theo@orange.fr",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-10-24 [Alan] 客户接受早期0.45USD报价，等设计定稿打样。",
+        "2026-10-28 [Alan] 需求增为500片及500个定制抽屉礼盒。",
+        "2026-10-31 [Alan] 第25封A/B包装粗估及运费已发；等选方向后精确核价。",
+        "2026-11-09 [Alan] 第34封追设计进度已发。",
+        "2026-11-10 [Alan] 客户UID43：logo首版已收到，插画预计11-15；之后未见新记录。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-10-24",
+          "person": "Alan",
+          "content": "客户接受早期0.45USD报价，等设计定稿打样。"
+        },
+        {
+          "date": "2026-10-28",
+          "person": "Alan",
+          "content": "需求增为500片及500个定制抽屉礼盒。"
+        },
+        {
+          "date": "2026-10-31",
+          "person": "Alan",
+          "content": "第25封A/B包装粗估及运费已发；等选方向后精确核价。"
+        },
+        {
+          "date": "2026-11-09",
+          "person": "Alan",
+          "content": "第34封追设计进度已发。"
+        },
+        {
+          "date": "2026-11-10",
+          "person": "Alan",
+          "content": "客户UID43：logo首版已收到，插画预计11-15；之后未见新记录。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "茶品牌，自带设计，重视零售包装；品牌全名待核。",
+        "position": "",
+        "assessment": "",
+        "source": "03_客户数据库/TMFR.md",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-SLSE-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-09-01",
+      "alias": "SLSE",
+      "company": "",
+      "country": "瑞典",
+      "source": "Customento",
+      "person": "Alan",
+      "product": "来图陶瓷／MDF杯垫",
+      "qty": "400片、4款设计",
+      "notes": "Sara Lötzsch；107mm圆形陶瓷与MDF对比。陶瓷0.45/0.50USD哑/亮，MDF0.40/0.45USD哑/亮；均含软木底；打样方案与含税运费历史版本见主档，未定最终方案。哥德堡41327；街道未补。",
+      "status": "互动中",
+      "archived": false,
+      "expired": false,
+      "grade": "A",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "追4款设计与样品方案；确认VAT抵扣／进口抬头是否仍阻塞。",
+      "email": "sara.lotzsch@gmail.com",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-10-22 [Alan] 回复背景，确认自画设计自有品牌网上卖。",
+        "2026-10-24 [Alan] 产品、样品及运费报价已发。",
+        "2026-10-28 [Alan] 第17封附对比图，说明货代DDP抬头与VAT区别，等设计。",
+        "2026-11-09 [Alan] 第33封跟进设计与VAT问题已发，尚无新反馈记录。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-10-22",
+          "person": "Alan",
+          "content": "回复背景，确认自画设计自有品牌网上卖。"
+        },
+        {
+          "date": "2026-10-24",
+          "person": "Alan",
+          "content": "产品、样品及运费报价已发。"
+        },
+        {
+          "date": "2026-10-28",
+          "person": "Alan",
+          "content": "第17封附对比图，说明货代DDP抬头与VAT区别，等设计。"
+        },
+        {
+          "date": "2026-11-09",
+          "person": "Alan",
+          "content": "第33封跟进设计与VAT问题已发，尚无新反馈记录。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "自画设计的小型装饰杯垫系列，自有品牌网销；品牌名未核。",
+        "position": "",
+        "assessment": "",
+        "source": "03_客户数据库/SLSE.md",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-Moqtana-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-10-27",
+      "alias": "Moqtana",
+      "company": "Moqtana Museums & Consultancy",
+      "country": "沙特阿拉伯",
+      "source": "Customento",
+      "person": "Alan",
+      "product": "麦地那博物馆多品类纪念品",
+      "qty": "",
+      "notes": "Yousef Mustafa；乌胡德战役主题；优先杯垫、石头磁贴、马克杯、小酒杯、不锈钢杯，不追学全目录。",
+      "status": "互动中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "Email原线程或WhatsApp询首批设计、品类和数量，收到后打样。",
+      "email": "yousef.mu@moqtana.sa",
+      "phone": "+20 1145330077（WhatsApp）；+966 555922 803",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-10-31 [Alan] 第24封介绍强项产品并请发设计数量。",
+        "2026-11-09 [Alan] 已看厂；第32封感谢并请发设计打样，等设计。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-10-31",
+          "person": "Alan",
+          "content": "第24封介绍强项产品并请发设计数量。"
+        },
+        {
+          "date": "2026-11-09",
+          "person": "Alan",
+          "content": "已看厂；第32封感谢并请发设计打样，等设计。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "https://moqtana.sa",
+        "business": "博物馆咨询及交钥匙建设；历史背调称Soft Image Group旗下；A类候选而非已定A。",
+        "position": "Partnership Coordinator",
+        "assessment": "",
+        "source": "04_询盘库/2026-10_官网邮箱询盘汇总.md；邮件草稿32",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-CBPLC-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-10-07",
+      "alias": "CBPLC",
+      "company": "City Bank PLC",
+      "country": "孟加拉",
+      "source": "Customento",
+      "person": "Alan",
+      "product": "银行品牌周边售货机项目",
+      "qty": "问200/300/500/1000/3000/5000个阶梯价，首批未定",
+      "notes": "现联系人Mahim Ahmed Khan；Samiur邮箱samiur.rahim@citybankplc.com。客户筛30类，我们推磁贴杯垫帆布袋杯子音乐盒等强项。",
+      "status": "互动中",
+      "archived": false,
+      "expired": false,
+      "grade": "B",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "复核已发送后给Mahim简短跟进，问先测品类、数量及时间；先展示草稿。",
+      "email": "mahim.ahmed@citybankplc.com",
+      "phone": "+880 1409 024695（原联系人Samiur）",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-10-22 [Alan] 首封推强项品类并问试点规模。",
+        "2026-11-04 [Alan] UID42转交Mahim；23:24第28封已发，目前等回复。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-10-22",
+          "person": "Alan",
+          "content": "首封推强项品类并问试点规模。"
+        },
+        {
+          "date": "2026-11-04",
+          "person": "Alan",
+          "content": "UID42转交Mahim；23:24第28封已发，目前等回复。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "历史档案核为大型上市银行，来信群发多供应商；可能持续补货但未定单。",
+        "position": "Brand & Marketing（Mahim）",
+        "assessment": "",
+        "source": "03_客户数据库/CBPLC.md",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-GSEW-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-10-19",
+      "alias": "GSEW",
+      "company": "GSE Works LLC",
+      "country": "美国",
+      "source": "Customento",
+      "person": "Alan",
+      "product": "3mm纯软木杯垫／套装",
+      "qty": "每款100/250/500片，4/6片套装",
+      "notes": "只接受邮件，不接电话；官网产品页获客；供应商预审，尚无设计，声明暂不下单／付样品费。历史散装约0.3–0.5USD/片。",
+      "status": "互动中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "低投入核实首批款数、启动日、品牌／Amazon店铺；无回应不高频催。",
+      "email": "suppliers@gseworksllc.com",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-10-21 [Alan] 已回主体、生产模式、价格范围、检测等，问款数与启动日。",
+        "2026-10-28 [Alan] 第15封简短跟进已发。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-10-21",
+          "person": "Alan",
+          "content": "已回主体、生产模式、价格范围、检测等，问款数与启动日。"
+        },
+        {
+          "date": "2026-10-28",
+          "person": "Alan",
+          "content": "第15封简短跟进已发。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "https://gseworksllc.com",
+        "business": "自称佛罗里达Lithia企业，Amazon成人家居餐饮杯垫自有品牌；真实性待互动核实。",
+        "position": "",
+        "assessment": "",
+        "source": "03_客户数据库/GSEW.md",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-Lesley-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-08-30",
+      "alias": "Lesley",
+      "company": "",
+      "country": "加拿大",
+      "source": "Customento",
+      "person": "Alan",
+      "product": "方形陶瓷杯垫＋软木底",
+      "qty": "500片，4片/盒",
+      "notes": "官网表单／邮件；最后已知跟进11-07，现状待核，不当新事实。",
+      "status": "互动中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "核对11-07后是否有进展，再针对性跟进；Lesley问寄样，Bosco先澄清产品，黑山Katarina先缩小选品。",
+      "email": "lallybyoga@gmail.com",
+      "phone": "+1 250 619 1671",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-10-22 [Alan] 已首次回复。",
+        "2026-11-07 [Alan] 已跟进（第29–31封对应主记录）。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-10-22",
+          "person": "Alan",
+          "content": "已首次回复。"
+        },
+        {
+          "date": "2026-11-07",
+          "person": "Alan",
+          "content": "已跟进（第29–31封对应主记录）。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "卖给墨西哥Baja精品店，未来加拿大美国；自带多图。",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/2026-10_官网邮箱询盘汇总.md；邮件草稿29–31",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-Bosco Da Silva-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-09-03",
+      "alias": "Bosco Da Silva",
+      "company": "",
+      "country": "瑞士",
+      "source": "Customento",
+      "person": "Alan",
+      "product": "空白产品（原文clusters，待澄清）",
+      "qty": "1000个",
+      "notes": "官网表单／邮件；最后已知跟进11-07，现状待核，不当新事实。",
+      "status": "互动中",
+      "archived": false,
+      "expired": false,
+      "grade": "B",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "核对11-07后是否有进展，再针对性跟进；Lesley问寄样，Bosco先澄清产品，黑山Katarina先缩小选品。",
+      "email": "bosco.dasilva@epi.ge.ch",
+      "phone": "+41 22 949 03 95",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-10-22 [Alan] 已首次回复。",
+        "2026-11-07 [Alan] 已跟进（第29–31封对应主记录）。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-10-22",
+          "person": "Alan",
+          "content": "已首次回复。"
+        },
+        {
+          "date": "2026-11-07",
+          "person": "Alan",
+          "content": "已跟进（第29–31封对应主记录）。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "EPI联系人；产品用途待核。",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/2026-10_官网邮箱询盘汇总.md；邮件草稿29–31",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-Katarina Radjenović-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-09-14",
+      "alias": "Katarina Radjenović",
+      "company": "",
+      "country": "黑山",
+      "source": "Customento",
+      "person": "Alan",
+      "product": "陶瓷杯／烟灰缸／装饰盘／冰箱贴／杯垫／礼盒",
+      "qty": "每款约15个",
+      "notes": "官网表单／邮件；最后已知跟进11-07，现状待核，不当新事实。",
+      "status": "互动中",
+      "archived": false,
+      "expired": false,
+      "grade": "B",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "核对11-07后是否有进展，再针对性跟进；Lesley问寄样，Bosco先澄清产品，黑山Katarina先缩小选品。",
+      "email": "katarinaradjenovic14@gmail.com",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-10-22 [Alan] 已首次回复。",
+        "2026-11-07 [Alan] 已跟进（第29–31封对应主记录）。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-10-22",
+          "person": "Alan",
+          "content": "已首次回复。"
+        },
+        {
+          "date": "2026-11-07",
+          "person": "Alan",
+          "content": "已跟进（第29–31封对应主记录）。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "Sveti Stefan在地纪念品店，多品类小批量。",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/2026-10_官网邮箱询盘汇总.md；邮件草稿29–31",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-GETN-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-09-27",
+      "alias": "GETN",
+      "company": "Alpha Print",
+      "country": "突尼斯",
+      "source": "Customento",
+      "person": "Alan",
+      "product": "11oz空白热转印白杯及内彩彩把杯",
+      "qty": "150000个",
+      "notes": "Email和WhatsApp均有询价，Alan以MUGS Tech对接；白杯AAA/AA散装0.29/0.27USD，内彩彩把0.43USD；FOB需求，不自动改DDP。",
+      "status": "互动中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "低频确认15万个项目仍否推进，先查供应工厂成本及毛利。",
+      "email": "ghassen@alphaprint.com.tn",
+      "phone": "+216 55 145 370",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-09-30 [Alan] 已答HS编码69120010。",
+        "2026-10-22 [Alan] WhatsApp补内彩报价并问项目进度，无回复记录。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-09-30",
+          "person": "Alan",
+          "content": "已答HS编码69120010。"
+        },
+        {
+          "date": "2026-10-22",
+          "person": "Alan",
+          "content": "WhatsApp补内彩报价并问项目进度，无回复记录。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "印刷促销品同行采购空白杯，工厂转单大批量路线；Alan明确目标客户，未指定ABCD。",
+        "position": "Manager（Ghassen Ellouze）",
+        "assessment": "",
+        "source": "03_客户数据库/GETN.md",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-AFGM-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "",
+      "alias": "AFGM",
+      "company": "",
+      "country": "德国",
+      "source": "WhatsApp",
+      "person": "Alan",
+      "product": "异形木质／MDF摆件",
+      "qty": "原2万件60款；后4万件比价",
+      "notes": "EXW4万件0.20USD；最初2万件0.30USD；运费595USD另列，VAT曾留缓冲，包装件重为估计。 AI获客线索为客户只回复AI，具体工具待核。",
+      "status": "互动中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价",
+        "已打样"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": "是"
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "旧摆件核比价结果；新夹子核配件图、款数、切印粘贴成本及是否先打样。",
+      "email": "",
+      "phone": "+49 1520 3547849",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [Alan] EXW4万件0.20USD；最初2万件0.30USD；运费595USD另列，VAT曾留缓冲，包装件重为估计。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "Alan",
+          "content": "EXW4万件0.20USD；最初2万件0.30USD；运费595USD另列，VAT曾留缓冲，包装件重为估计。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "Andreas Feiler，自称很小的公司，长期找来图加工供应商；公司全名未核。",
+        "position": "",
+        "assessment": "",
+        "source": "03_客户数据库/AFGM.md",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-AFGM-02",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-11-09",
+      "alias": "AFGM",
+      "company": "",
+      "country": "德国",
+      "source": "WhatsApp",
+      "person": "Alan",
+      "product": "竹制衣夹＋定制小木片",
+      "qty": "40000片",
+      "notes": "夹子带文字约0.25USD/个，不含小木片；拟激光切形＋UV仿雕刻＋粘贴，款数待核。 AI获客线索为客户只回复AI，具体工具待核。",
+      "status": "互动中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "旧摆件核比价结果；新夹子核配件图、款数、切印粘贴成本及是否先打样。",
+      "email": "",
+      "phone": "+49 1520 3547849",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-11-09 [Alan] 夹子带文字约0.25USD/个，不含小木片；拟激光切形＋UV仿雕刻＋粘贴，款数待核。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-11-09",
+          "person": "Alan",
+          "content": "夹子带文字约0.25USD/个，不含小木片；拟激光切形＋UV仿雕刻＋粘贴，款数待核。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "Andreas Feiler，自称很小的公司，长期找来图加工供应商；公司全名未核。",
+        "position": "",
+        "assessment": "",
+        "source": "03_客户数据库/AFGM.md",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-Chris Roarty-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-09-05",
+      "alias": "Chris Roarty",
+      "company": "",
+      "country": "美国",
+      "source": "Customento",
+      "person": "Alan",
+      "product": "空白热转印MDF软木杯垫",
+      "qty": "120片",
+      "notes": "100mm花边形、4mm MDF＋软木底。客户已在别处买到，个人用途，已结束。",
+      "status": "失效",
+      "archived": false,
+      "expired": true,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "不主动催单；新需求再接。",
+      "email": "cdr5631@aol.com",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-10-22 [Alan] 历史记录确认客户已另购，本项目结束。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-10-22",
+          "person": "Alan",
+          "content": "历史记录确认客户已另购，本项目结束。"
+        }
+      ],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "03_客户数据库/CRUS.md；10月询盘汇总",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-Owen Sopuruchi-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-10-11",
+      "alias": "Owen Sopuruchi",
+      "company": "",
+      "country": "加拿大（联系地）；尼日利亚（用途）",
+      "source": "Customento",
+      "person": "Alan",
+      "product": "活动T恤＋白色棒球帽",
+      "qty": "T恤3000件；帽子数量待核",
+      "notes": "OHANZE City Walk & Carnival；T恤4.5USD、帽1.95USD EXW35天；目标约半价。价格不匹配，非证实诈骗。",
+      "status": "失效",
+      "archived": false,
+      "expired": true,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "不主动再跟，接受我方价格品质再谈。",
+      "email": "owen_owen1@yahoo.com",
+      "phone": "+1 289 442-5517",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-10-12 [Alan] Alan通过WhatsApp报价。",
+        "2026-10-22 [Alan] 决定不主动跟进，保留历史。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-10-12",
+          "person": "Alan",
+          "content": "Alan通过WhatsApp报价。"
+        },
+        {
+          "date": "2026-10-22",
+          "person": "Alan",
+          "content": "决定不主动跟进，保留历史。"
+        }
+      ],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/2026-10_官网邮箱询盘汇总.md",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-GKK-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-10-24",
+      "alias": "GKK",
+      "company": "",
+      "country": "德国",
+      "source": "老客户",
+      "person": "Alan",
+      "product": "MDF冰箱贴空运",
+      "qty": "6000个；与此前300kg批次是否同票待核",
+      "notes": "Frank；回复WhatsApp，电话未记。货已好，Momi联系商检及FedEx，未发出。",
+      "status": "已成单",
+      "archived": true,
+      "expired": false,
+      "grade": "A",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "追Momi商检完成和提货日，计划11-23至29，具体日待落实。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-10-28 [Alan] 商检通过及次日发出为旧计划，不能据此标已发。",
+        "2026-11-20 [Alan] Alan确认空运货好但仍未发，Momi办理，计划下周。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-10-28",
+          "person": "Alan",
+          "content": "商检通过及次日发出为旧计划，不能据此标已发。"
+        },
+        {
+          "date": "2026-11-20",
+          "person": "Alan",
+          "content": "Alan确认空运货好但仍未发，Momi办理，计划下周。"
+        }
+      ],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "03_客户数据库/GKK.md",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-GKK-02",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-10-24",
+      "alias": "GKK",
+      "company": "",
+      "country": "德国",
+      "source": "老客户",
+      "person": "Alan",
+      "product": "海运新订单",
+      "qty": "明细待核",
+      "notes": "与空运分开；款式数量单价交期未提供。",
+      "status": "已成单",
+      "archived": true,
+      "expired": false,
+      "grade": "A",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "核实海运明细、商检与排期，不因空运进度标完成。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [],
+      "sourceFollowupEvents": [],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "03_客户数据库/GKK.md",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-SHYM-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-11-07",
+      "alias": "SHYM",
+      "company": "",
+      "country": "中国",
+      "source": "老客户",
+      "person": "Alan",
+      "product": "MDF空白杯垫",
+      "qty": "5000个",
+      "notes": "9.6cm、4mm、中性白、深圳亚美板，实际厚度待核；微信小宋／宋总。",
+      "status": "已成单",
+      "archived": true,
+      "expired": false,
+      "grade": "C",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已打样"
+      ],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": "是"
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "已交货未收款，确认应收金额、约定付款日及收款负责人。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-10-24 [Alan] 宋总来访，深圳亚美样板确认。",
+        "2026-11-07 [Alan] 5000个已生产。",
+        "2026-11-20 [Alan] Alan确认已交货，未收款，未判逾期。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-10-24",
+          "person": "Alan",
+          "content": "宋总来访，深圳亚美样板确认。"
+        },
+        {
+          "date": "2026-11-07",
+          "person": "Alan",
+          "content": "5000个已生产。"
+        },
+        {
+          "date": "2026-11-20",
+          "person": "Alan",
+          "content": "Alan确认已交货，未收款，未判逾期。"
+        }
+      ],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "03_客户数据库/SHYM.md",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-YWSD-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-11-09",
+      "alias": "YWSD",
+      "company": "",
+      "country": "中国",
+      "source": "老客户",
+      "person": "Alan",
+      "product": "搪瓷杯打样",
+      "qty": "数量待核",
+      "notes": "义乌旅游纪念品老客户；渠道及联系人未记，不能猜。",
+      "status": "打样中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已打样"
+      ],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": "是"
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "跟样品意见并追一箱检测的项目、进度与结果。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-11-20 [Alan] 已打样等客户回复，买一箱检测，不等于检测通过。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-11-20",
+          "person": "Alan",
+          "content": "已打样等客户回复，买一箱检测，不等于检测通过。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "03_客户数据库/YWSD.md",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-YSWG-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "",
+      "alias": "YSWG",
+      "company": "",
+      "country": "中国",
+      "source": "1688",
+      "person": "Alan",
+      "product": "印图玻璃菜板",
+      "qty": "数量待核",
+      "notes": "阿里／1688电商客户；此单亏损，平台5%服务费与低报价。",
+      "status": "已成单",
+      "archived": true,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "现无回复，等新采购节点提价覆盖5%平台费，不急催。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-11-09 [Alan] Alan决定继续接但涨价。",
+        "2026-11-20 [Alan] 无回复，Alan判断等下次采购，日期非客户承诺。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-11-09",
+          "person": "Alan",
+          "content": "Alan决定继续接但涨价。"
+        },
+        {
+          "date": "2026-11-20",
+          "person": "Alan",
+          "content": "无回复，Alan判断等下次采购，日期非客户承诺。"
+        }
+      ],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "03_客户数据库/YSWG.md",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-ZCM-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-09-14",
+      "alias": "ZCM",
+      "company": "",
+      "country": "中国（代理）；韩国（终端）",
+      "source": "老客户",
+      "person": "Alan",
+      "product": "空白玻璃菜板",
+      "qty": "1000个＋20个免费补货",
+      "notes": "PI26090005，8×11英寸；¥8.86/个，EXW；¥8860为历史成交／预收，不填为新目标金额。",
+      "status": "已成单",
+      "archived": true,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "11-09已发，本单不用再跟；留历史。",
+      "email": "",
+      "phone": "18616372466",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-09-15 [Alan] 历史记录预收8860元。",
+        "2026-11-09 [Alan] Alan确认货已发，不用再跟。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-09-15",
+          "person": "Alan",
+          "content": "历史记录预收8860元。"
+        },
+        {
+          "date": "2026-11-09",
+          "person": "Alan",
+          "content": "Alan确认货已发，不用再跟。"
+        }
+      ],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "03_客户数据库/ZCM.md",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-欢喜设计-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "",
+      "alias": "欢喜设计",
+      "company": "",
+      "country": "中国",
+      "source": "老客户",
+      "person": "Alan",
+      "product": "飘带",
+      "qty": "1100条",
+      "notes": "贵州林总老客户；4.95CNY/条，普票另加3%；样品5款250元，抵一款。",
+      "status": "已成单",
+      "archived": true,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价",
+        "已打样"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": "是"
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "11-09已交货，维护复购；不凭交货推断收款。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-10-22 [Alan] 大货生产中。",
+        "2026-11-09 [Alan] Alan确认已生产完成并交货。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-10-22",
+          "person": "Alan",
+          "content": "大货生产中。"
+        },
+        {
+          "date": "2026-11-09",
+          "person": "Alan",
+          "content": "Alan确认已生产完成并交货。"
+        }
+      ],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "03_客户数据库/欢喜设计.md",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-海静海静124421124-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-01-08",
+      "alias": "海静海静124421124",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "45000-50000个 90mm 3mm 4C胶印 单个opp袋，卡台纸3个一捆",
+      "notes": "历史1688来源表第3行；需求：45000-50000个 90mm 3mm 4C胶印 单个opp袋，卡台纸3个一捆；原报价：0.85+0.3/个；原跟进：已报价，待客户回复；原备注：大单，重点跟进。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型B类不自动套新ABCD。",
+      "status": "沉默中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期未填仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：已报价，待客户回复；旧计划日未填。精确跟进日期未核，勿视为已执行。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：已报价，待客户回复；旧计划日未填。精确跟进日期未核，勿视为已执行。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "B类",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行3",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-tb7218759465-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-01-15",
+      "alias": "tb7218759465",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "钥匙扣",
+      "qty": "心形+圆形钥匙扣各1440个，单个贴标+opp袋",
+      "notes": "历史1688来源表第4行；需求：心形+圆形钥匙扣各1440个，单个贴标+opp袋；原报价：1.55/个；原跟进：要对比价格，问目标价未回；原备注：待问目标价。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B不自动套新ABCD。",
+      "status": "沉默中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期未填仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：要对比价格，问目标价未回；旧计划日未填。精确跟进日期未核，勿视为已执行。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：要对比价格，问目标价未回；旧计划日未填。精确跟进日期未核，勿视为已执行。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "小B",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行4",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-五457339-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-02-05",
+      "alias": "五457339",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "钥匙扣",
+      "qty": "9cm四款共1000个热转印，贴标+哑光收缩膜",
+      "notes": "历史1688来源表第5行；需求：9cm四款共1000个热转印，贴标+哑光收缩膜；原报价：2.45/个；原跟进：2026.4.9微信再次询问，未回；原备注：已加微信，持续跟进。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B不自动套新ABCD。",
+      "status": "沉默中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期未填仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：2026.4.9微信再次询问，未回；旧计划日未填。精确跟进日期未核，勿视为已执行。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：2026.4.9微信再次询问，未回；旧计划日未填。精确跟进日期未核，勿视为已执行。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "小B",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行5",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-广州蓝川贸易-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-02-12",
+      "alias": "广州蓝川贸易",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "打样6款10*10软木底，37款图4个装",
+      "notes": "历史1688来源表第6行；需求：打样6款10*10软木底，37款图4个装；原报价：2.5/个；原跟进：3.16下单368个，客户发包装袋；原备注：已成单✓。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B不自动套新ABCD。 原总表金额368×2.7≈994，与成单页920不一致，保留待核，不填目标金额。",
+      "status": "已成单",
+      "archived": true,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期未填仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：3.16下单368个，客户发包装袋；旧计划日未填。精确跟进日期未核，勿视为已执行。",
+        "2026-03-16 [经办人待核] 历史成单记录（非本次新成交）：368，单价2.5+0.2；原金额920；已发货；售后无；。冲突金额见核对清单。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：3.16下单368个，客户发包装袋；旧计划日未填。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "2026-03-16",
+          "person": "",
+          "content": "历史成单记录（非本次新成交）：368，单价2.5+0.2；原金额920；已发货；售后无；。冲突金额见核对清单。"
+        }
+      ],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "原重点档案：广州；中",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行6",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-elaine_lfm-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-03-30",
+      "alias": "elaine_lfm",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "0.8cm厚圆形磨边纯软木5000/7000/10000个",
+      "notes": "历史1688来源表第7行；需求：0.8cm厚圆形磨边纯软木5000/7000/10000个；原报价：套装5.7/单个1.95；原跟进：4.9再次询问已报价，待回；原备注：大单注意跟进。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型B类不自动套新ABCD。",
+      "status": "沉默中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期未填仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：4.9再次询问已报价，待回；旧计划日未填。精确跟进日期未核，勿视为已执行。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：4.9再次询问已报价，待回；旧计划日未填。精确跟进日期未核，勿视为已执行。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "原重点档案：外贸/出口；高",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行7",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-water_hoho-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-06",
+      "alias": "water_hoho",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "300个+牛皮纸盒",
+      "notes": "历史1688来源表第8行；需求：300个+牛皮纸盒；原报价：1.85/个；原跟进：4.7下单300个，客户投诉偏位售后；原备注：售后问题需处理。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B不自动套新ABCD。",
+      "status": "已成单",
+      "archived": true,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期未填仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：4.7下单300个，客户投诉偏位售后；旧计划日未填。精确跟进日期未核，勿视为已执行。",
+        "2026-04-07 [经办人待核] 历史成单记录（非本次新成交）：300，单价1.85；原金额555；已发货；售后投诉偏位；需处理售后。冲突金额见核对清单。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：4.7下单300个，客户投诉偏位售后；旧计划日未填。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "2026-04-07",
+          "person": "",
+          "content": "历史成单记录（非本次新成交）：300，单价1.85；原金额555；已发货；售后投诉偏位；需处理售后。冲突金额见核对清单。"
+        }
+      ],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "小B",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行8",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-cindy031547090-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-07",
+      "alias": "cindy031547090",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "42款×25个=1050个 UV哑面",
+      "notes": "历史1688来源表第9行；需求：42款×25个=1050个 UV哑面；原报价：1.95/个；原跟进：4.10下单1075个，已收尾款发货；原备注：✓已完成。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B(代购)不自动套新ABCD。 询盘42×25=1050，最终成单1075；成单页4-7及4-10为同一项目的成交／尾款记录，不重复建商机。",
+      "status": "已成单",
+      "archived": true,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期未填仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "wxid_gv05intgbz1921",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：4.10下单1075个，已收尾款发货；旧计划日未填。精确跟进日期未核，勿视为已执行。",
+        "2026-04-07 [经办人待核] 历史成单记录（非本次新成交）：1075，单价1.95；原金额2096.25；已发货；售后无；老客户。冲突金额见核对清单。",
+        "2026-04-10 [经办人待核] 历史成单记录（非本次新成交）：1075，单价1.95；原金额—；已完成；售后无；已收尾款。冲突金额见核对清单。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：4.10下单1075个，已收尾款发货；旧计划日未填。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "2026-04-07",
+          "person": "",
+          "content": "历史成单记录（非本次新成交）：1075，单价1.95；原金额2096.25；已发货；售后无；老客户。冲突金额见核对清单。"
+        },
+        {
+          "date": "2026-04-10",
+          "person": "",
+          "content": "历史成单记录（非本次新成交）：1075，单价1.95；原金额—；已完成；售后无；已收尾款。冲突金额见核对清单。"
+        }
+      ],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "原重点档案：代购客户；高",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行9",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-goodpix-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-08",
+      "alias": "goodpix",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "冰箱贴",
+      "qty": "两款冰箱贴 1200/2400/3600规格报价",
+      "notes": "历史1688来源表第10行；需求：两款冰箱贴 1200/2400/3600规格报价；原报价：3.5/2.5起；原跟进：4.25询问未反馈，计划5.10再询；原备注：同行价格更低，注意竞争。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B(代购)不自动套新ABCD。",
+      "status": "沉默中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期5.10仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "18819696740",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：4.25询问未反馈，计划5.10再询；旧计划日5.10。精确跟进日期未核，勿视为已执行。",
+        "日期待核 [经办人待核] 旧提醒（未证实执行）：计划5.10；4.25询问客户未反馈；原建议话术：您好～之前报过的冰箱贴方案，您那边客户有没有消息了？我们这边产能现在比较充裕，可以优先安排😊。不是已发送或最新事实。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：4.25询问未反馈，计划5.10再询；旧计划日5.10。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "",
+          "person": "",
+          "content": "旧提醒（未证实执行）：计划5.10；4.25询问客户未反馈；原建议话术：您好～之前报过的冰箱贴方案，您那边客户有没有消息了？我们这边产能现在比较充裕，可以优先安排😊。不是已发送或最新事实。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "原重点档案：外贸代购；中",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行10",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-戏子zhe-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-09",
+      "alias": "戏子zhe",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "250-1000个 opp袋/收缩膜",
+      "notes": "历史1688来源表第11行；需求：250-1000个 opp袋/收缩膜；原报价：2.7-2.45/个；原跟进：4.30询问等客户回复，计划5.7询问；原备注：已发样品。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B(代购)不自动套新ABCD。",
+      "status": "沉默中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价",
+        "已打样"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": "是"
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期5.7仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：4.30询问等客户回复，计划5.7询问；旧计划日5.7。精确跟进日期未核，勿视为已执行。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：4.30询问等客户回复，计划5.7询问；旧计划日5.7。精确跟进日期未核，勿视为已执行。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "原重点档案：代购客户；中",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行11",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-小田园圆圆-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-11",
+      "alias": "小田园圆圆",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "马克杯",
+      "qty": "200个马克杯 白盒包装",
+      "notes": "历史1688来源表第12行；需求：200个马克杯 白盒包装；原报价：5/个；原跟进：4.20询问未回，计划5.10再询；原备注：。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B不自动套新ABCD。",
+      "status": "沉默中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期5.10仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：4.20询问未回，计划5.10再询；旧计划日5.10。精确跟进日期未核，勿视为已执行。",
+        "日期待核 [经办人待核] 旧提醒（未证实执行）：计划5.10；4.20询问未回；原建议话术：您好，之前咨询的200个马克杯，有没有考虑好呢？白盒包装价格我可以帮您再优化一下。不是已发送或最新事实。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：4.20询问未回，计划5.10再询；旧计划日5.10。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "",
+          "person": "",
+          "content": "旧提醒（未证实执行）：计划5.10；4.20询问未回；原建议话术：您好，之前咨询的200个马克杯，有没有考虑好呢？白盒包装价格我可以帮您再优化一下。不是已发送或最新事实。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "小B",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行12",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-myth1847-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-13",
+      "alias": "myth1847",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "25000个18cm磨边圆形软木，热收缩+衬卡",
+      "notes": "历史1688来源表第13行；需求：25000个18cm磨边圆形软木，热收缩+衬卡；原报价：待报；原跟进：待跟进报价；原备注：大单！尽快报价。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型B类不自动套新ABCD。",
+      "status": "报价中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期未填仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：待跟进报价；旧计划日未填。精确跟进日期未核，勿视为已执行。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：待跟进报价；旧计划日未填。精确跟进日期未核，勿视为已执行。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "原重点档案：—；高",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行13",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-alesa666-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-18",
+      "alias": "alesa666",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "2W个15图案 UV/热转印/纯软木",
+      "notes": "历史1688来源表第14行；需求：2W个15图案 UV/热转印/纯软木；原报价：1.5/个；原跟进：已寄样，4.23询问未回，重点跟进；原备注：重点客户义乌文化用品。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型B类不自动套新ABCD。",
+      "status": "沉默中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价",
+        "已打样"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": "是"
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期5.10仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：已寄样，4.23询问未回，重点跟进；旧计划日5.10。精确跟进日期未核，勿视为已执行。",
+        "日期待核 [经办人待核] 旧提醒（未证实执行）：计划5.10；4.23询问未回（重点）；原建议话术：您好，样品收到了吗？UV印刷的效果怎么样？2万个的订单这边随时可以安排生产，请问您那边客户有回复吗？。不是已发送或最新事实。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：已寄样，4.23询问未回，重点跟进；旧计划日5.10。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "",
+          "person": "",
+          "content": "旧提醒（未证实执行）：计划5.10；4.23询问未回（重点）；原建议话术：您好，样品收到了吗？UV印刷的效果怎么样？2万个的订单这边随时可以安排生产，请问您那边客户有回复吗？。不是已发送或最新事实。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "原重点档案：义乌文化用品；高",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行14",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-tb248640879(顶峰礼品)-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-20",
+      "alias": "tb248640879(顶峰礼品)",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "玻璃杯垫",
+      "qty": "1000个+纸盒+防滑胶 帮贴胶",
+      "notes": "历史1688来源表第15行；需求：1000个+纸盒+防滑胶 帮贴胶；原报价：4.05/个；原跟进：4.29下单1012个玻璃杯垫；原备注：✓。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B(礼品代购)不自动套新ABCD。 成单页总额0与数量1012×单价4.05冲突，0不作未知金额。",
+      "status": "已成单",
+      "archived": true,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期未填仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "apexgifts2989",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：4.29下单1012个玻璃杯垫；旧计划日未填。精确跟进日期未核，勿视为已执行。",
+        "2026-04-29 [经办人待核] 历史成单记录（非本次新成交）：1012，单价4.05；原金额0；已发货；售后无；✓。冲突金额见核对清单。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：4.29下单1012个玻璃杯垫；旧计划日未填。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "2026-04-29",
+          "person": "",
+          "content": "历史成单记录（非本次新成交）：1012，单价4.05；原金额0；已发货；售后无；✓。冲突金额见核对清单。"
+        }
+      ],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "原重点档案：礼品公司；高",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行15",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-义乌纳美采购:洪心-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-21",
+      "alias": "义乌纳美采购:洪心",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "陶瓷挂件",
+      "qty": "300个单面/双面挂件+蓝色绳子",
+      "notes": "历史1688来源表第16行；需求：300个单面/双面挂件+蓝色绳子；原报价：2.5/3+0.3/个；原跟进：5.6询问是否安排做货，等回复；原备注：老客户3次回购。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B(代购)不自动套新ABCD。",
+      "status": "沉默中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期5.10仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：5.6询问是否安排做货，等回复；旧计划日5.10。精确跟进日期未核，勿视为已执行。",
+        "日期待核 [经办人待核] 旧提醒（未证实执行）：计划5.10；5.6询问等回复；原建议话术：您好，上次陶瓷挂件样品做好了，客户那边蓝色绳子有消息了吗？。不是已发送或最新事实。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：5.6询问是否安排做货，等回复；旧计划日5.10。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "",
+          "person": "",
+          "content": "旧提醒（未证实执行）：计划5.10；5.6询问等回复；原建议话术：您好，上次陶瓷挂件样品做好了，客户那边蓝色绳子有消息了吗？。不是已发送或最新事实。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "原重点档案：义乌外贸；高",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行16",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-elvayin111-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-22",
+      "alias": "elvayin111",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "相框",
+      "qty": "10000个密度板相框12.7*17.8cm满版logo",
+      "notes": "历史1688来源表第17行；需求：10000个密度板相框12.7*17.8cm满版logo；原报价：15/个+1.2盒；原跟进：报价未读未回，需跟进；原备注：大单，重点跟进。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型B类不自动套新ABCD。",
+      "status": "沉默中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期5.10仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：报价未读未回，需跟进；旧计划日5.10。精确跟进日期未核，勿视为已执行。",
+        "日期待核 [经办人待核] 旧提醒（未证实执行）：计划5.10；报价未读；原建议话术：您好，之前发的10000个密度板相框报价，您看过了吗？如果有任何疑问我们可以详细沟通。不是已发送或最新事实。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：报价未读未回，需跟进；旧计划日5.10。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "",
+          "person": "",
+          "content": "旧提醒（未证实执行）：计划5.10；报价未读；原建议话术：您好，之前发的10000个密度板相框报价，您看过了吗？如果有任何疑问我们可以详细沟通。不是已发送或最新事实。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "原重点档案：—；高",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行17",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-zsyrlemon-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-27",
+      "alias": "zsyrlemon",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "2500-7500个纯软木空白",
+      "notes": "历史1688来源表第18行；需求：2500-7500个纯软木空白；原报价：0.95-1.15/个；原跟进：4.30询问已读不回；原备注：。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B不自动套新ABCD。",
+      "status": "沉默中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期5.10仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：4.30询问已读不回；旧计划日5.10。精确跟进日期未核，勿视为已执行。",
+        "日期待核 [经办人待核] 旧提醒（未证实执行）：计划5.10；4.30已读不回；原建议话术：您好，之前杯垫报价您看过了，请问价格上有什么顾虑吗？我可以帮您再调整。不是已发送或最新事实。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：4.30询问已读不回；旧计划日5.10。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "",
+          "person": "",
+          "content": "旧提醒（未证实执行）：计划5.10；4.30已读不回；原建议话术：您好，之前杯垫报价您看过了，请问价格上有什么顾虑吗？我可以帮您再调整。不是已发送或最新事实。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "小B",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行18",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-tb050400243258-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-27",
+      "alias": "tb050400243258",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "0.8cm软木300个",
+      "notes": "历史1688来源表第19行；需求：0.8cm软木300个；原报价：1.8/个；原跟进：4.29打样，5.6询问等回复；原备注：礼品公司老客户。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B(礼品)不自动套新ABCD。",
+      "status": "沉默中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价",
+        "已打样"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": "是"
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期5.10仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：4.29打样，5.6询问等回复；旧计划日5.10。精确跟进日期未核，勿视为已执行。",
+        "日期待核 [经办人待核] 旧提醒（未证实执行）：计划5.10；5.6询问等回复；原建议话术：您好，上次0.8cm软木杯垫打样情况怎么样？您那边准备大货了吗？。不是已发送或最新事实。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：4.29打样，5.6询问等回复；旧计划日5.10。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "",
+          "person": "",
+          "content": "旧提醒（未证实执行）：计划5.10；5.6询问等回复；原建议话术：您好，上次0.8cm软木杯垫打样情况怎么样？您那边准备大货了吗？。不是已发送或最新事实。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "小B(礼品)",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行19",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-tb8190611718-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-29",
+      "alias": "tb8190611718",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "9*9cm圆形MDF+软木/六边形",
+      "notes": "历史1688来源表第20行；需求：9*9cm圆形MDF+软木/六边形；原报价：1.5/1.85/个；原跟进：5.8回复等更新客户；原备注：。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B不自动套新ABCD。",
+      "status": "沉默中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期5.11仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：5.8回复等更新客户；旧计划日5.11。精确跟进日期未核，勿视为已执行。",
+        "日期待核 [经办人待核] 旧提醒（未证实执行）：计划5.11；等更新；原建议话术：您好，杯垫这边您要圆形1.5元还是六边形1.85元，请确认后我们安排生产。不是已发送或最新事实。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：5.8回复等更新客户；旧计划日5.11。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "",
+          "person": "",
+          "content": "旧提醒（未证实执行）：计划5.11；等更新；原建议话术：您好，杯垫这边您要圆形1.5元还是六边形1.85元，请确认后我们安排生产。不是已发送或最新事实。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "小B",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行20",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-xie2876998508-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-29",
+      "alias": "xie2876998508",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "1000个圆形10*10软木底，单个收缩膜",
+      "notes": "历史1688来源表第21行；需求：1000个圆形10*10软木底，单个收缩膜；原报价：2.55/个；原跟进：4.29下单1000个，已付定金；原备注：✓老客户。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B不自动套新ABCD。 成单页4098.6与1000×2.55=2550冲突，金额待核。",
+      "status": "已成单",
+      "archived": true,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期未填仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "17768012751",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：4.29下单1000个，已付定金；旧计划日未填。精确跟进日期未核，勿视为已执行。",
+        "2026-04-29 [经办人待核] 历史成单记录（非本次新成交）：1000，单价2.55；原金额4098.6；生产中；售后—；已付定金。冲突金额见核对清单。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：4.29下单1000个，已付定金；旧计划日未填。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "2026-04-29",
+          "person": "",
+          "content": "历史成单记录（非本次新成交）：1000，单价2.55；原金额4098.6；生产中；售后—；已付定金。冲突金额见核对清单。"
+        }
+      ],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "原重点档案：—；高",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行21",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-tb805824072-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-30",
+      "alias": "tb805824072",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "马克杯",
+      "qty": "5000个马克杯，含税运到阳江",
+      "notes": "历史1688来源表第22行；需求：5000个马克杯，含税运到阳江；原报价：8.65/个；原跟进：5.6询问还未确定，计划5.11询问；原备注：大单5000个。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B不自动套新ABCD。",
+      "status": "沉默中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期5.11仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：5.6询问还未确定，计划5.11询问；旧计划日5.11。精确跟进日期未核，勿视为已执行。",
+        "日期待核 [经办人待核] 旧提醒（未证实执行）：计划5.11；还未确定；原建议话术：您好，5000个马克杯含税运到阳江，报价8.65元，您那边准备安排了吗？。不是已发送或最新事实。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：5.6询问还未确定，计划5.11询问；旧计划日5.11。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "",
+          "person": "",
+          "content": "旧提醒（未证实执行）：计划5.11；还未确定；原建议话术：您好，5000个马克杯含税运到阳江，报价8.65元，您那边准备安排了吗？。不是已发送或最新事实。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "原重点档案：—；高",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行22",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-july13148-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-30",
+      "alias": "july13148",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "热转印陶瓷200个",
+      "notes": "历史1688来源表第23行；需求：热转印陶瓷200个；原报价：2.5/个；原跟进：未回，需跟进；原备注：。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B不自动套新ABCD。",
+      "status": "沉默中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期5.10仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：未回，需跟进；旧计划日5.10。精确跟进日期未核，勿视为已执行。",
+        "日期待核 [经办人待核] 旧提醒（未证实执行）：计划5.10；未回；原建议话术：您好，热转印陶瓷杯垫200个，价格是2.5元，您这边准备好了吗？。不是已发送或最新事实。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：未回，需跟进；旧计划日5.10。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "",
+          "person": "",
+          "content": "旧提醒（未证实执行）：计划5.10；未回；原建议话术：您好，热转印陶瓷杯垫200个，价格是2.5元，您这边准备好了吗？。不是已发送或最新事实。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "小B",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行23",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-bluejeans555-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-05-04",
+      "alias": "bluejeans555",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "5万个0.3cm磨边软木出口美国",
+      "notes": "历史1688来源表第24行；需求：5万个0.3cm磨边软木出口美国；原报价：待定；原跟进：推荐0.8cm，待客户回，5.6询问未回；原备注：出口单注意认证。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型C类不自动套新ABCD。",
+      "status": "报价中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期5.10仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：推荐0.8cm，待客户回，5.6询问未回；旧计划日5.10。精确跟进日期未核，勿视为已执行。",
+        "日期待核 [经办人待核] 旧提醒（未证实执行）：计划5.10；5.6询问未回；原建议话术：您好，5万个软木杯垫出口美国的订单，我们推荐0.8cm厚度的，这个方案您考虑了吗？。不是已发送或最新事实。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：推荐0.8cm，待客户回，5.6询问未回；旧计划日5.10。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "",
+          "person": "",
+          "content": "旧提醒（未证实执行）：计划5.10；5.6询问未回；原建议话术：您好，5万个软木杯垫出口美国的订单，我们推荐0.8cm厚度的，这个方案您考虑了吗？。不是已发送或最新事实。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "原重点档案：出口美国；超高",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行24",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-上海栎欧forward-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-05-05",
+      "alias": "上海栎欧forward",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "60个杯垫",
+      "notes": "历史1688来源表第25行；需求：60个杯垫；原报价：2.5/个；原跟进：5.6询问已读未回；原备注：。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B不自动套新ABCD。",
+      "status": "沉默中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期5.12仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：5.6询问已读未回；旧计划日5.12。精确跟进日期未核，勿视为已执行。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：5.6询问已读未回；旧计划日5.12。精确跟进日期未核，勿视为已执行。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "小B",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行25",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-tb365004417-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-05-05",
+      "alias": "tb365004417",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "玻璃菜板",
+      "qty": "每款3000个 单独牛皮纸盒",
+      "notes": "历史1688来源表第26行；需求：每款3000个 单独牛皮纸盒；原报价：含税13.62/20.35；原跟进：报价含税运，5.8再询；原备注：。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型B类不自动套新ABCD。",
+      "status": "沉默中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期5.8仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：报价含税运，5.8再询；旧计划日5.8。精确跟进日期未核，勿视为已执行。",
+        "日期待核 [经办人待核] 旧提醒（未证实执行）：计划5.8；报价含税；原建议话术：玻璃菜板报价已出：小的13.62，大的20.35（含税运宁波进仓），请问您可以确认下单吗？。不是已发送或最新事实。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：报价含税运，5.8再询；旧计划日5.8。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "",
+          "person": "",
+          "content": "旧提醒（未证实执行）：计划5.8；报价含税；原建议话术：玻璃菜板报价已出：小的13.62，大的20.35（含税运宁波进仓），请问您可以确认下单吗？。不是已发送或最新事实。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "原重点档案：—；高",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行26",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-tb91547776-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-05-06",
+      "alias": "tb91547776",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "1000/2500套 4个一套 9cm软木 彩盒",
+      "notes": "历史1688来源表第27行；需求：1000/2500套 4个一套 9cm软木 彩盒；原报价：4/3.4元/套；原跟进：等彩盒报价后跟进；原备注：。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B不自动套新ABCD。",
+      "status": "报价中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期5.10仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：等彩盒报价后跟进；旧计划日5.10。精确跟进日期未核，勿视为已执行。",
+        "日期待核 [经办人待核] 旧提醒（未证实执行）：计划5.10；等彩盒报价；原建议话术：1000/2500套杯垫+彩盒报价已整理好，请问您方便确认一下吗？。不是已发送或最新事实。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：等彩盒报价后跟进；旧计划日5.10。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "",
+          "person": "",
+          "content": "旧提醒（未证实执行）：计划5.10；等彩盒报价；原建议话术：1000/2500套杯垫+彩盒报价已整理好，请问您方便确认一下吗？。不是已发送或最新事实。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "小B",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行27",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-冰轩逸乐-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-05-06",
+      "alias": "冰轩逸乐",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "汽车杯",
+      "qty": "500个定制一色logo汽车杯",
+      "notes": "历史1688来源表第28行；需求：500个定制一色logo汽车杯；原报价：17/个；原跟进：已读未回，5.8再询；原备注：。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B不自动套新ABCD。",
+      "status": "沉默中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期5.8仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：已读未回，5.8再询；旧计划日5.8。精确跟进日期未核，勿视为已执行。",
+        "日期待核 [经办人待核] 旧提醒（未证实执行）：计划5.8；已读未回；原建议话术：您好，500个汽车杯定制，一色logo，17元一个，请问您那边准备好了吗？。不是已发送或最新事实。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：已读未回，5.8再询；旧计划日5.8。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "",
+          "person": "",
+          "content": "旧提醒（未证实执行）：计划5.8；已读未回；原建议话术：您好，500个汽车杯定制，一色logo，17元一个，请问您那边准备好了吗？。不是已发送或最新事实。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "小B",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行28",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-救世战神周召-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-05-07",
+      "alias": "救世战神周召",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫+餐垫",
+      "qty": "杯垫1200+餐垫1200个MDF+软木",
+      "notes": "历史1688来源表第29行；需求：杯垫1200+餐垫1200个MDF+软木；原报价：待报；原跟进：客户发图要空白，确认工艺后跟进；原备注：。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B不自动套新ABCD。",
+      "status": "报价中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期5.10仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：客户发图要空白，确认工艺后跟进；旧计划日5.10。精确跟进日期未核，勿视为已执行。",
+        "日期待核 [经办人待核] 旧提醒（未证实执行）：计划5.10；确认工艺中；原建议话术：您好，杯垫1200个+餐垫1200个，您说要空白的对吗？请再确认一下印刷要求，我这边好安排报价。不是已发送或最新事实。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：客户发图要空白，确认工艺后跟进；旧计划日5.10。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "",
+          "person": "",
+          "content": "旧提醒（未证实执行）：计划5.10；确认工艺中；原建议话术：您好，杯垫1200个+餐垫1200个，您说要空白的对吗？请再确认一下印刷要求，我这边好安排报价。不是已发送或最新事实。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "小B",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行29",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-tb132879924390-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-05-07",
+      "alias": "tb132879924390",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "钥匙扣",
+      "qty": "50个圆形钥匙扣双面印 前统一logo后50个不同名字",
+      "notes": "历史1688来源表第30行；需求：50个圆形钥匙扣双面印 前统一logo后50个不同名字；原报价：2/个；原跟进：客户提了新要求，跟进中；原备注：。资料为2026-06-15归档旧快照，当前现状未核，不当今日待办。原负责人Yana（不在模板选项，负责人字段留空待映射）；原客户类型小B(礼品)不自动套新ABCD。",
+      "status": "报价中",
+      "archived": false,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [
+        "已报价"
+      ],
+      "sourceMilestones": {
+        "quoted": "是",
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "先请Alan确认当前是否仍需跟进及负责人，再联系；旧下次日期5.10仅保留历史。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "日期待核 [经办人待核] 原负责人Yana；历史跟进原文：客户提了新要求，跟进中；旧计划日5.10。精确跟进日期未核，勿视为已执行。",
+        "日期待核 [经办人待核] 旧提醒（未证实执行）：计划5.10；确认新要求；原建议话术：您好，50个圆形钥匙扣双面印，前面统一logo后面各不同名字，这个方案我们可以做，请问需要打样吗？。不是已发送或最新事实。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "",
+          "person": "",
+          "content": "原负责人Yana；历史跟进原文：客户提了新要求，跟进中；旧计划日5.10。精确跟进日期未核，勿视为已执行。"
+        },
+        {
+          "date": "",
+          "person": "",
+          "content": "旧提醒（未证实执行）：计划5.10；确认新要求；原建议话术：您好，50个圆形钥匙扣双面印，前面统一logo后面各不同名字，这个方案我们可以做，请问需要打样吗？。不是已发送或最新事实。"
+        }
+      ],
+      "importedStatusNeedsReview": true,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "小B(礼品)",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 📋 询盘跟进总表 行30",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-tb072262348441-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "",
+      "alias": "tb072262348441",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "陶瓷杯垫+软木",
+      "qty": "180",
+      "notes": "历史成单页6行：陶瓷杯垫150个+纯软木30个，单价2.5/1.8；成单日2026-04-22不是询盘日；原总额—，未核不填目标金额。已发货；无；老客户第3次。当前现状待核。原负责人待核。",
+      "status": "已成单",
+      "archived": true,
+      "expired": false,
+      "grade": "",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "历史项目保留，确认是否仍有售后／复购待办。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [
+        "2026-04-22 [经办人待核] 历史成单记录（非本次新成交）：180，单价2.5/1.8；原金额—；已发货；售后无；老客户第3次。冲突金额见核对清单。"
+      ],
+      "sourceFollowupEvents": [
+        {
+          "date": "2026-04-22",
+          "person": "",
+          "content": "历史成单记录（非本次新成交）：180，单价2.5/1.8；原金额—；已发货；售后无；老客户第3次。冲突金额见核对清单。"
+        }
+      ],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / ✅ 已成单记录",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-tb264563404656-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-02",
+      "alias": "tb264563404656",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "陶瓷骨灰罐",
+      "qty": "",
+      "notes": "历史已归档：询问拼多多一件代发；原因非目标客户；可否激活否；原客户类型C类。旧结论不重新冒充本次背调。",
+      "status": "失效",
+      "archived": false,
+      "expired": true,
+      "grade": "D",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "按历史归档保留；需再激活时先确认现状。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [],
+      "sourceFollowupEvents": [],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 🗂️ 无效询盘归档 行3",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-懦弱的我514890955-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-01",
+      "alias": "懦弱的我514890955",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "",
+      "notes": "历史已归档：问温感密度板，暂时没有；原因产品不匹配；可否激活否；原客户类型C类。旧结论不重新冒充本次背调。",
+      "status": "失效",
+      "archived": false,
+      "expired": true,
+      "grade": "D",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "按历史归档保留；需再激活时先确认现状。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [],
+      "sourceFollowupEvents": [],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 🗂️ 无效询盘归档 行4",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-tb143565768-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-13",
+      "alias": "tb143565768",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "陶瓷骨灰罐",
+      "qty": "",
+      "notes": "历史已归档：询问贴纸还是热转印，未回；原因已读未回；可否激活否；原客户类型无效。旧结论不重新冒充本次背调。",
+      "status": "失效",
+      "archived": false,
+      "expired": true,
+      "grade": "D",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "按历史归档保留；需再激活时先确认现状。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [],
+      "sourceFollowupEvents": [],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 🗂️ 无效询盘归档 行5",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-t_1493115905948_0903-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-13",
+      "alias": "t_1493115905948_0903",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "首饰盒",
+      "qty": "",
+      "notes": "历史已归档：询问首饰盒起订量，一个起订；原因非目标；可否激活否；原客户类型无效。旧结论不重新冒充本次背调。",
+      "status": "失效",
+      "archived": false,
+      "expired": true,
+      "grade": "D",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "按历史归档保留；需再激活时先确认现状。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [],
+      "sourceFollowupEvents": [],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 🗂️ 无效询盘归档 行6",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-tb9244185108-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-17",
+      "alias": "tb9244185108",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "首饰盒",
+      "qty": "",
+      "notes": "历史已归档：白色首饰盒；原因无效询盘；可否激活否；原客户类型无效。旧结论不重新冒充本次背调。",
+      "status": "失效",
+      "archived": false,
+      "expired": true,
+      "grade": "D",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "按历史归档保留；需再激活时先确认现状。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [],
+      "sourceFollowupEvents": [],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 🗂️ 无效询盘归档 行7",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-yanerlin13-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-22",
+      "alias": "yanerlin13",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "变色杯",
+      "qty": "",
+      "notes": "历史已归档：发链接未回；原因无效询盘；可否激活否；原客户类型无效。旧结论不重新冒充本次背调。",
+      "status": "失效",
+      "archived": false,
+      "expired": true,
+      "grade": "D",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "按历史归档保留；需再激活时先确认现状。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [],
+      "sourceFollowupEvents": [],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 🗂️ 无效询盘归档 行8",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-泉州优诺供应链-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-23",
+      "alias": "泉州优诺供应链",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "马克杯",
+      "qty": "",
+      "notes": "历史已归档：6万个马克杯，目标价2.5元太低；原因价格无法谈拢；可否激活否；原客户类型B类。旧结论不重新冒充本次背调。",
+      "status": "失效",
+      "archived": false,
+      "expired": true,
+      "grade": "D",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "按历史归档保留；需再激活时先确认现状。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [],
+      "sourceFollowupEvents": [],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 🗂️ 无效询盘归档 行9",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-肖肥羊-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-30",
+      "alias": "肖肥羊",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "",
+      "notes": "历史已归档：TEMU Y2 pod，要求上午发单下午发货；原因时效不符合；可否激活否；原客户类型C类。旧结论不重新冒充本次背调。",
+      "status": "失效",
+      "archived": false,
+      "expired": true,
+      "grade": "D",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "按历史归档保留；需再激活时先确认现状。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [],
+      "sourceFollowupEvents": [],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 🗂️ 无效询盘归档 行10",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-yanyan270027-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-29",
+      "alias": "yanyan270027",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "",
+      "notes": "历史已归档：询问起订量，已读不回；原因无效；可否激活否；原客户类型C类。旧结论不重新冒充本次背调。",
+      "status": "失效",
+      "archived": false,
+      "expired": true,
+      "grade": "D",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "按历史归档保留；需再激活时先确认现状。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [],
+      "sourceFollowupEvents": [],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 🗂️ 无效询盘归档 行11",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-16886766375012-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-14",
+      "alias": "16886766375012",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "",
+      "notes": "历史已归档：询问陶瓷杯垫，无跟进内容；原因信息不全；可否激活可；原客户类型C类。旧结论不重新冒充本次背调。",
+      "status": "失效",
+      "archived": false,
+      "expired": true,
+      "grade": "D",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "按历史归档保留；需再激活时先确认现状。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [],
+      "sourceFollowupEvents": [],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 🗂️ 无效询盘归档 行12",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-yuntecher-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-28",
+      "alias": "yuntecher",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "宠物三角巾",
+      "qty": "",
+      "notes": "历史已归档：询问宠物三角巾是否可调节，已读未回；原因无效；可否激活否；原客户类型C类。旧结论不重新冒充本次背调。",
+      "status": "失效",
+      "archived": false,
+      "expired": true,
+      "grade": "D",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "按历史归档保留；需再激活时先确认现状。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [],
+      "sourceFollowupEvents": [],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 🗂️ 无效询盘归档 行13",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-左撇子75-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-20",
+      "alias": "左撇子75",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "帆布包",
+      "qty": "",
+      "notes": "历史已归档：POD单件定制帆布袋，非目标；原因非目标客户；可否激活否；原客户类型C类。旧结论不重新冒充本次背调。",
+      "status": "失效",
+      "archived": false,
+      "expired": true,
+      "grade": "D",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "按历史归档保留；需再激活时先确认现状。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [],
+      "sourceFollowupEvents": [],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 🗂️ 无效询盘归档 行14",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-就是觉得362083875-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-04-16",
+      "alias": "就是觉得362083875",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "",
+      "notes": "历史已归档：问皮革杯垫，无后续；原因询盘不明确；可否激活否；原客户类型C类。旧结论不重新冒充本次背调。",
+      "status": "失效",
+      "archived": false,
+      "expired": true,
+      "grade": "D",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "按历史归档保留；需再激活时先确认现状。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [],
+      "sourceFollowupEvents": [],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 🗂️ 无效询盘归档 行15",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-唐明爱5945-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-05-06",
+      "alias": "唐明爱5945",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "",
+      "notes": "历史已归档：问是否能做密胺；原因产品不匹配；可否激活否；原客户类型C类。旧结论不重新冒充本次背调。",
+      "status": "失效",
+      "archived": false,
+      "expired": true,
+      "grade": "D",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "按历史归档保留；需再激活时先确认现状。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [],
+      "sourceFollowupEvents": [],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 🗂️ 无效询盘归档 行16",
+        "date": ""
+      }
+    },
+    {
+      "sourceImportId": "CBOS-看不到的故事-01",
+      "sourceWorkbook": "全部客户询盘_含背景与跟进记录_2026-11-20.xlsx",
+      "date": "2026-05-06",
+      "alias": "看不到的故事",
+      "company": "",
+      "country": "",
+      "source": "1688",
+      "person": "",
+      "product": "杯垫",
+      "qty": "",
+      "notes": "历史已归档：询问定制方式，未回；原因无效；可否激活否；原客户类型C类。旧结论不重新冒充本次背调。",
+      "status": "失效",
+      "archived": false,
+      "expired": true,
+      "grade": "D",
+      "amount": null,
+      "currency": "",
+      "flags": [],
+      "sourceMilestones": {
+        "quoted": null,
+        "sampled": null
+      },
+      "followupDate": "",
+      "followupNote": "",
+      "suggestedNextAction": "按历史归档保留；需再激活时先确认现状。",
+      "email": "",
+      "phone": "",
+      "wechat": "",
+      "wangwang": "",
+      "referenceFiles": "",
+      "followups": [],
+      "sourceFollowupEvents": [],
+      "importedStatusNeedsReview": false,
+      "_v2migrated": true,
+      "isHot": false,
+      "vipStar": false,
+      "background": {
+        "website": "",
+        "business": "",
+        "position": "",
+        "assessment": "",
+        "source": "04_询盘库/_来源数据/1688询盘表_重构版_20260615.xlsx / 🗂️ 无效询盘归档 行17",
+        "date": ""
+      }
+    }
+  ],
+  "supportingSheets": {
+    "导出说明与待核对": [
+      {
+        "项目": "数据截止",
+        "说明": "2026-11-20；基于CBOS main a3baef5；最近邮箱扫描截止北京时间19:07，UID48，无新邮件。"
+      },
+      {
+        "项目": "范围",
+        "说明": "近期官网／WhatsApp采购询盘；现有具体订单跟进；旧1688总表、成单补充及失效历史。不是10169条笨鸟联系人全量导入。"
+      },
+      {
+        "项目": "主记录边界",
+        "说明": "本表是CBOS唯一主记录的导出快照；后续更新回归主档，不建立第二套主库。未实际导入CRM。"
+      },
+      {
+        "项目": "日期",
+        "说明": "未知询盘、跟进、调查日期留空；不把建档／导出日期冒充来信日期。无已约定下次日期，保持空白；AI建议仅写事项。"
+      },
+      {
+        "项目": "评级",
+        "说明": "仅可靠已定ABCD填写。旧小B／候选／渠道合作不机械转换；无评级留空。旧1688无效归档为D。"
+      },
+      {
+        "项目": "负责人",
+        "说明": "当前Alan接续的近期项目填Alan，GKK内部执行Momi写备注；旧Yana不在模板选项，字段留空，备注保留原名。"
+      },
+      {
+        "项目": "来源与回复",
+        "说明": "来源渠道遵守模板选项；AI获客来源及Email／WhatsApp实际回复路径在需求备注与联系方式。"
+      },
+      {
+        "项目": "未知布尔",
+        "说明": "未见报价／打样证据留空，不把未知填否。收到样品仅代表参考样已交，不代表客户定样或下单。"
+      },
+      {
+        "项目": "背景调查",
+        "说明": "仅整理已有背调及Alan说明，未新做外部调查。公开机构存在不等于发件权限／采购预算已核。日期未完整核实留空。"
+      },
+      {
+        "项目": "报价金额",
+        "说明": "报价写需求备注，目标金额只填有清楚口径的FEDJO意向货值1500CNY；历史成交价不填为新目标金额。"
+      },
+      {
+        "项目": "广州蓝川贸易金额",
+        "说明": "总表368×2.7≈994，成单页920，原单价2.5+0.2；有冲突待核。"
+      },
+      {
+        "项目": "xie2876998508金额",
+        "说明": "1000×2.55=2550，但成单页4098.6；不选一边填金额。"
+      },
+      {
+        "项目": "顶峰礼品金额",
+        "说明": "1012×4.05与原总额0冲突，0不代表真实成交额。"
+      },
+      {
+        "项目": "cindy031547090数量日期",
+        "说明": "原询盘1050，成单1075；4-7成交／4-10尾款同商机保留两条历史，不重复建行。"
+      },
+      {
+        "项目": "旧资料时效",
+        "说明": "1688资料截至2026-06-15旧快照，旧“今日待跟进”和建议话术不是已执行，不直接作为2026-11当前待办。"
+      },
+      {
+        "项目": "非买家与维护名单",
+        "说明": "设计推销／AR合作和仅有客户概况无独立商机的老客户另表保留；不造采购数量、日期及订单。"
+      },
+      {
+        "项目": "图片",
+        "说明": "参考图片留邮箱／WhatsApp／本聊天；无随表图片文件，参考图片文件名为空。"
+      }
+    ],
+    "非采购合作资源": [
+      {
+        "联系人／机构": "MUG ALIVE／Patrick Osinski",
+        "联系方式": "osinski.patrick@gmail.com；https://www.mugalive.com",
+        "性质": "AR技术设计合作，非采购询盘",
+        "当前事实／下一步": "11-19 UID48无采购量；第38封未发，先由Alan决定；核演示、授权、开发托管费用。",
+        "来源": "04_询盘库/2026-11_官网邮箱询盘汇总.md"
+      },
+      {
+        "联系人／机构": "DMEE／Artivery",
+        "联系方式": "makeev@artivery.eu；https://artivery.eu",
+        "性质": "付费插画服务",
+        "当前事实／下一步": "10-24拒绝反向生产渠道合作，仅出售买断设计；等Alan决定是否委托。",
+        "来源": "03_客户数据库/DMEE.md"
+      },
+      {
+        "联系人／机构": "Péter Kánya",
+        "联系方式": "kanyapeter90@gmail.com",
+        "性质": "城市插画设计资源",
+        "当前事实／下一步": "10-30来信；10-31 Alan指示先尝试反向供样、运费客户付；具体后续发送结果待核。",
+        "来源": "04_询盘库/2026-10_官网邮箱询盘汇总.md"
+      },
+      {
+        "联系人／机构": "FELIX TOMÀS",
+        "联系方式": "felixtomas785@gmail.com",
+        "性质": "付费图案包推销",
+        "当前事实／下一步": "10-22决定不回；不是产品采购。",
+        "来源": "04_询盘库/2026-10_官网邮箱询盘汇总.md"
+      },
+      {
+        "联系人／机构": "Meridian／Xiangce Sun",
+        "联系方式": "sunxiangce@mail.withmeridian.org",
+        "性质": "SEO／AI获客服务推销",
+        "当前事实／下一步": "11-16 UID44，X类不回；页面交期问题为对方声称未核。",
+        "来源": "04_询盘库/2026-11_官网邮箱询盘汇总.md"
+      }
+    ],
+    "客户维护及历史线索": [
+      {
+        "客户": "CAZL",
+        "背景／产品": "# CAZL\n\n- **地区**:加拿大\n- **类别**:A类核心客户\n- **产品**:MDF冰箱贴+杯垫,UV打印成品 —— 详见`02_产品库/MDF冰箱贴.md`、`02_产品库/MDF杯垫.md`\n- **成交规律**:已复单3次且增长,每款100-300个\n- **价值评估**:⭐ 最佳目标客户原型 —— 战略目标\"找20个CAZL级客户\"即以此为标杆\n- **客户原型特征**:手里有自己的设计(不需要我们出创意)、多款设计每款100-300个、大工厂看不上完美适合我们、持续复单关系稳定、欧美市场利润空间高\n",
+        "最近已知状态": "档案已有客户关系，未见独立本次采购项目，不编造商机日期数量。",
+        "下一步／边界": "维护／项目或历史关系；不按有客户档案就新建订单。",
+        "来源": "03_客户数据库/CAZL.md"
+      },
+      {
+        "客户": "AESOS",
+        "背景／产品": "# AESOS\n\n- **地区**:马来西亚\n- **类别**:B类稳定客户\n- **产品**:旅游纪念品杯子定制\n- **成交规律**:一年2-3次,单笔2-3千美金\n",
+        "最近已知状态": "档案已有客户关系，未见独立本次采购项目，不编造商机日期数量。",
+        "下一步／边界": "维护／项目或历史关系；不按有客户档案就新建订单。",
+        "来源": "03_客户数据库/AESOS.md"
+      },
+      {
+        "客户": "CSM",
+        "背景／产品": "# CSM\n\n- **地区**:美国\n- **类别**:B类稳定客户\n- **产品**:马克杯来图定制 —— 详见`02_产品库/热转印马克杯.md`\n- **成交规律**:一年2次,单笔3-4千美金\n",
+        "最近已知状态": "档案已有客户关系，未见独立本次采购项目，不编造商机日期数量。",
+        "下一步／边界": "维护／项目或历史关系；不按有客户档案就新建订单。",
+        "来源": "03_客户数据库/CSM.md"
+      },
+      {
+        "客户": "HZFS",
+        "背景／产品": "# HZFS\n\n- **地区**:国内跨境\n- **类别**:B类稳定客户\n- **产品**:DTF T恤、帆布袋 —— 详见`02_产品库/DTF软性产品.md`\n- **成交规律**:稳定小单,有复单\n",
+        "最近已知状态": "档案已有客户关系，未见独立本次采购项目，不编造商机日期数量。",
+        "下一步／边界": "维护／项目或历史关系；不按有客户档案就新建订单。",
+        "来源": "03_客户数据库/HZFS.md"
+      },
+      {
+        "客户": "赣州英聚",
+        "背景／产品": "# 赣州英聚(内部代号 CKY / GZYJ)\n\n- **老板**:陈可永\n- **身份**:客户 + 供应商 + 同行(MDF/陶瓷礼品同行业)\n- **公司布局**:广州有公司,江西赣州有工厂\n- **历史**:2025年广州跨境展期间,曾与Fourseason(曾耀祖,详见`Fourseason.md`)一起拜访对方公司\n\n## 我方向他们采购(供应商关系)\n- 陶瓷挂件 —— 详见 `07_供应商数据库/陶瓷挂件供应商.md`\n- 玻璃菜板 —— 详见 `07_供应商数据库/玻璃菜板供应商.md`(2026-10-22)\n\n## 他们向我方下单(客户关系)\n- MDF热转印空白杯垫、热转印印图杯垫 —— 详见`02_产品库/MDF杯垫.md`\n- 历史:去年MDF杯垫加工外协共5万个;获客成本低,但利润低(类别:C类同行外协)\n\n## 我方为其代工(同行代打)\n- UV代打石版画\n- 代打陶瓷挂件\n- 代打热转印图纸\n\n## 账期状态\n- 2026-07:应收货款约5000+,应付货款约1000+\n",
+        "最近已知状态": "档案已有客户关系，未见独立本次采购项目，不编造商机日期数量。",
+        "下一步／边界": "维护／项目或历史关系；不按有客户档案就新建订单。",
+        "来源": "03_客户数据库/赣州英聚.md"
+      },
+      {
+        "客户": "Fourseason",
+        "背景／产品": "# Fourseason\n\n- **地区**:惠州\n- **联系人**:曾耀祖 —— 原腾讯做数据流量分析,2年多前出来自己做跨境POD,现经营Temu平台惠州自发货,一天约5000单(数字持续在涨),有自己的技术团队做自动化发品;另孵化了一家做广告耗材的工厂,也做得不错\n- **自研系统**:禹链 —— 上品/发品/发货全流程自动化\n- **类别**:现有客户 → 已升级为渠道合作伙伴\n- **产品**:定制礼品(T恤衫、帆布袋等已做多批),手里有腾讯IP授权资源,做腾讯IP礼品\n- **成交规律**:一个季度约1万人民币营收(升级前)\n- **认识渠道**:2025年广州跨境电商展会认识,曾和CKY(赣州英聚·陈可永,详见`赣州英聚.md`)一起去过他们公司\n- **关系升级**:2026-07 谈妥接入其已跑通的 Temu 定制POD流量,用于填补公司产能缺口(大单人力不够/小单填不满)—— 这是目前公司最重要的项目之一,详见 `12_项目库/Fourseason惠州POD项目.md`\n- **历史**:2025-08 曾讨论过一体化工厂合作方向,见 `_原始数据/evernote导入/Fourseason 合作计划.md`\n",
+        "最近已知状态": "档案已有客户关系，未见独立本次采购项目，不编造商机日期数量。",
+        "下一步／边界": "维护／项目或历史关系；不按有客户档案就新建订单。",
+        "来源": "03_客户数据库/Fourseason.md"
+      },
+      {
+        "客户": "Printer Pix",
+        "背景／产品": "# Printer Pix\n\n> 内部简称**PP**(2021年《仓储及生产区域管理规章》里的\"PP生产区\"即指这个客户的专用生产区)\n\n- **地区**:美国、英国(印度裔老板)\n- **类别**:已流失的老客户\n- **业务**:在线图文礼品定制(网店,客户上传图片定制礼品)\n- **合作历史**:约10年前起,把一部分产品的生产交给我们做\n- **流失**:近两年被中国卖家做跨境POD挤压了很多生意;**2026年初停了我们的单**\n- **仓库遗留**:剩下大量**拼图、石板画、金属板**,**全是空白坯**,约占2个货架位+大货区2托盘左右,已成死货,Alan想盘活——处理进展见`../08_生产与排期库/仓库死货清理.md`\n",
+        "最近已知状态": "档案已有客户关系，未见独立本次采购项目，不编造商机日期数量。",
+        "下一步／边界": "维护／项目或历史关系；不按有客户档案就新建订单。",
+        "来源": "03_客户数据库/Printer Pix.md"
+      },
+      {
+        "客户": "Luke／The Prima Group",
+        "背景／产品": "2024旧推荐计划；luke@theprimagroup.co.uk、01228588960、https://www.theprimagroup.co.uk；无已确认独立采购需求。",
+        "最近已知状态": "历史旧线索，归属／时效待核",
+        "下一步／边界": "需核对后再建立商机，不能当新询盘",
+        "来源": "03_客户数据库/_原始数据/evernote导入/重点客户跟进计划.md"
+      },
+      {
+        "客户": "Anibal／Sublibolivia",
+        "背景／产品": "2024旧产品推荐方向，无数量日期，不冒充近期询盘。",
+        "最近已知状态": "历史旧线索，归属／时效待核",
+        "下一步／边界": "需核对后再建立商机，不能当新询盘",
+        "来源": "03_客户数据库/_原始数据/evernote导入/重点客户跟进计划.md"
+      },
+      {
+        "客户": "Euroland／法国抽绳包历史线索",
+        "背景／产品": "2021笔记列白杯0.39USD／变色0.62USD及抽绳包3000/5000/7000/10000，sunsoftkd@163.com；笔记混合项目，身份归属未核，不擅并为同客户。",
+        "最近已知状态": "历史旧线索，归属／时效待核",
+        "下一步／边界": "需核对后再建立商机，不能当新询盘",
+        "来源": "04_询盘库/_来源数据/evernote导入/Euroland 报价.md"
+      }
+    ]
+  }
+};
+function importRealInquiryWorkbook(){
+  var batch='real-inquiries-20261120-v1';
+  if((crmSettings.realInquiryImportBatches||[]).indexOf(batch)>=0)return;
+  if(!crmSettings.realTrialCleanupVersion&&!localStorage.getItem('crm_real_trial_cleanup_done_v1'))return;
+  if(!localStorage.getItem('crm_before_real_inquiries_20261120'))localStorage.setItem('crm_before_real_inquiries_20261120',JSON.stringify({inquiries:inquiries,customers:customers,settings:crmSettings}));
+  if(!crmSettings.inquiryBackgrounds)crmSettings.inquiryBackgrounds={};
+  REAL_INQUIRY_IMPORT.records.forEach(function(source){
+    if(!inquiries.some(function(i){return i.sourceImportId===source.sourceImportId;})){
+      var row=JSON.parse(JSON.stringify(source));row.id=nextInqId++;delete row.background;inquiries.push(row);
+    }
+    var key=source.alias.trim().toUpperCase();
+    if(!crmSettings.inquiryBackgrounds[key])crmSettings.inquiryBackgrounds[key]=[];
+    if(!crmSettings.inquiryBackgrounds[key].some(function(b){return b.importId===source.sourceImportId;}))crmSettings.inquiryBackgrounds[key].push(Object.assign({importId:source.sourceImportId},source.background));
+  });
+  crmSettings.realInquirySupportingSheets=REAL_INQUIRY_IMPORT.supportingSheets;
+  saveAll();
+  if(!crmSettings.realInquiryImportBatches)crmSettings.realInquiryImportBatches=[];
+  crmSettings.realInquiryImportBatches.push(batch);saveSettings();
+  localStorage.setItem('crm_inq_highwater_v1',String(nextInqId));
+}
+function inquiryBackgroundHtml(alias){
+  var records=(crmSettings.inquiryBackgrounds||{})[String(alias||'').trim().toUpperCase()]||[];
+  if(!records.some(function(b){return b.website||b.business||b.position||b.assessment||b.source;}))return '';
+  var labels={website:'网站 / 店铺',business:'业务背景',position:'联系人职位',assessment:'结论 / 待核实',source:'信息来源',date:'调查日期'};
+  var html='<div class="detail-section"><div class="detail-section-title">客户背景（同客户共用）</div>';
+  records.forEach(function(b){
+    html+='<div style="font-size:12px;color:var(--muted);padding:4px 0;overflow-wrap:anywhere">'+orderDisplayText(b.importId)+'</div>';
+    Object.keys(labels).forEach(function(k){if(b[k])html+='<div style="font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere"><span style="color:var(--muted)">'+labels[k]+'：</span>'+orderDisplayText(b[k])+'</div>';});
+  });return html+'</div>';
+}
+
+/* 用户授权的一次性真实试跑清理；以后新增客户、询盘和订单不受影响。 */
+function realTrialOrder(o){
+  var alias=String(o.alias||'').trim().toUpperCase();
+  var text=[o.sourceOrderNumber,o.sourceImportKey,o.notes].join(' ').replace(/[\s-]/g,'').toUpperCase();
+  if(alias==='CSM')return text.indexOf('PI26080020')>=0;
+  if(alias==='YWSD')return text.indexOf('PI26100003')>=0;
+  if(alias==='GKK')return /PI2610000[67](?![0-9])/.test(text)||/^PI-202610(27|28)-/.test(o.orderNumber||'');
+  return false;
+}
+function cleanRealTrialData(){
+  if(crmSettings.realTrialCleanupVersion>=1||localStorage.getItem('crm_real_trial_cleanup_done_v1'))return;
+  var archiveKey='crm_before_real_trial_cleanup_v1';
+  if(!localStorage.getItem(archiveKey)){
+    var stores={};Object.keys(SK).forEach(function(k){stores[SK[k]]=localStorage.getItem(SK[k]);});
+    localStorage.setItem(archiveKey,JSON.stringify({createdAt:new Date().toISOString(),inquiries:inquiries,customers:customers,orders:orders,saleRecords:saleRecords,settings:crmSettings,stores:stores}));
+  }
+  var keep=['GKK','YWSD','CSM','CAZL'];
+  orders=orders.filter(realTrialOrder);
+  /* 已完成列表也是订单界面的一部分，只保留真实订单的关联成交记录。 */
+  saleRecords=saleRecords.filter(function(s){return realTrialOrder(s)||orders.some(function(o){return String(o.id)===String(s.fromOrderId);});});
+  inquiries=[];
+  customers=customers.filter(function(c){return keep.indexOf(String(c.alias||'').trim().toUpperCase())>=0;});
+  customers.forEach(function(c){
+    var source=DEF_CUST.find(function(d){return d.alias===String(c.alias||'').trim().toUpperCase();});
+    if(!source)return;
+    /* 只清除与已知演示原值完全一致的联系方式/跟进，不覆盖人工修订资料。 */
+    ['email','phone','wechat','wangwang','followupDate','followupNote','notes'].forEach(function(key){if(c[key]&&c[key]===source[key])c[key]='';});
+    if(JSON.stringify(c.followups||[])===JSON.stringify(source.followups||[]))c.followups=[];
+    if(JSON.stringify(c.contacts||[])===JSON.stringify(source.contacts||[]))c.contacts=[];
+    if(c.company===source.company&&c.alias!=='GKK')c.company=c.alias==='CSM'?'CSM Supply':'';
+  });
+  keep.forEach(function(alias){
+    if(customers.some(function(c){return String(c.alias||'').trim().toUpperCase()===alias;}))return;
+    customers.push({id:nextCustId++,alias:alias,company:alias==='CSM'?'CSM Supply':'',country:'',person:'',type:'',layer:'',product:'',email:'',phone:'',wechat:'',wangwang:'',notes:'真实客户试跑建档，详细资料待补齐。',followups:[],contacts:[]});
+  });
+  crmSettings.realTrialCleanupVersion=1;
+  saveAll();saveSettings();
+  localStorage.setItem('crm_inq_highwater_v1',String(nextInqId));
+  localStorage.setItem('crm_cust_highwater_v1',String(nextCustId));
+  localStorage.setItem('crm_real_trial_cleanup_done_v1','1');
+}
+
 (function patchData(){
   /* 1. 修正 GKK 客户公司名 + 添加联系人 */
   var gkk=customers.find(function(c){return c.alias==='GKK';});
@@ -9112,7 +13351,7 @@ function importRealSourceOrders(){
   }
   /* 2. 仅补充缺失的GKK测试订单，不覆盖员工已编辑的明细与箱规。 */
   var needSaveOrd=false;
-  [3,4].forEach(function(oid){
+  (crmSettings.realTrialCleanupVersion>=1?[]:[3,4]).forEach(function(oid){
     var defO=DEF_ORD.find(function(d){return d.id===oid;});
     if(!defO)return;
     var idx=-1;
@@ -9140,6 +13379,9 @@ function importRealSourceOrders(){
   if(descriptionsChanged)localStorage.setItem(SK.ord,JSON.stringify(orders));
   getProdCatData();
   importRealSourceOrders();
+  cleanRealTrialData();
+  importRealInquiryWorkbook();
+  setTimeout(refreshAll,0);
   /* 产品库样板与一次性迁移统一由getProdCatData处理，不再在启动时覆盖HB资料。 */
 })();
 
