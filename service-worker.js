@@ -1,9 +1,13 @@
-const CACHE_NAME = 'customento-crm-v53';
+const CACHE_NAME = 'customento-crm-v54';
 const STATIC_ASSETS = [
+  '/CRM-customento/crm-v5_final_5.html',
   '/CRM-customento/manifest.json',
-  '/CRM-customento/crm-image-codec.js?v=52',
-  '/CRM-customento/crm-cbos-delta.js?v=52',
-  '/CRM-customento/crm-data-sync.js?v=52',
+  '/CRM-customento/crm-production.js?v=54',
+  '/CRM-customento/crm-production-ui.js?v=54',
+  '/CRM-customento/crm-production.css?v=54',
+  '/CRM-customento/crm-image-codec.js?v=54',
+  '/CRM-customento/crm-cbos-delta.js?v=54',
+  '/CRM-customento/crm-data-sync.js?v=54',
   '/CRM-customento/icon-192.png',
   '/CRM-customento/icon-512.png'
 ];
@@ -29,7 +33,7 @@ self.addEventListener('fetch', e => {
   // 带授权或跨域请求交由浏览器直接处理，私有数据不进入静态缓存。
   if(url.origin!==self.location.origin||e.request.headers.has('Authorization'))return;
   // HTML 文件：网络优先，离线时回退缓存
-  if (url.pathname.endsWith('.html') || e.request.destination === 'document' || /crm-(image-codec|cbos-delta|data-sync)\.js$/.test(url.pathname)) {
+  if (url.pathname.endsWith('.html') || e.request.destination === 'document' || /crm-(image-codec|cbos-delta|data-sync|production|production-ui)\.js$/.test(url.pathname) || /crm-production\.css$/.test(url.pathname)) {
     e.respondWith(
       fetch(e.request, {cache:'no-cache'}).then(res => {
         if(!res.ok)throw new Error('应用资源暂不可用');

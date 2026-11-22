@@ -43,3 +43,7 @@ CBOS日常归档须同时更新结构化投影、校验并推送，后续Actions
 - `node tests/cbos-delta.test.cjs`
 - 对所有新JS、Service Worker及主HTML内联脚本执行`node --check`。
 - 临时浏览器脚本与结果可以放仓库外；不得把私人验证夹具或基准备份加入公开tests。
+
+## 生产管理第一阶段（2026-11-22，v54）
+
+新增独立生产模块：`crm-production.js`数量规则、`crm-production-ui.js`界面、`crm-production.css`布局。设计与存储口径见`docs/production.md`，敏感事实及业务决定仍仅记私有CBOS/CRM记忆。复用既有产品/SKU、库存流水和采购单，禁止另造生产库存或把历史业务状态复制为本次事实。`SK.production`纳入同步/备份，保留`SK.prod`的产品开发含义。新增核验`node tests/production.test.cjs`；PWA v54；用户已明确授权本次发布，后续改动仍按先验证再获推送指令的约定。发布不自动建立真实工单或期初库存，隔离预览不等于真实浏览器已建工单。
