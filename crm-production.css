@@ -331,17 +331,6 @@
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
-.pn-dialog-content fieldset[data-route-step] {
-  border: 1px solid var(--border);
-  padding: 5px 12px 12px;
-  border-radius: 8px;
-  margin: 12px 0;
-}
-.pn-dialog-content fieldset legend {
-  font-size: 12px;
-  color: var(--accent);
-  padding: 0 4px;
-}
 .pn-operation {
   display: flex;
   gap: 10px;
@@ -479,4 +468,244 @@
 #pn-report-qty {
   font-size: 26px;
   font-weight: 600;
+}
+
+/* 工序配置按列编辑；手机用两行保留主要字段，长要求可展开。 */
+.pn-route-dialog {
+  max-width: 1140px;
+}
+.pn-route-columns,
+.pn-dialog-content .pn-route-row {
+  display: grid;
+  grid-template-columns: 24px minmax(90px, 1.3fr) minmax(125px, 2fr) minmax(90px, 1.3fr) 72px 86px 76px;
+  align-items: center;
+  gap: 6px;
+}
+.pn-route-columns {
+  padding: 5px 0;
+  color: var(--muted);
+  font-size: 11px;
+  border-bottom: 1px solid var(--border);
+}
+.pn-dialog-content .pn-route-row {
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  margin: 0;
+  padding: 6px 0;
+  min-width: 0;
+}
+.pn-route-index {
+  color: var(--muted);
+  text-align: center;
+  font-size: 12px;
+}
+.pn-route-row .pn-field {
+  margin: 0;
+  min-width: 0;
+  gap: 2px;
+}
+.pn-route-row .pn-route-field-label {
+  display: none;
+}
+.pn-route-row .pn-field input,
+.pn-route-row .pn-field select,
+.pn-route-requirement textarea {
+  width: 100%;
+  min-width: 0;
+  height: 30px;
+  padding: 5px 6px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+.pn-route-requirement {
+  min-width: 0;
+}
+.pn-route-requirement textarea {
+  display: block;
+  resize: vertical;
+  line-height: 18px;
+}
+.pn-route-requirement textarea:focus {
+  min-height: 66px;
+  outline: 1px solid var(--accent);
+}
+.pn-route-dialog .pn-route-requirement summary {
+  padding: 0;
+}
+.pn-route-controls {
+  display: flex;
+  gap: 2px;
+  justify-content: flex-end;
+}
+.pn-route-control {
+  width: 24px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 15px;
+}
+.pn-route-control:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.pn-route-control:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.pn-route-row input:disabled,
+.pn-route-row select:disabled,
+.pn-route-row textarea:disabled {
+  opacity: 0.7;
+}
+.pn-route-dialog .pn-dialog-body > .pn-note {
+  margin: 4px 0 8px;
+}
+@media (min-width: 769px) {
+  .pn-route-requirement summary {
+    display: none;
+  }
+}
+/* 手机保留工序和要求的两行概览，次要配置按需展开。 */
+.pn-route-settings-toggle {
+  display: none;
+}
+.pn-route-settings-close {
+  display: none;
+}
+.pn-route-req-caption {
+  display: none;
+}
+@media (max-width: 768px) {
+  .pn-route-dialog {
+    max-width: 100%;
+  }
+  .pn-route-columns {
+    display: none;
+  }
+  .pn-dialog-content .pn-route-row {
+    grid-template-columns: 18px minmax(0, 1fr) 44px 76px;
+    column-gap: 6px;
+    row-gap: 4px;
+    padding: 9px 0;
+  }
+  .pn-route-index {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .pn-route-name {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .pn-route-controls {
+    grid-column: 4;
+    grid-row: 1;
+  }
+  .pn-route-settings-toggle {
+    display: block;
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .pn-route-dialog .pn-route-settings-toggle summary {
+    list-style: none;
+    text-align: center;
+    font-size: 12px;
+    color: var(--accent);
+    padding: 6px 0;
+  }
+  .pn-route-settings-toggle summary::-webkit-details-marker {
+    display: none;
+  }
+  .pn-route-settings-toggle[open] .pn-route-settings-label {
+    display: none;
+  }
+  .pn-route-settings-toggle[open] .pn-route-settings-close {
+    display: inline;
+  }
+  .pn-route-requirement {
+    grid-column: 1/-1;
+    grid-row: 2;
+  }
+  .pn-route-dialog .pn-route-requirement summary {
+    min-height: 24px;
+    line-height: 24px;
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .pn-route-requirement summary::before {
+    content: '▸';
+    flex-shrink: 0;
+  }
+  .pn-route-req-preview {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .pn-route-requirement[open] summary::before {
+    content: '▾';
+  }
+  .pn-route-requirement[open] .pn-route-req-preview {
+    display: none;
+  }
+  .pn-route-requirement[open] .pn-route-req-caption {
+    display: inline;
+  }
+  .pn-route-requirement textarea {
+    height: 70px;
+  }
+  .pn-route-people,
+  .pn-route-rate,
+  .pn-route-mode {
+    display: none;
+  }
+  .pn-route-settings-open .pn-route-people,
+  .pn-route-settings-open .pn-route-rate,
+  .pn-route-settings-open .pn-route-mode {
+    display: flex;
+  }
+  .pn-route-people {
+    grid-column: 1/-1;
+    grid-row: 3;
+  }
+  .pn-route-rate {
+    grid-column: 1/3;
+    grid-row: 4;
+  }
+  .pn-route-mode {
+    grid-column: 3/-1;
+    grid-row: 4;
+  }
+  .pn-route-settings-open .pn-route-field-label {
+    display: block;
+    font-size: 11px;
+    line-height: 16px;
+  }
+  .pn-route-name .pn-route-field-label {
+    display: none;
+  }
+  .pn-route-people input,
+  .pn-route-rate input,
+  .pn-route-mode select {
+    height: 34px;
+    font-size: 13px;
+  }
+  .pn-route-rate input {
+    appearance: textfield;
+  }
+  .pn-route-rate input::-webkit-inner-spin-button,
+  .pn-route-rate input::-webkit-outer-spin-button {
+    appearance: none;
+    margin: 0;
+  }
 }

@@ -9,7 +9,8 @@
     routeDraft = null,
     routeProduct = '',
     reportToken = '',
-    modalStamp = '';
+    modalStamp = '',
+    routeDesktop = window.innerWidth > 768;
   function e(v) {
     return String(v === undefined || v === null ? '' : v).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -737,43 +738,67 @@
       routeDraft = JSON.parse(JSON.stringify(p.route));
       routeProduct = pid;
     }
+    routeDesktop = window.innerWidth > 768;
     var locked =
       p.released ||
       s.production.reports.some(function (r) {
         return r.productId === pid;
       });
+    var expandedSettings = keep
+      ? Array.from(document.querySelectorAll('.pn-route-settings-toggle[open]')).map(function (details) {
+          return details.closest('[data-route-step]').dataset.routeStep;
+        })
+      : [];
     var draft = routeDraft,
       html =
         note(p.name + ' · ' + p.skuCode + ' · 计划 ' + n(p.qty) + ' ' + p.unit) +
         (locked ? note('当前路线已下达或已有报工，保持只读；无报工时可撤回下达再修改。', true) : '') +
         '<input type="hidden" id="pn-route-product" value="' +
         e(pid) +
-        '"><div id="pn-route-steps">';
+        '"><div class="pn-route-columns" aria-hidden="true"><span>序</span><span>工序</span><span>操作要求</span><span>参与人员</span><span>参考产能</span><span>口径</span><span>操作</span></div><div id="pn-route-steps">';
     draft.forEach(function (step, index) {
       html +=
-        '<fieldset data-route-step="' +
+        '<fieldset class="pn-route-row' +
+        (expandedSettings.indexOf(step.id) >= 0 ? ' pn-route-settings-open' : '') +
+        '" data-route-step="' +
         e(step.id) +
         '" ' +
         (locked ? 'disabled' : '') +
-        '><legend>第 ' +
+        ' aria-label="第' +
         (index + 1) +
-        ' 道</legend>' +
-        fieldStep('工序名称', 'step-name', step.name) +
-        fieldStep('本单操作要求', 'step-req', step.requirements) +
-        fieldStep('参与人员（用逗号分隔，可小组）', 'step-people', (step.assignees || []).join('，')) +
-        '<div class="pn-grid2">' +
-        fieldStep('参考产能（可空，仅预估）', 'step-rate', step.rate || '', 'number') +
-        '<label class="pn-field">口径<select name="step-rate-mode"><option' +
+        '道工序">' +
+        '<span class="pn-route-index">' +
+        (index + 1) +
+        '</span>' +
+        fieldStep('工序名称', 'step-name', step.name, 'text', 'pn-route-name') +
+        '<details class="pn-route-settings-toggle"' +
+        (expandedSettings.indexOf(step.id) >= 0 ? ' open' : '') +
+        '><summary><span class="pn-route-settings-label">设置</span><span class="pn-route-settings-close">收起</span></summary></details>' +
+        '<details class="pn-route-requirement"' +
+        (window.innerWidth > 768 ? ' open' : '') +
+        '>' +
+        '<summary><span class="pn-route-req-preview">' +
+        e(step.requirements || '操作要求') +
+        '</span><span class="pn-route-req-caption">操作要求</span></summary><textarea name="step-req" rows="1" aria-label="本单操作要求" placeholder="操作要求" title="' +
+        e(step.requirements || '') +
+        '">' +
+        e(step.requirements || '') +
+        '</textarea></details>' +
+        fieldStep('人员', 'step-people', (step.assignees || []).join('，'), 'text', 'pn-route-people') +
+        fieldStep('产能', 'step-rate', step.rate || '', 'number', 'pn-route-rate') +
+        '<label class="pn-field pn-route-mode"><span class="pn-route-field-label">口径</span>' +
+        '<select name="step-rate-mode" aria-label="参考产能口径"><option' +
         (step.rateMode === '人时' ? ' selected' : '') +
         '>人时</option><option' +
         (step.rateMode === '机器小时' ? ' selected' : '') +
-        '>机器小时</option></select></label></div><div class="pn-actions">' +
-        button('上移', 'route-up', step.id) +
-        button('下移', 'route-down', step.id) +
-        button('移除', 'route-remove', step.id) +
+        '>机器小时</option></select></label>' +
+        '<div class="pn-route-controls">' +
+        routeControl('↑', '上移工序', 'route-up', step.id, index === 0) +
+        routeControl('↓', '下移工序', 'route-down', step.id, index === draft.length - 1) +
+        routeControl('×', '移除工序', 'route-remove', step.id, false) +
         '</div></fieldset>';
     });
-    html += '</div>';
+    html += '</div>' + note('人员用逗号分隔，可安排小组；参考产能可留空，仅用于预估。');
     if (!locked)
       html +=
         '<div class="pn-actions"><select id="pn-operation-choice"><option value="">从工序库选取</option>' +
@@ -796,22 +821,48 @@
       '</textarea></label>' +
       note('包装文字用于交代做法，实际包材仍在核料清单选SKU及数量。改变要求后请复核用料。');
     modal('产品工序配置', html, locked ? '' : '保存本款配置', locked ? '' : 'route-save');
+    document.querySelector('#pn-dialog .pn-dialog-content').classList.add('pn-route-dialog');
     routeDraft = draft;
     routeProduct = pid;
   }
-  function fieldStep(label, name, value, type) {
+  function fieldStep(label, name, value, type, css) {
     return (
-      '<label class="pn-field">' +
+      '<label class="pn-field ' +
+      (css || '') +
+      '"><span class="pn-route-field-label">' +
       e(label) +
-      '<input name="' +
+      '</span><input name="' +
       name +
       '" type="' +
       (type || 'text') +
       '" value="' +
       e(value || '') +
+      '" aria-label="' +
+      e(label) +
+      '" placeholder="' +
+      e(label) +
+      '" title="' +
+      e(value || '') +
       '"' +
       (type === 'number' ? ' min="0" step="any"' : '') +
       '></label>'
+    );
+  }
+  function routeControl(text, label, action, value, disabled) {
+    return (
+      '<button type="button" class="pn-route-control" aria-label="' +
+      label +
+      '" title="' +
+      label +
+      '" data-pn="' +
+      action +
+      '" data-value="' +
+      e(value) +
+      '"' +
+      (disabled ? ' disabled' : '') +
+      '>' +
+      text +
+      '</button>'
     );
   }
   function operations() {
@@ -1641,11 +1692,28 @@
     });
   });
   document.addEventListener('input', function (event) {
+    if (event.target.name === 'step-req') {
+      var preview = event.target.closest('.pn-route-requirement').querySelector('.pn-route-req-preview');
+      preview.textContent = event.target.value || '操作要求';
+      event.target.title = event.target.value;
+    }
     if (event.target.id === 'pn-material-search')
       run(function () {
         filterMaterial(event.target.value);
       });
   });
+  // 展开设置只改变显示；隐藏字段仍由同一份草稿采集和保存。
+  document.addEventListener(
+    'toggle',
+    function (event) {
+      if (event.target.classList && event.target.classList.contains('pn-route-settings-toggle')) {
+        event.target
+          .closest('[data-route-step]')
+          .classList.toggle('pn-route-settings-open', event.target.open);
+      }
+    },
+    true
+  );
   document.addEventListener('change', function (event) {
     if (event.target.id === 'pn-batch') {
       selected = event.target.value;
@@ -1657,6 +1725,15 @@
       closeModal();
       render();
     }
+  });
+  window.addEventListener('resize', function () {
+    var desktop = window.innerWidth > 768;
+    if (document.querySelector('.pn-route-dialog') && desktop !== routeDesktop) {
+      document.querySelectorAll('.pn-route-requirement').forEach(function (details) {
+        details.open = desktop;
+      });
+    }
+    routeDesktop = desktop;
   });
   window.addEventListener('storage', function (event) {
     if ([SK.production, SK.inv, SK.ord, SK.proc, SK.prodcat].indexOf(event.key) >= 0) {
