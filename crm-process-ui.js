@@ -592,11 +592,16 @@
               d.kind
             )
           : '') +
-        '</div><label class="pn-check"><input id="px-plan-generic" type="checkbox"' +
-        (!d.scopeSku ? ' checked' : '') +
-        '>通用路线／包装模板（加工用料方案须选具体SKU）</label><label class="pn-field">适用产品SKU' +
+        '</div>' +
+        (kind === 'packaging'
+          ? '<label class="pn-check"><input id="px-plan-generic" type="checkbox"' +
+            (!d.scopeSku ? ' checked' : '') +
+            '>适用于多个产品（可按大类限定）</label>'
+          : '') +
+        '<label class="pn-field"><span id="px-plan-sku-label">适用产品SKU</span>' +
         picker('px-plan-sku', d.scopeSku, 'product') +
         '</label>' +
+        '<div id="px-plan-scope-hint" class="pn-note"></div><div id="px-plan-error" role="alert" style="color:var(--red);margin:6px 0;font-size:13px"></div>' +
         select(
           '适用产品大类（可空）',
           'px-plan-category',
@@ -723,6 +728,70 @@
       d.previousId ? '保存修改' : '保存方案'
     );
     if (kind === 'packaging') updateCartonCapacity();
+    updatePlanScope();
+  }
+  // 用途是唯一工艺模式开关；部分填写只留在草稿，保存时再校验。
+  function updatePlanScope() {
+    var label = document.getElementById('px-plan-sku-label'),
+      hint = document.getElementById('px-plan-scope-hint');
+    if (!label) return;
+    var recipe = state.kind === 'recipe',
+      route = recipe && v('px-plan-kind') === 'route';
+    label.textContent = recipe
+      ? route
+        ? '适用产品SKU（可空）'
+        : '适用产品SKU（必选，要生产的产品）'
+      : '适用产品SKU';
+    hint.textContent = recipe
+      ? route
+        ? '路线模板可先保存通用工序，不带物料用量；按具体产品核料时再建立加工用料方案。'
+        : '从产品库搜索并选中要生产的SKU。板材等投入物料在下方另选；可以先配置，保存前补选产品。'
+      : '选择具体SKU后自动按该产品保存；勾选上方选项则按通用包装保存。';
+    document
+      .getElementById('px-plan-sku-query')
+      .setAttribute('aria-required', recipe && !route ? 'true' : 'false');
+    if (recipe) {
+      var section = document.querySelector('#pn-dialog .px-material-section'),
+        add = document.querySelector('#pn-dialog [data-px="plan-item-add"]');
+      var hasMaterials = !!(section && section.querySelector('.px-material-row')),
+        save = document.querySelector('#pn-form button[type="submit"]');
+      if (add) add.disabled = route;
+      if (save) save.disabled = route && hasMaterials;
+      if (section) section.style.display = route && !hasMaterials ? 'none' : '';
+      if (route && hasMaterials) {
+        var error = document.getElementById('px-plan-error');
+        if (error)
+          error.textContent =
+            '已填物料仍保留。通用路线不带物料，请改回具体产品加工方案，或移除下方物料后再保存。';
+      }
+    }
+  }
+  function planError(message, field) {
+    var el = document.getElementById('px-plan-error');
+    if (el) el.textContent = message;
+    var input = document.getElementById(field);
+    if (input) {
+      input.setAttribute('aria-invalid', 'true');
+      input.focus();
+      input.scrollIntoView({ block: 'center' });
+    }
+    return false;
+  }
+  function clearPlanError() {
+    var el = document.getElementById('px-plan-error');
+    if (el) el.textContent = '';
+    document.querySelectorAll('#pn-form [aria-invalid]').forEach(function (input) {
+      input.removeAttribute('aria-invalid');
+    });
+  }
+  function chosenPlanSku() {
+    var code = v('px-plan-sku'),
+      typed = v('px-plan-sku-query').trim().toUpperCase();
+    if (!code && M.sku(data(), typed)) {
+      code = typed;
+      document.getElementById('px-plan-sku').value = code;
+    }
+    return code;
   }
   function updateCartonCapacity() {
     var rows = Array.from(document.querySelectorAll('.px-simple-pack')),
@@ -786,9 +855,8 @@
     var d = state.draft;
     d.name = v('px-plan-name');
     d.source = v('px-plan-source');
-    d.scopeSku = document.getElementById('px-plan-generic').checked ? '' : v('px-plan-sku');
-    if (!document.getElementById('px-plan-generic').checked && !d.scopeSku)
-      throw new Error('请从搜索结果选择适用SKU');
+    d.scopeSku =
+      state.kind === 'packaging' && document.getElementById('px-plan-generic').checked ? '' : chosenPlanSku();
     d.requirements = v('px-plan-req');
     d.scopeCategory = v('px-plan-category');
     if (state.kind === 'recipe') {
@@ -1668,6 +1736,12 @@
         .join(' · ');
       document.getElementById(id + '-query').title = document.getElementById(id + '-query').value;
       document.getElementById(id + '-options').hidden = true;
+      if (id === 'px-plan-sku') {
+        var generic = document.getElementById('px-plan-generic');
+        if (generic) generic.checked = false;
+        clearPlanError();
+        updatePlanScope();
+      }
       return;
     }
     if (action === 'edit-operation') {
@@ -1937,6 +2011,20 @@
     if (action === 'plan-save') {
       var input = JSON.parse(JSON.stringify(capturePlan())),
         kind = state.kind;
+      clearPlanError();
+      if (!input.name.trim()) return planError('请填写方案名称。', 'px-plan-name');
+      if (kind === 'recipe' && input.kind !== 'route' && !input.scopeSku)
+        return planError(
+          '请搜索并选中要生产的产品SKU后保存；仅保存通用工序时，将用途改为“通用路线模板”。',
+          'px-plan-sku-query'
+        );
+      if (kind === 'recipe' && input.kind === 'route' && input.items.length)
+        return planError(
+          '路线模板只保存工序。已填物料仍保留，请改回具体产品加工方案，或移除物料后保存路线模板。',
+          'px-plan-kind'
+        );
+      if (kind === 'packaging' && !document.getElementById('px-plan-generic').checked && !input.scopeSku)
+        return planError('请选择适用产品SKU，或勾选“适用于多个产品”。', 'px-plan-sku-query');
       if (kind === 'packaging') {
         var roles = {};
         input.items.forEach(function (it) {
@@ -2094,6 +2182,10 @@
   });
   document.addEventListener('change', function (event) {
     var el = event.target;
+    if (el.id === 'px-plan-kind' || el.id === 'px-plan-generic') {
+      clearPlanError();
+      updatePlanScope();
+    }
     if (el.id.indexOf('px-item-role-') === 0) updateCartonCapacity();
     if (el.id === 'px-apply-recipe') {
       var recipe = M.find(data().production.processRecipes, el.value),
