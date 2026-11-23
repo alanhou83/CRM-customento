@@ -461,3 +461,112 @@ console.log(
   assert.throws(() => M.validate(conflict), /重复/);
 }
 console.log('包装分工验证通过：分类边界、层级尾箱、未知用量、旧版本追溯、复用包装及重复核料保护。');
+
+// 选用调整原子保存为新记录；原选用、用料流水和变更链可追溯。
+{
+  const { s, b, p } = setup(),
+    r = recipe(s),
+    pack = X.savePlan(
+      s,
+      'packaging',
+      {
+        name: '匿名包装记录',
+        scopeSku: p.skuCode,
+        items: [{ skuCode: 'PKG-0001-01', qty: 1, perOutput: 20 }]
+      },
+      ctx()
+    );
+  const original = X.apply(s, p.id, r.id, pack.id, 60, true, ctx());
+  assert.ok(s.production.taskChanges.some((c) => c.type === 'route-applied' && c.productId === p.id));
+  const originalSnapshot = clone(original),
+    before = clone(s),
+    route = clone(s.production.products[0].route);
+  assert.throws(
+    () => X.replaceApplication(s, original.id, r.id, pack.id, 200, false, '数量调整', ctx()),
+    /未安排/
+  );
+  assert.deepEqual(s, before);
+  assert.throws(() => X.replaceApplication(s, original.id, r.id, pack.id, 50, false, '', ctx()), /原因/);
+  const newer = X.replaceApplication(s, original.id, r.id, pack.id, 50, false, '按本批实际拆分安排', ctx());
+  const old = s.production.processApplications.find((a) => a.id === original.id);
+  assert.equal(old.status, 'withdrawn');
+  assert.equal(old.replacedBy, newer.id);
+  assert.equal(newer.replacesApplicationId, old.id);
+  assert.deepEqual(old.recipeSnapshot, originalSnapshot.recipeSnapshot);
+  assert.equal(old.qty, 60);
+  assert.equal(X.coverage(s, p.id, false), 50);
+  assert.equal(X.coverage(s, p.id, true), 50);
+  assert.deepEqual(s.inventory, before.inventory);
+  assert.deepEqual(s.procurement, before.procurement);
+  assert.deepEqual(s.production.products[0].route, route);
+  M.validate(s);
+  const length = s.production.processApplications.length;
+  assert.equal(X.replaceApplication(s, newer.id, r.id, pack.id, 50, false, '核对无变化', ctx()).id, newer.id);
+  assert.equal(s.production.processApplications.length, length);
+  const rival = clone(s);
+  const competing = clone(newer);
+  competing.id = 'other-adjustment';
+  rival.production.processApplications.push(competing);
+  assert.throws(() => M.validate(rival), /调整记录不一致/);
+  const locked = clone(s);
+  locked.production.products[0].released = true;
+  assert.throws(
+    () => X.replaceApplication(locked, newer.id, r.id, pack.id, 40, false, '重新分量', ctx()),
+    /未下达/
+  );
+  const hasReport = clone(s);
+  hasReport.production.reports.push({ id: 'history', productId: p.id, status: 'void' });
+  assert.throws(
+    () => X.replaceApplication(hasReport, newer.id, r.id, pack.id, 40, false, '更换', ctx()),
+    /未报工/
+  );
+  const template = X.savePlan(
+    s,
+    'recipe',
+    { name: '匿名通用路线记录', kind: 'route', route: [{ name: '匿名整理' }], items: [] },
+    ctx()
+  );
+  const count = s.production.taskChanges.length;
+  assert.equal(X.apply(s, p.id, template.id, '', '', true, ctx()), null);
+  assert.equal(s.production.taskChanges.length, count + 1);
+  assert.equal(s.production.taskChanges.at(-1).planSnapshot.id, template.id);
+  assert.equal(X.coverage(s, p.id, false), 50);
+  M.validate(s);
+}
+console.log(
+  '选用记录通过：数量调整追溯、失败不留半次撤回、无变化不重复记录、下达/历史锁定、跨设备调整链保护、通用路线带入留痕。'
+);
+// 调整链经过合并/按来源拆分仍保持历史可校验，拆分副本不冒充另一次调整。
+{
+  const { s, p } = setup();
+  const r = recipe(s);
+  const old = X.apply(s, p.id, r.id, '', 80, false, ctx());
+  X.replaceApplication(s, old.id, r.id, '', 70, false, '本批分段', ctx());
+  const children = X.split(s, p.id, true, ctx());
+  M.validate(s);
+  const childApps = s.production.processApplications.filter((a) => a.status === 'active');
+  assert.ok(childApps.every((a) => !a.replacesApplicationId && a.sourceApplicationId));
+  const merged = X.merge(
+    s,
+    children.map((p) => p.id),
+    true,
+    ctx()
+  );
+  assert.equal(X.coverage(s, merged.id, false), 70);
+  M.validate(s);
+  const other = setup(false),
+    r2 = recipe(other.s),
+    tasks = other.s.production.products;
+  X.apply(other.s, tasks[0].id, r2.id, '', 20, false, ctx());
+  const second = X.apply(other.s, tasks[1].id, r2.id, '', 20, false, ctx());
+  X.replaceApplication(other.s, second.id, r2.id, '', 19, false, '单独调量', ctx());
+  const combined = X.merge(
+    other.s,
+    tasks.map((p) => p.id),
+    true,
+    ctx()
+  );
+  assert.equal(X.coverage(other.s, combined.id, false), 39);
+  M.validate(other.s);
+}
+console.log('选用重组兼容通过：调整后拆分/合并、合并前各自调整的历史链与数量保留。');

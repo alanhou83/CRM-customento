@@ -1227,3 +1227,76 @@
     grid-row: 3;
   }
 }
+
+/* 选用结果紧贴产品，详情展示当时版本，避免重复安排。 */
+.px-task-plan-status {
+  margin-top: 5px;
+  min-width: 0;
+}
+.px-plan-status-line {
+  display: flex !important;
+  gap: 8px;
+  align-items: baseline;
+}
+.px-plan-status-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.px-plan-status-qty {
+  flex-shrink: 0;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.px-coverage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  padding: 8px 0;
+  font-size: 12px;
+}
+.px-application-record {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.px-application-record .pn-section-head {
+  margin-bottom: 4px;
+  gap: 8px;
+}
+.px-application-success {
+  color: var(--green);
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.px-workflow {
+  padding-left: 24px;
+}
+.px-workflow li {
+  padding: 8px 0;
+}
+.px-workflow p {
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 5px 0;
+}
+@media (max-width: 768px) {
+  .px-plan-status-line {
+    display: block !important;
+  }
+  .px-plan-status-name {
+    display: block;
+  }
+  .px-plan-status-qty {
+    font-size: 11px;
+  }
+  .px-application-record .pn-section-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .px-coverage {
+    flex-direction: column;
+  }
+}

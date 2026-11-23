@@ -237,7 +237,8 @@
       (canManage()
         ? button(workerMode ? '管理入口' : '生产员入口', 'mode') +
           (!workerMode
-            ? button('工艺库', 'operations') +
+            ? button('操作顺序', 'workflow') +
+              button('工艺库', 'operations') +
               button('采购工作台', 'proc-workbench') +
               button('新建工单', 'new', '', 'btn-primary')
             : '')
@@ -347,6 +348,7 @@
           })
           .join('') +
         '</details>' +
+        (root.CrmProcessUI ? root.CrmProcessUI.taskPlanSummary(s, p) : '') +
         (M.orderDrift(s, p)
           ? note('来源订单已变更；本工单保留原数量，请先核对。', true) +
             button('核对订单变更', 'reconcile-order', p.id)
@@ -1319,6 +1321,10 @@
       render();
       return;
     }
+    if (action === 'workflow' && root.CrmProcessUI) {
+      root.CrmProcessUI.showWorkflow();
+      return;
+    }
     if (action === 'new') {
       libraryView = '';
       openNew();
@@ -1833,6 +1839,13 @@
     },
     helpers: {
       data: data,
+      goTab: function (value) {
+        closeModal();
+        libraryView = '';
+        tab =
+          ['overview', 'materials', 'routes', 'reports', 'board'].indexOf(value) >= 0 ? value : 'overview';
+        render();
+      },
       commit: commit,
       changeData: changeData,
       modal: modal,

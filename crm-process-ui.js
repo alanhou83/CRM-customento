@@ -11,7 +11,9 @@
     draft: null,
     kind: 'recipe',
     pid: '',
-    openItems: []
+    openItems: [],
+    editApplicationId: '',
+    applyQtyEdited: false
   };
   function uid() {
     return 'px-' + crypto.randomUUID();
@@ -1010,71 +1012,456 @@
         note('来源 ' + p.source + ' · ' + p.createdBy + ' · ' + p.createdAt)
     );
   }
-  function applyForm(pid) {
-    var s = data(),
-      p = find(s.production.products, pid);
-    state.pid = pid;
-    var recipes = X.current(s.production.processRecipes).filter(function (r) {
-        return X.matches(s, r, p);
+  function taskApps(s, pid) {
+    var records = s.production.processApplications.filter(function (a) {
+        return a.productId === pid;
       }),
-      packs = X.current(s.production.packagingPlans).filter(function (r) {
-        return X.matches(s, r, p);
+      seen = new Set(
+        records.map(function (a) {
+          return a.id;
+        })
+      );
+    for (var i = 0; i < records.length; i++) {
+      var a = records[i];
+      [a.replacesApplicationId, a.sourceApplicationId].filter(Boolean).forEach(function (id) {
+        var source = M.find(s.production.processApplications, id);
+        if (source && !seen.has(id)) {
+          seen.add(id);
+          records.push(source);
+        }
       });
+    }
+    return records;
+  }
+  function canChangePlans(s, p) {
+    var batch = M.find(s.production.batches, p.batchId);
+    return (
+      H.canManage() &&
+      !p.retiredAt &&
+      batch &&
+      ['completed', 'cancelled'].indexOf(batch.status) < 0 &&
+      !p.released &&
+      !s.production.reports.some(function (r) {
+        return r.productId === p.id;
+      }) &&
+      !s.production.consumptions.some(function (c) {
+        return c.processProductId === p.id;
+      })
+    );
+  }
+  function planLabel(plan) {
+    return plan ? plan.name + ' · v' + plan.version : '未选';
+  }
+  function when(at) {
+    if (!at) return '时间待补';
+    var d = new Date(at);
+    return Number.isNaN(d.getTime()) ? '时间待补' : d.toLocaleString('zh-CN', { hour12: false });
+  }
+  function taskPlanSummary(s, p) {
+    var apps = taskApps(s, p.id).filter(function (a) {
+      return a.status === 'active';
+    });
+    function line(pack) {
+      var plans = apps
+          .map(function (a) {
+            return pack ? a.packagingSnapshot : a.recipeSnapshot;
+          })
+          .filter(Boolean),
+        names = Array.from(new Set(plans.map(planLabel))),
+        text = names.length
+          ? names[0] + (names.length > 1 ? ' 等' + names.length + '个方案' : '')
+          : pack
+            ? p.packaging
+              ? '已填包装要求，未选库方案'
+              : '未选包装方案'
+            : p.route.length
+              ? '已配' + p.route.length + '道工序，未选用料方案'
+              : '未选工艺方案';
+      return (
+        '<small class="px-plan-status-line"><span class="px-plan-status-name" title="' +
+        e(names.join('；') || text) +
+        '">' +
+        (pack ? '包装：' : '工艺：') +
+        e(text) +
+        '</span>' +
+        (plans.length
+          ? '<span class="px-plan-status-qty">已安排 ' +
+            n(X.coverage(s, p.id, pack)) +
+            '/' +
+            n(p.qty) +
+            '</span>'
+          : '') +
+        '</small>'
+      );
+    }
+    return '<div class="px-task-plan-status">' + line(false) + line(true) + '</div>';
+  }
+  function remainingSummary(s, p) {
+    return (
+      '<div class="px-coverage"><span>加工方案：已安排 <b>' +
+      n(X.coverage(s, p.id, false)) +
+      '</b> / ' +
+      n(p.qty) +
+      '，剩余 <b>' +
+      n(Math.max(0, p.qty - X.coverage(s, p.id, false))) +
+      '</b></span><span>包装方案：已安排 <b>' +
+      n(X.coverage(s, p.id, true)) +
+      '</b> / ' +
+      n(p.qty) +
+      '，剩余 <b>' +
+      n(Math.max(0, p.qty - X.coverage(s, p.id, true))) +
+      '</b></span></div>'
+    );
+  }
+  function applicationCard(s, p, a) {
+    var active = a.status === 'active',
+      editable = active && canChangePlans(s, p);
+    return (
+      '<article class="px-application-record" data-application-id="' +
+      e(a.id) +
+      '"><div class="pn-section-head"><b>' +
+      n(a.qty) +
+      ' ' +
+      e(p.unit) +
+      ' · ' +
+      (active
+        ? '当前生效'
+        : a.status === 'superseded'
+          ? '已按来源拆分，原记录保留'
+          : a.replacedBy
+            ? '已调整，原记录保留'
+            : '已撤回') +
+      '</b><div class="pn-actions">' +
+      b('查看当时配置', 'application-detail', a.id) +
+      (editable ? b('调整', 'edit-application', a.id) + b('撤回', 'withdraw', a.id) : '') +
+      '</div></div><small>工艺：' +
+      e(planLabel(a.recipeSnapshot)) +
+      '</small><small>包装：' +
+      e(planLabel(a.packagingSnapshot)) +
+      '</small><small>选用：' +
+      e(a.createdBy || '人员待补') +
+      ' · ' +
+      e(when(a.at || a.createdAt)) +
+      '</small>' +
+      (a.routeApplied !== undefined
+        ? '<small>' + (a.routeApplied ? '本次已带入工序路线' : '本次保留任务原工序路线') + '</small>'
+        : '') +
+      (a.sourceApplicationId ? note('按来源拆分生成；原选用保留在来源历史中。') : '') +
+      (a.productId !== p.id ? note('来源任务的历史记录，不计入当前安排量。') : '') +
+      (a.changeReason ? note('本次调整原因：' + a.changeReason) : '') +
+      (!active
+        ? note(
+            (a.status === 'superseded' ? '拆分' : a.replacedBy ? '调整' : '撤回') +
+              '：' +
+              (a.status === 'superseded' ? a.supersededBy || '人员待补' : a.withdrawBy || '人员待补') +
+              ' · ' +
+              when(a.status === 'superseded' ? a.supersededAt : a.withdrawAt) +
+              ' · ' +
+              (a.status === 'superseded' ? '分量记录见当前任务' : a.withdrawReason || '原因待补')
+          )
+        : '') +
+      '</article>'
+    );
+  }
+  function applicationManager(pid, message) {
+    var s = data(),
+      p = find(s.production.products, pid),
+      apps = taskApps(s, pid),
+      active = apps.filter(function (a) {
+        return a.status === 'active';
+      }),
+      history = apps.filter(function (a) {
+        return a.status !== 'active';
+      }),
+      routes = s.production.taskChanges.filter(function (c) {
+        return (
+          c.productId === pid &&
+          c.type === 'route-applied' &&
+          c.planSnapshot &&
+          c.planSnapshot.kind === 'route'
+        );
+      }),
+      changeable = canChangePlans(s, p),
+      remaining = p.qty - X.coverage(s, pid, false) > 0.000001 || p.qty - X.coverage(s, pid, true) > 0.000001;
+    state.pid = pid;
     modal(
-      '给本任务选用方案',
+      '本任务工艺与包装',
+      note(p.name + ' · ' + p.skuCode + ' · 计划 ' + n(p.qty) + ' ' + p.unit) +
+        (message ? '<p class="px-application-success" role="status">' + e(message) + '</p>' : '') +
+        remainingSummary(s, p) +
+        (active.length
+          ? active
+              .map(function (a) {
+                return applicationCard(s, p, a);
+              })
+              .join('')
+          : note('尚无用料／包装方案选用记录。已手动配置的工序和核料仍保留。')) +
+        (p.routeOrigin
+          ? note(
+              '当前工序来源：' +
+                p.routeOrigin.name +
+                ' v' +
+                p.routeOrigin.version +
+                ' · ' +
+                (p.released ? '已下达' : '待下达')
+            )
+          : note('当前工序：' + p.route.length + '道 · ' + (p.released ? '已下达' : '待下达'))) +
+        (changeable
+          ? remaining
+            ? '<div class="pn-actions">' + b('为剩余数量追加方案', 'apply-add', pid, true) + '</div>'
+            : note('工艺和包装已全部安排，无需重复带入。需要更换方案或数量，请点对应记录的“调整”。')
+          : note(
+              p.released
+                ? '任务已下达，选用记录只读。需要调整时，先核实现场情况，再到工序配置撤回未执行的下达。'
+                : '任务已有报工／归属投入或已关闭，保留历史选用，不能直接改写。'
+            )) +
+        (history.length
+          ? '<details><summary>调整／撤回／来源历史（' +
+            history.length +
+            '）</summary>' +
+            history
+              .slice()
+              .reverse()
+              .map(function (a) {
+                return applicationCard(s, p, a);
+              })
+              .join('') +
+            '</details>'
+          : '') +
+        (routes.length
+          ? '<details><summary>通用路线带入记录（' +
+            routes.length +
+            '）</summary>' +
+            routes
+              .slice()
+              .reverse()
+              .map(function (c) {
+                return (
+                  '<p>' +
+                  e(planLabel(c.planSnapshot)) +
+                  ' · ' +
+                  e(c.person) +
+                  ' · ' +
+                  e(when(c.at)) +
+                  ' · 工序v' +
+                  n(c.beforeVersion) +
+                  ' → v' +
+                  n(c.afterVersion) +
+                  '</p>'
+                );
+              })
+              .join('') +
+            '</details>'
+          : '') +
+        '<div class="pn-actions">' +
+        b('去核料领料', 'work-tab', 'materials') +
+        b('去工序配置', 'work-tab', 'routes') +
+        b('整理当前配置为库方案', 'from-task', pid) +
+        '</div>' +
+        note(
+          '选用只保存本工单采用的方案和数量；核料、下达、领料、报工分别记录。撤回不会自动撤销已带入工序或库存／采购／领料。'
+        )
+    );
+  }
+  function snapshotHtml(plan, pack) {
+    if (!plan) return note(pack ? '本记录未选择包装方案。' : '本记录未选择加工方案。');
+    return (
+      '<h3>' +
+      e(planLabel(plan)) +
+      '</h3>' +
+      note(plan.requirements || '') +
+      (pack
+        ? note(
+            '装箱：' +
+              (plan.carton && plan.carton.innerPcs ? n(plan.carton.innerPcs) + '个产品／内盒；' : '') +
+              (plan.carton && plan.carton.innersPerCarton
+                ? n(plan.carton.innersPerCarton) + '内盒／外箱；'
+                : '') +
+              (plan.carton && plan.carton.pcs ? n(plan.carton.pcs) + '个产品／外箱' : '箱规待核')
+          )
+        : (plan.route || [])
+            .map(function (st, i) {
+              return (
+                '<p>' + (i + 1) + '. ' + e(st.name) + ' · ' + e(st.requirements || '按本单要求') + '</p>'
+              );
+            })
+            .join('')) +
+      (plan.items || [])
+        .map(function (i) {
+          var x = M.sku(data(), i.skuCode);
+          return (
+            '<small>' +
+            e(x ? x.product.nameCN : i.skuCode) +
+            ' · ' +
+            e(i.skuCode) +
+            '：每' +
+            n(i.perOutput) +
+            (i.basis === 'inner' ? '个内盒' : i.basis === 'carton' ? '个外箱' : '个成品') +
+            '用' +
+            n(i.qty) +
+            e(i.unit) +
+            '</small>'
+          );
+        })
+        .join('')
+    );
+  }
+  function applicationDetail(id) {
+    var s = data(),
+      a = find(s.production.processApplications, id),
+      p = find(s.production.products, a.productId);
+    modal(
+      '选用记录 · 当时配置',
+      note(
+        p.name + ' · ' + n(a.qty) + ' ' + p.unit + ' · ' + (a.status === 'active' ? '当前生效' : '历史保留')
+      ) +
+        note((a.createdBy || '人员待补') + ' · ' + when(a.at || a.createdAt)) +
+        snapshotHtml(a.recipeSnapshot, false) +
+        snapshotHtml(a.packagingSnapshot, true) +
+        (a.changeReason ? note('调整原因：' + a.changeReason) : '') +
+        b('返回本任务选用记录', 'application-manager', state.pid || p.id) +
+        note('显示保存当时的版本；工艺库后续修改不会反写这里。')
+    );
+  }
+  function updateApplicationForm() {
+    var s = data(),
+      p = find(s.production.products, state.pid),
+      old = state.editApplicationId ? find(s.production.processApplications, state.editApplicationId) : null,
+      r = M.find(s.production.processRecipes, v('px-apply-recipe')),
+      pack = v('px-apply-pack'),
+      route = r && r.kind === 'route',
+      rawRemaining = Math.max(
+        0,
+        p.qty - X.coverage(s, p.id, false) + (old && old.recipeSnapshot ? old.qty : 0)
+      ),
+      packRemaining = Math.max(
+        0,
+        p.qty - X.coverage(s, p.id, true) + (old && old.packagingSnapshot ? old.qty : 0)
+      ),
+      limits = [];
+    if (r && !route) limits.push(rawRemaining);
+    if (pack && !route) limits.push(packRemaining);
+    var max = limits.length ? Math.min.apply(Math, limits) : Math.max(rawRemaining, packRemaining),
+      qty = document.getElementById('px-apply-qty'),
+      section = document.getElementById('px-apply-quantity'),
+      hint = document.getElementById('px-apply-remaining'),
+      packSelect = document.getElementById('px-apply-pack'),
+      routeBox = document.getElementById('px-apply-route'),
+      save = document.querySelector('#pn-form button[type="submit"]');
+    section.style.display = route ? 'none' : '';
+    packSelect.disabled = !!route;
+    routeBox.disabled = !!route;
+    if (route) routeBox.checked = true;
+    qty.max = max;
+    if (!old && (!state.applyQtyEdited || Number(qty.value) > max)) qty.value = max;
+    hint.textContent = route
+      ? '仅带入工序路线，不占用加工／包装安排数量；包装方案请另外选择。'
+      : '本次可安排上限 ' +
+        n(max) +
+        ' ' +
+        p.unit +
+        '；加工可安排 ' +
+        n(rawRemaining) +
+        '，包装可安排 ' +
+        n(packRemaining) +
+        '。' +
+        (old ? '调整会保留原记录并记录原因。' : '剩余0表示该类数量已经安排，已有记录可查看或调整。');
+    if (save) save.disabled = !route && limits.length > 0 && max <= 0;
+  }
+  function applyForm(pid, applicationId) {
+    var s = data(),
+      p = find(s.production.products, pid),
+      old = applicationId ? find(s.production.processApplications, applicationId) : null;
+    if (!canChangePlans(s, p)) {
+      applicationManager(pid);
+      return;
+    }
+    state.pid = pid;
+    state.editApplicationId = applicationId || '';
+    state.applyQtyEdited = !!old;
+    function options(kind, snapshot) {
+      var all = X.current(plans(s, kind)).filter(function (r) {
+        return X.matches(s, r, p) && (!old || kind === 'packaging' || r.kind !== 'route');
+      });
+      if (
+        snapshot &&
+        !all.some(function (r) {
+          return r.id === snapshot.id;
+        })
+      )
+        all.unshift(snapshot);
+      return all.map(function (r) {
+        return [r.id, r.name + ' v' + r.version + (r.kind === 'route' ? '（仅带工序）' : '')];
+      });
+    }
+    modal(
+      old ? '调整本次选用' : '为本任务安排工艺与包装',
       note(p.name + ' · ' + p.skuCode + ' · 计划 ' + n(p.qty)) +
+        remainingSummary(s, p) +
+        (old
+          ? note(
+              '原记录：' +
+                n(old.qty) +
+                ' ' +
+                p.unit +
+                ' · ' +
+                planLabel(old.recipeSnapshot) +
+                ' ＋ ' +
+                planLabel(old.packagingSnapshot)
+            )
+          : note('本表只新增未安排的数量；保存后会显示选用记录。')) +
         select(
           '加工／路线方案（可空，仅选包装）',
           'px-apply-recipe',
-          [['', '暂不选加工方案']].concat(
-            recipes.map(function (r) {
-              return [r.id, r.name + ' v' + r.version + (r.kind === 'route' ? '（仅套路线）' : '')];
-            })
-          ),
-          ''
+          [['', '暂不选加工方案']].concat(options('recipe', old && old.recipeSnapshot)),
+          old && old.recipeSnapshot ? old.recipeSnapshot.id : ''
         ) +
         select(
           '包装方案（可单独选用）',
           'px-apply-pack',
-          [['', '暂不选包装方案']].concat(
-            packs.map(function (r) {
-              return [r.id, r.name + ' v' + r.version];
-            })
-          ),
-          ''
+          [['', '暂不选包装方案']].concat(options('packaging', old && old.packagingSnapshot)),
+          old && old.packagingSnapshot ? old.packagingSnapshot.id : ''
         ) +
+        '<div id="px-apply-quantity">' +
         f(
-          '本次方案负责的产品数量',
+          old ? '调整后本记录负责的产品数量' : '本次新增安排数量',
           'px-apply-qty',
-          Math.max(0, p.qty - X.coverage(s, p.id, false)) || Math.max(0, p.qty - X.coverage(s, p.id, true)),
+          old ? old.qty : Math.max(0, p.qty - X.coverage(s, pid, false), p.qty - X.coverage(s, pid, true)),
           'number'
         ) +
-        '<label class="pn-check"><input id="px-apply-route" type="checkbox"' +
-        (!p.route.length ? ' checked' : '') +
-        '>带入工序路线（仅覆盖未下达配置，同名同位置人员保留）</label>' +
-        note(
-          '可分批选择不同板材方案；包装可独立覆盖全量，同一任务的相同包装方案合算尾箱。用量先进入核料建议，不自动预留或扣库存。'
-        ),
+        '</div><p id="px-apply-remaining" class="pn-note"></p><label class="pn-check"><input id="px-apply-route" type="checkbox"' +
+        (!old && !p.route.length ? ' checked' : '') +
+        '>同时带入工序路线（仅覆盖未下达配置，同名同位置人员保留）</label>' +
+        (old ? f('调整原因（必填，原选用记录保留）', 'px-apply-reason', '') : '') +
+        '<p id="px-apply-error" role="alert" style="color:var(--red)"></p>' +
+        note('用量进入核料建议，不自动预留或扣库存。更改库方案不会改变本单当时选用的版本。') +
+        b('查看本任务已有记录', 'application-manager', pid),
       'apply-save',
-      '带入本次配置'
+      old ? '保存调整并保留原记录' : '保存本次选用'
     );
+    updateApplicationForm();
   }
   function taskActions(s, p) {
     if (!H.canManage()) return '';
-    if (
-      p.released ||
-      s.production.reports.some(function (r) {
-        return r.productId === p.id;
-      }) ||
-      s.production.consumptions.some(function (c) {
-        return c.processProductId === p.id;
-      })
-    )
-      return '<div class="pn-actions px-task-actions">' + b('整理为方案', 'from-task', p.id) + '</div>';
+    var apps = taskApps(s, p.id),
+      mutable = canChangePlans(s, p);
     return (
       '<div class="pn-actions px-task-actions">' +
-      b('选工艺／包装', 'apply', p.id) +
-      (s.production.products.some(function (x) {
+      b(
+        apps.length
+          ? '查看／调整方案（' +
+              apps.filter(function (a) {
+                return a.status === 'active';
+              }).length +
+              '）'
+          : mutable
+            ? '选择工艺／包装'
+            : '查看本单方案',
+        'apply',
+        p.id
+      ) +
+      (mutable &&
+      s.production.products.some(function (x) {
         return (
           !x.retiredAt &&
           x.id !== p.id &&
@@ -1085,9 +1472,27 @@
       })
         ? b('合并同款', 'merge', p.id)
         : '') +
-      (p.sources.length > 1 ? b('按来源拆分', 'split', p.id) : '') +
-      b('整理为方案', 'from-task', p.id) +
+      (mutable && p.sources.length > 1 ? b('按来源拆分', 'split', p.id) : '') +
       '</div>'
+    );
+  }
+  function showWorkflow() {
+    modal(
+      '生产管理怎么操作',
+      note('工艺库是可复用的资料，不必先建齐全部产品。每张工单确认本次实际用法，也可手动配置。') +
+        '<ol class="px-workflow"><li><b>准备工单｜生产主管</b><p>从销售订单建工单，核对产品、数量、交期；相同要求可合并生产，并确认本次采用的工艺、包装或手动配置。</p>' +
+        b('回总览确认方案', 'work-tab', 'overview') +
+        '</li><li><b>核料与补料｜Penny／采购、仓库</b><p>把方案建议和实际情况核对，补齐／删减物料，检查实存、占用和本批备料目标。不足再汇总采购，到货按真实收货入库；已有料的部分可先安排。</p>' +
+        b('去核料领料', 'work-tab', 'materials') +
+        '</li><li><b>确认下达｜生产主管</b><p>核对这次工序顺序、操作／包装要求及实际参与人员，按具备条件的产品下达。选方案、配置工序和下达是不同动作。</p>' +
+        b('去工序配置', 'work-tab', 'routes') +
+        '</li><li><b>领料与加工｜仓库、生产员</b><p>按实际数量领料；追加、退回和真实投入分别留记录。来料放机旁不等于已经用掉，不靠事后手改库存。</p>' +
+        b('记录领料／投入', 'work-tab', 'materials') +
+        '</li><li><b>报工与核对｜生产员、小组、主管</b><p>工人只报本次实际完成多少、参与人和已知损耗；主管核对可流转数量。小组产量只记一次，工时分别记，超产保留原数提示。</p>' +
+        b('去报工记录', 'work-tab', 'reports') +
+        '</li><li><b>进度与完工交接｜生产主管</b><p>看各道工序的已报、已确认和未完成量，核对末道产出与交接。成品完工入库、出库发货与财务闭环仍待后续接通，当前不会自动完成订单。</p>' +
+        b('看进度', 'work-tab', 'board') +
+        '</li></ol>'
     );
   }
   function mergeForm(pid) {
@@ -1211,7 +1616,8 @@
                 .join(' ＋ ')
             ) +
             '</span>' +
-            b('撤回未执行选用', 'withdraw', a.id) +
+            b('查看记录', 'application-manager', p.id) +
+            (canChangePlans(s, p) ? b('撤回未执行选用', 'withdraw', a.id) : '') +
             '</div>'
           );
         })
@@ -1894,8 +2300,30 @@
       editPlan();
       return;
     }
-    if (action === 'apply') {
+    if (action === 'work-tab') {
+      H.goTab(value);
+      return;
+    }
+    if (action === 'application-manager') {
+      applicationManager(value);
+      return;
+    }
+    if (action === 'application-detail') {
+      applicationDetail(value);
+      return;
+    }
+    if (action === 'edit-application') {
+      var original = find(s.production.processApplications, value);
+      applyForm(original.productId, value);
+      return;
+    }
+    if (action === 'apply-add') {
       applyForm(value);
+      return;
+    }
+    if (action === 'apply') {
+      if (taskApps(s, value).length) applicationManager(value);
+      else applyForm(value);
       return;
     }
     if (action === 'merge') {
@@ -1909,10 +2337,13 @@
     if (action === 'withdraw') {
       var why = prompt('撤回未执行选用的原因（原已购/预留/已领保持，需重新核料）：');
       if (!why) return;
+      var prior = find(s.production.processApplications, value);
       H.commit(function (s) {
         X.withdraw(s, value, why, ctx);
       }, 'production');
+      H.closeModal();
       H.render();
+      applicationManager(prior.productId, '已撤回，本次安排数量已释放；原记录仍保留。');
       return;
     }
     if (action === 'material-suggest') {
@@ -2057,18 +2488,61 @@
         );
       }, 'production');
     } else if (action === 'apply-save') {
-      H.commit(function (s) {
-        X.apply(
-          s,
-          state.pid,
-          v('px-apply-recipe'),
-          v('px-apply-pack'),
-          v('px-apply-qty'),
-          document.getElementById('px-apply-route').checked,
-          ctx
-        );
+      var recipeId = v('px-apply-recipe'),
+        packId = v('px-apply-pack'),
+        selectedRecipe = M.find(data().production.processRecipes, recipeId),
+        routeOnly = selectedRecipe && selectedRecipe.kind === 'route',
+        qty = v('px-apply-qty'),
+        reason = state.editApplicationId ? v('px-apply-reason') : '',
+        error = document.getElementById('px-apply-error');
+      if (!recipeId && !packId) {
+        error.textContent = '请选择工艺或包装方案。';
+        return;
+      }
+      if (!routeOnly && (!Number.isFinite(Number(qty)) || Number(qty) <= 0)) {
+        error.textContent = '请填写大于0的本次安排数量。';
+        return;
+      }
+      if (state.editApplicationId && !reason.trim()) {
+        error.textContent = '请填写调整原因，原记录会保留。';
+        document.getElementById('px-apply-reason').focus();
+        return;
+      }
+      var saved = H.commit(function (s) {
+        return state.editApplicationId
+          ? X.replaceApplication(
+              s,
+              state.editApplicationId,
+              recipeId,
+              packId,
+              qty,
+              document.getElementById('px-apply-route').checked,
+              reason,
+              ctx
+            )
+          : X.apply(
+              s,
+              state.pid,
+              recipeId,
+              routeOnly ? '' : packId,
+              qty,
+              document.getElementById('px-apply-route').checked,
+              ctx
+            );
       }, 'production');
-      message = '已带入，请核对用料建议及人员安排';
+      H.closeModal();
+      H.render();
+      applicationManager(
+        state.pid,
+        routeOnly
+          ? '已带入工序路线；仅更新工序，不占用用料／包装安排数量。'
+          : state.editApplicationId
+            ? saved.id === state.editApplicationId
+              ? '方案与数量未变化，原记录保持。'
+              : '调整已保存，原记录已保留在历史中。'
+            : '本次选用已保存，方案与安排数量如下；下一步请核料。'
+      );
+      return;
     } else if (action === 'merge-save') {
       var ids = Array.from(document.querySelectorAll('[name=px-merge-id]:checked')).map(function (el) {
         return el.value;
@@ -2174,6 +2648,7 @@
       pickerResults(el);
       return;
     }
+    if (el.id === 'px-apply-qty') state.applyQtyEdited = true;
     if (el.id.indexOf('px-item-pack-count-') === 0) updateCartonCapacity();
     if (el.id === 'px-library-search') {
       state.query = el.value;
@@ -2203,6 +2678,7 @@
       )
         target.value = pack.id;
     }
+    if (el.id === 'px-apply-recipe' || el.id === 'px-apply-pack') updateApplicationForm();
     if (el.id === 'px-history-condition') {
       state.historyCondition = el.value;
       refresh();
@@ -2257,6 +2733,8 @@
     submit: submit,
     consumptionFields: consumptionFields,
     taskActions: taskActions,
+    taskPlanSummary: taskPlanSummary,
+    showWorkflow: showWorkflow,
     batchPlanSummary: batchPlanSummary,
     materialSuggestionFields: materialSuggestionFields,
     routeGroupFields: routeGroupFields,

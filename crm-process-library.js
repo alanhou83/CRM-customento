@@ -397,8 +397,22 @@
   function applyRoute(s, p, recipe, ctx) {
     mutable(s, p);
     if (!matches(s, recipe, p)) fail('路线方案不适用于此产品');
+    var before = clone(p.route),
+      beforeVersion = p.routeVersion;
     M.setRoute(s, p.id, cloneRoute(recipe.route, p, ctx), p.packaging, ctx);
     p.routeOrigin = { id: recipe.id, name: recipe.name, version: recipe.version };
+    s.production.taskChanges.push({
+      id: ctx.id,
+      type: 'route-applied',
+      batchId: p.batchId,
+      productId: p.id,
+      planSnapshot: clone(recipe),
+      beforeRoute: before,
+      beforeVersion: beforeVersion,
+      afterVersion: p.routeVersion,
+      at: ctx.at,
+      person: ctx.person
+    });
   }
   function routeBulk(s, bid, ids, recipeId, ctx) {
     var r = need(s.production.processRecipes, recipeId, '路线模板');
@@ -552,12 +566,44 @@
       packagingSnapshot: pack ? clone(pack) : null,
       createdBy: ctx.person,
       at: ctx.at,
-      planningBasisQty: p.qty
+      planningBasisQty: p.qty,
+      routeApplied: !!(withRoute && recipe && recipe.route.length),
+      routeVersion: p.routeVersion
     };
     s.production.processApplications.push(app);
     p.materialsNeedReview = true;
     prepareMaterials(s, p.batchId, ctx);
     return app;
+  }
+  // 未执行选用调整为新记录；原记录保留，失败时不留下半次撤回。
+  function replaceApplication(s, id, recipeId, packId, quantity, withRoute, note, ctx) {
+    var old = need(s.production.processApplications, id, '原选用记录'),
+      p = task(s, old.productId);
+    mutable(s, p);
+    if (old.status !== 'active') fail('原选用已撤回，请打开当前记录');
+    if (!String(note || '').trim()) fail('请填写调整原因');
+    if (ctx.id === id) fail('调整须使用新的记录编号');
+    recipeId = recipeId || '';
+    packId = packId || '';
+    var qty = M.num(quantity),
+      recipe = recipeId ? need(s.production.processRecipes, recipeId, '工艺方案') : null;
+    if (recipe && recipe.kind === 'route') fail('调整用料选用请选择具体加工方案；通用路线请单独带入');
+    if (
+      !withRoute &&
+      ((old.recipeSnapshot && old.recipeSnapshot.id) || '') === recipeId &&
+      ((old.packagingSnapshot && old.packagingSnapshot.id) || '') === packId &&
+      old.qty === qty
+    )
+      return old;
+    var draft = clone(s);
+    withdraw(draft, id, note, ctx);
+    var next = apply(draft, p.id, recipeId, packId, qty, withRoute, ctx);
+    var prior = need(draft.production.processApplications, id, '原选用记录');
+    prior.replacedBy = next.id;
+    next.replacesApplicationId = prior.id;
+    next.changeReason = String(note).trim();
+    s.production = draft.production;
+    return next;
   }
   function withdraw(s, id, note, ctx) {
     var a = need(s.production.processApplications, id, '选用记录');
@@ -773,6 +819,7 @@
     oldApps.forEach(function (a, ai) {
       a.status = 'superseded';
       a.supersededAt = ctx.at;
+      a.supersededBy = ctx.person;
       var remaining = a.qty;
       children.forEach(function (c, ci) {
         if (remaining <= EPS) return;
@@ -788,9 +835,14 @@
         next.qty = take;
         next.status = 'active';
         next.sourceApplicationId = a.id;
+        next.createdBy = ctx.person;
+        delete next.replacesApplicationId;
+        delete next.replacedBy;
         next.at = ctx.at;
         next.planningBasisQty = c.qty;
         delete next.supersededAt;
+        delete next.supersededBy;
+        delete next.changeReason;
         s.production.processApplications.push(next);
         if (a.recipeSnapshot) rawRemaining[ci] -= take;
         if (a.packagingSnapshot) packRemaining[ci] -= take;
@@ -1177,6 +1229,20 @@
     d.processApplications.forEach(function (a) {
       var p = need(d.products, a.productId, '方案对应产品');
       if (a.batchId !== p.batchId) fail('方案与工单关联错误');
+      if (a.replacesApplicationId) {
+        var prior = need(d.processApplications, a.replacesApplicationId, '调整前记录');
+        if (
+          prior.replacedBy !== a.id ||
+          prior.status === 'active' ||
+          need(d.products, prior.productId, '原选用产品').skuCode !== p.skuCode ||
+          prior.batchId !== a.batchId
+        )
+          fail('选用调整记录不一致，请核对多设备重复调整');
+      }
+      if (a.replacedBy) {
+        var next = need(d.processApplications, a.replacedBy, '调整后记录');
+        if (next.replacesApplicationId !== a.id) fail('选用调整记录不一致，请核对多设备重复调整');
+      }
       M.num(a.qty);
       if (a.status === 'active' && a.materialScopeVersion >= 2 && packagingOverlaps(s, p.id).length)
         fail('同步后工艺和包装重复包含同一包材，请核对后重试');
@@ -1261,6 +1327,7 @@
     demands: demands,
     materialSuggestion: materialSuggestion,
     withdraw: withdraw,
+    replaceApplication: replaceApplication,
     cartonEstimate: cartonEstimate,
     merge: merge,
     split: split,

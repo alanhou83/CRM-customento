@@ -1,15 +1,15 @@
-const CACHE_NAME = 'customento-crm-v60';
+const CACHE_NAME = 'customento-crm-v61';
 const STATIC_ASSETS = [
   '/CRM-customento/crm-v5_final_5.html',
   '/CRM-customento/manifest.json',
-  '/CRM-customento/crm-production.js?v=60',
-  '/CRM-customento/crm-process-library.js?v=60',
-  '/CRM-customento/crm-process-ui.js?v=60',
-  '/CRM-customento/crm-production-ui.js?v=60',
-  '/CRM-customento/crm-production.css?v=60',
-  '/CRM-customento/crm-image-codec.js?v=60',
-  '/CRM-customento/crm-cbos-delta.js?v=60',
-  '/CRM-customento/crm-data-sync.js?v=60',
+  '/CRM-customento/crm-production.js?v=61',
+  '/CRM-customento/crm-process-library.js?v=61',
+  '/CRM-customento/crm-process-ui.js?v=61',
+  '/CRM-customento/crm-production-ui.js?v=61',
+  '/CRM-customento/crm-production.css?v=61',
+  '/CRM-customento/crm-image-codec.js?v=61',
+  '/CRM-customento/crm-cbos-delta.js?v=61',
+  '/CRM-customento/crm-data-sync.js?v=61',
   '/CRM-customento/icon-192.png',
   '/CRM-customento/icon-512.png'
 ];
