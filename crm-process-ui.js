@@ -4,7 +4,15 @@
   var X = root.CrmProcessModel,
     M = root.CrmProductionModel,
     H = root.CrmProduction.helpers;
-  var state = { tab: 'recipes', query: '', historyCondition: '', draft: null, kind: 'recipe', pid: '' };
+  var state = {
+    tab: 'recipes',
+    query: '',
+    historyCondition: '',
+    draft: null,
+    kind: 'recipe',
+    pid: '',
+    openItems: []
+  };
   function uid() {
     return 'px-' + crypto.randomUUID();
   }
@@ -103,7 +111,9 @@
       e(code || '') +
       '"><input class="form-input" id="' +
       id +
-      '-query" data-px-picker="' +
+      '-query" title="' +
+      e(text) +
+      '" data-px-picker="' +
       id +
       '" data-kind="' +
       kind +
@@ -301,7 +311,7 @@
             e(p.source || '经验维护') +
             '</small></div><div class="pn-actions">' +
             b('查看', 'view-plan', kind + '|' + p.id) +
-            b('另存新版本', 'revise-plan', kind + '|' + p.id) +
+            b('修改／补充', 'revise-plan', kind + '|' + p.id) +
             b('历史版本', 'versions', kind + '|' + p.familyId) +
             (kind === 'recipe' ? b('套用工序到工单', 'bulk-route', p.id) : '') +
             b(p.enabled === false ? '启用' : '停用', 'disable-plan', kind + '|' + p.id) +
@@ -355,10 +365,70 @@
       '</div></div>'
     );
   }
+  function materialInput(it, i) {
+    var opened = state.openItems.indexOf(it.id) >= 0;
+    function cell(label, id, value, css, type) {
+      return (
+        '<label class="pn-field ' +
+        css +
+        '"><span class="px-material-label">' +
+        e(label) +
+        '</span><input id="' +
+        id +
+        '" type="' +
+        (type || 'text') +
+        '" aria-label="' +
+        e(label) +
+        '" value="' +
+        e(value == null ? '' : value) +
+        '"' +
+        (type === 'number' ? ' min="0" step="any"' : '') +
+        '></label>'
+      );
+    }
+    return (
+      '<div class="px-item px-material-row' +
+      (opened ? ' px-material-settings-open' : '') +
+      '" data-material-item="' +
+      e(it.id) +
+      '" role="group" aria-label="第' +
+      (i + 1) +
+      '项物料"><span class="px-material-index">' +
+      (i + 1) +
+      '</span><div class="px-material-sku">' +
+      picker('px-item-sku-' + i, it.skuCode, 'material') +
+      '</div>' +
+      cell('每组产品数', 'px-item-output-' + i, it.perOutput, 'px-material-output', 'number') +
+      cell('用料数', 'px-item-qty-' + i, it.qty, 'px-material-qty', 'number') +
+      '<label class="pn-field px-material-round"><span class="px-material-label">备料方式</span><select id="px-item-round-' +
+      i +
+      '" aria-label="备料方式"><option value="up"' +
+      (it.rounding !== 'exact' ? ' selected' : '') +
+      '>整组向上备料</option><option value="exact"' +
+      (it.rounding === 'exact' ? ' selected' : '') +
+      '>按比例保留小数</option></select></label><label class="pn-field px-material-stage"><span class="px-material-label">对应工序／说明</span><textarea id="px-item-stage-' +
+      i +
+      '" rows="1" aria-label="对应工序／说明" title="' +
+      e(it.stageName || '') +
+      '">' +
+      e(it.stageName || '') +
+      '</textarea></label><details class="px-material-settings-toggle"' +
+      (opened ? ' open' : '') +
+      '><summary aria-label="展开或收起物料设置">' +
+      (opened ? '收起' : '设置') +
+      '</summary></details><div class="px-material-remove">' +
+      b('×', 'plan-item-remove', String(i)).replace(
+        '<button ',
+        '<button aria-label="移除第' + (i + 1) + '项物料" title="移除此项" '
+      ) +
+      '</div></div>'
+    );
+  }
   function newDraft(kind, old, pid) {
     var s = data(),
       p = pid ? find(s.production.products, pid) : null;
     state.kind = kind;
+    state.openItems = [];
     state.draft = old
       ? JSON.parse(JSON.stringify(old))
       : {
@@ -472,31 +542,10 @@
         note('人员在工单分派，基础工序更新不回写此版本。') +
         '</details>';
     html +=
-      '<details open><summary>实际物料与用量规则</summary>' +
+      '<details open class="px-material-section"><summary>实际物料与用量规则</summary><div class="px-material-columns" aria-hidden="true"><span>序</span><span>物料／规格／SKU</span><span>每组产品</span><span>用料数</span><span>备料方式</span><span>对应工序／说明</span><span>操作</span></div>' +
       d.items
         .map(function (it, i) {
-          return (
-            '<fieldset class="px-item"><legend>物料 ' +
-            (i + 1) +
-            '</legend>' +
-            picker('px-item-sku-' + i, it.skuCode, 'material') +
-            '<div class="px-form-grid">' +
-            f('每组产品数', 'px-item-output-' + i, it.perOutput, 'number') +
-            f('每组用该物料数', 'px-item-qty-' + i, it.qty, 'number') +
-            select(
-              '备料方式',
-              'px-item-round-' + i,
-              [
-                ['up', '整组向上备料'],
-                ['exact', '按比例保留小数']
-              ],
-              it.rounding || 'up'
-            ) +
-            f('对应工序／说明', 'px-item-stage-' + i, it.stageName || '') +
-            '</div>' +
-            b('移除此项', 'plan-item-remove', String(i)) +
-            '</fieldset>'
-          );
+          return materialInput(it, i);
         })
         .join('') +
       b('从产品库添加物料', 'plan-item-add') +
@@ -538,7 +587,7 @@
     else {
       var c = d.carton || {};
       html +=
-        '<details open><summary>预计外箱数据（可空）</summary><div class="px-form-grid">' +
+        '<details open><summary>预计外箱数据（可空）</summary><div class="px-form-grid px-box-grid">' +
         f('每外箱产品数', 'px-box-pcs', c.pcs, 'number') +
         f('箱长cm', 'px-box-l', c.length, 'number') +
         f('箱宽cm', 'px-box-w', c.width, 'number') +
@@ -549,13 +598,20 @@
         '</details>';
     }
     modal(
-      (d.previousId ? '另存新版本：' : '新建：') + (kind === 'recipe' ? '工艺方案' : '包装方案'),
-      html,
+      (d.previousId ? '修改／补充：' : '新建：') + (kind === 'recipe' ? '工艺方案' : '包装方案'),
+      (d.previousId
+        ? note('已带回全部保存内容，可继续完善。保存自动保留修订版本，原工单选用的配置保持。')
+        : '') + html,
       'plan-save',
-      '保存方案版本'
+      d.previousId ? '保存修改' : '保存方案'
     );
   }
   function capturePlan() {
+    state.openItems = Array.from(document.querySelectorAll('.px-material-settings-toggle[open]')).map(
+      function (el) {
+        return el.closest('[data-material-item]').dataset.materialItem;
+      }
+    );
     var d = state.draft;
     d.name = v('px-plan-name');
     d.source = v('px-plan-source');
@@ -604,7 +660,10 @@
       p = find(plans(s, kind), id);
     modal(
       p.name + ' · v' + p.version,
-      note(scope(s, p)) +
+      '<div class="pn-section-head">' +
+        note(scope(s, p)) +
+        b('修改／补充', 'revise-plan', kind + '|' + p.id, true) +
+        '</div>' +
         (p.route
           ? '<p>' +
             e(
@@ -1365,6 +1424,7 @@
       ]
         .filter(Boolean)
         .join(' · ');
+      document.getElementById(id + '-query').title = document.getElementById(id + '-query').value;
       document.getElementById(id + '-options').hidden = true;
       return;
     }
@@ -1601,7 +1661,9 @@
         X.savePlan(s, kind, input, ctx);
       }, 'production');
       root.CrmProduction.openLibrary(kind === 'packaging' ? 'packaging' : 'recipes');
-      message = '方案版本已保存，原工单快照保留';
+      message = input.previousId
+        ? '修改已保存，当前显示最新版本；原工单配置保留'
+        : '方案已保存，可随时修改／补充';
     } else if (action === 'device-save') {
       H.commit(function (s) {
         X.saveDevice(
@@ -1717,6 +1779,16 @@
       handle(el.dataset.px, el.dataset.value || '');
     });
   });
+  document.addEventListener(
+    'toggle',
+    function (event) {
+      var el = event.target;
+      if (!el.classList || !el.classList.contains('px-material-settings-toggle')) return;
+      el.closest('.px-material-row').classList.toggle('px-material-settings-open', el.open);
+      el.querySelector('summary').textContent = el.open ? '收起' : '设置';
+    },
+    true
+  );
   document.addEventListener('input', function (event) {
     var el = event.target;
     if (el.dataset.pxPicker) {
