@@ -134,6 +134,11 @@
       (p.skus || []).forEach(function (sk) {
         if (kind === 'material' && !M.stocked({ product: p, sku: sk })) return;
         if (
+          (kind === 'recipe-material' || kind === 'packaging-material') &&
+          !X.materialAllowed(data(), kind === 'packaging-material' ? 'packaging' : 'recipe', sk.skuCode)
+        )
+          return;
+        if (
           [p.nameCN, p.descCN, sk.variantCN, sk.size, sk.itemNo, sk.skuCode]
             .join(' ')
             .toLowerCase()
@@ -365,8 +370,75 @@
       '</div></div>'
     );
   }
+  function packagingRole(it) {
+    return (
+      it.packagingRole ||
+      (it.basis === 'inner'
+        ? 'inner'
+        : it.basis === 'carton'
+          ? 'carton'
+          : it.perOutput != null && it.perOutput !== ''
+            ? 'legacy'
+            : '')
+    );
+  }
+  function packagingMaterialInput(it, i) {
+    var role = packagingRole(it),
+      c = state.draft.carton || {},
+      count = it.packCount;
+    if (count == null)
+      count =
+        role === 'inner'
+          ? c.innerPcs
+          : role === 'carton'
+            ? c.innerPcs
+              ? c.innersPerCarton
+              : c.pcs
+            : role === 'aux'
+              ? it.qty
+              : role === 'legacy'
+                ? it.perOutput
+                : '';
+    return (
+      '<div class="px-material-row px-simple-pack' +
+      (state.openItems.indexOf(it.id) >= 0 ? ' px-material-settings-open' : '') +
+      '" data-material-item="' +
+      e(it.id) +
+      '"><span class="px-material-index">' +
+      (i + 1) +
+      '</span><div class="px-material-sku">' +
+      picker('px-item-sku-' + i, it.skuCode, 'packaging-material') +
+      '</div><div class="px-pack-role">' +
+      select(
+        '用途',
+        'px-item-role-' + i,
+        [
+          ['', '选择用途'],
+          ['inner', '内盒'],
+          ['carton', '外箱'],
+          ['aux', '其他包材']
+        ].concat(role === 'legacy' ? [['legacy', '原用量规则']] : []),
+        role
+      ) +
+      '</div><label class="pn-field px-pack-count"><span class="px-pack-count-label"></span><input type="number" min="0" step="any" id="px-item-pack-count-' +
+      i +
+      '" value="' +
+      e(count == null ? '' : count) +
+      '"><small class="px-pack-count-unit"></small></label><label class="pn-field px-material-stage"><span class="px-material-label">操作说明</span><textarea id="px-item-stage-' +
+      i +
+      '" rows="1">' +
+      e(it.stageName || '') +
+      '</textarea></label><details class="px-material-settings-toggle"' +
+      (state.openItems.indexOf(it.id) >= 0 ? ' open' : '') +
+      '><summary>设置</summary></details><div class="px-material-remove">' +
+      b('×', 'plan-item-remove', String(i)) +
+      '</div></div>'
+    );
+  }
   function materialInput(it, i) {
-    var opened = state.openItems.indexOf(it.id) >= 0;
+    if (state.kind === 'packaging') return packagingMaterialInput(it, i);
+    var opened = state.openItems.indexOf(it.id) >= 0,
+      pack = state.kind === 'packaging';
     function cell(label, id, value, css, type) {
       return (
         '<label class="pn-field ' +
@@ -389,6 +461,7 @@
     return (
       '<div class="px-item px-material-row' +
       (opened ? ' px-material-settings-open' : '') +
+      (pack ? ' px-packaging-material' : '') +
       '" data-material-item="' +
       e(it.id) +
       '" role="group" aria-label="第' +
@@ -396,15 +469,31 @@
       '项物料"><span class="px-material-index">' +
       (i + 1) +
       '</span><div class="px-material-sku">' +
-      picker('px-item-sku-' + i, it.skuCode, 'material') +
+      picker('px-item-sku-' + i, it.skuCode, pack ? 'packaging-material' : 'recipe-material') +
       '</div>' +
-      cell('每组产品数', 'px-item-output-' + i, it.perOutput, 'px-material-output', 'number') +
-      cell('用料数', 'px-item-qty-' + i, it.qty, 'px-material-qty', 'number') +
+      '<div class="px-material-quantity">' +
+      (pack
+        ? cell('每', 'px-item-output-' + i, it.perOutput, 'px-material-output', 'number') +
+          select(
+            '计量依据',
+            'px-item-basis-' + i,
+            [
+              ['product', '个成品'],
+              ['inner', '个内盒'],
+              ['carton', '个外箱']
+            ],
+            it.basis || 'product'
+          ).replace('计量依据<select', '<span class="px-material-label">计量依据</span><select')
+        : cell('耗料数', 'px-item-qty-' + i, it.qty, 'px-material-qty', 'number')) +
+      (pack
+        ? cell('用包材数', 'px-item-qty-' + i, it.qty, 'px-material-qty', 'number')
+        : cell('可做成品数', 'px-item-output-' + i, it.perOutput, 'px-material-output', 'number')) +
+      '</div>' +
       '<label class="pn-field px-material-round"><span class="px-material-label">备料方式</span><select id="px-item-round-' +
       i +
       '" aria-label="备料方式"><option value="up"' +
       (it.rounding !== 'exact' ? ' selected' : '') +
-      '>整组向上备料</option><option value="exact"' +
+      '>按整组向上取整</option><option value="exact"' +
       (it.rounding === 'exact' ? ' selected' : '') +
       '>按比例保留小数</option></select></label><label class="pn-field px-material-stage"><span class="px-material-label">对应工序／说明</span><textarea id="px-item-stage-' +
       i +
@@ -529,7 +618,7 @@
           ),
           d.scopeCategory || ''
         ) +
-        f('方案要求／包装做法', 'px-plan-req', d.requirements || '');
+        f(kind === 'packaging' ? '包装做法' : '方案要求', 'px-plan-req', d.requirements || '');
     if (kind === 'recipe')
       html +=
         '<details open><summary>工序路线</summary>' +
@@ -542,17 +631,45 @@
         note('人员在工单分派，基础工序更新不回写此版本。') +
         '</details>';
     html +=
-      '<details open class="px-material-section"><summary>实际物料与用量规则</summary><div class="px-material-columns" aria-hidden="true"><span>序</span><span>物料／规格／SKU</span><span>每组产品</span><span>用料数</span><span>备料方式</span><span>对应工序／说明</span><span>操作</span></div>' +
+      '<details open class="px-material-section"><summary>' +
+      (kind === 'packaging' ? '包装材料与用量' : '生产物料与产出规则') +
+      '</summary><div class="px-material-columns' +
+      (kind === 'packaging' ? ' px-packaging-columns' : '') +
+      '" aria-hidden="true"><span>序</span><span>物料／规格／SKU</span><span>' +
+      (kind === 'packaging' ? '用途' : '耗料数／可做成品数') +
+      '</span>' +
+      (kind === 'packaging'
+        ? '<span>包装数量</span><span>操作说明</span>'
+        : '<span>取整方式</span><span>对应工序／说明</span>') +
+      '<span>操作</span></div>' +
       d.items
         .map(function (it, i) {
           return materialInput(it, i);
         })
         .join('') +
       b('从产品库添加物料', 'plan-item-add') +
-      note('例：每144个产品用1张板；每480个用1只外箱。不同板材分别保存排版方案，未知留待核。') +
+      note(
+        kind === 'packaging'
+          ? '选内盒后填每盒装几个产品，选外箱后填每箱装几个内盒；不使用内盒时，外箱直接填装几个产品。系统自动算容量和备料数。'
+          : '例：耗1张板可做144个成品。只维护生产用料；纸箱、内盒、袋子等在包装方案维护。不同板材分别保存排版方案。'
+      ) +
       '</details>';
     if (kind === 'recipe')
       html +=
+        select(
+          '关联包装方案（可空，选用时推荐）',
+          'px-plan-packaging',
+          [['', '暂不关联']].concat(
+            X.current(s.production.packagingPlans)
+              .filter(function (p) {
+                return !d.scopeSku || X.matches(s, p, { skuCode: d.scopeSku });
+              })
+              .map(function (p) {
+                return [p.familyId, p.name + ' · v' + p.version];
+              })
+          ),
+          d.packagingFamilyId || ''
+        ) +
         '<details><summary>排版、设备与参考条件</summary><div class="px-form-grid">' +
         f('原板／上机料规格', 'px-plan-board', d.boardSize || '') +
         f('排版文件／版本', 'px-plan-layout', d.layoutRef || '') +
@@ -587,8 +704,8 @@
     else {
       var c = d.carton || {};
       html +=
-        '<details open><summary>预计外箱数据（可空）</summary><div class="px-form-grid px-box-grid">' +
-        f('每外箱产品数', 'px-box-pcs', c.pcs, 'number') +
+        '<div id="px-pack-capacity" class="pn-note" aria-live="polite"></div><input type="hidden" id="px-box-inner-pcs"><input type="hidden" id="px-box-inners"><input type="hidden" id="px-box-pcs">' +
+        '<details><summary>预计外箱尺寸／毛重（可空）</summary><div class="px-form-grid px-box-grid">' +
         f('箱长cm', 'px-box-l', c.length, 'number') +
         f('箱宽cm', 'px-box-w', c.width, 'number') +
         f('箱高cm', 'px-box-h', c.height, 'number') +
@@ -605,6 +722,60 @@
       'plan-save',
       d.previousId ? '保存修改' : '保存方案'
     );
+    if (kind === 'packaging') updateCartonCapacity();
+  }
+  function updateCartonCapacity() {
+    var rows = Array.from(document.querySelectorAll('.px-simple-pack')),
+      hasInner = rows.some(function (row, i) {
+        return v('px-item-role-' + i) === 'inner';
+      }),
+      inner = '',
+      boxes = '',
+      pcs = '';
+    rows.forEach(function (row, i) {
+      var role = v('px-item-role-' + i),
+        count = v('px-item-pack-count-' + i),
+        label = row.querySelector('.px-pack-count-label'),
+        unit = row.querySelector('.px-pack-count-unit');
+      label.textContent =
+        role === 'inner'
+          ? '每盒装'
+          : role === 'carton'
+            ? '每箱装'
+            : role === 'aux'
+              ? '每个产品用'
+              : role === 'legacy'
+                ? '每包成品数'
+                : '包装数量';
+      unit.textContent =
+        role === 'inner'
+          ? '个产品'
+          : role === 'carton'
+            ? hasInner
+              ? '个内盒'
+              : '个产品'
+            : role === 'aux'
+              ? (M.sku(data(), v('px-item-sku-' + i)) || { sku: {} }).sku.stockUnit || '单位包材'
+              : role === 'legacy'
+                ? '原用量比例保留'
+                : '请先选择用途';
+      if (role === 'inner') inner = count;
+      if (role === 'carton') {
+        if (hasInner) boxes = count;
+        else pcs = count;
+      }
+    });
+    if (hasInner && Number(inner) > 0 && Number(boxes) > 0) pcs = Number(inner) * Number(boxes);
+    ['inner-pcs', 'inners', 'pcs'].forEach(function (k, i) {
+      var el = document.getElementById('px-box-' + k);
+      if (el) el.value = [inner, boxes, pcs][i];
+    });
+    var summary = document.getElementById('px-pack-capacity');
+    if (summary)
+      summary.textContent =
+        Number(pcs) > 0
+          ? '自动计算：每外箱 ' + pcs + ' 个产品；所需包材按生产数量自动计算，尾箱按实际内盒数。'
+          : '填写包装数量后自动计算；未确认数量可留空待核。';
   }
   function capturePlan() {
     state.openItems = Array.from(document.querySelectorAll('.px-material-settings-toggle[open]')).map(
@@ -622,6 +793,7 @@
     d.scopeCategory = v('px-plan-category');
     if (state.kind === 'recipe') {
       d.kind = v('px-plan-kind');
+      d.packagingFamilyId = v('px-plan-packaging');
       d.route = d.route.map(function (st, i) {
         return Object.assign({}, st, {
           operationId: v('px-stage-op-' + i),
@@ -636,17 +808,50 @@
       d.feedMode = v('px-plan-feed');
       d.deviceId = v('px-plan-device');
       d.deviceCondition = v('px-plan-condition');
-    } else
+    } else {
+      updateCartonCapacity();
+      var legacyOnly =
+        d.items.length &&
+        d.items.every(function (it, i) {
+          return v('px-item-role-' + i) === 'legacy';
+        });
+      var oldCarton = d.carton || {};
       d.carton = {
-        pcs: v('px-box-pcs'),
+        innerPcs: legacyOnly ? oldCarton.innerPcs : v('px-box-inner-pcs'),
+        innersPerCarton: legacyOnly ? oldCarton.innersPerCarton : v('px-box-inners'),
+        pcs: legacyOnly ? oldCarton.pcs : v('px-box-pcs'),
         length: v('px-box-l'),
         width: v('px-box-w'),
         height: v('px-box-h'),
         grossKg: v('px-box-gw')
       };
+    }
     d.items = d.items.map(function (it, i) {
+      if (state.kind === 'packaging') {
+        var role = v('px-item-role-' + i),
+          count = v('px-item-pack-count-' + i);
+        return Object.assign(
+          {},
+          it,
+          {
+            skuCode: v('px-item-sku-' + i),
+            packagingRole: role,
+            packCount: count,
+            stageName: v('px-item-stage-' + i)
+          },
+          role === 'legacy'
+            ? { perOutput: count }
+            : {
+                basis: role === 'inner' ? 'inner' : role === 'carton' ? 'carton' : 'product',
+                perOutput: 1,
+                qty: role === 'aux' ? count : 1,
+                rounding: role === 'aux' ? 'exact' : 'up'
+              }
+        );
+      }
       return Object.assign({}, it, {
         skuCode: v('px-item-sku-' + i),
+        basis: state.kind === 'packaging' ? v('px-item-basis-' + i) : it.basis || 'product',
         perOutput: v('px-item-output-' + i),
         qty: v('px-item-qty-' + i),
         rounding: v('px-item-round-' + i),
@@ -676,6 +881,34 @@
             '</p>'
           : '') +
         note(p.requirements || '') +
+        (kind === 'recipe' &&
+        p.items.some(function (i) {
+          return X.isPackaging(s, i.skuCode);
+        })
+          ? note('旧版本含包材，整理到包装方案后再选用。原版本和工单快照保留。') +
+            b('整理包材', 'separate-pack', p.id)
+          : '') +
+        (p.packagingFamilyId
+          ? note(
+              '关联包装：' +
+                (
+                  X.current(s.production.packagingPlans).find(function (x) {
+                    return x.familyId === p.packagingFamilyId;
+                  }) || { name: '待核' }
+                ).name
+            )
+          : '') +
+        (kind === 'packaging'
+          ? note(
+              '装箱：每内盒 ' +
+                n((p.carton || {}).innerPcs) +
+                ' 个成品 · 每外箱 ' +
+                n((p.carton || {}).innersPerCarton) +
+                ' 个内盒 · 整箱 ' +
+                n((p.carton || {}).pcs) +
+                ' 个成品'
+            )
+          : '') +
         (p.boardSize ? note('板材 ' + p.boardSize + ' · 排版 ' + p.layoutRef + ' · ' + p.feedMode) : '') +
         p.items
           .map(function (i) {
@@ -685,12 +918,21 @@
               e(x ? x.product.nameCN : i.skuCode) +
               ' · ' +
               e(i.skuCode) +
-              '：每 ' +
-              (i.perOutput == null ? '待核' : n(i.perOutput)) +
-              ' 个产品用 ' +
-              (i.qty == null ? '待核' : n(i.qty)) +
-              ' ' +
-              e(i.unit) +
+              (kind === 'packaging' && (i.packagingRole === 'inner' || i.packagingRole === 'carton')
+                ? '：' +
+                  (i.packagingRole === 'inner'
+                    ? '每盒装 ' + n((p.carton || {}).innerPcs) + ' 个产品'
+                    : '每箱装 ' +
+                      n((p.carton || {}).innerPcs ? (p.carton || {}).innersPerCarton : (p.carton || {}).pcs) +
+                      ((p.carton || {}).innerPcs ? ' 个内盒' : ' 个产品'))
+                : '：每 ' +
+                  (i.perOutput == null ? '待核' : n(i.perOutput)) +
+                  ' ' +
+                  e(i.basis === 'inner' ? '个内盒' : i.basis === 'carton' ? '个外箱' : '个成品') +
+                  '用 ' +
+                  (i.qty == null ? '待核' : n(i.qty)) +
+                  ' ' +
+                  e(i.unit)) +
               ' · ' +
               e(i.stageName || '工序待核') +
               '</p>'
@@ -944,7 +1186,7 @@
             .map(function (x) {
               return (
                 '<small>' +
-                e(x.planName) +
+                e((x.kind === 'packaging' ? '包装：' : '工艺：') + x.planName) +
                 ' · ' +
                 (x.qty === null ? '用量待核' : n(x.qty)) +
                 ' ' +
@@ -1470,6 +1712,31 @@
       newDraft(value);
       return;
     }
+    if (action === 'separate-pack') {
+      var oldRecipe = find(s.production.processRecipes, value),
+        choices = X.current(s.production.packagingPlans).filter(function (p) {
+          return X.matches(s, p, { skuCode: oldRecipe.scopeSku });
+        });
+      state.separateId = value;
+      modal(
+        '整理工艺中的包材',
+        note('保留原版本，新工艺只带生产用料；原工单及库存记录保持。复用已有包装时会核对包材和用量比例。') +
+          select(
+            '包装方案',
+            'px-separate-pack',
+            [['', '从原包材建立新包装方案']].concat(
+              choices.map(function (p) {
+                return [p.id, p.name + ' v' + p.version];
+              })
+            ),
+            ''
+          ) +
+          f('新包装方案名称', 'px-separate-name', oldRecipe.name + ' · 包装方案'),
+        'separate-save',
+        '保存整理结果'
+      );
+      return;
+    }
     if (action === 'revise-plan') {
       newDraft(bits[0], find(plans(s, bits[0]), bits[1]));
       return;
@@ -1654,9 +1921,33 @@
   function submit(action) {
     var ctx = H.context(),
       message = '已保存';
+    if (action === 'separate-save') {
+      H.commit(function (s) {
+        X.separatePackaging(
+          s,
+          state.separateId,
+          { packagingPlanId: v('px-separate-pack'), name: v('px-separate-name') },
+          ctx
+        );
+      }, 'production');
+      H.closeModal();
+      H.render();
+      return;
+    }
     if (action === 'plan-save') {
       var input = JSON.parse(JSON.stringify(capturePlan())),
         kind = state.kind;
+      if (kind === 'packaging') {
+        var roles = {};
+        input.items.forEach(function (it) {
+          if (!it.packagingRole) throw new Error('请选择每项包材的用途：内盒、外箱或其他包材');
+          if (it.packagingRole === 'inner' || it.packagingRole === 'carton') {
+            if (roles[it.packagingRole])
+              throw new Error('同一方案只维护一个内盒和一个外箱；不同包装请另存方案');
+            roles[it.packagingRole] = true;
+          }
+        });
+      }
       H.commit(function (s) {
         X.savePlan(s, kind, input, ctx);
       }, 'production');
@@ -1795,6 +2086,7 @@
       pickerResults(el);
       return;
     }
+    if (el.id.indexOf('px-item-pack-count-') === 0) updateCartonCapacity();
     if (el.id === 'px-library-search') {
       state.query = el.value;
       refresh();
@@ -1802,6 +2094,23 @@
   });
   document.addEventListener('change', function (event) {
     var el = event.target;
+    if (el.id.indexOf('px-item-role-') === 0) updateCartonCapacity();
+    if (el.id === 'px-apply-recipe') {
+      var recipe = M.find(data().production.processRecipes, el.value),
+        pack =
+          recipe &&
+          X.current(data().production.packagingPlans).find(function (x) {
+            return x.familyId === recipe.packagingFamilyId;
+          }),
+        target = document.getElementById('px-apply-pack');
+      if (
+        pack &&
+        Array.from(target.options).some(function (o) {
+          return o.value === pack.id;
+        })
+      )
+        target.value = pack.id;
+    }
     if (el.id === 'px-history-condition') {
       state.historyCondition = el.value;
       refresh();

@@ -17,6 +17,7 @@ function fixture() {
       },
       {
         id: 'raw',
+        type: 'raw',
         nameCN: '匿名板材',
         hasStock: true,
         skus: [
@@ -24,7 +25,13 @@ function fixture() {
           { skuCode: 'RAW-0001-02', stockUnit: '张' }
         ]
       },
-      { id: 'pkg', nameCN: '匿名箱', hasStock: true, skus: [{ skuCode: 'PKG-0001-01', stockUnit: '只' }] }
+      {
+        id: 'pkg',
+        type: 'packaging',
+        nameCN: '匿名箱',
+        hasStock: true,
+        skus: [{ skuCode: 'PKG-0001-01', stockUnit: '只' }]
+      }
     ]
   };
   return {
@@ -317,3 +324,140 @@ assert.throws(() => M.validate(reduced.s), /超过任务需求/);
 console.log(
   '工艺库规则通过：旧数据兼容、版本快照、多物料方案、包装合算、任务合拆、组合产量工时一次计、核对撤销与并发保护。'
 );
+
+// 包装层级按实际所需内盒计算尾箱，不把尾箱补成满箱内盒。
+{
+  const { s, b, p } = setup();
+  s.catalog.products.find((x) => x.id === 'pkg').skus.push({ skuCode: 'PKG-0001-02', stockUnit: '只' });
+  const beforeInventory = clone(s.inventory),
+    beforeOrders = clone(s.orders),
+    r = recipe(s);
+  const pack = X.savePlan(
+    s,
+    'packaging',
+    {
+      name: '匿名分层包装',
+      scopeSku: p.skuCode,
+      carton: { innerPcs: 7, innersPerCarton: 5 },
+      items: [
+        { skuCode: 'PKG-0001-01', perOutput: 1, qty: 1, basis: 'carton' },
+        { skuCode: 'PKG-0001-02', perOutput: 1, qty: 1, basis: 'inner' }
+      ]
+    },
+    ctx()
+  );
+  assert.equal(pack.carton.pcs, 35);
+  const linked = X.savePlan(
+    s,
+    'recipe',
+    { ...clone(r), previousId: r.id, packagingFamilyId: pack.familyId },
+    ctx()
+  );
+  X.apply(s, p.id, linked.id, pack.id, 60, false, ctx());
+  X.apply(s, p.id, linked.id, pack.id, 41, false, ctx());
+  const ds = X.demands(s, b.id);
+  assert.equal(ds.find((x) => x.skuCode === 'PKG-0001-01').qty, 3);
+  assert.equal(ds.find((x) => x.skuCode === 'PKG-0001-02').qty, 15);
+  assert.equal(ds.find((x) => x.skuCode === 'RAW-0001-01').qty, 11);
+  assert.equal(X.cartonEstimate(s, p.id)[0].boxes, 3);
+  assert.deepEqual(s.inventory, beforeInventory);
+  assert.deepEqual(s.orders, beforeOrders);
+  M.validate(s);
+  assert.throws(
+    () =>
+      X.savePlan(
+        s,
+        'packaging',
+        { ...clone(pack), carton: { innerPcs: 7, innersPerCarton: 5, pcs: 36 } },
+        ctx()
+      ),
+    /不一致/
+  );
+  assert.throws(
+    () => X.savePlan(s, 'packaging', { ...clone(pack), carton: { innerPcs: 1.5 } }, ctx()),
+    /正整数/
+  );
+  assert.throws(() => recipe(s, 'PKG-0001-01'), /包材/);
+  assert.throws(
+    () =>
+      X.savePlan(
+        s,
+        'packaging',
+        { name: '错误分类', items: [{ skuCode: 'RAW-0001-01', qty: 1, perOutput: 1 }] },
+        ctx()
+      ),
+    /包装材料/
+  );
+  const unknown = X.savePlan(
+    s,
+    'packaging',
+    {
+      name: '未定箱数',
+      scopeSku: p.skuCode,
+      items: [{ skuCode: 'PKG-0001-01', qty: 1, perOutput: 1, basis: 'carton' }]
+    },
+    ctx()
+  );
+  assert.equal(X.packagingCounts(unknown, 101).carton, null);
+}
+// 旧混合版本可读取，整理创建新版本；已有工单快照和实际流水不被静默改写。
+{
+  const { s, p, b } = setup(),
+    r = recipe(s);
+  delete r.materialScopeVersion;
+  r.items.push({ id: 'old-box', skuCode: 'PKG-0001-01', unit: '只', perOutput: 35, qty: 1, rounding: 'up' });
+  const old = clone(r),
+    inv = clone(s.inventory),
+    materials = clone(s.production.materials);
+  s.production.processApplications.push({
+    id: 'legacy-use',
+    batchId: b.id,
+    productId: p.id,
+    qty: 10,
+    status: 'active',
+    recipeSnapshot: clone(r)
+  });
+  M.validate(s);
+  const pack = X.savePlan(
+    s,
+    'packaging',
+    {
+      name: '已有包装',
+      scopeSku: p.skuCode,
+      carton: { pcs: 35 },
+      items: [{ skuCode: 'PKG-0001-01', perOutput: 1, qty: 1, basis: 'carton' }]
+    },
+    ctx()
+  );
+  assert.throws(() => X.apply(s, p.id, '', pack.id, 10, false, ctx()), /重复/);
+  const result = X.separatePackaging(s, r.id, { packagingPlanId: pack.id }, ctx());
+  assert.equal(s.production.packagingPlans.length, 1);
+  assert.equal(result.recipe.version, 2);
+  assert.equal(result.recipe.items.length, 1);
+  assert.equal(result.recipe.packagingFamilyId, pack.familyId);
+  assert.deepEqual(r, old);
+  assert.deepEqual(s.production.processApplications[0].recipeSnapshot, old);
+  assert.deepEqual(s.inventory, inv);
+  assert.deepEqual(s.production.materials, materials);
+  M.validate(s);
+  assert.throws(() => X.apply(s, p.id, r.id, '', 10, false, ctx()), /旧工艺/);
+  const bad = X.savePlan(
+    s,
+    'packaging',
+    { name: '比例不同', scopeSku: p.skuCode, items: [{ skuCode: 'PKG-0001-01', perOutput: 30, qty: 1 }] },
+    ctx()
+  );
+  assert.throws(() => X.separatePackaging(s, r.id, { packagingPlanId: bad.id }, ctx()), /比例不一致/);
+  const conflict = clone(s);
+  conflict.production.processApplications.push({
+    id: 'new-pack',
+    batchId: b.id,
+    productId: p.id,
+    qty: 10,
+    status: 'active',
+    materialScopeVersion: 2,
+    packagingSnapshot: clone(pack)
+  });
+  assert.throws(() => M.validate(conflict), /重复/);
+}
+console.log('包装分工验证通过：分类边界、层级尾箱、未知用量、旧版本追溯、复用包装及重复核料保护。');

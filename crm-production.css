@@ -777,7 +777,7 @@
 .px-material-columns,
 .px-material-row {
   display: grid;
-  grid-template-columns: 24px minmax(130px, 2.2fr) 70px 64px 120px minmax(100px, 1.3fr) 30px;
+  grid-template-columns: 24px minmax(130px, 2.2fr) 150px 140px minmax(100px, 1.3fr) 30px;
   gap: 6px;
   align-items: start;
   min-width: 0;
@@ -1142,5 +1142,88 @@
   }
   .px-box-grid input {
     font-size: 16px;
+  }
+}
+
+/* 生产用量与包装单位分开表达，核料仍统一汇总。 */
+.px-material-quantity {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  min-width: 0;
+}
+.px-packaging-material,
+.px-packaging-columns {
+  grid-template-columns: 24px minmax(130px, 2.2fr) 240px 140px minmax(100px, 1.3fr) 30px;
+}
+.px-packaging-material .px-material-quantity {
+  grid-template-columns: minmax(45px, 1fr) minmax(80px, 1.5fr) minmax(50px, 1fr);
+}
+.px-count-grid {
+  gap: 8px;
+}
+.px-box-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+@media (max-width: 768px) {
+  .px-packaging-material {
+    grid-template-columns: 20px minmax(0, 1fr) minmax(0, 1fr) 38px 28px;
+  }
+  .px-material-quantity {
+    grid-column: 1/-1;
+    grid-row: 2;
+  }
+  .px-material-quantity .pn-field {
+    grid-column: auto;
+    grid-row: auto;
+  }
+  .px-count-grid,
+  .px-box-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.px-simple-pack,
+.px-packaging-columns {
+  grid-template-columns: 24px minmax(150px, 2.2fr) 100px minmax(160px, 1fr) minmax(100px, 1fr) 30px;
+}
+.px-pack-role .pn-field {
+  font-size: 0;
+  gap: 0;
+}
+.px-pack-count {
+  display: grid !important;
+  grid-template-columns: auto minmax(45px, 1fr) auto;
+  align-items: center;
+  gap: 5px !important;
+}
+.px-pack-count-label,
+.px-pack-count-unit {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+@media (max-width: 768px) {
+  .px-simple-pack {
+    grid-template-columns: 20px minmax(0, 1fr) minmax(0, 1fr) 38px 28px;
+  }
+  .px-pack-role {
+    grid-column: 1/3;
+    grid-row: 2;
+  }
+  .px-pack-count {
+    grid-column: 3/-1;
+    grid-row: 2;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+  }
+  .px-pack-count-unit {
+    grid-column: 1/-1;
+    line-height: 12px;
+  }
+  .px-simple-pack .px-material-settings-open .px-material-stage {
+    grid-row: 3;
+  }
+  .px-simple-pack.px-material-settings-open .px-material-stage {
+    grid-row: 3;
   }
 }

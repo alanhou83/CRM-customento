@@ -87,10 +87,87 @@
         fail('组合任务至少包含两道连续工序，请先调整组合设置');
     });
   }
+  function isPackaging(s, code) {
+    var x = M.sku(s, code);
+    return !!(x && x.product.type === 'packaging');
+  }
+  function materialAllowed(s, kind, code) {
+    return M.stocked(M.sku(s, code)) && (kind === 'packaging' ? isPackaging(s, code) : !isPackaging(s, code));
+  }
+  function checkMaterialScope(s, kind, items) {
+    (items || []).forEach(function (i) {
+      if (!materialAllowed(s, kind, i.skuCode))
+        fail(
+          kind === 'packaging'
+            ? '包装方案只维护包装材料；生产用料请放入产品工艺'
+            : '工艺方案只维护生产用料；包材请整理到包装方案'
+        );
+      if (kind !== 'packaging' && i.basis && i.basis !== 'product') fail('生产用料须按成品数量核算');
+    });
+  }
+  function checkPackagingRoles(plan) {
+    var seen = {};
+    (plan.items || []).forEach(function (i) {
+      var role = i.packagingRole;
+      if (!role || role === 'legacy') return;
+      if (['inner', 'carton', 'aux'].indexOf(role) < 0) fail('包装用途无效');
+      if (role === 'inner' || role === 'carton') {
+        if (seen[role]) fail('同一方案只维护一个内盒和一个外箱');
+        seen[role] = true;
+        if (i.basis !== role || i.perOutput !== 1 || i.qty !== 1) fail('包装用途与计算规则不一致');
+      } else if (i.basis !== 'product' || i.perOutput !== 1) fail('辅助包材须按成品用量维护');
+    });
+  }
+  function packagingCounts(plan, quantity) {
+    var c = plan.carton || {},
+      inner = c.innerPcs ? Math.ceil(quantity / c.innerPcs - EPS) : null;
+    return {
+      product: quantity,
+      inner: inner,
+      carton:
+        inner !== null && c.innersPerCarton
+          ? Math.ceil(inner / c.innersPerCarton - EPS)
+          : c.pcs
+            ? Math.ceil(quantity / c.pcs - EPS)
+            : null
+    };
+  }
+  function packagingOverlaps(s, pid, recipe, pack) {
+    var rs = [],
+      ps = [];
+    applications(s, pid).forEach(function (a) {
+      if (a.recipeSnapshot) rs.push(a.recipeSnapshot);
+      if (a.packagingSnapshot) ps.push(a.packagingSnapshot);
+    });
+    if (recipe) rs.push(recipe);
+    if (pack) ps.push(pack);
+    var rawCodes = {};
+    rs.forEach(function (r) {
+      (r.items || []).forEach(function (i) {
+        if (isPackaging(s, i.skuCode)) rawCodes[i.skuCode] = true;
+      });
+    });
+    return Array.from(
+      new Set(
+        ps.reduce(function (a, p) {
+          return a.concat(
+            (p.items || [])
+              .filter(function (i) {
+                return rawCodes[i.skuCode];
+              })
+              .map(function (i) {
+                return i.skuCode;
+              })
+          );
+        }, [])
+      )
+    );
+  }
   function materialItems(s, items) {
     return (items || []).map(function (v, i) {
       var x = M.sku(s, v.skuCode);
       if (!M.stocked(x)) fail('方案用料须选择产品库中启用库存的实物SKU');
+      if (v.basis && ['product', 'inner', 'carton'].indexOf(v.basis) < 0) fail('包材计量依据无效');
       return {
         id: v.id || 'item-' + i,
         skuCode: v.skuCode,
@@ -98,6 +175,8 @@
         perOutput: v.perOutput === '' || v.perOutput == null ? null : M.num(v.perOutput),
         qty: v.qty === '' || v.qty == null ? null : M.num(v.qty),
         rounding: v.rounding === 'exact' ? 'exact' : 'up',
+        basis: v.basis === 'inner' || v.basis === 'carton' ? v.basis : 'product',
+        packagingRole: v.packagingRole || '',
         operationId: v.operationId || '',
         stageName: v.stageName || '',
         note: v.note || ''
@@ -132,13 +211,18 @@
       scopeCategory: input.scopeCategory || '',
       requirements: input.requirements || '',
       items: materialItems(s, input.items),
+      materialScopeVersion: 2,
       createdAt: ctx.at,
       createdBy: ctx.person,
       source: input.source || '经验维护',
       referenceReportIds: input.referenceReportIds || []
     };
+    checkMaterialScope(s, kind, v.items);
     if (kind === 'packaging') {
+      checkPackagingRoles(v);
       v.carton = {
+        innerPcs: optional((input.carton || {}).innerPcs),
+        innersPerCarton: optional((input.carton || {}).innersPerCarton),
         pcs: optional((input.carton || {}).pcs),
         length: optional((input.carton || {}).length),
         width: optional((input.carton || {}).width),
@@ -148,7 +232,26 @@
       Object.keys(v.carton).forEach(function (k) {
         if (v.carton[k] === 0) fail('预计箱规和毛重须大于0或留空');
       });
+      ['innerPcs', 'innersPerCarton', 'pcs'].forEach(function (k) {
+        if (v.carton[k] !== null && !Number.isInteger(v.carton[k])) fail('装箱数量须为正整数或留空');
+      });
+      if (v.carton.innerPcs && v.carton.innersPerCarton) {
+        var capacity = M.round(v.carton.innerPcs * v.carton.innersPerCarton);
+        if (v.carton.pcs !== null && Math.abs(v.carton.pcs - capacity) > EPS)
+          fail('整箱成品数与每内盒数量×每箱内盒数不一致');
+        v.carton.pcs = capacity;
+      }
     } else {
+      v.packagingFamilyId = input.packagingFamilyId || '';
+      if (
+        v.packagingFamilyId &&
+        !current(s.production.packagingPlans).some(function (p) {
+          return (
+            p.familyId === v.packagingFamilyId && (!v.scopeSku || matches(s, p, { skuCode: v.scopeSku }))
+          );
+        })
+      )
+        fail('关联包装方案不存在或不适用此产品');
       v.kind = input.kind === 'route' ? 'route' : 'product';
       if (v.kind === 'product' && !v.scopeSku) fail('加工用料方案须选择具体成品SKU；通用配置请选择路线模板');
       v.route = (input.route || []).map(function (step, i) {
@@ -174,6 +277,75 @@
     }
     a.push(v);
     return v;
+  }
+  function separatePackaging(s, recipeId, input, ctx) {
+    input = input || {};
+    var old = need(s.production.processRecipes, recipeId, '原工艺方案'),
+      packItems = (old.items || []).filter(function (i) {
+        return isPackaging(s, i.skuCode);
+      }),
+      rawItems = (old.items || []).filter(function (i) {
+        return !isPackaging(s, i.skuCode);
+      });
+    if (!packItems.length) fail('此工艺已无包材需要整理');
+    var pack = input.packagingPlanId
+      ? need(s.production.packagingPlans, input.packagingPlanId, '已有包装方案')
+      : null;
+    if (pack) {
+      checkMaterialScope(s, 'packaging', pack.items);
+      if (!matches(s, pack, { skuCode: old.scopeSku })) fail('已有包装方案不适用此产品');
+      packItems.forEach(function (i) {
+        var matches = pack.items.filter(function (j) {
+          return j.skuCode === i.skuCode;
+        });
+        if (matches.length !== 1) fail('已有包装方案包材不完整或重复，请先核对');
+        var j = matches[0],
+          per = j.perOutput;
+        if (j.basis === 'inner') per *= pack.carton.innerPcs || NaN;
+        if (j.basis === 'carton') per *= pack.carton.pcs || NaN;
+        if (
+          !per ||
+          !Number.isFinite(per) ||
+          i.perOutput == null ||
+          i.qty == null ||
+          j.qty == null ||
+          Math.abs(j.qty / per - i.qty / i.perOutput) > EPS
+        )
+          fail('已有包装方案与原工艺的包材比例不一致，请先核对');
+      });
+    } else
+      pack = savePlan(
+        s,
+        'packaging',
+        {
+          name: input.name || old.name + ' · 包装方案',
+          scopeSku: old.scopeSku,
+          scopeCategory: old.scopeCategory,
+          requirements: input.requirements || '',
+          items: packItems,
+          carton: input.carton || {},
+          source: old.source || '经验维护'
+        },
+        { id: ctx.id + '-pack', at: ctx.at, person: ctx.person }
+      );
+    var clean = savePlan(
+      s,
+      'recipe',
+      Object.assign({}, clone(old), {
+        previousId: old.id,
+        items: rawItems,
+        packagingFamilyId: pack.familyId
+      }),
+      { id: ctx.id + '-recipe', at: ctx.at, person: ctx.person }
+    );
+    clean.packagingSeparation = {
+      sourceRecipeId: old.id,
+      packagingPlanId: pack.id,
+      at: ctx.at,
+      person: ctx.person,
+      note: '原版本保留；已选工单快照/实际物料不自动改写'
+    };
+    return { recipe: clean, packaging: pack };
   }
   function saveDevice(s, input, ctx) {
     var name = String(input.name || '').trim();
@@ -285,7 +457,9 @@
     Object.keys(groups).forEach(function (key) {
       var g = groups[key];
       (g.plan.items || []).forEach(function (item) {
-        var groupsNeeded = item.perOutput == null ? null : g.qty / item.perOutput,
+        var basis = item.basis || 'product',
+          base = g.kind === 'packaging' ? packagingCounts(g.plan, g.qty)[basis] : g.qty,
+          groupsNeeded = item.perOutput == null || base === null ? null : base / item.perOutput,
           quantity =
             groupsNeeded === null || item.qty == null
               ? null
@@ -299,6 +473,7 @@
           applicationIds: g.applicationIds,
           planName: g.plan.name,
           kind: g.kind,
+          basis: basis,
           stageName: item.stageName || '',
           operationId: item.operationId || ''
         });
@@ -350,6 +525,16 @@
       applyRoute(s, p, recipe, ctx);
       return null;
     }
+    if (
+      recipe &&
+      (recipe.items || []).some(function (i) {
+        return isPackaging(s, i.skuCode);
+      })
+    )
+      fail('旧工艺方案含包材，请先整理到包装方案后选用');
+    if (pack) checkMaterialScope(s, 'packaging', pack.items);
+    if (packagingOverlaps(s, pid, recipe, pack).length)
+      fail('工艺和包装方案重复包含同一包材，请先核对旧方案，避免重复备料');
     var qty = M.num(quantity);
     if (recipe && qty > p.qty - coverage(s, pid, false) + EPS)
       fail('本次加工数量超过未安排数量，请撤回未执行的旧方案后再选');
@@ -362,6 +547,7 @@
       productId: pid,
       qty: qty,
       status: 'active',
+      materialScopeVersion: 2,
       recipeSnapshot: recipe ? clone(recipe) : null,
       packagingSnapshot: pack ? clone(pack) : null,
       createdBy: ctx.person,
@@ -416,7 +602,7 @@
     return Object.keys(groups).map(function (k) {
       var g = groups[k],
         c = g.plan.carton || {},
-        boxes = c.pcs ? Math.ceil(g.qty / c.pcs) : null;
+        boxes = packagingCounts(g.plan, g.qty).carton;
       return {
         name: g.plan.name,
         qty: g.qty,
@@ -942,7 +1128,24 @@
           if (i.perOutput != null) M.num(i.perOutput);
           if (i.qty != null) M.num(i.qty);
           if (!M.sku(s, i.skuCode)) fail('工艺／包装引用的物料SKU缺失');
+          if (i.basis && ['product', 'inner', 'carton'].indexOf(i.basis) < 0) fail('包材计量依据无效');
         });
+        if (key === 'packagingPlans') {
+          if (v.materialScopeVersion >= 2) checkPackagingRoles(v);
+          var c = v.carton || {};
+          Object.keys(c).forEach(function (k) {
+            if (c[k] != null) M.num(c[k]);
+          });
+          if (
+            c.innerPcs &&
+            c.innersPerCarton &&
+            c.pcs &&
+            Math.abs(c.innerPcs * c.innersPerCarton - c.pcs) > EPS
+          )
+            fail('同步后的装箱数量不一致');
+        }
+        if (v.materialScopeVersion >= 2)
+          checkMaterialScope(s, key === 'packagingPlans' ? 'packaging' : 'recipe', v.items);
         if (v.route) checkRoute(v.route);
       });
     });
@@ -975,6 +1178,8 @@
       var p = need(d.products, a.productId, '方案对应产品');
       if (a.batchId !== p.batchId) fail('方案与工单关联错误');
       M.num(a.qty);
+      if (a.status === 'active' && a.materialScopeVersion >= 2 && packagingOverlaps(s, p.id).length)
+        fail('同步后工艺和包装重复包含同一包材，请核对后重试');
       if (a.status === 'active' && !active(p)) fail('生效方案仍指向已重组任务');
       [a.recipeSnapshot, a.packagingSnapshot].filter(Boolean).forEach(function (plan) {
         if (!matches(s, plan, p)) fail('方案与产品SKU不匹配');
@@ -1038,6 +1243,11 @@
   }
   var api = {
     current: current,
+    isPackaging: isPackaging,
+    materialAllowed: materialAllowed,
+    packagingCounts: packagingCounts,
+    packagingOverlaps: packagingOverlaps,
+    separatePackaging: separatePackaging,
     matches: matches,
     active: active,
     checkRoute: checkRoute,
