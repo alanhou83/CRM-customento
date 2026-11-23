@@ -41,6 +41,7 @@ CBOS日常归档须同时更新结构化投影、校验并推送，后续Actions
 
 - `node tests/sync-merge.test.cjs`
 - `node tests/cbos-delta.test.cjs`
+- `node tests/production.test.cjs`及`node tests/process-library.test.cjs`
 - 对所有新JS、Service Worker及主HTML内联脚本执行`node --check`。
 - 临时浏览器脚本与结果可以放仓库外；不得把私人验证夹具或基准备份加入公开tests。
 
@@ -49,3 +50,5 @@ CBOS日常归档须同时更新结构化投影、校验并推送，后续Actions
 新增独立生产模块：`crm-production.js`数量规则、`crm-production-ui.js`界面、`crm-production.css`布局。设计与存储口径见`docs/production.md`，敏感事实及业务决定仍仅记私有CBOS/CRM记忆。复用既有产品/SKU、库存流水和采购单，禁止另造生产库存或把历史业务状态复制为本次事实。`SK.production`纳入同步/备份，保留`SK.prod`的产品开发含义。新增核验`node tests/production.test.cjs`；PWA v54；用户已明确授权本次发布，后续改动仍按先验证再获推送指令的约定。发布不自动建立真实工单或期初库存，隔离预览不等于真实浏览器已建工单。
 
 2026-11-22工序配置布局反馈：用户确认改为电脑按列的紧凑行、手机工序/要求两行概览、人员产能按“设置”展开及长要求展开。v55已调整UI/CSS并验证编辑往返和锁定读取，业务存储结构与数量规则不变；用户已明确授权本轮发布，后续改动仍按先确认方案、验证后再获推送指令执行。详见docs/production.md。
+
+2026-11-23用户明确授权“设计推送后实操”。v56加入正式工艺库、物料/排版可选方案、包装版本、工单选用快照、未执行任务合并/按来源拆分及连续工序组合/部分报工，规则与限制见docs/production.md。不得把工艺预计需求当领料/实际耗用，不把组合工时重复算进每道工序；旧数据仅补新增数组。公开测试必须匿名，不写实际工单、采购、设备效率或库存；真实试跑由用户执行后逐项核对。

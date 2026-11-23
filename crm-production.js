@@ -29,14 +29,34 @@
       reports: [],
       operations: [],
       templates: [],
-      planChanges: []
+      planChanges: [],
+      processRecipes: [],
+      packagingPlans: [],
+      processDevices: [],
+      processApplications: [],
+      taskChanges: [],
+      executions: []
     };
   }
   function normalize(p) {
     p = p || empty();
     if (p.schemaVersion !== 1) fail('生产数据版本不支持');
     Object.keys(empty()).forEach(function (k) {
-      if (Array.isArray(empty()[k]) && !Array.isArray(p[k])) fail('生产数据缺少' + k);
+      if (Array.isArray(empty()[k]) && !Array.isArray(p[k])) {
+        if (
+          p[k] === undefined &&
+          [
+            'processRecipes',
+            'packagingPlans',
+            'processDevices',
+            'processApplications',
+            'taskChanges',
+            'executions'
+          ].indexOf(k) >= 0
+        )
+          p[k] = [];
+        else fail('生产数据缺少' + k);
+      }
     });
     return p;
   }
@@ -53,6 +73,7 @@
   function product(s, id) {
     var p = find(s.production.products, id);
     if (!p) fail('产品任务已不存在，请刷新');
+    if (p.retiredAt) fail('任务已合并或拆分，请打开当前任务');
     return p;
   }
   function batch(s, id) {
@@ -250,6 +271,7 @@
         if (!code || !sku(s, code)) fail('请先把订单产品关联到产品库SKU');
         var duplicate = s.production.products.some(function (p) {
           return (
+            !p.retiredAt &&
             batch(s, p.batchId).status !== 'cancelled' &&
             p.sources.some(function (a) {
               return a.orderId === String(o.id) && a.lineId === lineKey;
@@ -358,6 +380,14 @@
     p.qty = quantity;
     p.sources = next;
     p.materialsNeedReview = true;
+    p.processPlanNeedsReview = true;
+    p.processReviewApplicationIds = s.production.processApplications
+      .filter(function (a) {
+        return a.productId === p.id && a.status === 'active';
+      })
+      .map(function (a) {
+        return a.id;
+      });
   }
   function addMaterial(s, bid, code, ctx) {
     live(s, bid);
@@ -539,6 +569,12 @@
       person: ctx.person,
       at: ctx.at
     });
+    if (root.CrmProcessModel)
+      root.CrmProcessModel.enrichConsumption(
+        s,
+        s.production.consumptions[s.production.consumptions.length - 1],
+        ctx
+      );
   }
   function voidConsumption(s, id, note, ctx) {
     var c = find(s.production.consumptions, id);
@@ -569,7 +605,7 @@
       m.referenceNote = old.note || '';
       m.uses = s.production.products
         .filter(function (p) {
-          return p.batchId === bid && (old.useSkus || []).indexOf(p.skuCode) >= 0;
+          return !p.retiredAt && p.batchId === bid && (old.useSkus || []).indexOf(p.skuCode) >= 0;
         })
         .map(function (p) {
           return p.id;
@@ -582,6 +618,7 @@
       .filter(function (p) {
         return (
           p.batchId === bid &&
+          !p.retiredAt &&
           !p.released &&
           !s.production.reports.some(function (r) {
             return r.productId === p.id;
@@ -601,7 +638,11 @@
               requirements: step.requirements || '',
               assignees: [],
               rate: step.rate === undefined ? '' : step.rate,
-              rateMode: step.rateMode || '人时'
+              rateMode: step.rateMode || '人时',
+              executionGroup: step.executionGroup
+                ? ctx.id + '-group-' + index + '-' + step.executionGroup
+                : '',
+              groupName: step.groupName || ''
             };
           });
           p.packaging = old.packaging || '';
@@ -614,7 +655,7 @@
   function configFromBatch(s, bid) {
     var b = batch(s, bid),
       products = s.production.products.filter(function (p) {
-        return p.batchId === bid;
+        return p.batchId === bid && !p.retiredAt;
       });
     return {
       name: b.name,
@@ -729,6 +770,8 @@
     if (!p.released) fail('任务尚未下达');
     var step = find(p.route, stepId);
     if (!step) fail('工序已不存在');
+    if (step.executionGroup && !values._groupInternal && root.CrmProcessModel)
+      return root.CrmProcessModel.reportGroup(s, pid, stepId, values, ctx);
     if (
       s.production.reports.some(function (r) {
         return r.id === ctx.id;
@@ -783,12 +826,14 @@
       orderWarning: orderDrift(s, p),
       previousWarning: previous !== null && sum > previous + EPS
     };
+    if (root.CrmProcessModel) root.CrmProcessModel.enrichReport(s, r, values);
     s.production.reports.push(r);
     return r;
   }
   function updateReportTime(s, id, hours, machineHours, note, ctx) {
     var r = find(s.production.reports, id);
     if (!r || r.status === 'void') fail('报工记录不存在或已撤销');
+    if (r.executionId) fail('组合报工请从组合记录补充工时');
     live(s, r.batchId);
     var people = {};
     hours.forEach(function (h) {
@@ -814,6 +859,7 @@
   function confirmReport(s, id, good, note, ctx) {
     var r = find(s.production.reports, id);
     if (!r || r.status !== 'pending') fail('报工已处理，请刷新');
+    if (r.executionId && !ctx._groupConfirm) fail('组合报工请整组核对');
     live(s, r.batchId);
     var p = product(s, r.productId),
       n = num(good, true);
@@ -836,6 +882,7 @@
   function voidReport(s, id, note, ctx) {
     var r = find(s.production.reports, id);
     if (!r || r.status === 'void') fail('记录已撤销');
+    if (r.executionId && !ctx._groupVoid) fail('组合报工请整组撤销');
     live(s, r.batchId);
     if (!String(note || '').trim()) fail('请填写更正原因');
     var p = product(s, r.productId),
@@ -953,7 +1000,7 @@
     });
     var sourceKeys = {};
     p.products.forEach(function (pr) {
-      if (batch(s, pr.batchId).status === 'cancelled') return;
+      if (pr.retiredAt || batch(s, pr.batchId).status === 'cancelled') return;
       pr.sources.forEach(function (a) {
         var key = a.orderId + '|' + a.lineId;
         if (sourceKeys[key]) fail('同一销售明细被多个设备重复建工单，请核对');
@@ -1071,6 +1118,7 @@
         )
           fail('生产领退料方向错误');
       });
+    if (root.CrmProcessModel) root.CrmProcessModel.validate(s);
     return true;
   }
   function validateStores(stores) {

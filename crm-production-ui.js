@@ -4,6 +4,7 @@
   var M = root.CrmProductionModel,
     selected = '',
     tab = 'overview',
+    libraryView = '',
     workerMode = false,
     actor = '',
     routeDraft = null,
@@ -89,7 +90,7 @@
   }
   function products(s, bid) {
     return s.production.products.filter(function (p) {
-      return p.batchId === bid;
+      return p.batchId === bid && !p.retiredAt;
     });
   }
   function commit(change, kind) {
@@ -197,10 +198,14 @@
     if (!host) return;
     try {
       var s = data(),
-        managed = canManage() && !workerMode,
-        b =
-          M.find(s.production.batches, selected) ||
-          get(s.production.batches, (s.production.batches[0] || {}).id);
+        managed = canManage() && !workerMode;
+      if (libraryView && managed && root.CrmProcessUI) {
+        host.innerHTML = header(s, managed) + root.CrmProcessUI.render(s, libraryView);
+        return;
+      }
+      var b =
+        M.find(s.production.batches, selected) ||
+        get(s.production.batches, (s.production.batches[0] || {}).id);
       selected = b.id;
       host.innerHTML =
         header(s, managed) +
@@ -232,7 +237,7 @@
       (canManage()
         ? button(workerMode ? '管理入口' : '生产员入口', 'mode') +
           (!workerMode
-            ? button('工序库', 'operations') +
+            ? button('工艺库', 'operations') +
               button('采购工作台', 'proc-workbench') +
               button('新建工单', 'new', '', 'btn-primary')
             : '')
@@ -352,10 +357,12 @@
         n(p.qty) +
         '</b><small>末道确认可流转</small>' +
         button(p.released ? '查看工序' : '配置工序', 'route', p.id) +
+        (root.CrmProcessUI ? root.CrmProcessUI.taskActions(s, p) : '') +
         '</div></article>';
     });
     return (
       html +
+      (root.CrmProcessUI ? root.CrmProcessUI.batchPlanSummary(s, b.id) : '') +
       s.production.planChanges
         .filter(function (c) {
           return c.batchId === b.id;
@@ -445,6 +452,7 @@
       field('理论净需求（' + m.unit + '，可空）', 'pn-theoretical', m.theoretical, 'number') +
       field('本批备料目标（' + m.unit + '）', 'pn-target', m.target, 'number') +
       '</div>';
+    if (root.CrmProcessUI) html += root.CrmProcessUI.materialSuggestionFields(s, m);
     if (m.referenceTarget !== undefined)
       html += note(
         '引用 ' +
@@ -577,7 +585,8 @@
         (['issue', 'return'].indexOf(action) >= 0 ? field('实际领／退料人', 'pn-recipient', '') : '') +
         (action === 'consume'
           ? field('上述投入中实际损耗数（非成品不良数）', 'pn-scrap', 0, 'number') +
-            field('使用产品／工序／异常说明', 'pn-consume-note', '')
+            field('使用产品／工序／异常说明', 'pn-consume-note', '') +
+            (root.CrmProcessUI ? root.CrmProcessUI.consumptionFields(s, m) : '')
           : '') +
         note('请填写本次增量，不填累计数。'),
       '确认记录',
@@ -668,7 +677,7 @@
   function routes(s, b) {
     return (
       '<div class="pn-section-head"><h2>每款产品独立配置工序</h2>' +
-      button('工序库', 'operations') +
+      button('工艺库', 'operations') +
       '</div>' +
       products(s, b.id)
         .map(function (p) {
@@ -813,6 +822,7 @@
         '</select>' +
         button('添加工序', 'route-add') +
         '</div>';
+    if (root.CrmProcessUI) html += root.CrmProcessUI.routeGroupFields(draft, locked);
     html +=
       '<label class="pn-field">本款客户包装要求（保护膜、垫纸、内包装、装箱等）<textarea id="pn-packaging"' +
       (locked ? ' disabled' : '') +
@@ -867,6 +877,11 @@
   }
   function operations() {
     needManage();
+    if (root.CrmProcessUI) {
+      libraryView = libraryView || 'recipes';
+      render();
+      return;
+    }
     var s = data();
     modal(
       '工序基础库',
@@ -916,20 +931,32 @@
     s.production.products.forEach(function (p) {
       var b = get(s.production.batches, p.batchId);
       if (!p.released || ['cancelled', 'completed'].indexOf(b.status) >= 0) return;
-      p.route.forEach(function (step) {
-        if (!all && (step.assignees || []).indexOf(person) < 0) return;
+      if (p.retiredAt) return;
+      var tasks = root.CrmProcessModel
+        ? root.CrmProcessModel.taskGroups(p)
+        : p.route.map(function (step) {
+            return {
+              name: step.name,
+              steps: [step],
+              people: step.assignees,
+              requirements: step.requirements
+            };
+          });
+      tasks.forEach(function (group) {
+        var step = group.steps[0];
+        if (!all && group.people.indexOf(person) < 0) return;
         var t = M.totals(s, p.id, step.id);
         html +=
           '<article class="pn-product-row"><div><b>' +
           e(p.name) +
           ' · ' +
-          e(step.name) +
+          e(group.name) +
           '</b><small>' +
           e(b.name) +
           ' · ' +
           e(p.skuCode) +
           '</small><small>' +
-          e(step.requirements || '按本单工艺执行') +
+          e(group.requirements || '按本单工艺执行') +
           '</small></div><div class="pn-right"><b>' +
           n(t.reported) +
           ' / ' +
@@ -943,11 +970,15 @@
   }
   function worker(s) {
     var people = [];
-    s.production.products.forEach(function (p) {
-      p.route.forEach(function (r) {
-        people = people.concat(r.assignees);
+    s.production.products
+      .filter(function (p) {
+        return !p.retiredAt;
+      })
+      .forEach(function (p) {
+        p.route.forEach(function (r) {
+          people = people.concat(r.assignees);
+        });
       });
-    });
     people = Array.from(new Set(people));
     if (people.indexOf(actor) < 0) actor = people[0] || '';
     return (
@@ -1000,6 +1031,9 @@
     return (
       list
         .map(function (r) {
+          if (r.executionId && root.CrmProcessUI) {
+            return r.groupIndex === 0 ? root.CrmProcessUI.executionRow(s, r.executionId, managed) : '';
+          }
           var p = get(s.production.products, r.productId);
           return (
             '<article class="pn-report"><div class="pn-section-head"><b>' +
@@ -1032,6 +1066,7 @@
                 )
               : '') +
             (r.orderWarning ? note('报工时来源订单有变更，实际报数保留，主管需核对计划。', true) : '') +
+            (root.CrmProcessUI ? root.CrmProcessUI.reportContext(s, r) : '') +
             (r.note ? note(r.note) : '') +
             (r.confirmNote ? note('核对：' + r.confirmNote) : '') +
             (r.voidReason ? note('更正：' + r.voidReason) : '') +
@@ -1065,7 +1100,14 @@
       bits = value.split('|'),
       p = get(s.production.products, bits[0]),
       step = get(p.route, bits[1]);
-    if (!canManage() && (step.assignees || []).indexOf(actor) < 0)
+    var group = root.CrmProcessModel
+      ? root.CrmProcessModel.taskGroups(p).find(function (g) {
+          return g.steps.some(function (st) {
+            return st.id === step.id;
+          });
+        })
+      : { name: step.name, people: step.assignees, requirements: step.requirements };
+    if (!canManage() && (group.people || []).indexOf(actor) < 0)
       throw new Error('请使用分派给当前人员的任务');
     reportToken = id();
     modal(
@@ -1075,19 +1117,36 @@
         '"><input type="hidden" id="pn-report-step" value="' +
         e(step.id) +
         '">' +
-        note(p.name + ' · ' + step.name + ' · 计划 ' + n(p.qty) + ' ' + p.unit) +
-        note(step.requirements || '') +
+        note(p.name + ' · ' + group.name + ' · 计划 ' + n(p.qty) + ' ' + p.unit) +
+        note(group.requirements || '') +
+        (step.executionGroup
+          ? '<fieldset class="px-completed-steps"><legend>本次实际完成的步骤</legend>' +
+            group.steps
+              .map(function (st) {
+                return (
+                  '<label class="pn-check"><input type="checkbox" name="px-completed-step" value="' +
+                  e(st.id) +
+                  '" checked>' +
+                  e(st.name) +
+                  '</label>'
+                );
+              })
+              .join('') +
+            note('只勾选已经完成的步骤。仅做了擦边时，取消其他步骤；不会自动算作包装完成。') +
+            '</fieldset>'
+          : '') +
         field('本次新增完成数量（' + p.unit + '）', 'pn-report-qty', '', 'number') +
         field(
           '实际参与人／小组成员（逗号分隔）',
           'pn-report-people',
-          workerMode || !canManage() ? actor : (step.assignees || []).join('，')
+          workerMode || !canManage() ? actor : (group.people || []).join('，')
         ) +
         note('小组共同完成的数量只报一次，不按人数重复增加。') +
         '<details><summary>补充异常／工时（可稍后说明）</summary>' +
         field('其中不良数（不清楚可留空）', 'pn-report-bad', '', 'number') +
         field('各人人时（例如 姓名=2，姓名=1.5）', 'pn-report-hours', '') +
         field('实际机器小时（可空）', 'pn-machine-hours', '', 'number') +
+        (root.CrmProcessUI ? root.CrmProcessUI.reportFields(s, p) : '') +
         field('异常／补充说明', 'pn-report-note', '') +
         '</details>',
       '提交报工',
@@ -1166,7 +1225,9 @@
                       e(p.unit) +
                       '/' +
                       e(step.rateMode)
-                    : '实际工时待补齐') +
+                    : step.executionGroup
+                      ? '组合工时见报工记录／历史实绩'
+                      : '实际工时待补齐') +
                   '</small></div>'
                 );
               })
@@ -1225,12 +1286,16 @@
     showPage('production');
   }
   function orderEntry(orderId) {
+    libraryView = '';
     show();
     var s = data(),
       found = s.production.products.find(function (p) {
-        return p.sources.some(function (a) {
-          return a.orderId === String(orderId);
-        });
+        return (
+          !p.retiredAt &&
+          p.sources.some(function (a) {
+            return a.orderId === String(orderId);
+          })
+        );
       });
     if (found) {
       selected = found.batchId;
@@ -1255,6 +1320,7 @@
       return;
     }
     if (action === 'new') {
+      libraryView = '';
       openNew();
       return;
     }
@@ -1495,6 +1561,7 @@
   }
   function submit(action) {
     freshForm();
+    if (action.indexOf('px-') === 0 && root.CrmProcessUI) return root.CrmProcessUI.submit(action.slice(3));
     var ctx = context(),
       message = '已保存';
     if (action === 'create') {
@@ -1528,6 +1595,8 @@
       var a = val('pn-material-action'),
         mid = val('pn-mid'),
         qty = val('pn-action-qty');
+      ctx.processApplicationId = val('px-consume-app');
+      ctx.processStageName = val('px-consume-stage');
       commit(
         function (s) {
           if (a === 'consume') M.consume(s, mid, qty, val('pn-scrap'), val('pn-consume-note'), ctx);
@@ -1606,7 +1675,17 @@
             people: people,
             hours: hours,
             machineHours: val('pn-machine-hours'),
-            note: val('pn-report-note')
+            note: val('pn-report-note'),
+            processApplicationId: val('px-report-app'),
+            completedStepIds: document.querySelector('[name=px-completed-step]')
+              ? Array.from(document.querySelectorAll('[name=px-completed-step]:checked')).map(function (el) {
+                  return el.value;
+                })
+              : undefined,
+            deviceId: val('px-report-device'),
+            deviceCondition: val('px-report-condition'),
+            prepHours: val('px-report-prep'),
+            downtimeHours: val('px-report-down')
           },
           ctx
         );
@@ -1743,6 +1822,51 @@
   });
   root.CrmProduction = {
     render: render,
+    openLibrary: function (t) {
+      needManage();
+      libraryView = t || 'recipes';
+      render();
+    },
+    closeLibrary: function () {
+      libraryView = '';
+      render();
+    },
+    helpers: {
+      data: data,
+      commit: commit,
+      changeData: changeData,
+      modal: modal,
+      closeModal: closeModal,
+      render: render,
+      context: context,
+      e: e,
+      n: n,
+      field: field,
+      val: val,
+      button: button,
+      note: note,
+      run: run,
+      freshForm: freshForm,
+      canManage: canManage,
+      selected: function () {
+        return selected;
+      },
+      actor: function () {
+        return actor;
+      },
+      openOperation: editOperation,
+      openRoute: openRoute,
+      captureRoute: captureRoute,
+      routeDraft: function () {
+        return routeDraft;
+      },
+      replaceRouteDraft: function (v) {
+        routeDraft = v;
+      },
+      routeProduct: function () {
+        return routeProduct;
+      }
+    },
     orderEntry: orderEntry,
     show: show,
     validateStores: M.validateStores,
